@@ -1,0 +1,17 @@
+{% extends "base.html" %} {% load wagtailcore_tags %} {% block content %}
+
+<h1>{{ page.title }}</h1>
+<p>{{ page.description|richtext }}</p>
+<p><strong>${{ page.price }}</strong></p>
+
+{% load wagtailimages_tags %}
+<div class="product-images">
+  {% if page.product_images.all %} {% for img in page.product_images.all %}
+  <!-- or img.image.fil.url directly -->
+  {% image img.image fill-400x300 as preview %}
+  <img src="{{ preview.url }}" alt="{{ img.caption }}" />
+  {% endfor %} {% else %}
+  <p>🚫 No image found for this item.</p>
+  {% endif %}
+</div>
+{% endblock %}
