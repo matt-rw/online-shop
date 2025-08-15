@@ -1,72 +1,66 @@
 from django.db import models
-from modelcluster.fields import ParentalKey
-from wagtail.admin.panels import FieldPanel, InlinePanel
-from wagtail.fields import RichTextField
-from wagtail.models import Orderable, Page
 
 
-class ShopIndexPage(Page):
+class Product(models.Model):
     """
-    A Wagtail Page model that serves as the landing page for the online shop.
+    A data model used in carts, orders, and Stripe.
 
-    This page acts as a container for all ProductPage instances. It includes an
-    introductory rich text area and renders a list of child product pages.
-
-    Example URL: /shop/
+    Admin updates prices via Django Admin or Wagtail Snippets.
     """
-    intro = RichTextField(blank=True)
+    name = models.CharField(max_length=255)
+    slug = models.SlugField(unique=True)
+    # sku = models.CharField(max_length=50, blank=True)
+    base_price = models.DecimalField(max_digits=10, decimal_places=2)
+    # stock_quantity = models.PositiveIntegerField(default=0)
+    is_active = models.BooleanField(default=True)
 
-    content_panels = Page.content_panels + [
-        FieldPanel('intro'),
-    ]
-
-    subpage_types = ['shop.ProductPage']
-
-
-class ProductPage(Page):
-    """
-    A Wagtail Page model representing an individual product.
-
-    Each product has a description, price, and an optional collection
-    of images. It is intended to be created as a child of ShopIndexPage.
-
-    Example URL: /shop/sample-product/
-    """
-    description = RichTextField()
-    price = models.DecimalField(max_digits=10, decimal_places=2)
-
-    content_panels = Page.content_panels + [
-        FieldPanel('description'),
-        FieldPanel('price'),
-        InlinePanel('product_images', label="Product Images"),
-    ]
-
-    parent_page_types = ['shop.ShopIndexPage']
+    def __str__(self):
+        return self.name
 
 
-class ProductImage(Orderable):
-    """
-    An orderable model for storing images related to a ProductPage.
+class CartItem(models.Model):
+    product = models.ForeignKey(Product, on_delete=models.CASCADE)
 
-    Allows multiple images per product with optional captions. Images
-    are displayed in the order defined by the content editor using
-    drag-and-drop.
 
-    This model is edited inline within the ProductPage admin interface.
-    """
-    page = ParentalKey(
-        'shop.ProductPage',
-        on_delete=models.CASCADE,
-        related_name='product_images'
+class Size(models.Model):
+    # VARIABLE?
+    name = models.CharField(
+        max_length=10,
+        choices=[
+            # choices = [(internal_value, human_readable_label)]
+            ('XS', 'XS'), ('S', 'S'), ('M', 'M'), ('L', 'L'), ('XL', 'XL')
+        ]
     )
-    image = models.ForeignKey(
-        'wagtailimages.Image',
-        on_delete=models.CASCADE,
-        related_name='+',
-    )
-    caption = models.CharField(blank=True, max_length=250)
 
-    panels = [
-        FieldPanel('image'),
-        FieldPanel('caption'),
-    ]
+
+class Color(models.Model):
+    name = models.CharField(max_length=20, unique=True)
+
+    def __str__(self):
+        return self.name
+
+
+# GENDER?
+
+
+class ProductVariant(models.Model):
+    """
+    An instance or configuration of a product, not a type of product.
+
+    Each variant contains attributes that can change (stock, size, color, SKU).
+    """
+    product = models.ForeignKey(
+        Product,
+        related_name='variants',
+        on_delete=models.CASCADE
+        )
+    color = models.ForeignKey(Color, on_delete=models.PROTECT)
+    size = models.ForeignKey(Size, on_delete=models.PROTECT)
+    stock_quantity = models.PositiveIntegerField(default=0)
+    is_active = models.BooleanField(default=True)
+
+    class Meta:
+        unique_together = ['product', 'size', 'color']
+
+    def __str__(self):
+        return f'{self.product.name} - {self.size} - {self.color}'
