@@ -4,7 +4,7 @@ from wagtail.admin.panels import FieldPanel, InlinePanel
 from wagtail.fields import RichTextField
 from wagtail.models import Orderable, Page
 
-from .models import Product
+from .product import Product
 
 
 class ShopIndexPage(Page):
@@ -36,11 +36,10 @@ class ProductPage(Page):
     """
     product = models.ForeignKey(
         Product,
-        on_delete=models.CASCADE,
+        on_delete=models.PROTECT,
         related_name='pages'
     )
-    description = RichTextField()
-    # price = models.DecimalField(max_digits=10, decimal_places=2)
+    description = RichTextField(blank=True)
 
     content_panels = Page.content_panels + [
         FieldPanel('product'),
@@ -78,3 +77,11 @@ class ProductImage(Orderable):
         FieldPanel('image'),
         FieldPanel('caption'),
     ]
+
+
+for page_model in [
+    ShopIndexPage,
+    ProductPage,
+    ProductImage
+]:
+    page_model.__module__ = 'shop.models'
