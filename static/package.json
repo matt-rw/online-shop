@@ -1,0 +1,5 @@
+{
+  "dependencies": {
+    "@tailwindplus/elements": "^1.0.12"
+  }
+}

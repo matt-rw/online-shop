@@ -1,0 +1,190 @@
+{% extends 'base.html' %} {% load static %} {% block content %}
+
+<!-- Background video
+<section class="relative w-full h-screen overflow-hidden">
+  <video
+    autoplay
+    muted
+    loop
+    playsinline
+    class="absolute top-0 left-0 w-full h-full object-cover"
+  >
+    <source src="https://www.w3schools.com/html/mov_bbb.mp4" type="video/mp4" />
+    Your browser does not support the video tag.
+  </video>
+-->
+<section
+  class="relative min-h-screen bg-cover bg-center w-full h-screen overflow-hidden"
+  style="background-image: url('{% static 'images/walking.jpg' %}');"
+>
+  <div
+    class="relative z-10 flex flex-col items-center justify-center h-full text-white"
+  >
+    <a href="/" class="block">
+      <img
+          src="{% static 'images/logo.png' %}"
+          class="h-[200px] w-auto"
+          alt="Blueprint Apparel"
+      />
+    </a>
+    <a
+      href="#products"
+      class="mt-6 px-8 py-3 bg-black rounded-lg hover:bg-gray-600"
+    >
+      Shop Now
+    </a>
+  </div>
+</section>
+
+<!-- for below style="background-image: url('{% static 'images/blueprint_bg1.png' %}');" -->
+<section
+  id="products" class="w-full min-h-screen bg-cover bg-center bg-no-repeat"
+  style="background-image: url('{% static 'images/blueprint_bg1.png' %}');"
+>
+<div class="relative z-10 flex flex-col sm:flex-row justify-center items-center h-full gap-8">
+
+  <a href="/shop/t-shirt/">
+    <div class="card bg-base-100 w-96 shadow-sm hover:scale-105 bg-white rounded-xl shadow-lg w-150 aspect-square flex flex-col justify-center items-center hover:scale-105 transition">
+      <!--<figure>-->
+        <div class="carousel w-full">
+          <div id="item1" class="carousel-item w-full">
+            <img
+                src="{% static 'images/white_bg_top.png' %}"
+                alt="T-Shirt"
+                class="w-full h-full object-cover rounded-lg aspect-square">
+          </div>
+          <div id="item2" class="carousel-item w-full">
+            <img
+                src="{% static 'images/white_bg_top.png' %}"
+                alt="T-Shirt"
+                class="w-full h-full object-cover rounded-lg aspect-square">
+          </div>
+        </div>
+        <div class="flex w-full justify-center gap-2 py-2">
+          <a href="#item1" class="btn btn-xs scroll-mt-24">1</a>
+          <a href="#item2" class="btn btn-xs scroll-mt-24">2</a>
+        </div>
+        </figure>
+      <div class="card-body text-center items-center">
+        <h2 class="card-title">Foundation T-Shirt</h2>
+        <p class="text-sm text-gray-600"></p>
+        <div class="card-actions justify-end">
+          <button class="btn btn-neutral bg-black">Add to cart</button>
+        </div>
+      </div>
+    </div>
+  </a>
+
+  <a href="/shop/bottoms/">
+    <div class="card bg-base-100 w-96 shadow-sm hover:scale-105 bg-white rounded-xl shadow-lg w-150 aspect-square flex flex-col justify-center items-center hover:scale-105 transition">
+      <!--<figure>-->
+        <div class="carousel w-full">
+          <div id="item3" class="carousel-item w-full">
+            <img
+                src="{% static 'images/white_bg_bottom.png' %}"
+                alt="T-Shirt"
+                class="w-full h-full object-cover rounded-lg aspect-square">
+          </div>
+          <div id="item4" class="carousel-item w-full">
+            <img
+                src="{% static 'images/white_bg_bottom.png' %}"
+                alt="T-Shirt"
+                class="w-full h-full object-cover rounded-lg aspect-square">
+          </div>
+        </div>
+        <div class="flex w-full justify-center gap-2 py-2">
+          <a href="#item3" class="btn btn-xs scroll-mt-24">1</a>
+          <a href="#item4" class="btn btn-xs scroll-mt-24">2</a>
+        </div>
+        </figure>
+      <div class="card-body text-center items-center">
+        <h2 class="card-title">Foundation T-Shirt</h2>
+        <p class="text-sm text-gray-600"></p>
+        <div class="card-actions justify-end">
+          <button class="btn btn-neutral bg-black">Add to cart</button>
+        </div>
+      </div>
+    </div>
+  </a>
+  
+    <div class="absolute flex justify-center items-center">
+      <div class="bg-white/30 backdrop-blur-xs rounded-xl shadow-xl p-40 w-400 h-200 text-center">
+        <h2 class="text-6xl text-black font-bold mb-10">Join the Blueprint Community</h2>
+        <p class="text-black text-2xl mb-20">Get early access to the Foundation/Fall release.</p>
+        <form action="#" method="POST" class="flex flex-col sm:flex-row gap-3">
+          <input type="email" name="email" placeholder="Enter your email"
+                 class="flex-1 px-4 py-2 rounded-md border text-xl text-black border-black">
+          <button type="submit"
+                  class="px-6 py-2 rounded-md bg-gray-600 text-white font-semibold hover:bg-indigo-500">
+            Sign Up
+          </button>
+        </form>
+      </div>
+
+  <!--
+  <a href="/shop/t-shirt/"
+   class="bg-white rounded-xl shadow-lg p-6 w-130 aspect-square flex flex-col justify-center items-center hover:scale-105 transition">
+  <img
+      src="{% static 'images/white_bg_top.png' %}"
+      alt="T-Shirt"
+      class="w-full h-full object-cover rounded-lg mb-4">
+  <h3 class="text-lg font-semibold">Foundation T-Shirt</h3>
+  <p class="text-sm text-gray-600">Shop now</p>
+  </a>
+  -->
+    <!--
+    <a href="/shop/jacket/" 
+   class="bg-white rounded-xl shadow-lg p-6 w-130 aspect-square flex flex-col justify-center items-center hover:scale-105 transition">
+      <img
+        src="{% static 'images/white_bg_bottom.png' %}"
+        alt="Jacket"
+        class="w-full h-full object-cover rounded-lg mb-4">
+      <h3 class="text-lg font-semibold">Foundation Pants</h3>
+      <p class="text-sm text-gray-600">Shop now</p>
+    </a>
+    -->
+    <!--
+    <div class="absolute flex justify-center items-center">
+      <div class="bg-gray-600/30 backdrop-blur-md rounded-xl shadow-xl p-40 w-300 h-200 text-center">
+        <h2 class="text-5xl font-bold mb-4">Join the Blueprint Community</h2>
+        <p class="text-black text-2xl mb-6">Get early access to the Foundation/Fall release.</p>
+        <form action="#" method="POST" class="flex flex-col sm:flex-row gap-3">
+          <input type="email" name="email" placeholder="Enter your email"
+                 class="flex-1 px-4 py-2 rounded-md border border-gray-300">
+          <button type="submit"
+                  class="px-6 py-2 rounded-md bg-gray-600 text-white font-semibold hover:bg-indigo-500">
+            Sign Up
+          </button>
+        </form>
+      </div>
+    -->
+  </div>
+
+</section>
+
+
+<section
+  class="relative w-full min-h-screen bg-cover bg-center bg-no-repeat"
+  style="background-image: url('{% static 'images/blueprint_bg1.png' %}');"
+>
+
+<div class="flex items-center justify-center">
+<h2 class="text-9xl text-white text-center font-bold mb-10">Follow your PATH</h2>
+<p class="text-3xl text-center text-white">
+Our collection is about more than clothes; it’s about creating a blueprint. In our debut collection, we draw inspiration from Japanese gardens — balanced, intentional, and built with purpose — and channel that into clean, versatile pieces designed to move wherever life takes you. Whether you’re chasing goals, finding your rhythm, or carving out your own identity, Blueprint Apparel reflects your focus, discipline, and individuality. <br><br>This isn’t about following trends — it’s about following your path.
+</p>
+</div>
+
+<div class="flex items-center justify-center">
+  <div class="relative z-10 flex flex-col sm:flex-row items-start items-center h-full pl-64 pr-20 gap-8">
+    {% include 'partials/insta.html' %}
+  </div>
+  <p class="text-3xl text-center text-white pr-64">
+  The quiet discipline and flowing harmony of Japanese gardens — spaces where every stone and every line serves a purpose. 
+  <br><br>Just as a garden becomes a map of balance, Blueprint Apparel creates a blueprint for your lifestyle, blending clean, thoughtful design with modern utility
+  </p>
+</div>
+
+</section>
+
+{% endblock %}

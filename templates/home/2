@@ -1,0 +1,110 @@
+{% extends 'base.html' %} {% load static %} {% block content %}
+
+<!-- Background video
+<section class="relative w-full h-screen overflow-hidden">
+  <video
+    autoplay
+    muted
+    loop
+    playsinline
+    class="absolute top-0 left-0 w-full h-full object-cover"
+  >
+    <source src="https://www.w3schools.com/html/mov_bbb.mp4" type="video/mp4" />
+    Your browser does not support the video tag.
+  </video>
+-->
+<section
+  class="relative min-h-screen bg-cover bg-center w-full h-screen overflow-hidden"
+  style="background-image: url('{% static 'images/walking.jpg' %}');"
+>
+  <div
+    class="relative z-10 flex flex-col items-center justify-center h-full text-white"
+  >
+    <a href="/" class="block">
+      <img
+          src="{% static 'images/logo.png' %}"
+          class="h-[200px] w-auto"
+          alt="Blueprint Apparel"
+      />
+    </a>
+    <a
+      href="#products"
+      class="mt-6 px-8 py-3 bg-black rounded-lg hover:bg-gray-600"
+    >
+      Shop Now
+    </a>
+  </div>
+</section>
+
+<!-- for below style="background-image: url('{% static 'images/blueprint_bg1.png' %}');" -->
+<section
+  class="w-full min-h-screen bg-cover bg-center bg-no-repeat"
+>
+<div class="relative z-10 flex flex-col sm:flex-row justify-center items-center h-full gap-8">
+  <div class="card bg-base-100 w-96 shadow-sm">
+  <figure>
+  <img
+      src="{% static 'images/white_bg_top.png' %}"
+      alt="T-Shirt"
+      class="w-full h-full object-cover rounded-lg mb-4">
+  </figure>
+  <div class="card-body">
+    <h2 class="card-title">Card Title</h2>
+    <p>A card component has a figure, a body part, and inside body there are title and actions parts</p>
+    <div class="card-actions justify-end">
+      <button class="btn btn-primary">Buy Now</button>
+    </div>
+  </div>
+</div>
+
+  <!-- T-shirt Card -->
+  <a href="/shop/t-shirt/"
+   class="bg-white rounded-xl shadow-lg p-6 w-130 aspect-square flex flex-col justify-center items-center hover:scale-105 transition">
+  <img
+      src="{% static 'images/white_bg_top.png' %}"
+      alt="T-Shirt"
+      class="w-full h-full object-cover rounded-lg mb-4">
+  <h3 class="text-lg font-semibold">Foundation T-Shirt</h3>
+  <p class="text-sm text-gray-600">Shop now</p>
+</a>
+
+    <a href="/shop/jacket/" 
+   class="bg-white rounded-xl shadow-lg p-6 w-130 aspect-square flex flex-col justify-center items-center hover:scale-105 transition">
+      <img
+        src="{% static 'images/white_bg_bottom.png' %}"
+        alt="Jacket"
+        class="w-full h-full object-cover rounded-lg mb-4">
+      <h3 class="text-lg font-semibold">Foundation Pants</h3>
+      <p class="text-sm text-gray-600">Shop now</p>
+    </a>
+    <!--
+    <div class="absolute flex justify-center items-center">
+      <div class="bg-gray-600/30 backdrop-blur-md rounded-xl shadow-xl p-40 w-300 h-200 text-center">
+        <h2 class="text-5xl font-bold mb-4">Join the Blueprint Community</h2>
+        <p class="text-black text-2xl mb-6">Get early access to the Foundation/Fall release.</p>
+        <form action="#" method="POST" class="flex flex-col sm:flex-row gap-3">
+          <input type="email" name="email" placeholder="Enter your email"
+                 class="flex-1 px-4 py-2 rounded-md border border-gray-300">
+          <button type="submit"
+                  class="px-6 py-2 rounded-md bg-gray-600 text-white font-semibold hover:bg-indigo-500">
+            Sign Up
+          </button>
+        </form>
+      </div>
+    -->
+  </div>
+
+</section>
+
+
+<section
+  class="w-full min-h-screen bg-cover bg-center bg-no-repeat"
+  style="background-image: url('{% static 'blueprint_bg2.png' %}');"
+>
+<div class="absolute inset-0 bg-black/30"></div>
+
+<div class="relative z-10 flex flex-col sm:flex-row justify-center items-center h-full gap-8">
+  {% include 'partials/insta.html' %}
+</section>
+
+{% endblock %}
