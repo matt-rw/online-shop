@@ -24,10 +24,12 @@ BASE_DIR = Path(os.path.dirname(PROJECT_DIR))
 load_dotenv(BASE_DIR / '.env')
 
 
-def get_env_variable(name):
+def get_env_variable(name, default=None):
     try:
         return os.environ[name]
     except KeyError:
+        if default:
+            return default
         raise ImproperlyConfigured(
             f'Missing required environment variable {name}'
         )
@@ -214,3 +216,12 @@ TAILWIND_APP_NAME = "theme"
 # STRIPE
 STRIPE_SECRET_KEY = get_env_variable('STRIPE_SECRET_KEY')
 STRIPE_PUBLISHABLE_KEY = get_env_variable('STRIPE_PUBLISHABLE_KEY')
+
+# EMAIL
+EMAIL_BACKEND = 'django.core.mail.backends.stmp.EmailBackend'
+EMAIL_HOST = get_env_variable('EMAIL_HOST')
+EMAIL_PORT = int(get_env_variable('EMAIL_PORT', 587))
+EMAIL_USE_TLS = get_env_variable('EMAIL_USE_TLS', 'True') == 'True'
+EMAIL_HOST_USER = get_env_variable('EMAIL_HOST_USER')
+EMAIL_HOST_PASSWORD = get_env_variable('EMAIL_HOST_PASSWORD')
+DEFAULT_FROM_EMAIL = EMAIL_HOST_USER

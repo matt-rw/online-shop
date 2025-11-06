@@ -2,10 +2,18 @@ module.exports = {
   purge: [],
   darkMode: false, // or 'media' or 'class'
   theme: {
-    extend: {},
+    extend: {
+      fontFamily: {
+        vogue: ['Vogue', 'serif'], // fallback serif
+      },
+    },
+  },
+  plugins: [],
+}
   },
   variants: {
     extend: {},
   },
   plugins: [],
 };
+
