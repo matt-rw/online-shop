@@ -1,350 +1,326 @@
-{% extends 'base.html' %} {% load static %} {% block content %}
-<script src="
-https://cdn.jsdelivr.net/npm/debug-grid-overlay-custom@1.0.5/index.min.js
-"></script>
+{% extends 'base.html' %}
+{% load static %}
 
-<!-- Background video
-<section class="relative w-full h-screen overflow-hidden">
-  <video
-    autoplay
-    muted
-    loop
-    playsinline
-    class="absolute top-0 left-0 w-full h-full object-cover"
-  >
-    <source src="https://www.w3schools.com/html/mov_bbb.mp4" type="video/mp4" />
-    Your browser does not support the video tag.
-  </video>
-  style="background-image: url('{% static 'images/walking.jpg' %}');"
--->
+{% block extra_css %}
+  <!-- AOS (Animate On Scroll) Library -->
+  <link rel="stylesheet" href="https://unpkg.com/aos@2.3.4/dist/aos.css">
+{% endblock %}
+
+{% block content %}
+<!-- Debug Grid Overlay (dev tool) -->
+<script src="https://cdn.jsdelivr.net/npm/debug-grid-overlay-custom@1.0.5/index.min.js"></script>
+
+<!-- ============================================ -->
+<!-- HERO SECTION -->
+<!-- ============================================ -->
 <section
   class="relative min-h-screen bg-cover bg-center w-full h-screen overflow-hidden"
   style="background-image: url('{% static 'images/unnamed.png' %}');"
 >
-  <div
-    class="relative z-10 flex flex-col items-center justify-center h-full text-white"
-  >
+  <div class="relative z-10 flex flex-col items-center justify-center h-full text-white">
     <a href="/" class="block">
       <img
-          src="{% static 'images/font.png' %}"
-          class="h-lg w-auto"
-          alt="Blueprint Apparel"
+        src="{% static 'images/font.png' %}"
+        class="h-lg w-auto"
+        alt="Blueprint Apparel"
       />
     </a>
     <a
       href="#products"
-      class="mt-6 px-8 py-3 bg-black rounded-lg hover:bg-gray-600"
+      class="mt-6 px-8 py-3 bg-black rounded-lg hover:bg-gray-600 transition"
     >
       Shop Now
     </a>
   </div>
 </section>
 
-<!-- for below style="background-image: url('{% static 'images/blueprint_bg1.png' %}');" -->
+<!-- TODO: Background video alternative for hero section
+<section class="relative w-full h-screen overflow-hidden">
+  <video autoplay muted loop playsinline class="absolute top-0 left-0 w-full h-full object-cover">
+    <source src="https://www.w3schools.com/html/mov_bbb.mp4" type="video/mp4" />
+    Your browser does not support the video tag.
+  </video>
+  <div class="relative z-10 flex flex-col items-center justify-center h-full text-white">
+    Hero content here
+  </div>
+</section>
+-->
+
+<!-- ============================================ -->
+<!-- PRODUCTS SECTION -->
+<!-- ============================================ -->
 <section
-  id="products" class="w-full bg-cover bg-center bg-no-repeat overflow-hidden h-auto"
+  id="products"
+  class="w-full bg-cover bg-center bg-no-repeat overflow-hidden h-auto"
   style="background-image: url('{% static 'images/blueprint_bg1.png' %}');"
 >
-  <!--
-  <div class="mx-auto max-w-2xl px-4 py-16 sm:px-6 sm:py-24 lg:max-w-7xl lg:px-8 items-center">
-      <div class="rounded-xl shadow-xl p-20 h-auto mt-12 mb-24" data-aos="fade-up">
-        <h2 class="font-['Playfair_Display'] text-5xl md:text-5xl sm:text-4xl text-black font-bold mb-10">Join the Blueprint Community</h2>
-        <p class="text-black-500 text-2xl mb-20">Get early access to the Foundation/Fall drop, latest deals, and our Discord channel.</p>
-        <form action="#" method="POST" class="flex flex-col sm:flex-row gap-3">
-          <input type="email" name="email" placeholder="Enter your email"
-                 class="flex-1 px-4 py-2 rounded-md border text-xl text-black border-black">
-          <button type="submit"
-                  class="px-6 py-2 rounded-md bg-gray-600 text-white font-semibold hover:bg-indigo-500">
-            Sign Up
-          </button>
-        </form>
-      </div>
-  -->
-
-<!--
-<div class="grid grid-cols-1 items-center justify-center mb-32">
-<div class="group relative">
-  <p class="font-['Rajdhani'] w-md text-5xl md:text-5xl sm:text-2xl leading-relaxed text-white ml-auto text-right mb-16 mr-16" data-aos="fade-left">Our collection is about more than clothes.</p>
+  <!-- Foundation Drop Announcement -->
+  <div class="flex flex-row justify-between items-center">
+    <h2
+      data-aos="fade-right"
+      class="font-['Manrope'] text-6xl md:text-6xl sm:text-6xl font-semibold w-sm h-max tracking-tight text-white mb-24 m-24"
+    >
+      The FOUNDATION DROP coming soon...
+    </h2>
   </div>
-</p>
-</div>
-<p class="font-['Rajdhani'] text-5xl leading-relaxed text-white text-center mb-32" data-aos="fade-up">It’s about creating a blueprint.</p>
+
+  <!-- Brand Philosophy -->
+  <div class="grid grid-cols-1 items-center justify-center mb-32">
+    <div class="group relative">
+      <p
+        class="font-['Manrope'] w-md text-5xl md:text-5xl sm:text-2xl leading-relaxed text-white ml-auto text-right mb-16"
+        data-aos="fade-left"
+      >
+        Our collection is about more than clothes.
+      </p>
+    </div>
+  </div>
+
+  <p
+    class="font-['Manrope'] text-5xl leading-relaxed text-white text-center mb-32"
+    data-aos="fade-up"
+  >
+    It's about creating a blueprint.
+  </p>
+
   <div class="group relative">
-  <h2 class="font-['Rajdhani'] text-even leading-tight ml-16 text-9xl md:text-9xl sm:text-4xl text-white justify-left font-bold mb-32">Follow your Path.</h2>
+    <h2
+      data-aos="fade-in"
+      class="font-['Manrope'] text-even leading-tight ml-16 text-9xl md:text-9xl sm:text-4xl text-white justify-left font-bold mb-32"
+    >
+      Follow your Path.
+    </h2>
   </div>
--->
-    
-    <div class="flex flex-row justify-between items-center">
-      <h2 data-aos="fade-right" class="font-['Manrope'] text-6xl md:text-6xl sm:text-6xl font-semibold w-sm h-max tracking-tight text-white mb-24 m-24">The FOUNDATION DROP coming soon...</h2>
-    </div>
-	    <!--<p class="text-8xl text-center ml-auto w-lg text-white">The true test of character is passion.</p>-->
-    <!--A
-    </div>
-      <div class="group relative">
-      <div class="flex flex-col items-center">
-        <h2 class="font-['Manrope'] text-6xl text-center md:text-7xl sm:text-6xl font-bold w-md h-max tracking-tight leading-tight text-white mb-16">Signup for 20% off your first order.</h2>
-      </div>
-      <div class="flex flex-col items-center">
-      <div class="bg-gray-200 backdrop-blur-xs rounded-4xl shadow-xl p-2 h-auto mt-12 mb-6 w-3xs" data-aos="fade-up">
-        <h2 class="font-['Rajdhani'] p-6 text-3xl text-center md:text-3xl sm:text-2xl font-bold tracking-tight leading-tight text-black">COMING SOON!</h2>
-      </div>
-      </div>
-      </div>
-    -->
-  
-    <!--BLURRY IMAGES
-    <div class="mt-12 grid grid-cols-1 gap-x-6 gap-y-10 sm:grid-cols-1 lg:grid-cols-2 xl:gap-x-24 items-center p-16">
-      <div class="group relative items-center">
-	      <img src="{% static 'images/white_bg_top.png' %}" alt="Front of men&#039;s Basic Tee in black." class="aspect-square w-lg rounded-md bg-gray-200 object-cover group-hover:opacity-75 lg:aspect-auto lg:h-160 blur-xl mb-24" />
-      </div>
-      <div class="group relative">
-	      <img src="{% static 'images/white_bg_bottom.png' %}" alt="Front of men&#039;s Basic Tee in black." class="aspect-square w-lg rounded-md bg-gray-200 object-cover group-hover:opacity-75 lg:aspect-auto lg:h-160 blur-xl mb-24" />
-      </div>
-    </div>
-  </div>
-</div>
-    -->
+</section>
 
+<!-- ============================================ -->
+<!-- EMAIL SIGNUP SECTION -->
+<!-- ============================================ -->
+<div class="mx-auto max-w-2xl px-4 py-16 sm:px-6 sm:py-24 lg:max-w-7xl lg:px-8 items-center bg-white rounded-3xl">
+  <div class="rounded-xl shadow-xl p-20 h-auto mt-12 mb-24" data-aos="fade-up">
+    <h2 class="font-['Playfair_Display'] text-5xl md:text-5xl sm:text-3xl text-black font-bold mb-10">
+      Join the Blueprint Community
+    </h2>
+    <p class="text-black-500 text-2xl mb-20">
+      Get early access to the Foundation/Fall drop, latest deals, and our Discord channel.
+    </p>
 
-<!--
-<div class="card bg-base-100 w-96 shadow-sm hover:scale-105 bg-white rounded-xl shadow-lg lg:w-lg md:w-lg sm:w-md aspect-square flex flex-col justify-center items-center hover:scale-105 transition blur-xl">
-<div class="carousel w-full">
-  <div id="item3" class="carousel-item w-full">
-    <img
-	src="{% static 'images/white_bg_bottom.png' %}"
-	alt="T-Shirt"
-	class="w-full h-full object-cover rounded-lg aspect-square blurxl">
+    <!-- Email Signup Form -->
+    <form action="{% url 'subscribe' %}" method="POST" class="flex flex-col sm:flex-row gap-3">
+      {% csrf_token %}
+      <input
+        type="email"
+        name="email"
+        placeholder="Enter your email"
+        required
+        class="flex-1 px-4 py-2 rounded-md border text-xl text-black border-black"
+      />
+      <button
+        type="submit"
+        class="px-6 py-2 rounded-md bg-gray-600 text-white font-semibold hover:bg-indigo-500 transition"
+      >
+        Sign Up
+      </button>
+    </form>
   </div>
-  <div id="item4" class="carousel-item w-full">
-    <img
-	src="{% static 'images/white_bg_bottom.png' %}"
-	alt="T-Shirt"
-	class="w-full h-full object-cover rounded-lg aspect-square">
+
+  <!-- Brand Story -->
+  <div class="flex justify-center mx-12 mb-12">
+    <p class="font-['Vogue'] text-3xl text-black md:text-3xl w-xl leading-relaxed sm:text-xl">
+      In our debut collection, we draw inspiration from Japanese gardens — balanced, intentional, and built with purpose —
+      relating back to our Chicago roots, we channel that into clean, versatile pieces designed to move wherever life takes you.
+      <br><br>
+      Whether you're chasing goals, finding your rhythm, or carving out your own identity, Blueprint Apparel reflects your
+      focus, discipline, and individuality.
+      <br><br>
+      This isn't about following trends — it's about following your path.
+    </p>
+  </div>
+
+  <!-- Feature Image -->
+  <img class="rounded-4xl mb-32" src="{% static 'images/web.png' %}" alt="Blueprint Collection" />
+
+  <!-- Design Inspiration -->
+  <div class="flex mx-12 mb-12 justify-center">
+    <div class="w-xl rounded-3xl" data-aos="zoom-in">
+      <p class="font-['Rajdhani'] text-3xl text-black md:text-3xl w-xl leading-relaxed sm:text-xl">
+        This first released was partly inspired by the design of the tiger in classical Korean art. This is something we
+        pay homage to as a prominent feature of the collection to instill courage and hope for the future.
+        <br><br>
+        Come back soon for an official release date/time, but in the meantime, subscribe to our email list for new deals
+        and arrivals or join us on our moderated Discord channel around design fundamentals and materials for lifestyle fashion.
+      </p>
+    </div>
   </div>
 </div>
-<div class="flex w-full justify-center gap-2 py-2">
-  <a href="#item3" class="btn btn-xs scroll-mt-24">1</a>
-  <a href="#item4" class="btn btn-xs scroll-mt-24">2</a>
-</div>
-</figure>
-<div class="card-body text-center items-center">
-<h2 class="card-title">Foundation T-Shirt</h2>
-<p class="text-sm text-gray-600"></p>
-<div class="card-actions justify-end">
-  <button class="btn btn-neutral bg-black">Add to cart</button>
-</div>
-</div>
+
+<!-- ============================================ -->
+<!-- FOUNDATION LINE DETAILS SECTION -->
+<!-- ============================================ -->
+<section
+  class="w-full py-20 px-6 lg:py-32 lg:px-12"
+  style="background-color:#0d0d0d; background-image: url('{% static 'images/blueprint_bg1.png' %}'); background-size: cover; background-position: center;"
+>
+  <div class="max-w-7xl mx-auto">
+    <!-- Section Title -->
+    <div class="text-center mb-16 lg:mb-24" data-aos="fade-up">
+      <h2 class="font-['Manrope'] text-5xl lg:text-7xl text-white font-bold mb-6 tracking-tight">
+        The FOUNDATION Line
+      </h2>
+      <div class="w-24 h-1 bg-white mx-auto mb-6"></div>
+      <p class="text-white text-2xl lg:text-3xl font-light">Design Philosophy</p>
+    </div>
+
+    <!-- Three Column Layout: Text | Instagram | Text -->
+    <div class="grid grid-cols-1 lg:grid-cols-[1fr_auto_1fr] gap-12 lg:gap-16 items-center">
+
+      <!-- Left - First Design Element -->
+      <div class="text-center lg:text-right space-y-6" data-aos="fade-right">
+        <h3 class="text-4xl lg:text-5xl font-['Manrope'] text-white font-semibold leading-tight">
+          Quiet Discipline
+        </h3>
+        <p class="text-2xl lg:text-3xl text-white leading-relaxed font-light">
+          Every stone and every line serves a purpose. Inspired by flowing harmony and intentional design.
+        </p>
+      </div>
+
+      <!-- Center - Instagram -->
+      <div class="flex flex-col items-center justify-center mx-auto" data-aos="zoom-in">
+        <div class="w-full max-w-md lg:max-w-lg">
+          {% include 'partials/insta.html' %}
+        </div>
+        <a
+          href="https://www.instagram.com/_blueprintapparel"
+          target="_blank"
+          class="mt-6 text-white hover:text-gray-300 transition-colors text-lg font-medium"
+        >
+          Follow us on Instagram →
+        </a>
+      </div>
+
+      <!-- Right - Second Design Element -->
+      <div class="text-center lg:text-left space-y-6" data-aos="fade-left">
+        <h3 class="text-4xl lg:text-5xl font-['Manrope'] text-white font-semibold leading-tight">
+          Modern Balance
+        </h3>
+        <p class="text-2xl lg:text-3xl text-white leading-relaxed font-light">
+          A map for your lifestyle, blending clean design with modern aesthetic and timeless versatility.
+        </p>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- ============================================ -->
+<!-- TODO: FUTURE FEATURE IDEAS -->
+<!-- ============================================ -->
+
+<!-- TODO: Alternative signup form with "Coming Soon" badge
+<div class="mx-auto max-w-2xl px-4 py-16 sm:px-6 sm:py-24 lg:max-w-7xl lg:px-8 items-center">
+  <div class="rounded-xl shadow-xl p-20 h-auto mt-12 mb-24" data-aos="fade-up">
+    <h2 class="font-['Playfair_Display'] text-5xl md:text-5xl sm:text-4xl text-black font-bold mb-10">
+      Join the Blueprint Community
+    </h2>
+    <p class="text-black-500 text-2xl mb-20">
+      Get early access to the Foundation/Fall drop, latest deals, and our Discord channel.
+    </p>
+    <form action="#" method="POST" class="flex flex-col sm:flex-row gap-3">
+      <input type="email" name="email" placeholder="Enter your email" class="flex-1 px-4 py-2 rounded-md border text-xl text-black border-black">
+      <button type="submit" class="px-6 py-2 rounded-md bg-gray-600 text-white font-semibold hover:bg-indigo-500">Sign Up</button>
+    </form>
+  </div>
 </div>
 -->
-    <!--
-    <div class="absolute flex justify-center items-center">
-      <div class="bg-white/30 backdrop-blur-xs rounded-xl shadow-xl p-40 w-400 h-200 text-center">
-        <h2 class="text-6xl text-black font-bold mb-10">Join the Blueprint Community</h2>
-        <p class="text-black text-2xl mb-20">Get early access to the Foundation/Fall release.</p>
-        <form action="#" method="POST" class="flex flex-col sm:flex-row gap-3">
-          <input type="email" name="email" placeholder="Enter your email"
-                 class="flex-1 px-4 py-2 rounded-md border text-xl text-black border-black">
-          <button type="submit"
-                  class="px-6 py-2 rounded-md bg-gray-600 text-white font-semibold hover:bg-indigo-500">
-            Sign Up
-          </button>
-        </form>
-      </div>
-    -->
-  <!--
-  <a href="/shop/t-shirt/"
-   class="bg-white rounded-xl shadow-lg p-6 w-130 aspect-square flex flex-col justify-center items-center hover:scale-105 transition">
-  <img
-      src="{% static 'images/white_bg_top.png' %}"
-      alt="T-Shirt"
-      class="w-full h-full object-cover rounded-lg mb-4">
+
+<!-- TODO: Product card carousel with image gallery
+<div class="card bg-base-100 w-96 shadow-sm hover:scale-105 bg-white rounded-xl shadow-lg">
+  <div class="carousel w-full">
+    <div id="item3" class="carousel-item w-full">
+      <img src="{% static 'images/white_bg_bottom.png' %}" alt="T-Shirt" class="w-full h-full object-cover rounded-lg aspect-square">
+    </div>
+    <div id="item4" class="carousel-item w-full">
+      <img src="{% static 'images/white_bg_bottom.png' %}" alt="T-Shirt" class="w-full h-full object-cover rounded-lg aspect-square">
+    </div>
+  </div>
+  <div class="flex w-full justify-center gap-2 py-2">
+    <a href="#item3" class="btn btn-xs">1</a>
+    <a href="#item4" class="btn btn-xs">2</a>
+  </div>
+  <div class="card-body text-center items-center">
+    <h2 class="card-title">Foundation T-Shirt</h2>
+    <div class="card-actions justify-end">
+      <button class="btn btn-neutral bg-black">Add to cart</button>
+    </div>
+  </div>
+</div>
+-->
+
+<!-- TODO: Blurred product preview images
+<div class="mt-12 grid grid-cols-1 gap-x-6 gap-y-10 sm:grid-cols-1 lg:grid-cols-2 xl:gap-x-24 items-center p-16">
+  <div class="group relative items-center">
+    <img src="{% static 'images/white_bg_top.png' %}" alt="Product preview" class="aspect-square w-lg rounded-md bg-gray-200 object-cover group-hover:opacity-75 lg:aspect-auto lg:h-160 blur-xl mb-24" />
+  </div>
+  <div class="group relative">
+    <img src="{% static 'images/white_bg_bottom.png' %}" alt="Product preview" class="aspect-square w-lg rounded-md bg-gray-200 object-cover group-hover:opacity-75 lg:aspect-auto lg:h-160 blur-xl mb-24" />
+  </div>
+</div>
+-->
+
+<!-- TODO: Individual product cards with links
+<a href="/shop/t-shirt/" class="bg-white rounded-xl shadow-lg p-6 w-130 aspect-square flex flex-col justify-center items-center hover:scale-105 transition">
+  <img src="{% static 'images/white_bg_top.png' %}" alt="T-Shirt" class="w-full h-full object-cover rounded-lg mb-4">
   <h3 class="text-lg font-semibold">Foundation T-Shirt</h3>
   <p class="text-sm text-gray-600">Shop now</p>
-  </a>
-  -->
-    <!--
-    <a href="/shop/jacket/" 
-   class="bg-white rounded-xl shadow-lg p-6 w-130 aspect-square flex flex-col justify-center items-center hover:scale-105 transition">
-      <img
-        src="{% static 'images/white_bg_bottom.png' %}"
-        alt="Jacket"
-        class="w-full h-full object-cover rounded-lg mb-4">
-      <h3 class="text-lg font-semibold">Foundation Pants</h3>
-      <p class="text-sm text-gray-600">Shop now</p>
-    </a>
-    -->
-    <!--
-    <div class="absolute flex justify-center items-center">
-      <div class="bg-gray-600/30 backdrop-blur-md rounded-xl shadow-xl p-40 w-300 h-200 text-center">
-        <h2 class="text-5xl font-bold mb-4">Join the Blueprint Community</h2>
-        <p class="text-black text-2xl mb-6">Get early access to the Foundation/Fall release.</p>
-        <form action="#" method="POST" class="flex flex-col sm:flex-row gap-3">
-          <input type="email" name="email" placeholder="Enter your email"
-                 class="flex-1 px-4 py-2 rounded-md border border-gray-300">
-          <button type="submit"
-                  class="px-6 py-2 rounded-md bg-gray-600 text-white font-semibold hover:bg-indigo-500">
-            Sign Up
-          </button>
-        </form>
-      </div>
-    -->
+</a>
 
+<a href="/shop/jacket/" class="bg-white rounded-xl shadow-lg p-6 w-130 aspect-square flex flex-col justify-center items-center hover:scale-105 transition">
+  <img src="{% static 'images/white_bg_bottom.png' %}" alt="Jacket" class="w-full h-full object-cover rounded-lg mb-4">
+  <h3 class="text-lg font-semibold">Foundation Pants</h3>
+  <p class="text-sm text-gray-600">Shop now</p>
+</a>
+-->
 
-<!-- Head -->
-<link rel="stylesheet" href="https://unpkg.com/aos@2.3.4/dist/aos.css">
+<!-- TODO: Overlay signup modal with backdrop blur
+<div class="absolute flex justify-center items-center">
+  <div class="bg-white/30 backdrop-blur-xs rounded-xl shadow-xl p-40 w-400 h-200 text-center">
+    <h2 class="text-6xl text-black font-bold mb-10">Join the Blueprint Community</h2>
+    <p class="text-black text-2xl mb-20">Get early access to the Foundation/Fall release.</p>
+    <form action="#" method="POST" class="flex flex-col sm:flex-row gap-3">
+      <input type="email" name="email" placeholder="Enter your email" class="flex-1 px-4 py-2 rounded-md border text-xl text-black border-black">
+      <button type="submit" class="px-6 py-2 rounded-md bg-gray-600 text-white font-semibold hover:bg-indigo-500">Sign Up</button>
+    </form>
+  </div>
+</div>
+-->
 
-<!-- Body end -->
+<!-- TODO: 20% discount signup variant
+<div class="group relative">
+  <div class="flex flex-col items-center">
+    <h2 class="font-['Manrope'] text-6xl text-center md:text-7xl sm:text-6xl font-bold w-md h-max tracking-tight leading-tight text-white mb-16">
+      Signup for 20% off your first order.
+    </h2>
+  </div>
+  <div class="flex flex-col items-center">
+    <div class="bg-gray-200 backdrop-blur-xs rounded-4xl shadow-xl p-2 h-auto mt-12 mb-6 w-3xs" data-aos="fade-up">
+      <h2 class="font-['Rajdhani'] p-6 text-3xl text-center md:text-3xl sm:text-2xl font-bold tracking-tight leading-tight text-black">
+        COMING SOON!
+      </h2>
+    </div>
+  </div>
+</div>
+-->
+
+{% endblock %}
+
+{% block extra_js %}
+<!-- AOS (Animate On Scroll) Initialization -->
 <script src="https://unpkg.com/aos@2.3.4/dist/aos.js"></script>
 <script>
-  AOS.init({ duration: 600, easing: 'ease-out', once: true });
+  AOS.init({
+    duration: 600,
+    easing: 'ease-out',
+    once: true
+  });
 </script>
-
-<div class="grid grid-cols-1 items-center justify-center mb-32">
-<div class="group relative">
-  <p class="font-['Manrope'] w-md text-5xl md:text-5xl sm:text-2xl leading-relaxed text-white ml-auto text-right mb-16" data-aos="fade-left">Our collection is about more than clothes.</p>
-  </div>
-</p>
-</div>
-<p class="font-['Manrope'] text-5xl leading-relaxed text-white text-center mb-32" data-aos="fade-up">It’s about creating a blueprint.</p>
-  <div class="group relative">
-  <h2 data-aos="fade-in" class="font-['Manrope'] text-even leading-tight ml-16 text-9xl md:text-9xl sm:text-4xl text-white justify-left font-bold mb-32">Follow your Path.</h2>
-  </div>
-</section>
-
-</div>
-<!--
-<div class="group relative">
-<div class="flex flex-col items-center">
-<h2 class="font-['Manrope'] text-6xl text-center md:text-7xl sm:text-6xl font-bold w-md h-max tracking-tight leading-tight text-white mb-16">Signup for 20% off your first order.</h2>
-</div>
-<div class="flex flex-col items-center">
-<div class="bg-gray-200 backdrop-blur-xs rounded-4xl shadow-xl p-2 h-auto mt-12 mb-6 w-3xs" data-aos="fade-up">
-<h2 class="font-['Rajdhani'] p-6 text-3xl text-center md:text-3xl sm:text-2xl font-bold tracking-tight leading-tight text-black">COMING SOON!</h2>
-</div>
-</div>
-</div>
--->
-
-
-  <div class="mx-auto max-w-2xl px-4 py-16 sm:px-6 sm:py-24 lg:max-w-7xl lg:px-8 items-center bg-white rounded-3xl">
-      <div class="rounded-xl shadow-xl p-20 h-auto mt-12 mb-24" data-aos="fade-up">
-        <h2 class="font-['Playfair_Display'] text-5xl md:text-5xl sm:text-3xl text-black font-bold mb-10">Join the Blueprint Community</h2>
-        <p class="text-black-500 text-2xl mb-20">Get early access to the Foundation/Fall drop, latest deals, and our Discord channel.</p>
-	<form action="{% url 'subscribe' %}" method="POST" class="flex flex-col sm:flex-row gap-3">
-          {% csrf_token %}
-          <input type="email" name="email" placeholder="Enter your email"
-                 class="flex-1 px-4 py-2 rounded-md border text-xl text-black border-black">
-          <button type="submit"
-                  class="px-6 py-2 rounded-md bg-gray-600 text-white font-semibold hover:bg-indigo-500">
-            Sign Up
-          </button>
-        </form>
-      </div>
-
-<div>
-  <i class="devicon-discord"></i>
-
-
-
-<div class="flex justify-center mx-12 mb-12">
-<!--<div class="bg-stone-200 shadow-xl w-xl p-24 rounded-4xl" data-aos="zoom-in">-->
-	<p class="font-['Vogue'] text-3xl text-black md:text-3xl w-xl leading-relaxed sm:text-xl">In our debut collection, we draw inspiration from Japanese gardens — balanced, intentional, and built with purpose — relating back to our Chicago roots, we channel that into clean, versatile pieces designed to move wherever life takes you. <br><br>Whether you’re chasing goals, finding your rhythm, or carving out your own identity, Blueprint Apparel reflects your focus, discipline, and individuality. <br><br>This isn’t about following trends — it’s about following your path.
-  </p>
-</div>
-
-<img class="rounded-4xl mb-32" src={% static 'images/web.png' %}/>
-
-<div class="flex mx-12 mb-12 justify-center">
-<div class="w-xl rounded-3xl" data-aos="zoom-in"><p class="font-['Rajdhani'] text-3xl text-black md:text-3xl w-xl leading-relaxed sm:text-xl">This first released was partly inspired by the design of the tiger in classical Korean art. This is something we pay homage to as a prominent feature of the collection to instill courage and hope for the future.<br><br>Come back soon for an official release date/time, but in the meantime, subscribe to our email list for new deals and arrivals or join us on our moderated Discord channel around design fundamentals and materials for lifestyle fashion.</p>
-</div>
-  </div></div></div>
-
-<!--
-  <div class="mt-24 grid grid-cols-1 gap-x-6 gap-y-10 sm:grid-cols-1 lg:grid-cols-2 mx-auto p-16">
-      <div class="group relative shadow-xl rounded-3xl">
-	      <img src="{% static 'images/white_bg_top.png' %}" alt="Front of men&#039;s Basic Tee in black." class="aspect-square w-lg rounded-md bg-gray-200 object-cover group-hover:opacity-75 lg:aspect-auto lg:h-160 blur-xl shadow-xl mb-24" />
-      </div>
-      <div class="group relative shadow-xl rounded-3xl">
-	      <img src="{% static 'images/white_bg_bottom.png' %}" alt="Front of men&#039;s Basic Tee in black." class="aspect-square w-lg rounded-md bg-gray-200 object-cover group-hover:opacity-75 lg:aspect-auto lg:h-160 shadow-xl blur-xl mb-24" />
-      </div>
-    </div>
-  <p class="font-['Manrope'] text-3xl text-black md:text-3xl w-xl leading-relaxed sm:text-xl">Coming soon... Sign up to get 10% off your first order.
-</div>
--->
-<!--</section>-->
-<!--
-<section
-  class="relative w-full min-h-screen bg-cover bg-center bg-no-repeat py-24"
-  style="background-image: url('{% static 'images/blueprint_bg1.png' %}');"
->
--->
-<!--
-  <div class="items-center">
-  <div class="mt-24 grid grid-cols-1 gap-x-6 gap-y-10 sm:grid-cols-1 lg:grid-cols-2 mx-auto p-16">
-      <div class="group relative">
-	      <img src="{% static 'images/white_bg_top.png' %}" alt="Front of men&#039;s Basic Tee in black." class="aspect-square w-lg rounded-md bg-gray-200 object-cover group-hover:opacity-75 lg:aspect-auto lg:h-160 blur-xl mb-24" />
-      </div>
-      <div class="group relative">
-	      <img src="{% static 'images/white_bg_bottom.png' %}" alt="Front of men&#039;s Basic Tee in black." class="aspect-square w-lg rounded-md bg-gray-200 object-cover group-hover:opacity-75 lg:aspect-auto lg:h-160 blur-xl mb-24" />
-      </div>
-    </div>
-  </div>
-  </div>
-</div>
--->
-<!--
-<section
-  class="relative w-full bg-cover bg-center bg-no-repeat py-12"
-  style="background-image: url('{% static 'images/blueprint_bg1.png' %}');"
->
--->
-<!--
-<div class="grid grid-cols-1 md:grid-cols-1 sm:grid relative z-10 sm:flex-row items-start items-center gap-8">
-  <div class="flex h-full justify-center mx-12 items-center">
-  <div class="group relative">
-    <div class="bg-white aspect-square rounded-3xl">
-    {% include 'partials/insta.html' %}
-    </div>
-  </div>
-  <div class="group relative">
-	    <h2 class="font-['Manrope'] leading-relaxed text-3xl text-semibold text-white">The FOUNDATION line</h2>
-  <div class="w-xl p-24 mb-24" data-aos="zoom-in">
-    <div class="flex justify-center">
-	    <p class="font-['Manrope'] leading-relaxed text-2xl text-semibold text-white">Inspired by:<br><br>&mdash; Quiet discipline and flowing harmony: every stone and every line serves a purpose.<br><br>&mdash; A map of balance for your lifestyle: blending clean design with modern utility.</p>
-    </div>
-    </div>
-  </div>
-  </div>
-</div>
--->
-<section class="bg-cover" style="background-color:#0d0d0d; padding:6rem 8rem; display:flex; justify-content:center; align-items:flex-start; gap:6rem; background-image: url('{% static 'images/blueprint_bg1.png' %}');">
-<div class="grid grid-cols-1 items-center justify-center mb-32">
-<div class="group relative">
-  <!--
-  <div class="grid grid-cols-2 md:grid-cols-2 sm:grid-cols-1 relative z-10 sm:flex-row items-start items-center gap-8">
-  <div class="flex h-full justify-center mx-12 items-center">
-  -->
-  <div class="group relative">
-  <div style="flex:1; max-width:40%;">
-    {% include 'partials/insta.html' %}
-    <p style="color:#bfbfbf; font-size:0.9rem; margin-top:1rem;">View on Instagram →</p>
-  </div>
-
-  <div class="group relative">
-  <div style="flex:1; color:#faf9f6;">
-    <h2 style="font-family:serif; font-size:2.75rem; letter-spacing:0.05em; margin-bottom:1rem;">The FOUNDATION line's</h2>
-    <p style="color:#bfbfbf; margin-bottom:2rem; font-size:2rem">Design elements:</p>
-
-    <p style="line-height:1.8; margin-bottom:1.5rem; font-size:1.5rem">
-      — Quiet discipline and flowing harmony: every stone and every line serves a purpose.
-    </p>
-    <p style="line-height:1.8; font-size:1.5rem">
-      — A map of balance for your lifestyle: blending clean design with a modern aesthetic.
-    </p>
-  </div>
-</section>
-
-
-</section>
-
 {% endblock %}

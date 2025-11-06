@@ -1,7 +1,37 @@
-venv
-db.sqlite3
-__pycache__/
-.env
-*.py[cod]
+# Virtual Environments
+venv/
+.venv/
+env/
 
-migrations/
+# Database
+db.sqlite3
+*.sqlite3
+
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.Python
+
+# Django
+.env
+staticfiles/
+media/
+*.log
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Migrations (keep structure but ignore generated files)
+# migrations/
+
+# Documentation (don't ignore, we want to track these)
+# !docs/

@@ -1,0 +1,25 @@
+services:
+  - type: web
+    name: blueprint-apparel
+    env: python
+    region: oregon
+    plan: free
+    buildCommand: "./build.sh"
+    startCommand: "gunicorn online_shop.wsgi:application"
+    envVars:
+      - key: DJANGO_SETTINGS_MODULE
+        value: online_shop.settings.production
+      - key: PYTHON_VERSION
+        value: 3.8.0
+      - key: SECRET_KEY
+        generateValue: true
+      - key: DEBUG
+        value: False
+      # Note: Add these manually in Render dashboard for security
+      # - STRIPE_SECRET_KEY
+      # - STRIPE_PUBLISHABLE_KEY
+      # - EMAIL_HOST
+      # - EMAIL_PORT
+      # - EMAIL_USE_TLS
+      # - EMAIL_HOST_USER
+      # - EMAIL_HOST_PASSWORD

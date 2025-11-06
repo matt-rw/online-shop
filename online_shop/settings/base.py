@@ -66,7 +66,7 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
-    "django_browser_reload",
+    # "django_browser_reload",
 ]
 
 MIDDLEWARE = [
@@ -78,7 +78,7 @@ MIDDLEWARE = [
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
     "django.middleware.security.SecurityMiddleware",
     "wagtail.contrib.redirects.middleware.RedirectMiddleware",
-    "django_browser_reload.middleware.BrowserReloadMiddleware",
+    # "django_browser_reload.middleware.BrowserReloadMiddleware",
 ]
 
 ROOT_URLCONF = "online_shop.urls"
@@ -218,7 +218,7 @@ STRIPE_SECRET_KEY = get_env_variable('STRIPE_SECRET_KEY')
 STRIPE_PUBLISHABLE_KEY = get_env_variable('STRIPE_PUBLISHABLE_KEY')
 
 # EMAIL
-EMAIL_BACKEND = 'django.core.mail.backends.stmp.EmailBackend'
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 EMAIL_HOST = get_env_variable('EMAIL_HOST')
 EMAIL_PORT = int(get_env_variable('EMAIL_PORT', 587))
 EMAIL_USE_TLS = get_env_variable('EMAIL_USE_TLS', 'True') == 'True'

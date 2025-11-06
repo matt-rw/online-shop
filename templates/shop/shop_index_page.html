@@ -1,15 +1,41 @@
-{% extends "base.html" %} {% load wagtailcore_tags %} {% block content %}
-<h1>{{ page.title }}</h1>
-<div class="intro">{{ page.intro|richtext }}</div>
+{% extends "base.html" %}
+{% load wagtailcore_tags %}
 
-<div class="product-grid">
-  {% for child in page.get_children.live %} {% with product=child.specific %}
-  <div class="product">
-    <a href="{{ product.url }}">
-      <h2>{{ product.title }}</h2>
-      <p>${{ product.price }}</p>
-    </a>
+{% block content %}
+<div class="container mx-auto px-4 py-16 pt-24">
+  <!-- Page Header -->
+  <div class="text-center mb-12">
+    <h1 class="text-5xl font-bold text-gray-900 mb-4">{{ page.title }}</h1>
+    {% if page.intro %}
+      <div class="text-xl text-gray-600 max-w-3xl mx-auto">
+        {{ page.intro|richtext }}
+      </div>
+    {% endif %}
   </div>
-  {% endwith %} {% endfor %}
+
+  <!-- Product Grid -->
+  <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
+    {% for child in page.get_children.live %}
+      {% with product=child.specific %}
+        <div class="product-card bg-white rounded-xl shadow-lg overflow-hidden hover:shadow-2xl hover:scale-105 transition-all duration-300">
+          <a href="{{ product.url }}" class="block">
+            <!-- TODO: Add product image here when available -->
+            <div class="aspect-square bg-gray-200 flex items-center justify-center">
+              <span class="text-gray-400">No Image</span>
+            </div>
+
+            <div class="p-6">
+              <h2 class="text-xl font-semibold text-gray-900 mb-2">{{ product.title }}</h2>
+              <p class="text-2xl font-bold text-gray-900">${{ product.price }}</p>
+            </div>
+          </a>
+        </div>
+      {% endwith %}
+    {% empty %}
+      <div class="col-span-full text-center py-12">
+        <p class="text-gray-600 text-lg">No products available yet. Check back soon!</p>
+      </div>
+    {% endfor %}
+  </div>
 </div>
 {% endblock %}
