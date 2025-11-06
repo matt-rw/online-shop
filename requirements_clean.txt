@@ -23,6 +23,7 @@ djangorestframework
 draftjs_exporter
 et_xmlfile
 filetype
+gunicorn
 idna
 Jinja2
 laces
