@@ -10,7 +10,7 @@ services:
       - key: DJANGO_SETTINGS_MODULE
         value: online_shop.settings.production
       - key: PYTHON_VERSION
-        value: 3.8.0
+        value: 3.11
       - key: SECRET_KEY
         generateValue: true
       - key: DEBUG
