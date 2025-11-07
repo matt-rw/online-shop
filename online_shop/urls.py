@@ -11,7 +11,8 @@ urlpatterns = [
     path("django-admin/", admin.site.urls),
     path("admin/", include(wagtailadmin_urls)),
     path("documents/", include(wagtaildocs_urls)),
-    path("shop", include('shop.urls')),
+    path("accounts/", include("allauth.urls")),  # django-allauth URLs
+    path("shop/", include('shop.urls')),
     path("search/", search_views.search, name="search"),
 ]
 

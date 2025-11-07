@@ -1,0 +1,80 @@
+################################################################################
+# Docker Compose - Local Development Environment
+################################################################################
+# This file sets up a complete local development environment with:
+# - PostgreSQL database (matches production)
+# - Django/Wagtail application
+# - Persistent volumes for data
+#
+# Usage:
+#   docker-compose up        # Start all services
+#   docker-compose down      # Stop all services
+#   docker-compose logs -f   # View logs
+#
+# Access:
+#   Application: http://localhost:8000
+#   PostgreSQL:  localhost:5432
+################################################################################
+
+version: '3.8'
+
+services:
+  # PostgreSQL Database
+  db:
+    image: postgres:15-alpine
+    container_name: blueprint-db
+    environment:
+      POSTGRES_DB: online_shop
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Django/Wagtail Application
+  web:
+    build: .
+    container_name: blueprint-web
+    command: >
+      sh -c "python manage.py migrate &&
+             python manage.py runserver 0.0.0.0:8000"
+    environment:
+      # Django Settings
+      DJANGO_SETTINGS_MODULE: online_shop.settings.dev
+      DEBUG: "True"
+
+      # Database (PostgreSQL instead of SQLite)
+      DATABASE_URL: postgres://postgres:postgres@db:5432/online_shop
+
+      # Stripe (Test Keys)
+      STRIPE_SECRET_KEY: sk_test_your_test_key_here
+      STRIPE_PUBLISHABLE_KEY: pk_test_your_test_key_here
+
+      # Email (Console backend for dev)
+      EMAIL_HOST: smtp.gmail.com
+      EMAIL_PORT: 587
+      EMAIL_USE_TLS: "True"
+      EMAIL_HOST_USER: your-email@gmail.com
+      EMAIL_HOST_PASSWORD: your-app-password
+    volumes:
+      - .:/app
+      - static_volume:/app/staticfiles
+      - media_volume:/app/media
+    ports:
+      - "8000:8000"
+    depends_on:
+      db:
+        condition: service_healthy
+    stdin_open: true
+    tty: true
+
+volumes:
+  postgres_data:
+  static_volume:
+  media_volume:

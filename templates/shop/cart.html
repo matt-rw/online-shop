@@ -1,0 +1,101 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Shopping Cart - Blueprint Apparel{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-12">
+    <h1 class="text-4xl font-bold mb-8">Shopping Cart</h1>
+
+    {% if cart_items %}
+        <div class="grid lg:grid-cols-3 gap-8">
+            <!-- Cart Items -->
+            <div class="lg:col-span-2">
+                {% for item in cart_items %}
+                <div class="bg-white p-6 rounded-lg shadow mb-4 flex items-center gap-6">
+                    <!-- Product Image Placeholder -->
+                    <div class="w-24 h-24 bg-gray-200 rounded flex-shrink-0"></div>
+
+                    <!-- Product Info -->
+                    <div class="flex-grow">
+                        <h3 class="font-bold text-lg">{{ item.variant.product.name }}</h3>
+                        <p class="text-gray-600">
+                            Size: {{ item.variant.size }} | Color: {{ item.variant.color }}
+                        </p>
+                        <p class="text-lg font-semibold mt-2">${{ item.variant.price }}</p>
+                    </div>
+
+                    <!-- Quantity Controls -->
+                    <div class="flex items-center gap-2">
+                        <form method="post" action="{% url 'shop:update_cart_item' item.id %}" class="inline">
+                            {% csrf_token %}
+                            <input type="hidden" name="quantity" value="{{ item.quantity|add:'-1' }}">
+                            <button type="submit" class="px-3 py-1 bg-gray-200 hover:bg-gray-300 rounded">-</button>
+                        </form>
+
+                        <span class="px-4 py-1 bg-gray-100 rounded">{{ item.quantity }}</span>
+
+                        <form method="post" action="{% url 'shop:update_cart_item' item.id %}" class="inline">
+                            {% csrf_token %}
+                            <input type="hidden" name="quantity" value="{{ item.quantity|add:'1' }}">
+                            <button type="submit" class="px-3 py-1 bg-gray-200 hover:bg-gray-300 rounded">+</button>
+                        </form>
+                    </div>
+
+                    <!-- Remove Button -->
+                    <form method="post" action="{% url 'shop:remove_from_cart' item.id %}">
+                        {% csrf_token %}
+                        <button type="submit" class="text-red-600 hover:text-red-800">
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                            </svg>
+                        </button>
+                    </form>
+                </div>
+                {% endfor %}
+            </div>
+
+            <!-- Order Summary -->
+            <div class="lg:col-span-1">
+                <div class="bg-white p-6 rounded-lg shadow sticky top-4">
+                    <h2 class="text-2xl font-bold mb-4">Order Summary</h2>
+
+                    <div class="space-y-2 mb-4">
+                        <div class="flex justify-between">
+                            <span>Subtotal:</span>
+                            <span>${{ subtotal }}</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span>Shipping:</span>
+                            <span>{% if shipping > 0 %}${{ shipping }}{% else %}FREE{% endif %}</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span>Tax:</span>
+                            <span>${{ tax }}</span>
+                        </div>
+                        <div class="border-t pt-2 flex justify-between font-bold text-lg">
+                            <span>Total:</span>
+                            <span>${{ total }}</span>
+                        </div>
+                    </div>
+
+                    <a href="{% url 'shop:checkout' %}" class="block w-full bg-black text-white text-center py-3 rounded hover:bg-gray-800 transition">
+                        Proceed to Checkout
+                    </a>
+
+                    <a href="/" class="block text-center mt-4 text-gray-600 hover:text-black">
+                        Continue Shopping
+                    </a>
+                </div>
+            </div>
+        </div>
+    {% else %}
+        <div class="text-center py-12">
+            <p class="text-xl text-gray-600 mb-6">Your cart is empty</p>
+            <a href="/" class="inline-block bg-black text-white px-8 py-3 rounded hover:bg-gray-800 transition">
+                Start Shopping
+            </a>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}

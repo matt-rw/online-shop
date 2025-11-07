@@ -1,3 +1,15 @@
+################################################################################
+# DOCKERFILE - Alternative Deployment Option
+################################################################################
+# NOTE: This Dockerfile is NOT currently used for production deployment.
+# Production uses native Python deployment on Render (see build.sh and render.yaml).
+#
+# This file is provided for:
+# - Alternative deployment platforms (AWS ECS, Google Cloud Run, etc.)
+# - Local development with docker-compose (see docker-compose.yml)
+# - Containerized deployment if needed in the future
+################################################################################
+
 # Use an official Python runtime based on Debian 12 "bookworm" as a parent image.
 FROM python:3.12-slim-bookworm
 

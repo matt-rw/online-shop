@@ -10,6 +10,7 @@ click
 cookiecutter
 defusedxml
 Django
+django-allauth
 django-browser-reload
 django-filter
 django-modelcluster

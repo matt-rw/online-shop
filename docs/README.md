@@ -10,6 +10,7 @@ This directory contains all documentation for the Blueprint Apparel online shop 
 - **[DEPLOYMENT_CHECKLIST.md](DEPLOYMENT_CHECKLIST.md)** - Pre-deployment checklist and quick reference
 
 ### Development & Templates
+- **[DOCKER_SETUP.md](DOCKER_SETUP.md)** - Docker setup for local development with PostgreSQL
 - **[TEMPLATE_CLEANUP_SUMMARY.md](TEMPLATE_CLEANUP_SUMMARY.md)** - Summary of HTML template cleanup work
 - **[DEVELOPMENT_SETUP.md](DEVELOPMENT_SETUP.md)** - Local development environment setup *(coming soon)*
 - **[TEMPLATE_GUIDE.md](TEMPLATE_GUIDE.md)** - HTML/CSS/Tailwind template documentation *(coming soon)*

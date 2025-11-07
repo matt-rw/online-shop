@@ -66,6 +66,14 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
+    "django.contrib.sites",  # Required by allauth
+    # django-allauth
+    "allauth",
+    "allauth.account",
+    "allauth.socialaccount",
+    # Optional social providers (uncomment as needed)
+    # "allauth.socialaccount.providers.google",
+    # "allauth.socialaccount.providers.facebook",
     # "django_browser_reload",
 ]
 
@@ -77,6 +85,7 @@ MIDDLEWARE = [
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
     "django.middleware.security.SecurityMiddleware",
+    "allauth.account.middleware.AccountMiddleware",  # Required by allauth
     "wagtail.contrib.redirects.middleware.RedirectMiddleware",
     # "django_browser_reload.middleware.BrowserReloadMiddleware",
 ]
@@ -97,6 +106,7 @@ TEMPLATES = [
                 "django.template.context_processors.request",
                 "django.contrib.auth.context_processors.auth",
                 "django.contrib.messages.context_processors.messages",
+                "shop.context_processors.cart_context",  # Cart info in all templates
             ],
         },
     },
@@ -225,3 +235,31 @@ EMAIL_USE_TLS = get_env_variable('EMAIL_USE_TLS', 'True') == 'True'
 EMAIL_HOST_USER = get_env_variable('EMAIL_HOST_USER')
 EMAIL_HOST_PASSWORD = get_env_variable('EMAIL_HOST_PASSWORD')
 DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
+
+# DJANGO-ALLAUTH CONFIGURATION
+SITE_ID = 1  # Required by django.contrib.sites
+
+AUTHENTICATION_BACKENDS = [
+    # Django default (needed for admin)
+    'django.contrib.auth.backends.ModelBackend',
+    # Allauth specific authentication methods
+    'allauth.account.auth_backends.AuthenticationBackend',
+]
+
+# Allauth settings
+ACCOUNT_LOGIN_METHODS = {'email'}  # Use email instead of username
+ACCOUNT_SIGNUP_FIELDS = ['email*', 'password1*', 'password2*']  # Required signup fields
+ACCOUNT_UNIQUE_EMAIL = True
+ACCOUNT_EMAIL_VERIFICATION = 'mandatory'  # Require email verification
+ACCOUNT_LOGIN_ON_EMAIL_CONFIRMATION = True
+ACCOUNT_CONFIRM_EMAIL_ON_GET = True
+ACCOUNT_EMAIL_CONFIRMATION_EXPIRE_DAYS = 3
+ACCOUNT_LOGIN_ON_PASSWORD_RESET = True
+
+# Redirect URLs
+LOGIN_REDIRECT_URL = '/'
+ACCOUNT_LOGOUT_REDIRECT_URL = '/'
+ACCOUNT_SIGNUP_REDIRECT_URL = '/'
+
+# Session settings
+ACCOUNT_SESSION_REMEMBER = True  # Remember me by default
