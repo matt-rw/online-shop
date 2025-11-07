@@ -106,7 +106,7 @@
     </p>
 
     <!-- Email Signup Form -->
-    <form action="{% url 'subscribe' %}" method="POST" class="flex flex-col sm:flex-row gap-3">
+    <form action="{% url 'shop:subscribe' %}" method="POST" class="flex flex-col sm:flex-row gap-3">
       {% csrf_token %}
       <input
         type="email"
