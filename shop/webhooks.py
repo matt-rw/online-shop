@@ -38,17 +38,16 @@ def stripe_webhook(request):
             )
         else:
             # For development without webhook secret
-            event = stripe.Event.construct_from(
-                stripe.util.json.loads(payload), stripe.api_key
-            )
+            import json
+            event = json.loads(payload)
 
     except ValueError as e:
         # Invalid payload
         logger.error(f"Invalid webhook payload: {e}")
         return HttpResponse(status=400)
-    except stripe.error.SignatureVerificationError as e:
-        # Invalid signature
-        logger.error(f"Invalid webhook signature: {e}")
+    except Exception as e:
+        # Invalid signature or other errors
+        logger.error(f"Webhook error: {e}")
         return HttpResponse(status=400)
 
     # Handle the event

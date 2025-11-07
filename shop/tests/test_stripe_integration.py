@@ -4,7 +4,7 @@ Tests for Stripe integration and webhook handling.
 import json
 from decimal import Decimal
 from unittest.mock import patch, Mock
-from django.test import TestCase, Client
+from django.test import TestCase, Client, override_settings
 from django.urls import reverse
 from django.contrib.auth import get_user_model
 
@@ -183,6 +183,7 @@ class StripeWebhookTestCase(TestCase):
             stripe_payment_intent_id='pi_test_456'
         )
 
+    @override_settings(STRIPE_WEBHOOK_SECRET='test_secret')
     @patch('shop.webhooks.stripe.Webhook.construct_event')
     def test_webhook_checkout_session_completed(self, mock_construct_event):
         """Test handling checkout.session.completed webhook."""
@@ -214,6 +215,7 @@ class StripeWebhookTestCase(TestCase):
         self.order.refresh_from_db()
         self.assertEqual(self.order.status, OrderStatus.PAID)
 
+    @override_settings(STRIPE_WEBHOOK_SECRET='test_secret')
     @patch('shop.webhooks.stripe.Webhook.construct_event')
     def test_webhook_payment_intent_succeeded(self, mock_construct_event):
         """Test handling payment_intent.succeeded webhook."""
@@ -238,6 +240,7 @@ class StripeWebhookTestCase(TestCase):
         self.order.refresh_from_db()
         self.assertEqual(self.order.status, OrderStatus.PAID)
 
+    @override_settings(STRIPE_WEBHOOK_SECRET='test_secret')
     @patch('shop.webhooks.stripe.Webhook.construct_event')
     def test_webhook_payment_intent_failed(self, mock_construct_event):
         """Test handling payment_intent.payment_failed webhook."""
@@ -275,6 +278,7 @@ class StripeWebhookTestCase(TestCase):
         # (Actual behavior depends on STRIPE_WEBHOOK_SECRET setting)
         self.assertIn(response.status_code, [200, 400])
 
+    @override_settings(STRIPE_WEBHOOK_SECRET='test_secret')
     @patch('shop.webhooks.stripe.Webhook.construct_event')
     def test_webhook_order_not_found(self, mock_construct_event):
         """Test webhook for non-existent order."""
