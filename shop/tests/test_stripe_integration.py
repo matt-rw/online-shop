@@ -12,6 +12,7 @@ from shop.models import (
     Cart, CartItem, Product, ProductVariant, Size, Color,
     Order, OrderStatus, OrderItem
 )
+from .test_helpers import create_test_user
 
 User = get_user_model()
 
@@ -24,10 +25,7 @@ class StripeIntegrationTestCase(TestCase):
         self.client = Client()
 
         # Create test user
-        self.user = User.objects.create_user(
-            email='test@example.com',
-            password='testpass123'
-        )
+        self.user = create_test_user()
 
         # Create test products
         self.product = Product.objects.create(
@@ -171,10 +169,7 @@ class StripeWebhookTestCase(TestCase):
         self.client = Client()
 
         # Create test order
-        self.user = User.objects.create_user(
-            email='test@example.com',
-            password='testpass123'
-        )
+        self.user = create_test_user()
 
         self.order = Order.objects.create(
             user=self.user,

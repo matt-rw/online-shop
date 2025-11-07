@@ -5,6 +5,7 @@ from django.test import TestCase
 from django.contrib.auth import get_user_model
 
 from shop.models import UserProfile, SavedAddress
+from .test_helpers import create_test_user
 
 User = get_user_model()
 
@@ -14,10 +15,7 @@ class UserProfileTestCase(TestCase):
 
     def test_user_profile_created_on_user_creation(self):
         """Test that UserProfile is automatically created when User is created."""
-        user = User.objects.create_user(
-            email='test@example.com',
-            password='testpass123'
-        )
+        user = create_test_user()
 
         # Profile should exist
         self.assertTrue(hasattr(user, 'profile'))
@@ -25,10 +23,7 @@ class UserProfileTestCase(TestCase):
 
     def test_user_profile_fields(self):
         """Test UserProfile fields."""
-        user = User.objects.create_user(
-            email='test@example.com',
-            password='testpass123'
-        )
+        user = create_test_user()
 
         profile = user.profile
         profile.phone_number = '555-1234'
@@ -43,10 +38,7 @@ class UserProfileTestCase(TestCase):
 
     def test_user_profile_str(self):
         """Test UserProfile string representation."""
-        user = User.objects.create_user(
-            email='test@example.com',
-            password='testpass123'
-        )
+        user = create_test_user()
 
         profile_str = str(user.profile)
         self.assertIn('test@example.com', profile_str)
@@ -57,10 +49,7 @@ class SavedAddressTestCase(TestCase):
 
     def setUp(self):
         """Set up test data."""
-        self.user = User.objects.create_user(
-            email='test@example.com',
-            password='testpass123'
-        )
+        self.user = create_test_user()
 
     def test_create_saved_address(self):
         """Test creating a saved address."""

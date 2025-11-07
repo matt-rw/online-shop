@@ -17,6 +17,7 @@ from shop.cart_utils import (
     merge_carts,
     clear_cart
 )
+from .test_helpers import create_test_user
 
 User = get_user_model()
 
@@ -29,10 +30,7 @@ class CartUtilsTestCase(TestCase):
         self.factory = RequestFactory()
 
         # Create test user
-        self.user = User.objects.create_user(
-            email='test@example.com',
-            password='testpass123'
-        )
+        self.user = create_test_user()
 
         # Create test products
         self.product = Product.objects.create(

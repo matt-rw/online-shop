@@ -7,6 +7,7 @@ from django.urls import reverse
 from django.contrib.auth import get_user_model
 
 from shop.models import Cart, CartItem, Product, ProductVariant, Size, Color
+from .test_helpers import create_test_user
 
 User = get_user_model()
 
@@ -19,10 +20,7 @@ class CartViewsTestCase(TestCase):
         self.client = Client()
 
         # Create test user
-        self.user = User.objects.create_user(
-            email='test@example.com',
-            password='testpass123'
-        )
+        self.user = create_test_user()
 
         # Create test products
         self.product = Product.objects.create(
@@ -250,10 +248,7 @@ class CartViewsTestCase(TestCase):
         self.client.logout()
 
         # User 2 tries to update User 1's cart item
-        user2 = User.objects.create_user(
-            email='test2@example.com',
-            password='testpass123'
-        )
+        user2 = create_test_user(email='test2@example.com')
         self.client.login(email='test2@example.com', password='testpass123')
 
         response = self.client.post(

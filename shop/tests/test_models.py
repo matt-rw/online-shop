@@ -10,6 +10,7 @@ from shop.models import (
     Cart, CartItem,
     Order, OrderItem, OrderStatus, Address
 )
+from .test_helpers import create_test_user
 
 User = get_user_model()
 
@@ -112,10 +113,7 @@ class CartModelTestCase(TestCase):
 
     def setUp(self):
         """Set up test data."""
-        self.user = User.objects.create_user(
-            email='test@example.com',
-            password='testpass123'
-        )
+        self.user = create_test_user()
 
         self.product = Product.objects.create(
             name='Test T-Shirt',
@@ -181,10 +179,7 @@ class OrderModelTestCase(TestCase):
 
     def setUp(self):
         """Set up test data."""
-        self.user = User.objects.create_user(
-            email='test@example.com',
-            password='testpass123'
-        )
+        self.user = create_test_user()
 
         self.product = Product.objects.create(
             name='Test T-Shirt',
