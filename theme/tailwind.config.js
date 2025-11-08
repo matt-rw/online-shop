@@ -4,12 +4,9 @@ module.exports = {
   theme: {
     extend: {
       fontFamily: {
-        vogue: ['Vogue', 'serif'], // fallback serif
+        sans: ['Manrope', 'system-ui', '-apple-system', 'sans-serif'],
       },
     },
-  },
-  plugins: [],
-}
   },
   variants: {
     extend: {},

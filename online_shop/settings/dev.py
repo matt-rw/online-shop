@@ -4,7 +4,7 @@ from .base import *
 DEBUG = True
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = "django-insecure-8gpylib_d)h$q7mk&m4=sqe9*mpkt@ptq7^k2q$=%0nsfx$%kc"
+SECRET_KEY = get_env_variable('SECRET_KEY', 'django-insecure-dev-fallback-key-change-in-env-file')
 
 # SECURITY WARNING: define the correct hosts in production!
 ALLOWED_HOSTS = ["*"]

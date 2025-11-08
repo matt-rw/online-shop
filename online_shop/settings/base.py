@@ -211,7 +211,7 @@ WAGTAILSEARCH_BACKENDS = {
 
 # Base URL to use when referring to full URLs within the Wagtail admin backend -
 # e.g. in notification emails. Don't include '/admin' or a trailing slash
-WAGTAILADMIN_BASE_URL = "http://example.com"
+WAGTAILADMIN_BASE_URL = get_env_variable('WAGTAILADMIN_BASE_URL', 'http://localhost:8000')
 
 # Allowed file extensions for documents in the document library.
 # This can be omitted to allow all files, but note that this may present a security risk
@@ -226,15 +226,17 @@ TAILWIND_APP_NAME = "theme"
 # STRIPE
 STRIPE_SECRET_KEY = get_env_variable('STRIPE_SECRET_KEY')
 STRIPE_PUBLISHABLE_KEY = get_env_variable('STRIPE_PUBLISHABLE_KEY')
+STRIPE_WEBHOOK_SECRET = get_env_variable('STRIPE_WEBHOOK_SECRET', None)
 
 # EMAIL
+# These settings can be overridden in dev.py or production.py
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
-EMAIL_HOST = get_env_variable('EMAIL_HOST')
+EMAIL_HOST = get_env_variable('EMAIL_HOST', 'smtp.gmail.com')
 EMAIL_PORT = int(get_env_variable('EMAIL_PORT', 587))
 EMAIL_USE_TLS = get_env_variable('EMAIL_USE_TLS', 'True') == 'True'
-EMAIL_HOST_USER = get_env_variable('EMAIL_HOST_USER')
-EMAIL_HOST_PASSWORD = get_env_variable('EMAIL_HOST_PASSWORD')
-DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
+EMAIL_HOST_USER = get_env_variable('EMAIL_HOST_USER', '')
+EMAIL_HOST_PASSWORD = get_env_variable('EMAIL_HOST_PASSWORD', '')
+DEFAULT_FROM_EMAIL = get_env_variable('DEFAULT_FROM_EMAIL', EMAIL_HOST_USER or 'noreply@example.com')
 
 # DJANGO-ALLAUTH CONFIGURATION
 SITE_ID = 1  # Required by django.contrib.sites
@@ -263,3 +265,27 @@ ACCOUNT_SIGNUP_REDIRECT_URL = '/'
 
 # Session settings
 ACCOUNT_SESSION_REMEMBER = True  # Remember me by default
+
+# SECURITY HEADERS
+# Prevent clickjacking attacks by preventing your site from being embedded in iframes
+X_FRAME_OPTIONS = 'DENY'
+
+# Enable the browser's XSS filtering
+SECURE_BROWSER_XSS_FILTER = True
+
+# Prevent MIME type sniffing
+SECURE_CONTENT_TYPE_NOSNIFF = True
+
+# Make CSRF cookie httponly (not accessible via JavaScript)
+CSRF_COOKIE_HTTPONLY = True
+
+# Session cookie security
+SESSION_COOKIE_HTTPONLY = True  # Prevent JavaScript access to session cookie
+SESSION_COOKIE_SAMESITE = 'Lax'  # CSRF protection
+SESSION_COOKIE_AGE = 1209600  # 2 weeks in seconds
+
+# CSRF cookie security
+CSRF_COOKIE_SAMESITE = 'Lax'
+
+# Referrer policy - control how much information is sent in the Referer header
+SECURE_REFERRER_POLICY = 'strict-origin-when-cross-origin'
