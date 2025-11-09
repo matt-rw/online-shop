@@ -49,7 +49,7 @@ log_info "Python version: $(python --version)"
 log_info "Pip version: $(pip --version)"
 
 # Step 1: Install dependencies
-log_section "Step 1/4: Installing Python Dependencies"
+log_section "Step 1/3: Installing Python Dependencies"
 log_info "Installing packages from requirements.txt..."
 if pip install -r requirements.txt --no-cache-dir; then
     log_success "Dependencies installed successfully"
@@ -60,18 +60,8 @@ else
     exit 1
 fi
 
-# Step 2: Build Tailwind CSS
-log_section "Step 2/4: Building Tailwind CSS"
-log_info "Compiling Tailwind CSS..."
-if python manage.py tailwind build; then
-    log_success "Tailwind CSS compiled successfully"
-else
-    log_error "Failed to compile Tailwind CSS"
-    exit 1
-fi
-
-# Step 3: Collect static files
-log_section "Step 3/4: Collecting Static Files"
+# Step 2: Collect static files
+log_section "Step 2/3: Collecting Static Files"
 log_info "Running collectstatic..."
 if python manage.py collectstatic --no-input --clear; then
     log_success "Static files collected successfully"
@@ -87,8 +77,8 @@ else
     exit 1
 fi
 
-# Step 4: Run database migrations
-log_section "Step 4/4: Running Database Migrations"
+# Step 3: Run database migrations
+log_section "Step 3/3: Running Database Migrations"
 log_info "Checking for pending migrations..."
 if python manage.py migrate --no-input; then
     log_success "Database migrations completed successfully"
