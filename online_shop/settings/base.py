@@ -28,7 +28,7 @@ def get_env_variable(name, default=None):
     try:
         return os.environ[name]
     except KeyError:
-        if default:
+        if default is not None:
             return default
         raise ImproperlyConfigured(
             f'Missing required environment variable {name}'
