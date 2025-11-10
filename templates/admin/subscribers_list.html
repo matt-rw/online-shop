@@ -6,6 +6,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Subscribers & Users - Blueprint Apparel</title>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
   <style>
     * {
       margin: 0;
@@ -206,12 +207,13 @@
       background: #edf2f7;
     }
     .upload-btn {
-      padding: 0.75rem 2rem;
+      padding: 0.5rem 1.5rem;
       background: #667eea;
       color: white;
       border: none;
-      border-radius: 8px;
+      border-radius: 6px;
       font-weight: 600;
+      font-size: 0.875rem;
       cursor: pointer;
       transition: all 0.2s;
       box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
@@ -263,6 +265,41 @@
     .shake {
       animation: shake 0.5s;
     }
+    .period-selector {
+      display: flex;
+      gap: 0;
+      margin-bottom: 1.5rem;
+      justify-content: flex-end;
+    }
+    .period-btn {
+      padding: 0.65rem 1.2rem;
+      border: 1px solid #e2e8f0;
+      background: #f7fafc;
+      color: #4a5568;
+      border-right: none;
+      font-weight: 600;
+      font-size: 0.875rem;
+      cursor: pointer;
+      transition: all 0.2s;
+      text-decoration: none;
+    }
+    .period-btn:first-child {
+      border-radius: 8px 0 0 8px;
+    }
+    .period-btn:last-child {
+      border-radius: 0 8px 8px 0;
+      border-right: 1px solid #e2e8f0;
+    }
+    .period-btn:hover {
+      background: #edf2f7;
+      color: #667eea;
+    }
+    .period-btn.active {
+      background: #667eea;
+      color: white;
+      font-weight: 700;
+      border-color: #667eea;
+    }
     @media (max-width: 768px) {
       body {
         padding: 1rem;
@@ -280,10 +317,16 @@
   </style>
 </head>
 <body>
+  <!-- Server Time - Top Right Corner -->
+  <div style="position: fixed; top: 1rem; right: 1rem; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 0.75rem 1.25rem; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.2); z-index: 1000;">
+    <div style="color: rgba(255,255,255,0.8); font-size: 0.75rem; margin-bottom: 0.25rem; text-align: center;">Server Time</div>
+    <div style="color: white; font-size: 0.875rem; font-weight: 600; text-align: center;">{{ server_time|date:"M d, Y - g:i A" }}</div>
+  </div>
+
   <div class="container">
     <!-- Header -->
     <div class="header">
-      <h1>📊 Subscribers & Users Dashboard</h1>
+      <h1>Subscribers & Users Dashboard</h1>
       <p>Blueprint Apparel - Admin View</p>
     </div>
 
@@ -312,11 +355,66 @@
         <h3>Registered Users</h3>
         <div class="number">{{ total_users }}</div>
       </div>
+      <div class="stat-card" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border: none;">
+        <h3 style="color: white;">Last 7 Days (subs)</h3>
+        <div style="display: flex; align-items: center; gap: 1rem;">
+          <div class="number" style="color: white;">{{ last_7_days_signups }}</div>
+          {% if last_7_days_percent_change > 0 %}
+          <div style="background: rgba(255,255,255,0.2); padding: 0.4rem 0.75rem; border-radius: 20px; font-size: 0.875rem; font-weight: 700; color: white;">
+            ↑ {{ last_7_days_percent_change|floatformat:0 }}%
+          </div>
+          {% elif last_7_days_percent_change < 0 %}
+          <div style="background: rgba(255,255,255,0.2); padding: 0.4rem 0.75rem; border-radius: 20px; font-size: 0.875rem; font-weight: 700; color: white;">
+            ↓ {{ last_7_days_percent_change|floatformat:0|cut:"-" }}%
+          </div>
+          {% else %}
+          <div style="background: rgba(255,255,255,0.2); padding: 0.4rem 0.75rem; border-radius: 20px; font-size: 0.875rem; font-weight: 700; color: white;">
+            0%
+          </div>
+          {% endif %}
+        </div>
+        {% if last_7_days_signups_list %}
+        <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid rgba(255,255,255,0.2);">
+          {% for subscriber in last_7_days_signups_list %}
+          <div style="color: rgba(255,255,255,0.9); font-size: 0.875rem; padding: 0.25rem 0;">
+            {{ subscriber.email }}
+          </div>
+          {% endfor %}
+        </div>
+        {% endif %}
+      </div>
+    </div>
+
+    <!-- Subscriber Growth Chart -->
+    <div class="section">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem;">
+        <h2 style="margin: 0;">Subscriber Growth</h2>
+        <div class="period-selector">
+          <a href="?period=7" class="period-btn {% if selected_period == '7' %}active{% endif %}">7 Days</a>
+          <a href="?period=30" class="period-btn {% if selected_period == '30' or not selected_period %}active{% endif %}">30 Days</a>
+          <a href="?period=90" class="period-btn {% if selected_period == '90' %}active{% endif %}">90 Days</a>
+          <a href="?period=weekly" class="period-btn {% if selected_period == 'weekly' %}active{% endif %}">Weekly</a>
+          <a href="?period=monthly" class="period-btn {% if selected_period == 'monthly' %}active{% endif %}">Monthly</a>
+        </div>
+      </div>
+      <div style="position: relative; height: 300px;">
+        <canvas id="subscriberChart"></canvas>
+      </div>
+      {% if selected_period == 'weekly' %}
+      <p style="text-align: center; color: #718096; font-size: 0.875rem; margin-top: 1rem; font-style: italic;">
+        Weekly (every Sunday)
+      </p>
+      {% endif %}
+      {% if selected_period == 'monthly' %}
+      <p style="text-align: center; color: #718096; font-size: 0.875rem; margin-top: 1rem; font-style: italic;">
+        Monthly (1st of each month)
+      </p>
+      {% endif %}
     </div>
 
     <!-- Email Subscribers -->
     <div class="section">
-      <h2>📧 Email Subscribers</h2>
+      <h2>Email Subscribers</h2>
       {% if subscribers %}
       <div style="overflow-x: auto;">
         <table>
@@ -346,37 +444,91 @@
           </tbody>
         </table>
       </div>
+
+      <!-- Pagination for Subscribers -->
+      {% if subscribers.paginator %}
+      <div style="display: flex; justify-content: center; align-items: center; gap: 0; margin-top: 1.5rem;">
+        {% if subscribers.has_previous %}
+        <a href="?subscribers_page={{ subscribers.previous_page_number }}{% if selected_period %}&period={{ selected_period }}{% endif %}"
+           style="padding: 0.5rem 1rem; background: #f7fafc; color: #4a5568; text-decoration: none; font-weight: 600; font-size: 0.875rem; transition: all 0.2s; cursor: pointer; border: 1px solid #e2e8f0; border-radius: 8px 0 0 8px; border-right: none;"
+           onmouseover="this.style.background='#edf2f7'; this.style.color='#667eea';"
+           onmouseout="this.style.background='#f7fafc'; this.style.color='#4a5568';">
+          ← Previous
+        </a>
+        {% else %}
+        <span style="padding: 0.5rem 1rem; background: #f7fafc; color: #cbd5e0; font-weight: 600; font-size: 0.875rem; cursor: not-allowed; border: 1px solid #e2e8f0; border-radius: 8px 0 0 8px; border-right: none;">
+          ← Previous
+        </span>
+        {% endif %}
+
+        <span style="padding: 0.5rem 1rem; background: #edf2f7; color: #4a5568; font-weight: 600; font-size: 0.875rem; border: 1px solid #e2e8f0; margin-left: -1px; margin-right: -1px;">
+          Page {{ subscribers.number }} of {{ subscribers.paginator.num_pages }}
+        </span>
+
+        {% if subscribers.has_next %}
+        <a href="?subscribers_page={{ subscribers.next_page_number }}{% if selected_period %}&period={{ selected_period }}{% endif %}"
+           style="padding: 0.5rem 1rem; background: #f7fafc; color: #4a5568; text-decoration: none; font-weight: 600; font-size: 0.875rem; transition: all 0.2s; cursor: pointer; border: 1px solid #e2e8f0; border-radius: 0 8px 8px 0; border-left: none;"
+           onmouseover="this.style.background='#edf2f7'; this.style.color='#667eea';"
+           onmouseout="this.style.background='#f7fafc'; this.style.color='#4a5568';">
+          Next →
+        </a>
+        {% else %}
+        <span style="padding: 0.5rem 1rem; background: #f7fafc; color: #cbd5e0; font-weight: 600; font-size: 0.875rem; cursor: not-allowed; border: 1px solid #e2e8f0; border-radius: 0 8px 8px 0; border-left: none;">
+          Next →
+        </span>
+        {% endif %}
+      </div>
+      {% endif %}
+
       {% else %}
       <p style="color: #718096; text-align: center; padding: 2rem;">No subscribers yet.</p>
       {% endif %}
 
+      <!-- Add Single Subscriber -->
+      <div style="margin-top: 2rem; padding-top: 2rem; border-top: 2px solid #e2e8f0;">
+        <h3 style="color: #1a202c; font-size: 1.1rem; font-weight: 700; margin-bottom: 1rem;">Add Subscriber</h3>
+        <form method="POST" style="display: flex; gap: 0.75rem; align-items: flex-end; flex-wrap: wrap;">
+          {% csrf_token %}
+          <div style="flex: 1; min-width: 250px;">
+            <label for="single_email" style="display: block; font-size: 0.875rem; font-weight: 600; color: #4a5568; margin-bottom: 0.5rem;">Email Address</label>
+            <input type="email" name="single_email" id="single_email" placeholder="user@example.com" required
+                   style="width: 100%; padding: 0.5rem 0.75rem; border: 1px solid #e2e8f0; border-radius: 6px; font-size: 0.875rem;">
+          </div>
+          <button type="submit" style="padding: 0.5rem 1.5rem; background: #667eea; color: white; border: none; border-radius: 6px; font-weight: 600; font-size: 0.875rem; cursor: pointer; transition: all 0.2s;"
+                  onmouseover="this.style.background='#5568d3'"
+                  onmouseout="this.style.background='#667eea'">
+            Add
+          </button>
+        </form>
+      </div>
+
       <!-- CSV Upload for Subscribers -->
       <div style="margin-top: 2rem; padding-top: 2rem; border-top: 2px solid #e2e8f0;">
-        <h3 style="color: #1a202c; font-size: 1.1rem; font-weight: 700; margin-bottom: 1rem;">📤 Upload Subscribers (CSV)</h3>
-        <form method="POST" enctype="multipart/form-data" class="upload-form">
+        <h3 style="color: #1a202c; font-size: 1.1rem; font-weight: 700; margin-bottom: 1rem;">Upload Subscribers (CSV)</h3>
+        <form method="POST" enctype="multipart/form-data" style="display: flex; gap: 0.75rem; align-items: center; flex-wrap: wrap;">
           {% csrf_token %}
-          <div class="file-input-wrapper">
-            <label for="subscriber_csv">Choose CSV File</label>
+          <div style="flex: 1; min-width: 250px;">
+            <label for="subscriber_csv" style="display: block; font-size: 0.875rem; font-weight: 600; color: #4a5568; margin-bottom: 0.5rem;">Choose CSV File</label>
             <input type="file" name="subscriber_csv" id="subscriber_csv" accept=".csv" class="file-input" required>
-            <div class="csv-help">
-              <strong>Required column:</strong> <code>email</code><br>
-              <strong>Optional columns:</strong> <code>is_confirmed</code> (true/false), <code>source</code> (text)<br>
-              <strong>Example:</strong><br>
-              <code style="display: block; background: #f7fafc; padding: 0.5rem; border-radius: 4px; margin-top: 0.5rem;">
-                email,is_confirmed,source<br>
-                user@example.com,true,newsletter<br>
-                another@example.com,false,landing_page
-              </code>
-            </div>
           </div>
-          <button type="button" class="upload-btn" onclick="showBetaMessage(this)">Upload</button>
+          <button type="button" class="upload-btn" onclick="showBetaMessage(this)" style="margin-top: 1.5rem;">Upload</button>
+          <div class="csv-help" style="width: 100%;">
+            <strong>Required column:</strong> <code>email</code><br>
+            <strong>Optional columns:</strong> <code>is_confirmed</code> (true/false), <code>source</code> (text)<br>
+            <strong>Example:</strong><br>
+            <code style="display: block; background: #f7fafc; padding: 0.5rem; border-radius: 4px; margin-top: 0.5rem;">
+              email,is_confirmed,source<br>
+              user@example.com,true,newsletter<br>
+              another@example.com,false,landing_page
+            </code>
+          </div>
         </form>
       </div>
     </div>
 
     <!-- Registered Users -->
     <div class="section">
-      <h2>👥 Registered Users</h2>
+      <h2>Registered Users</h2>
       {% if users %}
       <div style="overflow-x: auto;">
         <table>
@@ -408,31 +560,67 @@
           </tbody>
         </table>
       </div>
+
+      <!-- Pagination for Users -->
+      {% if users.paginator %}
+      <div style="display: flex; justify-content: center; align-items: center; gap: 0; margin-top: 1.5rem;">
+        {% if users.has_previous %}
+        <a href="?users_page={{ users.previous_page_number }}{% if selected_period %}&period={{ selected_period }}{% endif %}{% if request.GET.subscribers_page %}&subscribers_page={{ request.GET.subscribers_page }}{% endif %}"
+           style="padding: 0.5rem 1rem; background: #f7fafc; color: #4a5568; text-decoration: none; font-weight: 600; font-size: 0.875rem; transition: all 0.2s; cursor: pointer; border: 1px solid #e2e8f0; border-radius: 8px 0 0 8px; border-right: none;"
+           onmouseover="this.style.background='#edf2f7'; this.style.color='#667eea';"
+           onmouseout="this.style.background='#f7fafc'; this.style.color='#4a5568';">
+          ← Previous
+        </a>
+        {% else %}
+        <span style="padding: 0.5rem 1rem; background: #f7fafc; color: #cbd5e0; font-weight: 600; font-size: 0.875rem; cursor: not-allowed; border: 1px solid #e2e8f0; border-radius: 8px 0 0 8px; border-right: none;">
+          ← Previous
+        </span>
+        {% endif %}
+
+        <span style="padding: 0.5rem 1rem; background: #edf2f7; color: #4a5568; font-weight: 600; font-size: 0.875rem; border: 1px solid #e2e8f0; margin-left: -1px; margin-right: -1px;">
+          Page {{ users.number }} of {{ users.paginator.num_pages }}
+        </span>
+
+        {% if users.has_next %}
+        <a href="?users_page={{ users.next_page_number }}{% if selected_period %}&period={{ selected_period }}{% endif %}{% if request.GET.subscribers_page %}&subscribers_page={{ request.GET.subscribers_page }}{% endif %}"
+           style="padding: 0.5rem 1rem; background: #f7fafc; color: #4a5568; text-decoration: none; font-weight: 600; font-size: 0.875rem; transition: all 0.2s; cursor: pointer; border: 1px solid #e2e8f0; border-radius: 0 8px 8px 0; border-left: none;"
+           onmouseover="this.style.background='#edf2f7'; this.style.color='#667eea';"
+           onmouseout="this.style.background='#f7fafc'; this.style.color='#4a5568';">
+          Next →
+        </a>
+        {% else %}
+        <span style="padding: 0.5rem 1rem; background: #f7fafc; color: #cbd5e0; font-weight: 600; font-size: 0.875rem; cursor: not-allowed; border: 1px solid #e2e8f0; border-radius: 0 8px 8px 0; border-left: none;">
+          Next →
+        </span>
+        {% endif %}
+      </div>
+      {% endif %}
+
       {% else %}
       <p style="color: #718096; text-align: center; padding: 2rem;">No registered users yet.</p>
       {% endif %}
 
       <!-- CSV Upload for Users -->
       <div style="margin-top: 2rem; padding-top: 2rem; border-top: 2px solid #e2e8f0;">
-        <h3 style="color: #1a202c; font-size: 1.1rem; font-weight: 700; margin-bottom: 1rem;">📤 Upload Users (CSV)</h3>
-        <form method="POST" enctype="multipart/form-data" class="upload-form">
+        <h3 style="color: #1a202c; font-size: 1.1rem; font-weight: 700; margin-bottom: 1rem;">Upload Users (CSV)</h3>
+        <form method="POST" enctype="multipart/form-data" style="display: flex; gap: 0.75rem; align-items: center; flex-wrap: wrap;">
           {% csrf_token %}
-          <div class="file-input-wrapper">
-            <label for="user_csv">Choose CSV File</label>
+          <div style="flex: 1; min-width: 250px;">
+            <label for="user_csv" style="display: block; font-size: 0.875rem; font-weight: 600; color: #4a5568; margin-bottom: 0.5rem;">Choose CSV File</label>
             <input type="file" name="user_csv" id="user_csv" accept=".csv" class="file-input" required>
-            <div class="csv-help">
-              <strong>Required columns:</strong> <code>username</code>, <code>email</code><br>
-              <strong>Optional columns:</strong> <code>password</code> (if omitted, random password generated)<br>
-              <strong>Example:</strong><br>
-              <code style="display: block; background: #f7fafc; padding: 0.5rem; border-radius: 4px; margin-top: 0.5rem;">
-                username,email,password<br>
-                johndoe,john@example.com,securepass123<br>
-                janedoe,jane@example.com,<br>
-              </code>
-              <em style="display: block; margin-top: 0.5rem; color: #975a16;">⚠️ Note: Users created without passwords will have random passwords. They'll need to reset via "Forgot Password".</em>
-            </div>
           </div>
-          <button type="button" class="upload-btn" onclick="showBetaMessage(this)">Upload</button>
+          <button type="button" class="upload-btn" onclick="showBetaMessage(this)" style="margin-top: 1.5rem;">Upload</button>
+          <div class="csv-help" style="width: 100%;">
+            <strong>Required columns:</strong> <code>username</code>, <code>email</code><br>
+            <strong>Optional columns:</strong> <code>password</code> (if omitted, random password generated)<br>
+            <strong>Example:</strong><br>
+            <code style="display: block; background: #f7fafc; padding: 0.5rem; border-radius: 4px; margin-top: 0.5rem;">
+              username,email,password<br>
+              johndoe,john@example.com,securepass123<br>
+              janedoe,jane@example.com,<br>
+            </code>
+            <em style="display: block; margin-top: 0.5rem; color: #975a16;">⚠️ Note: Users created without passwords will have random passwords. They'll need to reset via "Forgot Password".</em>
+          </div>
         </form>
       </div>
 
@@ -458,6 +646,72 @@
   </div>
 
   <script>
+    // Initialize subscriber growth chart
+    const ctx = document.getElementById('subscriberChart');
+    const subscriberChart = new Chart(ctx, {
+      type: 'line',
+      data: {
+        labels: {{ chart_labels|safe }},
+        datasets: [{
+          label: 'New Subscribers',
+          data: {{ chart_data|safe }},
+          borderColor: '#667eea',
+          backgroundColor: 'rgba(102, 126, 234, 0.1)',
+          borderWidth: 3,
+          fill: true,
+          tension: 0.4,
+          pointRadius: 4,
+          pointBackgroundColor: '#667eea',
+          pointBorderColor: '#fff',
+          pointBorderWidth: 2,
+          pointHoverRadius: 6,
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: {
+            display: false
+          },
+          tooltip: {
+            backgroundColor: '#1a202c',
+            titleColor: '#fff',
+            bodyColor: '#fff',
+            padding: 12,
+            displayColors: false,
+            callbacks: {
+              label: function(context) {
+                return context.parsed.y + ' subscriber' + (context.parsed.y !== 1 ? 's' : '');
+              }
+            }
+          }
+        },
+        scales: {
+          y: {
+            beginAtZero: true,
+            ticks: {
+              stepSize: 1,
+              color: '#718096'
+            },
+            grid: {
+              color: 'rgba(0, 0, 0, 0.05)'
+            }
+          },
+          x: {
+            ticks: {
+              color: '#718096',
+              maxRotation: 45,
+              minRotation: 45
+            },
+            grid: {
+              display: false
+            }
+          }
+        }
+      }
+    });
+
     function showBetaMessage(button) {
       // Add shake animation to button
       button.classList.add('shake');
@@ -479,7 +733,7 @@
       // Create error message
       const messageDiv = document.createElement('div');
       messageDiv.className = 'message message-warning';
-      messageDiv.textContent = '⚠️ This feature is still in beta and not yet available.';
+      messageDiv.textContent = 'This feature is still in beta.';
 
       // Add message to top
       messagesDiv.insertBefore(messageDiv, messagesDiv.firstChild);
