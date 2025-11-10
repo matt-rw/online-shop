@@ -5,10 +5,12 @@ from search import views as search_views
 from wagtail import urls as wagtail_urls
 from wagtail.admin import urls as wagtailadmin_urls
 from wagtail.documents import urls as wagtaildocs_urls
+from shop import admin_views
 # from shop import urls as shop_urls
 
 urlpatterns = [
     path("django-admin/", admin.site.urls),
+    path("admin/subscribers/", admin_views.subscribers_list, name='admin_subscribers'),
     path("admin/", include(wagtailadmin_urls)),
     path("documents/", include(wagtaildocs_urls)),
     path("accounts/", include("allauth.urls")),  # django-allauth URLs

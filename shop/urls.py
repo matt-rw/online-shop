@@ -8,9 +8,6 @@ from . import admin_views
 app_name = 'shop'
 
 urlpatterns = [
-    # Admin views
-    path('admin-subscribers/', admin_views.subscribers_list, name='admin_subscribers'),
-
     # Email subscription
     path('subscribe/', views.subscribe, name='subscribe'),
 

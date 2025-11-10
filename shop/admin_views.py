@@ -38,7 +38,7 @@ def subscribers_list(request):
         else:
             messages.error(request, 'Please provide a valid email address')
 
-        return redirect('shop:admin_subscribers')
+        return redirect('admin_subscribers')
 
     # Handle Subscriber CSV Upload
     if request.method == 'POST' and request.FILES.get('subscriber_csv'):
@@ -47,7 +47,7 @@ def subscribers_list(request):
         # Validate file extension
         if not csv_file.name.endswith('.csv'):
             messages.error(request, 'Please upload a CSV file.')
-            return redirect('shop:admin_subscribers')
+            return redirect('admin_subscribers')
 
         try:
             # Read CSV file
@@ -95,11 +95,11 @@ def subscribers_list(request):
                 if len(errors) > 5:
                     messages.warning(request, f'...and {len(errors) - 5} more errors.')
 
-            return redirect('shop:admin_subscribers')
+            return redirect('admin_subscribers')
 
         except Exception as e:
             messages.error(request, f'Error processing CSV: {str(e)}')
-            return redirect('shop:admin_subscribers')
+            return redirect('admin_subscribers')
 
     # Handle User CSV Upload
     if request.method == 'POST' and request.FILES.get('user_csv'):
@@ -108,7 +108,7 @@ def subscribers_list(request):
         # Validate file extension
         if not csv_file.name.endswith('.csv'):
             messages.error(request, 'Please upload a CSV file.')
-            return redirect('shop:admin_subscribers')
+            return redirect('admin_subscribers')
 
         try:
             # Read CSV file
@@ -157,11 +157,11 @@ def subscribers_list(request):
                 if len(errors) > 5:
                     messages.warning(request, f'...and {len(errors) - 5} more errors.')
 
-            return redirect('shop:admin_subscribers')
+            return redirect('admin_subscribers')
 
         except Exception as e:
             messages.error(request, f'Error processing CSV: {str(e)}')
-            return redirect('shop:admin_subscribers')
+            return redirect('admin_subscribers')
 
     # GET request - display page with pagination
     from django.core.paginator import Paginator
