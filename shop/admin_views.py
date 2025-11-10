@@ -16,6 +16,35 @@ def subscribers_list(request):
     Only accessible to admin/staff users.
     Handles CSV upload for bulk subscriber and user import.
     """
+    # Handle Delete Actions
+    if request.method == 'POST' and request.POST.get('delete_action'):
+        delete_action = request.POST.get('delete_action')
+        delete_id = request.POST.get('delete_id')
+
+        try:
+            if delete_action == 'subscriber':
+                subscriber = EmailSubscription.objects.get(id=delete_id)
+                email = subscriber.email
+                subscriber.delete()
+                messages.success(request, f'Successfully deleted subscriber: {email}')
+            elif delete_action == 'user':
+                user = User.objects.get(id=delete_id)
+                # Prevent deleting staff users
+                if user.is_staff:
+                    messages.error(request, 'Cannot delete staff users')
+                else:
+                    username = user.username
+                    user.delete()
+                    messages.success(request, f'Successfully deleted user: {username}')
+        except EmailSubscription.DoesNotExist:
+            messages.error(request, 'Subscriber not found')
+        except User.DoesNotExist:
+            messages.error(request, 'User not found')
+        except Exception as e:
+            messages.error(request, f'Error deleting: {str(e)}')
+
+        return redirect('admin_subscribers')
+
     # Handle Single Subscriber Addition
     if request.method == 'POST' and request.POST.get('single_email'):
         email = request.POST.get('single_email', '').strip().lower()
