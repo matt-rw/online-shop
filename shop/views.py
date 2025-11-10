@@ -39,7 +39,7 @@ def subscribe(request):
                 #     fail_silently=False
                 # )
 
-                return redirect('home:home')
+                return redirect('/#subscribe')
 
             except Exception as e:
                 logger.error(f"Error creating subscription: {e}")

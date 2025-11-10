@@ -87,16 +87,16 @@
     .section {
       background: white;
       border-radius: 12px;
-      padding: 2rem;
-      margin-bottom: 2rem;
+      padding: 1.5rem;
+      margin-bottom: 1.5rem;
       box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
     }
     .section h2 {
       color: #1a202c;
-      font-size: 1.5rem;
+      font-size: 1.25rem;
       font-weight: 700;
-      margin-bottom: 1.5rem;
-      padding-bottom: 1rem;
+      margin-bottom: 1rem;
+      padding-bottom: 0.75rem;
       border-bottom: 2px solid #e2e8f0;
     }
     .stats-grid {
@@ -108,7 +108,7 @@
     .stat-card {
       background: #f7fafc;
       border-radius: 8px;
-      padding: 1.5rem;
+      padding: 1rem;
       border-left: 4px solid #667eea;
     }
     .stat-card.warning {
@@ -125,21 +125,22 @@
     }
     .stat-card h3 {
       color: #718096;
-      font-size: 0.875rem;
+      font-size: 0.75rem;
       font-weight: 600;
       text-transform: uppercase;
       letter-spacing: 0.05em;
-      margin-bottom: 0.5rem;
+      margin-bottom: 0.25rem;
     }
     .stat-card .number {
       color: #1a202c;
-      font-size: 2rem;
+      font-size: 1.5rem;
       font-weight: 700;
+      line-height: 1.2;
     }
     .stat-card .subtext {
       color: #718096;
-      font-size: 0.875rem;
-      margin-top: 0.5rem;
+      font-size: 0.75rem;
+      margin-top: 0.25rem;
     }
     .warning-box {
       padding: 1rem 1.5rem;
@@ -177,19 +178,20 @@
     }
     th {
       text-align: left;
-      padding: 1rem;
+      padding: 0.75rem;
       background: #f7fafc;
       color: #4a5568;
       font-weight: 600;
-      font-size: 0.875rem;
+      font-size: 0.75rem;
       text-transform: uppercase;
       letter-spacing: 0.05em;
       border-bottom: 2px solid #e2e8f0;
     }
     td {
-      padding: 1rem;
+      padding: 0.75rem;
       border-bottom: 1px solid #e2e8f0;
       color: #2d3748;
+      font-size: 0.875rem;
     }
     tr:hover {
       background: #f7fafc;
@@ -225,19 +227,22 @@
     .info-item {
       display: flex;
       justify-content: space-between;
-      padding: 0.75rem;
+      align-items: center;
+      padding: 0.625rem 0.75rem;
       background: #f7fafc;
       border-radius: 6px;
+      min-height: 40px;
     }
     .info-label {
       color: #718096;
       font-weight: 600;
-      font-size: 0.875rem;
+      font-size: 0.8rem;
     }
     .info-value {
       color: #1a202c;
       font-weight: 600;
       text-align: right;
+      font-size: 0.875rem;
     }
     .status-dot {
       display: inline-block;
@@ -286,10 +291,10 @@
     <!-- System Logs -->
     <div class="section">
       <h2>System Logs & Activity</h2>
-      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin-bottom: 1.5rem;">
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1rem;">
         <div>
-          <h3 style="color: #4a5568; font-size: 1rem; margin-bottom: 0.75rem;">Recent Logs</h3>
-          <div style="background: #1a202c; border-radius: 8px; padding: 1rem; font-family: 'Monaco', 'Courier New', monospace; font-size: 0.7rem; color: #48bb78; overflow-x: auto; max-height: 400px; overflow-y: auto; line-height: 1.5;">
+          <h3 style="color: #4a5568; font-size: 0.875rem; margin-bottom: 0.5rem; font-weight: 600;">Recent Logs</h3>
+          <div style="background: #1a202c; border-radius: 8px; padding: 0.875rem; font-family: 'Monaco', 'Courier New', monospace; font-size: 0.7rem; color: #48bb78; overflow-x: auto; max-height: 300px; overflow-y: auto; line-height: 1.4;">
             {% if recent_logs %}
               {% for log in recent_logs %}
                 <div style="margin-bottom: 0.125rem;">{{ log|escape }}</div>
@@ -301,8 +306,8 @@
           </div>
         </div>
         <div>
-          <h3 style="color: #4a5568; font-size: 1rem; margin-bottom: 0.75rem;">Live Connections</h3>
-          <div style="background: #1a202c; border-radius: 8px; padding: 1rem; font-family: 'Monaco', 'Courier New', monospace; font-size: 0.7rem; color: #68d391; max-height: 400px; overflow-y: auto; line-height: 1.5;">
+          <h3 style="color: #4a5568; font-size: 0.875rem; margin-bottom: 0.5rem; font-weight: 600;">Live Connections</h3>
+          <div style="background: #1a202c; border-radius: 8px; padding: 0.875rem; font-family: 'Monaco', 'Courier New', monospace; font-size: 0.7rem; color: #68d391; max-height: 300px; overflow-y: auto; line-height: 1.4;">
             {% for conn in recent_connections|slice:":20" %}
               <div style="margin-bottom: 0.25rem; {% if conn.status_code >= 400 %}color: #fc8181;{% elif conn.status_code >= 300 %}color: #f6ad55;{% endif %}">
                 <span style="color: #718096;">{{ conn.timestamp|date:"H:i:s" }}</span>
@@ -337,7 +342,7 @@
     {% endif %}
 
     <!-- Two Column Layout for System Stats -->
-    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin-bottom: 1.5rem;">
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1rem;">
       <!-- Left Column -->
       <div>
         <!-- Machine Status -->
@@ -539,26 +544,26 @@
     </div>
 
     <!-- Two Column Layout for Charts and Metrics -->
-    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin-bottom: 1.5rem;">
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1rem;">
       <!-- Resource Usage Charts -->
       <div class="section">
         <h2>Resource Usage Charts</h2>
-        <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; margin-top: 1rem;">
+        <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.75rem; margin-top: 0.75rem;">
           <div>
-            <h3 style="color: #4a5568; font-size: 0.875rem; margin-bottom: 0.5rem; text-align: center;">CPU</h3>
-            <div style="position: relative; height: 150px;">
+            <h3 style="color: #4a5568; font-size: 0.75rem; margin-bottom: 0.375rem; text-align: center; font-weight: 600;">CPU</h3>
+            <div style="position: relative; height: 120px;">
               <canvas id="cpuChart"></canvas>
             </div>
           </div>
           <div>
-            <h3 style="color: #4a5568; font-size: 0.875rem; margin-bottom: 0.5rem; text-align: center;">Memory</h3>
-            <div style="position: relative; height: 150px;">
+            <h3 style="color: #4a5568; font-size: 0.75rem; margin-bottom: 0.375rem; text-align: center; font-weight: 600;">Memory</h3>
+            <div style="position: relative; height: 120px;">
               <canvas id="memoryChart"></canvas>
             </div>
           </div>
           <div>
-            <h3 style="color: #4a5568; font-size: 0.875rem; margin-bottom: 0.5rem; text-align: center;">Disk</h3>
-            <div style="position: relative; height: 150px;">
+            <h3 style="color: #4a5568; font-size: 0.75rem; margin-bottom: 0.375rem; text-align: center; font-weight: 600;">Disk</h3>
+            <div style="position: relative; height: 120px;">
               <canvas id="diskChart"></canvas>
             </div>
           </div>
@@ -568,32 +573,32 @@
       <!-- User & Subscription Metrics -->
       <div class="section">
         <h2>User & Subscription Metrics</h2>
-        <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 0.75rem; margin-top: 1rem;">
-          <div class="stat-card" style="padding: 1rem;">
-            <h3 style="font-size: 0.75rem;">Total Users</h3>
-            <div class="number" style="font-size: 1.75rem;">{{ user_metrics.total }}</div>
-            <div class="subtext" style="font-size: 0.75rem;">{{ user_metrics.active }} active</div>
+        <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 0.625rem; margin-top: 0.75rem;">
+          <div class="stat-card" style="padding: 0.75rem;">
+            <h3 style="font-size: 0.7rem;">Total Users</h3>
+            <div class="number" style="font-size: 1.5rem;">{{ user_metrics.total }}</div>
+            <div class="subtext" style="font-size: 0.7rem;">{{ user_metrics.active }} active</div>
           </div>
-          <div class="stat-card" style="padding: 1rem;">
-            <h3 style="font-size: 0.75rem;">New Users (24h)</h3>
-            <div class="number" style="font-size: 1.75rem;">{{ user_metrics.recent_24h }}</div>
+          <div class="stat-card" style="padding: 0.75rem;">
+            <h3 style="font-size: 0.7rem;">New Users (24h)</h3>
+            <div class="number" style="font-size: 1.5rem;">{{ user_metrics.recent_24h }}</div>
           </div>
-          <div class="stat-card" style="padding: 1rem;">
-            <h3 style="font-size: 0.75rem;">Staff Members</h3>
-            <div class="number" style="font-size: 1.75rem;">{{ user_metrics.staff }}</div>
+          <div class="stat-card" style="padding: 0.75rem;">
+            <h3 style="font-size: 0.7rem;">Staff Members</h3>
+            <div class="number" style="font-size: 1.5rem;">{{ user_metrics.staff }}</div>
           </div>
-          <div class="stat-card success" style="padding: 1rem;">
-            <h3 style="font-size: 0.75rem;">Total Subscribers</h3>
-            <div class="number" style="font-size: 1.75rem;">{{ email_metrics.total }}</div>
-            <div class="subtext" style="font-size: 0.75rem;">{{ email_metrics.confirmed }} confirmed</div>
+          <div class="stat-card success" style="padding: 0.75rem;">
+            <h3 style="font-size: 0.7rem;">Total Subscribers</h3>
+            <div class="number" style="font-size: 1.5rem;">{{ email_metrics.total }}</div>
+            <div class="subtext" style="font-size: 0.7rem;">{{ email_metrics.confirmed }} confirmed</div>
           </div>
-          <div class="stat-card" style="padding: 1rem;">
-            <h3 style="font-size: 0.75rem;">New Subs (24h)</h3>
-            <div class="number" style="font-size: 1.75rem;">{{ email_metrics.recent_24h }}</div>
+          <div class="stat-card" style="padding: 0.75rem;">
+            <h3 style="font-size: 0.7rem;">New Subs (24h)</h3>
+            <div class="number" style="font-size: 1.5rem;">{{ email_metrics.recent_24h }}</div>
           </div>
-          <div class="stat-card {% if email_metrics.confirmation_rate > 70 %}success{% elif email_metrics.confirmation_rate > 40 %}warning{% else %}danger{% endif %}" style="padding: 1rem;">
-            <h3 style="font-size: 0.75rem;">Confirmation Rate</h3>
-            <div class="number" style="font-size: 1.75rem;">{{ email_metrics.confirmation_rate }}%</div>
+          <div class="stat-card {% if email_metrics.confirmation_rate > 70 %}success{% elif email_metrics.confirmation_rate > 40 %}warning{% else %}danger{% endif %}" style="padding: 0.75rem;">
+            <h3 style="font-size: 0.7rem;">Confirmation Rate</h3>
+            <div class="number" style="font-size: 1.5rem;">{{ email_metrics.confirmation_rate }}%</div>
           </div>
         </div>
       </div>
@@ -601,16 +606,16 @@
 
     <!-- Connection Details Table -->
     <div class="section">
-      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
-        <div>
-          <h2 style="margin-bottom: 0.5rem;">Connection Details (Last 50)</h2>
-          <p style="color: #718096; font-size: 0.875rem; margin: 0;">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem; gap: 1rem;">
+        <div style="flex: 1;">
+          <h2 style="margin-bottom: 0.375rem;">Connection Details (Last 50)</h2>
+          <p style="color: #718096; font-size: 0.8rem; margin: 0; line-height: 1.4;">
             Tracks IP addresses, paths, methods, and response codes.
             <strong>Setup:</strong> Add 'shop.middleware.ConnectionLogMiddleware' to MIDDLEWARE
           </p>
         </div>
-        <div class="stat-card" style="margin: 0; min-width: 150px;">
-          <h3 style="font-size: 0.75rem;">Unique IPs (24h)</h3>
+        <div class="stat-card" style="margin: 0; min-width: 140px; padding: 0.75rem;">
+          <h3 style="font-size: 0.7rem;">Unique IPs (24h)</h3>
           <div class="number" style="font-size: 1.5rem;">{{ unique_ips_24h }}</div>
         </div>
       </div>
