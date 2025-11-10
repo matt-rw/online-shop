@@ -1,12 +1,13 @@
 import csv
 import io
+import pytz
 from django.contrib.admin.views.decorators import staff_member_required
 from django.shortcuts import render, redirect
 from django.contrib import messages
 from django.contrib.auth import get_user_model
 from django.db.models import Count, Q
 from django.utils import timezone
-from datetime import timedelta
+from datetime import timedelta, datetime
 from .models import EmailSubscription, ConnectionLog
 
 User = get_user_model()
@@ -365,7 +366,8 @@ def subscribers_list(request):
         'chart_labels': chart_labels,
         'chart_data': chart_data,
         'selected_period': period,
-        'server_time': datetime.now(),
+        'server_time': timezone.now(),
+        'cst_time': timezone.now().astimezone(pytz.timezone('America/Chicago')),
     }
 
     return render(request, 'admin/subscribers_list.html', context)
