@@ -3,10 +3,14 @@ from django.urls import path
 from . import views
 from . import cart_views
 from . import webhooks
+from . import admin_views
 
 app_name = 'shop'
 
 urlpatterns = [
+    # Admin views
+    path('admin-subscribers/', admin_views.subscribers_list, name='admin_subscribers'),
+
     # Email subscription
     path('subscribe/', views.subscribe, name='subscribe'),
 

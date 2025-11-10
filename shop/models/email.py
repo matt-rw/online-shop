@@ -9,3 +9,6 @@ class EmailSubscription(models.Model):
     source = models.CharField(max_length=50, default='site_form')
 
     # unsub_token = models.CharField(max_length=64, unique=True)
+
+    def __str__(self):
+        return self.email

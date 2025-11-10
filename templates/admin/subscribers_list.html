@@ -1,0 +1,501 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Subscribers & Users - Blueprint Apparel</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    body {
+      font-family: 'Inter', sans-serif;
+      background:
+        linear-gradient(135deg, rgba(102, 126, 234, 0.9) 0%, rgba(118, 75, 162, 0.9) 100%),
+        repeating-linear-gradient(0deg, transparent, transparent 35px, rgba(255,255,255,.03) 35px, rgba(255,255,255,.03) 36px),
+        repeating-linear-gradient(90deg, transparent, transparent 35px, rgba(255,255,255,.03) 35px, rgba(255,255,255,.03) 36px),
+        radial-gradient(circle at 20% 30%, rgba(255,255,255,0.1) 0%, transparent 50%),
+        radial-gradient(circle at 80% 70%, rgba(255,255,255,0.08) 0%, transparent 50%),
+        radial-gradient(circle at 50% 50%, rgba(118, 75, 162, 0.3) 0%, transparent 100%);
+      background-attachment: fixed;
+      min-height: 100vh;
+      padding: 2rem;
+      position: relative;
+    }
+    body::before {
+      content: '';
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background-image:
+        radial-gradient(circle at 15% 15%, rgba(255,255,255,0.15) 2px, transparent 2px),
+        radial-gradient(circle at 85% 45%, rgba(255,255,255,0.15) 3px, transparent 3px),
+        radial-gradient(circle at 45% 75%, rgba(255,255,255,0.12) 2px, transparent 2px),
+        radial-gradient(circle at 65% 25%, rgba(255,255,255,0.1) 2px, transparent 2px);
+      background-size: 100% 100%;
+      pointer-events: none;
+      z-index: 0;
+    }
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      position: relative;
+      z-index: 1;
+    }
+    .header {
+      background: white;
+      border-radius: 12px;
+      padding: 2rem;
+      margin-bottom: 2rem;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+    .header h1 {
+      color: #1a202c;
+      font-size: 2rem;
+      font-weight: 700;
+      margin-bottom: 0.75rem;
+    }
+    .header p {
+      color: #667eea;
+      font-size: 1.125rem;
+      font-weight: 500;
+      letter-spacing: 0.025em;
+      opacity: 0.9;
+    }
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 1rem;
+      margin-bottom: 2rem;
+    }
+    .stat-card {
+      background: white;
+      border-radius: 12px;
+      padding: 1.5rem;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+    .stat-card h3 {
+      color: #718096;
+      font-size: 0.875rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-bottom: 0.5rem;
+    }
+    .stat-card .number {
+      color: #667eea;
+      font-size: 2.5rem;
+      font-weight: 700;
+    }
+    .section {
+      background: white;
+      border-radius: 12px;
+      padding: 2rem;
+      margin-bottom: 2rem;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+    .section h2 {
+      color: #1a202c;
+      font-size: 1.5rem;
+      font-weight: 700;
+      margin-bottom: 1.5rem;
+      padding-bottom: 1rem;
+      border-bottom: 2px solid #e2e8f0;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+    th {
+      text-align: left;
+      padding: 1rem;
+      background: #f7fafc;
+      color: #4a5568;
+      font-weight: 600;
+      font-size: 0.875rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      border-bottom: 2px solid #e2e8f0;
+    }
+    td {
+      padding: 1rem;
+      border-bottom: 1px solid #e2e8f0;
+      color: #2d3748;
+    }
+    tr:hover {
+      background: #f7fafc;
+    }
+    .badge {
+      display: inline-block;
+      padding: 0.25rem 0.75rem;
+      border-radius: 9999px;
+      font-size: 0.75rem;
+      font-weight: 600;
+    }
+    .badge-success {
+      background: #c6f6d5;
+      color: #22543d;
+    }
+    .badge-warning {
+      background: #fef5e7;
+      color: #975a16;
+    }
+    .badge-info {
+      background: #bee3f8;
+      color: #2c5282;
+    }
+    .back-link {
+      display: inline-block;
+      margin-top: 2rem;
+      padding: 0.75rem 1.5rem;
+      background: white;
+      color: #667eea;
+      text-decoration: none;
+      border-radius: 8px;
+      font-weight: 600;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+      transition: all 0.2s;
+    }
+    .back-link:hover {
+      background: #667eea;
+      color: white;
+      transform: translateY(-2px);
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+    }
+    .upload-section {
+      background: white;
+      border-radius: 12px;
+      padding: 2rem;
+      margin-bottom: 2rem;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+    .upload-form {
+      display: flex;
+      gap: 1rem;
+      align-items: flex-end;
+      flex-wrap: wrap;
+    }
+    .file-input-wrapper {
+      flex: 1;
+      min-width: 250px;
+    }
+    .file-input-wrapper label {
+      display: block;
+      color: #4a5568;
+      font-weight: 600;
+      margin-bottom: 0.5rem;
+      font-size: 0.875rem;
+    }
+    .file-input {
+      width: 100%;
+      padding: 0.75rem;
+      border: 2px dashed #cbd5e0;
+      border-radius: 8px;
+      background: #f7fafc;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .file-input:hover {
+      border-color: #667eea;
+      background: #edf2f7;
+    }
+    .upload-btn {
+      padding: 0.75rem 2rem;
+      background: #667eea;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+    .upload-btn:hover {
+      background: #5568d3;
+      transform: translateY(-2px);
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+    }
+    .csv-help {
+      color: #718096;
+      font-size: 0.875rem;
+      margin-top: 0.5rem;
+    }
+    .messages {
+      margin-bottom: 2rem;
+    }
+    .message {
+      padding: 1rem 1.5rem;
+      border-radius: 8px;
+      margin-bottom: 0.5rem;
+      font-weight: 500;
+    }
+    .message-success {
+      background: #c6f6d5;
+      color: #22543d;
+      border-left: 4px solid #38a169;
+    }
+    .message-error {
+      background: #fed7d7;
+      color: #742a2a;
+      border-left: 4px solid #e53e3e;
+    }
+    .message-warning {
+      background: #fef5e7;
+      color: #975a16;
+      border-left: 4px solid #dd6b20;
+    }
+    .message-info {
+      background: #bee3f8;
+      color: #2c5282;
+      border-left: 4px solid #3182ce;
+    }
+    @keyframes shake {
+      0%, 100% { transform: translateX(0); }
+      10%, 30%, 50%, 70%, 90% { transform: translateX(-10px); }
+      20%, 40%, 60%, 80% { transform: translateX(10px); }
+    }
+    .shake {
+      animation: shake 0.5s;
+    }
+    @media (max-width: 768px) {
+      body {
+        padding: 1rem;
+      }
+      .header h1 {
+        font-size: 1.5rem;
+      }
+      table {
+        font-size: 0.875rem;
+      }
+      th, td {
+        padding: 0.75rem 0.5rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <!-- Header -->
+    <div class="header">
+      <h1>📊 Subscribers & Users Dashboard</h1>
+      <p>Blueprint Apparel - Admin View</p>
+    </div>
+
+    <!-- Messages -->
+    {% if messages %}
+    <div class="messages">
+      {% for message in messages %}
+      <div class="message message-{{ message.tags }}">
+        {{ message }}
+      </div>
+      {% endfor %}
+    </div>
+    {% endif %}
+
+    <!-- Stats -->
+    <div class="stats">
+      <div class="stat-card">
+        <h3>Total Subscribers</h3>
+        <div class="number">{{ total_subscribers }}</div>
+      </div>
+      <div class="stat-card">
+        <h3>Confirmed</h3>
+        <div class="number">{{ confirmed_subscribers }}</div>
+      </div>
+      <div class="stat-card">
+        <h3>Registered Users</h3>
+        <div class="number">{{ total_users }}</div>
+      </div>
+    </div>
+
+    <!-- Email Subscribers -->
+    <div class="section">
+      <h2>📧 Email Subscribers</h2>
+      {% if subscribers %}
+      <div style="overflow-x: auto;">
+        <table>
+          <thead>
+            <tr>
+              <th>Email</th>
+              <th>Status</th>
+              <th>Source</th>
+              <th>Subscribed</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for sub in subscribers %}
+            <tr>
+              <td>{{ sub.email }}</td>
+              <td>
+                {% if sub.is_confirmed %}
+                  <span class="badge badge-success">✓ Confirmed</span>
+                {% else %}
+                  <span class="badge badge-warning">⏳ Pending</span>
+                {% endif %}
+              </td>
+              <td><span class="badge badge-info">{{ sub.source }}</span></td>
+              <td>{{ sub.subscribed_at|date:"M d, Y - g:i A" }}</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      {% else %}
+      <p style="color: #718096; text-align: center; padding: 2rem;">No subscribers yet.</p>
+      {% endif %}
+
+      <!-- CSV Upload for Subscribers -->
+      <div style="margin-top: 2rem; padding-top: 2rem; border-top: 2px solid #e2e8f0;">
+        <h3 style="color: #1a202c; font-size: 1.1rem; font-weight: 700; margin-bottom: 1rem;">📤 Upload Subscribers (CSV)</h3>
+        <form method="POST" enctype="multipart/form-data" class="upload-form">
+          {% csrf_token %}
+          <div class="file-input-wrapper">
+            <label for="subscriber_csv">Choose CSV File</label>
+            <input type="file" name="subscriber_csv" id="subscriber_csv" accept=".csv" class="file-input" required>
+            <div class="csv-help">
+              <strong>Required column:</strong> <code>email</code><br>
+              <strong>Optional columns:</strong> <code>is_confirmed</code> (true/false), <code>source</code> (text)<br>
+              <strong>Example:</strong><br>
+              <code style="display: block; background: #f7fafc; padding: 0.5rem; border-radius: 4px; margin-top: 0.5rem;">
+                email,is_confirmed,source<br>
+                user@example.com,true,newsletter<br>
+                another@example.com,false,landing_page
+              </code>
+            </div>
+          </div>
+          <button type="button" class="upload-btn" onclick="showBetaMessage(this)">Upload</button>
+        </form>
+      </div>
+    </div>
+
+    <!-- Registered Users -->
+    <div class="section">
+      <h2>👥 Registered Users</h2>
+      {% if users %}
+      <div style="overflow-x: auto;">
+        <table>
+          <thead>
+            <tr>
+              <th>Username</th>
+              <th>Email</th>
+              <th>Status</th>
+              <th>Joined</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for user in users %}
+            <tr>
+              <td>{{ user.username }}</td>
+              <td>{{ user.email }}</td>
+              <td>
+                {% if user.is_staff %}
+                  <span class="badge badge-success">👑 Staff</span>
+                {% elif user.is_active %}
+                  <span class="badge badge-info">Active</span>
+                {% else %}
+                  <span class="badge badge-warning">Inactive</span>
+                {% endif %}
+              </td>
+              <td>{{ user.date_joined|date:"M d, Y - g:i A" }}</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      {% else %}
+      <p style="color: #718096; text-align: center; padding: 2rem;">No registered users yet.</p>
+      {% endif %}
+
+      <!-- CSV Upload for Users -->
+      <div style="margin-top: 2rem; padding-top: 2rem; border-top: 2px solid #e2e8f0;">
+        <h3 style="color: #1a202c; font-size: 1.1rem; font-weight: 700; margin-bottom: 1rem;">📤 Upload Users (CSV)</h3>
+        <form method="POST" enctype="multipart/form-data" class="upload-form">
+          {% csrf_token %}
+          <div class="file-input-wrapper">
+            <label for="user_csv">Choose CSV File</label>
+            <input type="file" name="user_csv" id="user_csv" accept=".csv" class="file-input" required>
+            <div class="csv-help">
+              <strong>Required columns:</strong> <code>username</code>, <code>email</code><br>
+              <strong>Optional columns:</strong> <code>password</code> (if omitted, random password generated)<br>
+              <strong>Example:</strong><br>
+              <code style="display: block; background: #f7fafc; padding: 0.5rem; border-radius: 4px; margin-top: 0.5rem;">
+                username,email,password<br>
+                johndoe,john@example.com,securepass123<br>
+                janedoe,jane@example.com,<br>
+              </code>
+              <em style="display: block; margin-top: 0.5rem; color: #975a16;">⚠️ Note: Users created without passwords will have random passwords. They'll need to reset via "Forgot Password".</em>
+            </div>
+          </div>
+          <button type="button" class="upload-btn" onclick="showBetaMessage(this)">Upload</button>
+        </form>
+      </div>
+
+      <!-- Admin Note -->
+      <div style="margin-top: 2rem; padding: 1.5rem; background: #edf2f7; border-left: 4px solid #667eea; border-radius: 8px;">
+        <h4 style="color: #1a202c; font-weight: 700; margin-bottom: 0.5rem;">👑 Creating Admin/Staff Users</h4>
+        <p style="color: #4a5568; font-size: 0.875rem; line-height: 1.6;">
+          Users uploaded via CSV are created as regular users. To grant admin/staff privileges, use the Django admin interface
+          (<a href="/admin/auth/user/" style="color: #667eea; text-decoration: underline;">User Management</a>)
+          or run this command in the Render shell:
+        </p>
+        <code style="display: block; background: #2d3748; color: #48bb78; padding: 1rem; border-radius: 4px; margin-top: 0.75rem; font-size: 0.875rem;">
+          python manage.py createsuperuser
+        </code>
+        <p style="color: #718096; font-size: 0.8rem; margin-top: 0.75rem; font-style: italic;">
+          For existing users, edit them in <a href="/admin/auth/user/" style="color: #667eea;">Django Admin → Users</a> and check "Staff status" or "Superuser status".
+        </p>
+      </div>
+    </div>
+
+    <!-- Back to Admin -->
+    <!-- <a href="/admin/" class="back-link">← Back to Admin</a> -->
+  </div>
+
+  <script>
+    function showBetaMessage(button) {
+      // Add shake animation to button
+      button.classList.add('shake');
+
+      // Remove shake class after animation completes
+      setTimeout(() => {
+        button.classList.remove('shake');
+      }, 500);
+
+      // Create or find messages container
+      let messagesDiv = document.querySelector('.messages');
+      if (!messagesDiv) {
+        messagesDiv = document.createElement('div');
+        messagesDiv.className = 'messages';
+        const header = document.querySelector('.header');
+        header.parentNode.insertBefore(messagesDiv, header.nextSibling);
+      }
+
+      // Create error message
+      const messageDiv = document.createElement('div');
+      messageDiv.className = 'message message-warning';
+      messageDiv.textContent = '⚠️ This feature is still in beta and not yet available.';
+
+      // Add message to top
+      messagesDiv.insertBefore(messageDiv, messagesDiv.firstChild);
+
+      // Scroll to top to show message
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+
+      // Remove message after 5 seconds
+      setTimeout(() => {
+        messageDiv.style.transition = 'opacity 0.5s';
+        messageDiv.style.opacity = '0';
+        setTimeout(() => {
+          messageDiv.remove();
+        }, 500);
+      }, 5000);
+    }
+  </script>
+</body>
+</html>
