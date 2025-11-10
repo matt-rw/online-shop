@@ -4,7 +4,10 @@ from django.contrib.admin.views.decorators import staff_member_required
 from django.shortcuts import render, redirect
 from django.contrib import messages
 from django.contrib.auth import get_user_model
-from .models import EmailSubscription
+from django.db.models import Count, Q
+from django.utils import timezone
+from datetime import timedelta
+from .models import EmailSubscription, ConnectionLog
 
 User = get_user_model()
 
@@ -366,3 +369,310 @@ def subscribers_list(request):
     }
 
     return render(request, 'admin/subscribers_list.html', context)
+
+
+@staff_member_required
+def security_dashboard(request):
+    """
+    Display security and system stats dashboard.
+    Only accessible to admin/staff users.
+    """
+    from datetime import datetime
+    import sys
+    import platform
+    import django
+    import os
+    import psutil
+    from django.conf import settings
+
+    now = timezone.now()
+
+    # System Information
+    system_info = {
+        'python_version': sys.version.split()[0],
+        'django_version': django.get_version(),
+        'platform': platform.platform(),
+        'platform_system': platform.system(),
+        'platform_release': platform.release(),
+        'processor': platform.processor(),
+        'architecture': platform.machine(),
+        'hostname': platform.node(),
+        'server_time': now,
+    }
+
+    # Machine Status (CPU, Memory, Disk)
+    try:
+        cpu_percent = psutil.cpu_percent(interval=1)
+        memory = psutil.virtual_memory()
+        disk = psutil.disk_usage('/')
+
+        machine_status = {
+            'cpu_percent': round(cpu_percent, 1),
+            'cpu_count': psutil.cpu_count(),
+            'memory_total_gb': round(memory.total / (1024**3), 2),
+            'memory_used_gb': round(memory.used / (1024**3), 2),
+            'memory_percent': round(memory.percent, 1),
+            'disk_total_gb': round(disk.total / (1024**3), 2),
+            'disk_used_gb': round(disk.used / (1024**3), 2),
+            'disk_percent': round(disk.percent, 1),
+        }
+    except:
+        machine_status = {
+            'cpu_percent': 'N/A',
+            'cpu_count': 'N/A',
+            'memory_total_gb': 'N/A',
+            'memory_used_gb': 'N/A',
+            'memory_percent': 'N/A',
+            'disk_total_gb': 'N/A',
+            'disk_used_gb': 'N/A',
+            'disk_percent': 'N/A',
+        }
+
+    # Database Information
+    try:
+        from django.db import connection
+        db_info = {
+            'engine': settings.DATABASES['default']['ENGINE'].split('.')[-1],
+            'name': settings.DATABASES['default']['NAME'],
+            'host': settings.DATABASES['default'].get('HOST', 'localhost'),
+            'port': settings.DATABASES['default'].get('PORT', 'default'),
+        }
+
+        # Get database size if PostgreSQL
+        if 'postgresql' in settings.DATABASES['default']['ENGINE']:
+            with connection.cursor() as cursor:
+                cursor.execute("SELECT pg_database_size(current_database());")
+                db_size_bytes = cursor.fetchone()[0]
+                db_size_mb = round(db_size_bytes / (1024 * 1024), 2)
+                db_info['size'] = f"{db_size_mb} MB"
+        else:
+            db_info['size'] = 'N/A'
+    except Exception as e:
+        db_info = {
+            'engine': 'Unknown',
+            'name': 'Unknown',
+            'host': 'Unknown',
+            'port': 'Unknown',
+            'size': 'N/A',
+            'error': str(e)
+        }
+
+    # Django Settings Security Check
+    django_settings = {
+        'debug_mode': settings.DEBUG,
+        'allowed_hosts': settings.ALLOWED_HOSTS,
+        'secret_key_set': bool(settings.SECRET_KEY and len(settings.SECRET_KEY) > 20),
+        'session_cookie_secure': getattr(settings, 'SESSION_COOKIE_SECURE', False),
+        'csrf_cookie_secure': getattr(settings, 'CSRF_COOKIE_SECURE', False),
+        'secure_ssl_redirect': getattr(settings, 'SECURE_SSL_REDIRECT', False),
+        'secure_hsts_seconds': getattr(settings, 'SECURE_HSTS_SECONDS', 0),
+        'static_root': bool(getattr(settings, 'STATIC_ROOT', None)),
+        'media_root': bool(getattr(settings, 'MEDIA_ROOT', None)),
+    }
+
+    # HTTPS/TLS Status
+    https_status = {
+        'ssl_redirect': django_settings['secure_ssl_redirect'],
+        'session_cookie_secure': django_settings['session_cookie_secure'],
+        'csrf_cookie_secure': django_settings['csrf_cookie_secure'],
+        'hsts_enabled': django_settings['secure_hsts_seconds'] > 0,
+        'hsts_seconds': django_settings['secure_hsts_seconds'],
+    }
+
+    # Services Status (check if common services are running)
+    services_status = []
+
+    # Check if running under systemd/gunicorn
+    try:
+        running_processes = [p.name() for p in psutil.process_iter(['name'])]
+        services_status.append({
+            'name': 'Gunicorn',
+            'status': 'running' if any('gunicorn' in p.lower() for p in running_processes) else 'not detected',
+        })
+        services_status.append({
+            'name': 'Nginx',
+            'status': 'running' if any('nginx' in p.lower() for p in running_processes) else 'not detected',
+        })
+        services_status.append({
+            'name': 'PostgreSQL',
+            'status': 'running' if any('postgres' in p.lower() for p in running_processes) else 'not detected',
+        })
+    except:
+        services_status.append({
+            'name': 'Process Check',
+            'status': 'unavailable',
+        })
+
+    # Security Warnings
+    warnings = []
+
+    if django_settings['debug_mode']:
+        warnings.append({
+            'level': 'danger',
+            'message': 'DEBUG mode is enabled! This should be disabled in production.'
+        })
+
+    if not django_settings['secret_key_set']:
+        warnings.append({
+            'level': 'danger',
+            'message': 'SECRET_KEY is not properly configured.'
+        })
+
+    if not https_status['ssl_redirect']:
+        warnings.append({
+            'level': 'warning',
+            'message': 'SECURE_SSL_REDIRECT is not enabled. HTTPS is not enforced.'
+        })
+
+    if not https_status['session_cookie_secure']:
+        warnings.append({
+            'level': 'warning',
+            'message': 'SESSION_COOKIE_SECURE is False. Session cookies can be sent over HTTP.'
+        })
+
+    if not https_status['hsts_enabled']:
+        warnings.append({
+            'level': 'warning',
+            'message': 'HSTS (HTTP Strict Transport Security) is not enabled.'
+        })
+
+    if settings.ALLOWED_HOSTS == ['*']:
+        warnings.append({
+            'level': 'danger',
+            'message': 'ALLOWED_HOSTS is set to [\'*\']. This is insecure in production.'
+        })
+
+    # System resource warnings
+    if machine_status['cpu_percent'] != 'N/A' and machine_status['cpu_percent'] > 80:
+        warnings.append({
+            'level': 'warning',
+            'message': f'High CPU usage: {machine_status["cpu_percent"]}%'
+        })
+
+    if machine_status['memory_percent'] != 'N/A' and machine_status['memory_percent'] > 85:
+        warnings.append({
+            'level': 'warning',
+            'message': f'High memory usage: {machine_status["memory_percent"]}%'
+        })
+
+    if machine_status['disk_percent'] != 'N/A' and machine_status['disk_percent'] > 90:
+        warnings.append({
+            'level': 'danger',
+            'message': f'Critical disk usage: {machine_status["disk_percent"]}%'
+        })
+
+    # Get process info
+    try:
+        process_count = len(list(psutil.process_iter()))
+        boot_time = datetime.fromtimestamp(psutil.boot_time())
+        uptime_seconds = (now - timezone.make_aware(boot_time)).total_seconds()
+        uptime_days = int(uptime_seconds // 86400)
+        uptime_hours = int((uptime_seconds % 86400) // 3600)
+        uptime_minutes = int((uptime_seconds % 3600) // 60)
+
+        system_info['uptime'] = f"{uptime_days}d {uptime_hours}h {uptime_minutes}m"
+        system_info['boot_time'] = boot_time
+        system_info['process_count'] = process_count
+    except:
+        system_info['uptime'] = 'N/A'
+        system_info['boot_time'] = 'N/A'
+        system_info['process_count'] = 'N/A'
+
+    # Network info
+    try:
+        import socket
+        hostname = socket.gethostname()
+        local_ip = socket.gethostbyname(hostname)
+        system_info['local_ip'] = local_ip
+    except:
+        system_info['local_ip'] = 'N/A'
+
+    # Additional metrics for user activity
+    total_users = User.objects.count()
+    active_users = User.objects.filter(is_active=True).count()
+    staff_users = User.objects.filter(is_staff=True).count()
+
+    last_24h = now - timedelta(hours=24)
+    last_7d = now - timedelta(days=7)
+
+    recent_users_24h = User.objects.filter(date_joined__gte=last_24h).count()
+    recent_users_7d = User.objects.filter(date_joined__gte=last_7d).count()
+
+    user_metrics = {
+        'total': total_users,
+        'active': active_users,
+        'staff': staff_users,
+        'recent_24h': recent_users_24h,
+        'recent_7d': recent_users_7d,
+    }
+
+    # Get recent connections from database
+    recent_connections = ConnectionLog.objects.select_related('user').all()[:50]
+
+    # Get unique IPs in last 24 hours
+    unique_ips_24h = ConnectionLog.objects.filter(
+        timestamp__gte=last_24h
+    ).values('ip_address').distinct().count()
+
+    # Get recent user logins (last login data)
+    recent_logins = User.objects.exclude(last_login__isnull=True).order_by('-last_login')[:20]
+
+    # Try to get request logs (if available)
+    recent_logs = []
+    try:
+        import glob
+        import os
+        log_files = []
+
+        # Common Django log locations
+        possible_log_paths = [
+            '/var/log/django/*.log',
+            '/var/log/gunicorn/*.log',
+            '/var/log/nginx/access.log',
+            'logs/*.log',
+            '*.log',
+        ]
+
+        for pattern in possible_log_paths:
+            log_files.extend(glob.glob(pattern))
+
+        if log_files:
+            # Read last 50 lines from the most recent log file
+            latest_log = max(log_files, key=os.path.getmtime)
+            with open(latest_log, 'r') as f:
+                lines = f.readlines()
+                recent_logs = lines[-50:]  # Last 50 lines
+        else:
+            recent_logs = ['No log files found in standard locations']
+    except Exception as e:
+        recent_logs = [f'Unable to read logs: {str(e)}']
+
+    # Email subscription metrics
+    total_subs = EmailSubscription.objects.count()
+    confirmed_subs = EmailSubscription.objects.filter(is_confirmed=True).count()
+    recent_subs_24h = EmailSubscription.objects.filter(subscribed_at__gte=last_24h).count()
+
+    email_metrics = {
+        'total': total_subs,
+        'confirmed': confirmed_subs,
+        'recent_24h': recent_subs_24h,
+        'confirmation_rate': round((confirmed_subs / total_subs * 100), 1) if total_subs > 0 else 0,
+    }
+
+    context = {
+        'system_info': system_info,
+        'machine_status': machine_status,
+        'db_info': db_info,
+        'django_settings': django_settings,
+        'https_status': https_status,
+        'services_status': services_status,
+        'warnings': warnings,
+        'user_metrics': user_metrics,
+        'email_metrics': email_metrics,
+        'recent_logins': recent_logins,
+        'recent_logs': recent_logs,
+        'recent_connections': recent_connections,
+        'unique_ips_24h': unique_ips_24h,
+    }
+
+    return render(request, 'admin/security_dashboard.html', context)

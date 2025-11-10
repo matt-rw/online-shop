@@ -11,6 +11,7 @@ from shop import admin_views
 urlpatterns = [
     path("django-admin/", admin.site.urls),
     path("admin/subscribers/", admin_views.subscribers_list, name='admin_subscribers'),
+    path("admin/security/", admin_views.security_dashboard, name='admin_security'),
     path("admin/", include(wagtailadmin_urls)),
     path("documents/", include(wagtaildocs_urls)),
     path("accounts/", include("allauth.urls")),  # django-allauth URLs

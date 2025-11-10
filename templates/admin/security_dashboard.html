@@ -1,0 +1,859 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Security & System Dashboard - Blueprint Apparel</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    body {
+      font-family: 'Inter', sans-serif;
+      background:
+        linear-gradient(135deg, rgba(102, 126, 234, 0.9) 0%, rgba(118, 75, 162, 0.9) 100%),
+        repeating-linear-gradient(0deg, transparent, transparent 35px, rgba(255,255,255,.03) 35px, rgba(255,255,255,.03) 36px),
+        repeating-linear-gradient(90deg, transparent, transparent 35px, rgba(255,255,255,.03) 35px, rgba(255,255,255,.03) 36px),
+        radial-gradient(circle at 20% 30%, rgba(255,255,255,0.1) 0%, transparent 50%),
+        radial-gradient(circle at 80% 70%, rgba(255,255,255,0.08) 0%, transparent 50%),
+        radial-gradient(circle at 50% 50%, rgba(118, 75, 162, 0.3) 0%, transparent 100%);
+      background-attachment: fixed;
+      min-height: 100vh;
+      padding: 2rem;
+      position: relative;
+    }
+    body::before {
+      content: '';
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background-image:
+        radial-gradient(circle at 15% 15%, rgba(255,255,255,0.15) 2px, transparent 2px),
+        radial-gradient(circle at 85% 45%, rgba(255,255,255,0.15) 3px, transparent 3px),
+        radial-gradient(circle at 45% 75%, rgba(255,255,255,0.12) 2px, transparent 2px),
+        radial-gradient(circle at 65% 25%, rgba(255,255,255,0.1) 2px, transparent 2px);
+      background-size: 100% 100%;
+      pointer-events: none;
+      z-index: 0;
+    }
+    .container {
+      max-width: 1400px;
+      margin: 0 auto;
+      position: relative;
+      z-index: 1;
+    }
+    .header {
+      background: white;
+      border-radius: 12px;
+      padding: 2rem;
+      margin-bottom: 2rem;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 1rem;
+    }
+    .header h1 {
+      color: #1a202c;
+      font-size: 2rem;
+      font-weight: 700;
+    }
+    .header-links {
+      display: flex;
+      gap: 1rem;
+    }
+    .header-link {
+      padding: 0.5rem 1rem;
+      background: #f7fafc;
+      color: #667eea;
+      text-decoration: none;
+      border-radius: 6px;
+      font-weight: 600;
+      font-size: 0.875rem;
+      transition: all 0.2s;
+    }
+    .header-link:hover {
+      background: #667eea;
+      color: white;
+    }
+    .section {
+      background: white;
+      border-radius: 12px;
+      padding: 2rem;
+      margin-bottom: 2rem;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+    .section h2 {
+      color: #1a202c;
+      font-size: 1.5rem;
+      font-weight: 700;
+      margin-bottom: 1.5rem;
+      padding-bottom: 1rem;
+      border-bottom: 2px solid #e2e8f0;
+    }
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 1rem;
+      margin-bottom: 1.5rem;
+    }
+    .stat-card {
+      background: #f7fafc;
+      border-radius: 8px;
+      padding: 1.5rem;
+      border-left: 4px solid #667eea;
+    }
+    .stat-card.warning {
+      border-left-color: #f6ad55;
+      background: #fffaf0;
+    }
+    .stat-card.danger {
+      border-left-color: #fc8181;
+      background: #fff5f5;
+    }
+    .stat-card.success {
+      border-left-color: #68d391;
+      background: #f0fff4;
+    }
+    .stat-card h3 {
+      color: #718096;
+      font-size: 0.875rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-bottom: 0.5rem;
+    }
+    .stat-card .number {
+      color: #1a202c;
+      font-size: 2rem;
+      font-weight: 700;
+    }
+    .stat-card .subtext {
+      color: #718096;
+      font-size: 0.875rem;
+      margin-top: 0.5rem;
+    }
+    .warning-box {
+      padding: 1rem 1.5rem;
+      border-radius: 8px;
+      margin-bottom: 1rem;
+      font-weight: 500;
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+    .warning-box.warning {
+      background: #fef5e7;
+      color: #975a16;
+      border-left: 4px solid #dd6b20;
+    }
+    .warning-box.danger {
+      background: #fff5f5;
+      color: #c53030;
+      border-left: 4px solid #e53e3e;
+    }
+    .warning-box.info {
+      background: #bee3f8;
+      color: #2c5282;
+      border-left: 4px solid #3182ce;
+    }
+    .warning-box.success {
+      background: #c6f6d5;
+      color: #22543d;
+      border-left: 4px solid #38a169;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 1rem;
+    }
+    th {
+      text-align: left;
+      padding: 1rem;
+      background: #f7fafc;
+      color: #4a5568;
+      font-weight: 600;
+      font-size: 0.875rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      border-bottom: 2px solid #e2e8f0;
+    }
+    td {
+      padding: 1rem;
+      border-bottom: 1px solid #e2e8f0;
+      color: #2d3748;
+    }
+    tr:hover {
+      background: #f7fafc;
+    }
+    .badge {
+      display: inline-block;
+      padding: 0.25rem 0.75rem;
+      border-radius: 9999px;
+      font-size: 0.75rem;
+      font-weight: 600;
+    }
+    .badge-success {
+      background: #c6f6d5;
+      color: #22543d;
+    }
+    .badge-warning {
+      background: #fef5e7;
+      color: #975a16;
+    }
+    .badge-danger {
+      background: #fed7d7;
+      color: #c53030;
+    }
+    .badge-info {
+      background: #bee3f8;
+      color: #2c5282;
+    }
+    .info-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 1rem;
+    }
+    .info-item {
+      display: flex;
+      justify-content: space-between;
+      padding: 0.75rem;
+      background: #f7fafc;
+      border-radius: 6px;
+    }
+    .info-label {
+      color: #718096;
+      font-weight: 600;
+      font-size: 0.875rem;
+    }
+    .info-value {
+      color: #1a202c;
+      font-weight: 600;
+      text-align: right;
+    }
+    .status-dot {
+      display: inline-block;
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      margin-right: 0.5rem;
+    }
+    .status-dot.running {
+      background: #48bb78;
+    }
+    .status-dot.stopped {
+      background: #f56565;
+    }
+    .status-dot.unknown {
+      background: #a0aec0;
+    }
+    @media (max-width: 1024px) {
+      body {
+        padding: 1rem;
+      }
+      .header h1 {
+        font-size: 1.5rem;
+      }
+      .stats-grid {
+        grid-template-columns: 1fr;
+      }
+      div[style*="grid-template-columns: 1fr 1fr"] {
+        grid-template-columns: 1fr !important;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <!-- Header -->
+    <div class="header">
+      <div>
+        <h1>Security & System Dashboard</h1>
+      </div>
+      <div class="header-links">
+        <a href="{% url 'admin_subscribers' %}" class="header-link">Subscribers</a>
+      </div>
+    </div>
+
+    <!-- System Logs -->
+    <div class="section">
+      <h2>System Logs & Activity</h2>
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin-bottom: 1.5rem;">
+        <div>
+          <h3 style="color: #4a5568; font-size: 1rem; margin-bottom: 0.75rem;">Recent Logs</h3>
+          <div style="background: #1a202c; border-radius: 8px; padding: 1rem; font-family: 'Monaco', 'Courier New', monospace; font-size: 0.7rem; color: #48bb78; overflow-x: auto; max-height: 400px; overflow-y: auto; line-height: 1.5;">
+            {% if recent_logs %}
+              {% for log in recent_logs %}
+                <div style="margin-bottom: 0.125rem;">{{ log|escape }}</div>
+              {% endfor %}
+            {% else %}
+              <div style="color: #f6ad55; text-align: center; padding: 2rem;">No log files found in standard locations</div>
+              <div style="color: #718096; text-align: center; font-size: 0.65rem;">Checked: /var/log/django/, /var/log/gunicorn/, /var/log/nginx/, logs/, *.log</div>
+            {% endif %}
+          </div>
+        </div>
+        <div>
+          <h3 style="color: #4a5568; font-size: 1rem; margin-bottom: 0.75rem;">Live Connections</h3>
+          <div style="background: #1a202c; border-radius: 8px; padding: 1rem; font-family: 'Monaco', 'Courier New', monospace; font-size: 0.7rem; color: #68d391; max-height: 400px; overflow-y: auto; line-height: 1.5;">
+            {% for conn in recent_connections|slice:":20" %}
+              <div style="margin-bottom: 0.25rem; {% if conn.status_code >= 400 %}color: #fc8181;{% elif conn.status_code >= 300 %}color: #f6ad55;{% endif %}">
+                <span style="color: #718096;">{{ conn.timestamp|date:"H:i:s" }}</span>
+                <span style="color: #68d391;">{{ conn.ip_address }}</span>
+                <span style="color: #667eea;">{{ conn.method }}</span>
+                <span style="color: #e2e8f0;">{{ conn.path|truncatechars:30 }}</span>
+                {% if conn.user %}
+                  <span style="color: #f6ad55;">[{{ conn.user.username }}]</span>
+                {% endif %}
+              </div>
+            {% empty %}
+              <div style="color: #f6ad55; text-align: center; padding: 2rem;">No connection logs yet</div>
+              <div style="color: #718096; text-align: center; font-size: 0.65rem;">Add middleware to settings.py to enable tracking</div>
+            {% endfor %}
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Security Alerts (Compact) -->
+    {% if warnings %}
+    <div style="background: white; border-radius: 8px; padding: 1rem; margin-bottom: 1.5rem; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);">
+      <h3 style="color: #1a202c; font-size: 1rem; margin-bottom: 0.75rem; font-weight: 700;">Security Alerts</h3>
+      <div style="display: grid; gap: 0.5rem;">
+        {% for warning in warnings %}
+        <div style="padding: 0.5rem 1rem; border-radius: 6px; font-size: 0.875rem; {% if warning.level == 'danger' %}background: #fff5f5; color: #c53030; border-left: 3px solid #e53e3e;{% elif warning.level == 'warning' %}background: #fef5e7; color: #975a16; border-left: 3px solid #dd6b20;{% else %}background: #bee3f8; color: #2c5282; border-left: 3px solid #3182ce;{% endif %}">
+          {{ warning.message }}
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+    {% endif %}
+
+    <!-- Two Column Layout for System Stats -->
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin-bottom: 1.5rem;">
+      <!-- Left Column -->
+      <div>
+        <!-- Machine Status -->
+        <div class="section">
+          <h2>Machine Status</h2>
+          <div class="stats-grid">
+            <div class="stat-card {% if machine_status.cpu_percent != 'N/A' and machine_status.cpu_percent > 80 %}danger{% elif machine_status.cpu_percent != 'N/A' and machine_status.cpu_percent > 60 %}warning{% endif %}">
+              <h3>CPU Usage</h3>
+              <div class="number">{{ machine_status.cpu_percent }}%</div>
+              <div class="subtext">{{ machine_status.cpu_count }} cores</div>
+            </div>
+            <div class="stat-card {% if machine_status.memory_percent != 'N/A' and machine_status.memory_percent > 85 %}danger{% elif machine_status.memory_percent != 'N/A' and machine_status.memory_percent > 70 %}warning{% endif %}">
+              <h3>Memory Usage</h3>
+              <div class="number">{{ machine_status.memory_percent }}%</div>
+              <div class="subtext">{{ machine_status.memory_used_gb }} / {{ machine_status.memory_total_gb }} GB</div>
+            </div>
+            <div class="stat-card {% if machine_status.disk_percent != 'N/A' and machine_status.disk_percent > 90 %}danger{% elif machine_status.disk_percent != 'N/A' and machine_status.disk_percent > 75 %}warning{% endif %}">
+              <h3>Disk Usage</h3>
+              <div class="number">{{ machine_status.disk_percent }}%</div>
+              <div class="subtext">{{ machine_status.disk_used_gb }} / {{ machine_status.disk_total_gb }} GB</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Django Settings -->
+        <div class="section">
+          <h2>Django Settings</h2>
+          <div class="info-grid" style="grid-template-columns: 1fr;">
+            <div class="info-item">
+              <span class="info-label">Debug Mode</span>
+              <span class="info-value">
+                {% if django_settings.debug_mode %}
+                  <span class="badge badge-danger">ON (Unsafe!)</span>
+                {% else %}
+                  <span class="badge badge-success">OFF</span>
+                {% endif %}
+              </span>
+            </div>
+            <div class="info-item">
+              <span class="info-label">Secret Key</span>
+              <span class="info-value">
+                {% if django_settings.secret_key_set %}
+                  <span class="badge badge-success">Configured</span>
+                {% else %}
+                  <span class="badge badge-danger">Missing</span>
+                {% endif %}
+              </span>
+            </div>
+            <div class="info-item">
+              <span class="info-label">Allowed Hosts</span>
+              <span class="info-value">
+                {% if django_settings.allowed_hosts|length > 0 %}
+                  <span class="badge badge-info">{{ django_settings.allowed_hosts|length }} host(s)</span>
+                {% else %}
+                  <span class="badge badge-warning">None</span>
+                {% endif %}
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Database Information -->
+        <div class="section">
+          <h2>Database</h2>
+          <div class="info-grid" style="grid-template-columns: 1fr;">
+            <div class="info-item">
+              <span class="info-label">Engine</span>
+              <span class="info-value">{{ db_info.engine }}</span>
+            </div>
+            <div class="info-item">
+              <span class="info-label">Database Name</span>
+              <span class="info-value">{{ db_info.name }}</span>
+            </div>
+            <div class="info-item">
+              <span class="info-label">Host</span>
+              <span class="info-value">{{ db_info.host }}</span>
+            </div>
+            <div class="info-item">
+              <span class="info-label">Database Size</span>
+              <span class="info-value">{{ db_info.size }}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Right Column -->
+      <div>
+        <!-- HTTPS/TLS Security -->
+        <div class="section">
+          <h2>HTTPS / TLS Security</h2>
+          <div class="info-grid" style="grid-template-columns: 1fr;">
+            <div class="info-item">
+              <span class="info-label">SSL Redirect</span>
+              <span class="info-value">
+                {% if https_status.ssl_redirect %}
+                  <span class="badge badge-success">Enabled</span>
+                {% else %}
+                  <span class="badge badge-danger">Disabled</span>
+                {% endif %}
+              </span>
+            </div>
+            <div class="info-item">
+              <span class="info-label">Secure Session Cookies</span>
+              <span class="info-value">
+                {% if https_status.session_cookie_secure %}
+                  <span class="badge badge-success">Enabled</span>
+                {% else %}
+                  <span class="badge badge-danger">Disabled</span>
+                {% endif %}
+              </span>
+            </div>
+            <div class="info-item">
+              <span class="info-label">Secure CSRF Cookies</span>
+              <span class="info-value">
+                {% if https_status.csrf_cookie_secure %}
+                  <span class="badge badge-success">Enabled</span>
+                {% else %}
+                  <span class="badge badge-danger">Disabled</span>
+                {% endif %}
+              </span>
+            </div>
+            <div class="info-item">
+              <span class="info-label">HSTS</span>
+              <span class="info-value">
+                {% if https_status.hsts_enabled %}
+                  <span class="badge badge-success">{{ https_status.hsts_seconds }}s</span>
+                {% else %}
+                  <span class="badge badge-danger">Disabled</span>
+                {% endif %}
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Services Status -->
+        <div class="section">
+          <h2>Services</h2>
+          <table>
+            <thead>
+              <tr>
+                <th>Service</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for service in services_status %}
+              <tr>
+                <td>{{ service.name }}</td>
+                <td>
+                  {% if 'running' in service.status %}
+                    <span class="status-dot running"></span><span class="badge badge-success">{{ service.status }}</span>
+                  {% elif 'not detected' in service.status %}
+                    <span class="status-dot unknown"></span><span class="badge badge-info">{{ service.status }}</span>
+                  {% else %}
+                    <span class="status-dot stopped"></span><span class="badge badge-warning">{{ service.status }}</span>
+                  {% endif %}
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+
+        <!-- System Information -->
+        <div class="section">
+          <h2>System Info</h2>
+          <div class="info-grid" style="grid-template-columns: 1fr;">
+            <div class="info-item">
+              <span class="info-label">Python</span>
+              <span class="info-value">{{ system_info.python_version }}</span>
+            </div>
+            <div class="info-item">
+              <span class="info-label">Django</span>
+              <span class="info-value">{{ system_info.django_version }}</span>
+            </div>
+            <div class="info-item">
+              <span class="info-label">OS</span>
+              <span class="info-value">{{ system_info.platform_system }} {{ system_info.platform_release }}</span>
+            </div>
+            <div class="info-item">
+              <span class="info-label">Hostname</span>
+              <span class="info-value">{{ system_info.hostname }}</span>
+            </div>
+            <div class="info-item">
+              <span class="info-label">Local IP</span>
+              <span class="info-value">{{ system_info.local_ip }}</span>
+            </div>
+            <div class="info-item">
+              <span class="info-label">Uptime</span>
+              <span class="info-value">{{ system_info.uptime }}</span>
+            </div>
+            <div class="info-item">
+              <span class="info-label">Processes</span>
+              <span class="info-value">{{ system_info.process_count }}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Two Column Layout for Charts and Metrics -->
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin-bottom: 1.5rem;">
+      <!-- Resource Usage Charts -->
+      <div class="section">
+        <h2>Resource Usage Charts</h2>
+        <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; margin-top: 1rem;">
+          <div>
+            <h3 style="color: #4a5568; font-size: 0.875rem; margin-bottom: 0.5rem; text-align: center;">CPU</h3>
+            <div style="position: relative; height: 150px;">
+              <canvas id="cpuChart"></canvas>
+            </div>
+          </div>
+          <div>
+            <h3 style="color: #4a5568; font-size: 0.875rem; margin-bottom: 0.5rem; text-align: center;">Memory</h3>
+            <div style="position: relative; height: 150px;">
+              <canvas id="memoryChart"></canvas>
+            </div>
+          </div>
+          <div>
+            <h3 style="color: #4a5568; font-size: 0.875rem; margin-bottom: 0.5rem; text-align: center;">Disk</h3>
+            <div style="position: relative; height: 150px;">
+              <canvas id="diskChart"></canvas>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- User & Subscription Metrics -->
+      <div class="section">
+        <h2>User & Subscription Metrics</h2>
+        <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 0.75rem; margin-top: 1rem;">
+          <div class="stat-card" style="padding: 1rem;">
+            <h3 style="font-size: 0.75rem;">Total Users</h3>
+            <div class="number" style="font-size: 1.75rem;">{{ user_metrics.total }}</div>
+            <div class="subtext" style="font-size: 0.75rem;">{{ user_metrics.active }} active</div>
+          </div>
+          <div class="stat-card" style="padding: 1rem;">
+            <h3 style="font-size: 0.75rem;">New Users (24h)</h3>
+            <div class="number" style="font-size: 1.75rem;">{{ user_metrics.recent_24h }}</div>
+          </div>
+          <div class="stat-card" style="padding: 1rem;">
+            <h3 style="font-size: 0.75rem;">Staff Members</h3>
+            <div class="number" style="font-size: 1.75rem;">{{ user_metrics.staff }}</div>
+          </div>
+          <div class="stat-card success" style="padding: 1rem;">
+            <h3 style="font-size: 0.75rem;">Total Subscribers</h3>
+            <div class="number" style="font-size: 1.75rem;">{{ email_metrics.total }}</div>
+            <div class="subtext" style="font-size: 0.75rem;">{{ email_metrics.confirmed }} confirmed</div>
+          </div>
+          <div class="stat-card" style="padding: 1rem;">
+            <h3 style="font-size: 0.75rem;">New Subs (24h)</h3>
+            <div class="number" style="font-size: 1.75rem;">{{ email_metrics.recent_24h }}</div>
+          </div>
+          <div class="stat-card {% if email_metrics.confirmation_rate > 70 %}success{% elif email_metrics.confirmation_rate > 40 %}warning{% else %}danger{% endif %}" style="padding: 1rem;">
+            <h3 style="font-size: 0.75rem;">Confirmation Rate</h3>
+            <div class="number" style="font-size: 1.75rem;">{{ email_metrics.confirmation_rate }}%</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Connection Details Table -->
+    <div class="section">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+        <div>
+          <h2 style="margin-bottom: 0.5rem;">Connection Details (Last 50)</h2>
+          <p style="color: #718096; font-size: 0.875rem; margin: 0;">
+            Tracks IP addresses, paths, methods, and response codes.
+            <strong>Setup:</strong> Add 'shop.middleware.ConnectionLogMiddleware' to MIDDLEWARE
+          </p>
+        </div>
+        <div class="stat-card" style="margin: 0; min-width: 150px;">
+          <h3 style="font-size: 0.75rem;">Unique IPs (24h)</h3>
+          <div class="number" style="font-size: 1.5rem;">{{ unique_ips_24h }}</div>
+        </div>
+      </div>
+      <div style="overflow-x: auto;">
+        <table>
+          <thead>
+            <tr>
+              <th>Time</th>
+              <th>IP Address</th>
+              <th>User</th>
+              <th>Path</th>
+              <th>Method</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for conn in recent_connections %}
+            <tr>
+              <td style="white-space: nowrap;">{{ conn.timestamp|date:"M d, H:i:s" }}</td>
+              <td style="font-family: monospace;">{{ conn.ip_address }}</td>
+              <td>
+                {% if conn.user %}
+                  <span class="badge badge-info">{{ conn.user.username }}</span>
+                {% else %}
+                  <span style="color: #a0aec0;">Anonymous</span>
+                {% endif %}
+              </td>
+              <td style="font-family: monospace; font-size: 0.75rem;">{{ conn.path|truncatechars:40 }}</td>
+              <td>
+                <span class="badge {% if conn.method == 'GET' %}badge-info{% elif conn.method == 'POST' %}badge-success{% else %}badge-warning{% endif %}">
+                  {{ conn.method }}
+                </span>
+              </td>
+              <td>
+                <span class="badge {% if conn.status_code < 300 %}badge-success{% elif conn.status_code < 400 %}badge-info{% elif conn.status_code < 500 %}badge-warning{% else %}badge-danger{% endif %}">
+                  {{ conn.status_code|default:"N/A" }}
+                </span>
+              </td>
+            </tr>
+            {% empty %}
+            <tr>
+              <td colspan="6" style="text-align: center; color: #a0aec0; padding: 2rem;">
+                No connection logs yet. Middleware will start tracking after activation.
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Security Recommendations -->
+    <div class="section">
+      <h2>Security Best Practices</h2>
+      <div style="display: grid; gap: 1rem;">
+        <div class="info-item" style="flex-direction: column; align-items: flex-start; padding: 1rem;">
+          <div style="display: flex; justify-content: space-between; width: 100%; margin-bottom: 0.5rem;">
+            <span class="info-label">HTTPS Enforcement</span>
+            {% if https_status.ssl_redirect %}
+              <span class="badge badge-success">✓ Enabled</span>
+            {% else %}
+              <span class="badge badge-danger">✗ Not Enabled</span>
+            {% endif %}
+          </div>
+          <p style="color: #718096; font-size: 0.875rem; margin-top: 0.5rem;">
+            Ensures all HTTP requests are redirected to HTTPS. Critical for protecting user data in transit.
+          </p>
+        </div>
+
+        <div class="info-item" style="flex-direction: column; align-items: flex-start; padding: 1rem;">
+          <div style="display: flex; justify-content: space-between; width: 100%; margin-bottom: 0.5rem;">
+            <span class="info-label">HSTS (HTTP Strict Transport Security)</span>
+            {% if https_status.hsts_enabled %}
+              <span class="badge badge-success">✓ Enabled ({{ https_status.hsts_seconds }}s)</span>
+            {% else %}
+              <span class="badge badge-danger">✗ Not Enabled</span>
+            {% endif %}
+          </div>
+          <p style="color: #718096; font-size: 0.875rem; margin-top: 0.5rem;">
+            Forces browsers to only connect via HTTPS. Recommended value: 31536000 (1 year) for production.
+          </p>
+        </div>
+
+        <div class="info-item" style="flex-direction: column; align-items: flex-start; padding: 1rem;">
+          <div style="display: flex; justify-content: space-between; width: 100%; margin-bottom: 0.5rem;">
+            <span class="info-label">Secure Cookies</span>
+            {% if https_status.session_cookie_secure and https_status.csrf_cookie_secure %}
+              <span class="badge badge-success">✓ Both Enabled</span>
+            {% elif https_status.session_cookie_secure or https_status.csrf_cookie_secure %}
+              <span class="badge badge-warning">⚠ Partially Enabled</span>
+            {% else %}
+              <span class="badge badge-danger">✗ Not Enabled</span>
+            {% endif %}
+          </div>
+          <p style="color: #718096; font-size: 0.875rem; margin-top: 0.5rem;">
+            Prevents cookies from being sent over insecure HTTP connections. Essential for protecting session data.
+          </p>
+        </div>
+
+        <div class="info-item" style="flex-direction: column; align-items: flex-start; padding: 1rem;">
+          <div style="display: flex; justify-content: space-between; width: 100%; margin-bottom: 0.5rem;">
+            <span class="info-label">Debug Mode</span>
+            {% if not django_settings.debug_mode %}
+              <span class="badge badge-success">✓ Disabled</span>
+            {% else %}
+              <span class="badge badge-danger">✗ Enabled (UNSAFE!)</span>
+            {% endif %}
+          </div>
+          <p style="color: #718096; font-size: 0.875rem; margin-top: 0.5rem;">
+            Debug mode must be disabled in production to prevent exposing sensitive system information and code.
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // CPU Usage Chart
+    const cpuValue = {{ machine_status.cpu_percent|default:"0" }};
+    const cpuCtx = document.getElementById('cpuChart');
+    new Chart(cpuCtx, {
+      type: 'doughnut',
+      data: {
+        labels: ['Used', 'Available'],
+        datasets: [{
+          data: [cpuValue, 100 - cpuValue],
+          backgroundColor: [
+            cpuValue > 80 ? '#fc8181' : cpuValue > 60 ? '#f6ad55' : '#667eea',
+            '#e2e8f0'
+          ],
+          borderWidth: 0
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { display: false },
+          tooltip: {
+            callbacks: {
+              label: function(context) {
+                return context.label + ': ' + context.parsed + '%';
+              }
+            }
+          }
+        },
+        cutout: '70%'
+      }
+    });
+
+    // Memory Usage Chart
+    const memValue = {{ machine_status.memory_percent|default:"0" }};
+    const memCtx = document.getElementById('memoryChart');
+    new Chart(memCtx, {
+      type: 'doughnut',
+      data: {
+        labels: ['Used', 'Available'],
+        datasets: [{
+          data: [memValue, 100 - memValue],
+          backgroundColor: [
+            memValue > 85 ? '#fc8181' : memValue > 70 ? '#f6ad55' : '#667eea',
+            '#e2e8f0'
+          ],
+          borderWidth: 0
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { display: false },
+          tooltip: {
+            callbacks: {
+              label: function(context) {
+                return context.label + ': ' + context.parsed + '%';
+              }
+            }
+          }
+        },
+        cutout: '70%'
+      }
+    });
+
+    // Disk Usage Chart
+    const diskValue = {{ machine_status.disk_percent|default:"0" }};
+    const diskCtx = document.getElementById('diskChart');
+    new Chart(diskCtx, {
+      type: 'doughnut',
+      data: {
+        labels: ['Used', 'Available'],
+        datasets: [{
+          data: [diskValue, 100 - diskValue],
+          backgroundColor: [
+            diskValue > 90 ? '#fc8181' : diskValue > 75 ? '#f6ad55' : '#667eea',
+            '#e2e8f0'
+          ],
+          borderWidth: 0
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { display: false },
+          tooltip: {
+            callbacks: {
+              label: function(context) {
+                return context.label + ': ' + context.parsed + '%';
+              }
+            }
+          }
+        },
+        cutout: '70%'
+      }
+    });
+
+    // Add center text to doughnut charts
+    const addCenterText = (chart, text) => {
+      const ctx = chart.ctx;
+      const centerX = (chart.chartArea.left + chart.chartArea.right) / 2;
+      const centerY = (chart.chartArea.top + chart.chartArea.bottom) / 2;
+
+      ctx.save();
+      ctx.font = 'bold 24px Inter';
+      ctx.fillStyle = '#1a202c';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(text + '%', centerX, centerY);
+      ctx.restore();
+    };
+
+    Chart.register({
+      id: 'centerText',
+      afterDraw: (chart) => {
+        if (chart.canvas.id === 'cpuChart') {
+          addCenterText(chart, cpuValue);
+        } else if (chart.canvas.id === 'memoryChart') {
+          addCenterText(chart, memValue);
+        } else if (chart.canvas.id === 'diskChart') {
+          addCenterText(chart, diskValue);
+        }
+      }
+    });
+  </script>
+</body>
+</html>
