@@ -44,12 +44,12 @@ def subscribe(request):
             except Exception as e:
                 logger.error(f"Error creating subscription: {e}")
                 messages.error(request, "Something went wrong. Please try again.")
-                return render(request, 'home/home_page.html', {'form': form})
+                return redirect('/#subscribe')
 
         else:
             logger.warning(f"Invalid subscription form submission: {form.errors}")
             messages.error(request, "Please enter a valid email address.")
-            return render(request, 'home/home_page.html', {'form': form})
+            return redirect('/#subscribe')
 
     # GET request
     form = SubscribeForm()
