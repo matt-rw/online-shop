@@ -1,0 +1,2347 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="csrf-token" content="{{ csrf_token }}">
+  <title>Products - Blueprint Apparel</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background: #f1f5f9;
+      min-height: 100vh;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
+
+    .nav-links {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      padding: 1rem 2rem;
+      display: flex;
+      gap: 0.75rem;
+      align-items: center;
+    }
+
+    .nav-link {
+      background: rgba(255, 255, 255, 0.15);
+      backdrop-filter: blur(10px);
+      color: white;
+      padding: 0.5rem 1rem;
+      border-radius: 8px;
+      text-decoration: none;
+      font-size: 0.875rem;
+      font-weight: 500;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .nav-link:hover {
+      background: rgba(255, 255, 255, 0.25);
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    }
+
+    .top-bar {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      padding: 2rem 0;
+      box-shadow: 0 4px 20px rgba(102, 126, 234, 0.15);
+      margin-bottom: 2rem;
+    }
+
+    .container {
+      max-width: 1600px;
+      margin: 0 auto;
+      padding: 0 2rem;
+    }
+
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1rem;
+    }
+
+    .header h1 {
+      color: white;
+      font-size: 2.5rem;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+    }
+
+    .btn-primary {
+      background: white;
+      color: #667eea;
+      padding: 0.875rem 1.75rem;
+      border-radius: 12px;
+      text-decoration: none;
+      font-weight: 700;
+      font-size: 1rem;
+      transition: all 0.3s;
+      border: none;
+      cursor: pointer;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .btn-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+    }
+
+    .main-content {
+      padding: 0 2rem 2rem 2rem;
+      max-width: 1600px;
+      margin: 0 auto;
+    }
+
+    .quick-stats {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 1.5rem;
+      margin-bottom: 3rem;
+      margin-top: -4rem;
+      position: relative;
+      z-index: 10;
+    }
+
+    .stat-box {
+      background: white;
+      border-radius: 16px;
+      padding: 1.75rem;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+      text-align: center;
+      border: 1px solid rgba(226, 232, 240, 0.8);
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .stat-box::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 4px;
+      background: linear-gradient(90deg, #667eea, #764ba2);
+      opacity: 0;
+      transition: opacity 0.3s;
+    }
+
+    .stat-box:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 12px 28px rgba(0, 0, 0, 0.12);
+    }
+
+    .stat-box:hover::before {
+      opacity: 1;
+    }
+
+    .stat-box h4 {
+      color: #64748b;
+      font-size: 0.75rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      margin-bottom: 0.75rem;
+    }
+
+    .stat-box .number {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      font-size: 2.25rem;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+    }
+
+    .stat-box .icon {
+      font-size: 1.75rem;
+      margin-bottom: 0.75rem;
+      color: #667eea;
+    }
+
+    .products-section {
+      background: white;
+      border-radius: 16px;
+      padding: 2rem;
+      box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
+      border: 1px solid #e2e8f0;
+    }
+
+    .section-title {
+      color: #1e293b;
+      font-size: 1.5rem;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      margin-bottom: 1.5rem;
+      position: relative;
+      padding-left: 1rem;
+    }
+
+    .section-title::before {
+      content: '';
+      position: absolute;
+      left: 0;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 4px;
+      height: 28px;
+      background: linear-gradient(180deg, #667eea, #764ba2);
+      border-radius: 2px;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    th {
+      background: #f8fafc;
+      color: #64748b;
+      font-size: 0.75rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      padding: 1rem;
+      text-align: left;
+      border-bottom: 2px solid #e2e8f0;
+    }
+
+    td {
+      padding: 1.25rem 1rem;
+      border-bottom: 1px solid #f1f5f9;
+      color: #334155;
+    }
+
+    tbody tr {
+      transition: all 0.2s;
+    }
+
+    tbody tr:hover {
+      background: #f8fafc;
+    }
+
+    .product-name {
+      font-weight: 600;
+      color: #0f172a;
+      font-size: 0.9375rem;
+    }
+
+    .product-slug {
+      font-size: 0.75rem;
+      color: #64748b;
+      margin-top: 0.25rem;
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.375rem;
+      padding: 0.375rem 0.75rem;
+      border-radius: 8px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .badge.active {
+      background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%);
+      color: #065f46;
+    }
+
+    .badge.inactive {
+      background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%);
+      color: #991b1b;
+    }
+
+    .badge.low-stock {
+      background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+      color: #92400e;
+    }
+
+    .badge.out-of-stock {
+      background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%);
+      color: #991b1b;
+    }
+
+    .price-input {
+      border: 1px solid #e2e8f0;
+      padding: 0.5rem 0.75rem;
+      border-radius: 6px;
+      font-size: 0.875rem;
+      width: 100px;
+      transition: all 0.2s;
+    }
+
+    .price-input:focus {
+      outline: none;
+      border-color: #667eea;
+      box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+    }
+
+    .btn {
+      padding: 0.5rem 1rem;
+      border-radius: 8px;
+      font-size: 0.875rem;
+      font-weight: 600;
+      border: none;
+      cursor: pointer;
+      transition: all 0.2s;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      text-decoration: none;
+    }
+
+    .btn-secondary {
+      background: #f1f5f9;
+      color: #64748b;
+      border: 1px solid #e2e8f0;
+    }
+
+    .btn-secondary:hover {
+      background: #e2e8f0;
+    }
+
+    .btn-sm {
+      padding: 0.375rem 0.75rem;
+      font-size: 0.8125rem;
+    }
+
+    .toggle-active {
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .toggle-active:hover {
+      transform: scale(1.05);
+    }
+
+    /* Modal Styles */
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.6);
+      backdrop-filter: blur(4px);
+      z-index: 1000;
+      animation: fadeIn 0.2s ease-out;
+    }
+
+    .modal-overlay.active {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 2rem;
+    }
+
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+      }
+      to {
+        opacity: 1;
+      }
+    }
+
+    .modal-content {
+      background: white;
+      border-radius: 16px;
+      width: 100%;
+      max-width: 600px;
+      max-height: 90vh;
+      overflow-y: auto;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+      animation: slideUp 0.3s ease-out;
+    }
+
+    @keyframes slideUp {
+      from {
+        transform: translateY(20px);
+        opacity: 0;
+      }
+      to {
+        transform: translateY(0);
+        opacity: 1;
+      }
+    }
+
+    .modal-header {
+      padding: 2rem;
+      border-bottom: 1px solid #e2e8f0;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .modal-header h2 {
+      color: #1e293b;
+      font-size: 1.5rem;
+      font-weight: 700;
+    }
+
+    .modal-close {
+      background: none;
+      border: none;
+      font-size: 1.5rem;
+      color: #64748b;
+      cursor: pointer;
+      width: 36px;
+      height: 36px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 8px;
+      transition: all 0.2s;
+    }
+
+    .modal-close:hover {
+      background: #f1f5f9;
+      color: #1e293b;
+    }
+
+    .modal-body {
+      padding: 2rem;
+    }
+
+    .form-group {
+      margin-bottom: 1.5rem;
+    }
+
+    .form-group label {
+      display: block;
+      color: #334155;
+      font-size: 0.875rem;
+      font-weight: 600;
+      margin-bottom: 0.5rem;
+    }
+
+    .form-group input,
+    .form-group textarea,
+    .form-group select {
+      width: 100%;
+      border: 1px solid #e2e8f0;
+      padding: 0.75rem;
+      border-radius: 8px;
+      font-size: 0.9375rem;
+      transition: all 0.2s;
+    }
+
+    .form-group textarea {
+      min-height: 100px;
+      resize: vertical;
+    }
+
+    .form-group input:focus,
+    .form-group textarea:focus,
+    .form-group select:focus {
+      outline: none;
+      border-color: #667eea;
+      box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+    }
+
+    .modal-footer {
+      padding: 1.5rem 2rem;
+      border-top: 1px solid #e2e8f0;
+      display: flex;
+      gap: 1rem;
+      justify-content: flex-end;
+    }
+
+    @media (max-width: 768px) {
+      .header h1 {
+        font-size: 2rem;
+      }
+      .quick-stats {
+        grid-template-columns: 1fr 1fr;
+        margin-top: -3rem;
+      }
+      .modal-content {
+        max-width: 100%;
+        margin: 1rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="nav-links">
+    <a href="{% url 'admin_home' %}" class="nav-link">← Back</a>
+  </div>
+
+  <div class="top-bar">
+    <div class="container">
+      <div class="header">
+        <h1>Products</h1>
+        <button onclick="openAddProductPopup()" class="btn-primary">+ Add Product</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="main-content">
+    <!-- Quick Stats -->
+    <div class="quick-stats">
+      <div class="stat-box">
+        <div class="icon"><i class="fa-solid fa-box"></i></div>
+        <h4>Core Products</h4>
+        <div class="number">{{ total_products }}</div>
+        <div style="font-size: 0.75rem; color: #64748b; margin-top: 0.5rem;">Unique product types</div>
+      </div>
+      <div class="stat-box">
+        <div class="icon"><i class="fa-solid fa-check-circle"></i></div>
+        <h4>Active Products</h4>
+        <div class="number">{{ active_products }}</div>
+      </div>
+      <div class="stat-box">
+        <div class="icon"><i class="fa-solid fa-barcode"></i></div>
+        <h4>SKUs</h4>
+        <div class="number">{{ total_variants }}</div>
+        <div style="font-size: 0.75rem; color: #64748b; margin-top: 0.5rem;">Total variants</div>
+      </div>
+      <div class="stat-box">
+        <div class="icon"><i class="fa-solid fa-warehouse"></i></div>
+        <h4>Total Stock</h4>
+        <div class="number">{{ total_stock }}</div>
+      </div>
+      <div class="stat-box">
+        <div class="icon"><i class="fa-solid fa-exclamation-triangle"></i></div>
+        <h4>Low Stock</h4>
+        <div class="number">{{ low_stock_count }}</div>
+      </div>
+      <div class="stat-box">
+        <div class="icon"><i class="fa-solid fa-ban"></i></div>
+        <h4>Out of Stock</h4>
+        <div class="number">{{ out_of_stock_count }}</div>
+      </div>
+    </div>
+
+    <!-- Products Table -->
+    <div class="products-section">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+        <div>
+          <h2 class="section-title" style="margin-bottom: 0.5rem;">Product Catalog</h2>
+          <p style="color: #64748b; font-size: 0.875rem; padding-left: 1rem;">
+            Showing <strong>{{ total_products }} core products</strong>. Each product may have multiple size/color combinations.
+          </p>
+        </div>
+      </div>
+      <table>
+        <thead>
+          <tr>
+            <th>Product Name</th>
+            <th>Category</th>
+            <th>Base Price</th>
+            <th>SKUs</th>
+            <th>Total Stock</th>
+            <th>Status</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for product in products %}
+          <tr>
+            <td>
+              <div class="product-name">{{ product.name }}</div>
+              <div class="product-slug">/{{ product.slug }}</div>
+            </td>
+            <td>
+              <span class="badge" style="background: linear-gradient(135deg, #e0e7ff 0%, #c7d2fe 100%); color: #4338ca;">
+                {{ product.category|default:"Uncategorized" }}
+              </span>
+            </td>
+            <td>
+              <input
+                type="number"
+                class="price-input"
+                value="{{ product.base_price }}"
+                step="0.01"
+                data-product-id="{{ product.id }}"
+                onchange="updatePrice(this)"
+              >
+            </td>
+            <td>
+              <strong>{{ product.variant_count }}</strong> total
+              <div style="font-size: 0.75rem; color: #64748b; margin-top: 0.25rem;">
+                {{ product.active_variants }} active
+              </div>
+            </td>
+            <td>
+              {% if product.total_stock == 0 %}
+                <span class="badge out-of-stock">
+                  <i class="fa-solid fa-ban"></i>
+                  Out of Stock
+                </span>
+              {% elif product.total_stock < 10 %}
+                <span class="badge low-stock">
+                  <i class="fa-solid fa-exclamation-triangle"></i>
+                  {{ product.total_stock }} units
+                </span>
+              {% else %}
+                <strong>{{ product.total_stock }}</strong> units
+              {% endif %}
+            </td>
+            <td>
+              <span
+                class="badge {% if product.is_active %}active{% else %}inactive{% endif %} toggle-active"
+                data-product-id="{{ product.id }}"
+                onclick="toggleActive(this)"
+              >
+                <i class="fa-solid fa-{% if product.is_active %}check-circle{% else %}times-circle{% endif %}"></i>
+                {% if product.is_active %}Active{% else %}Inactive{% endif %}
+              </span>
+            </td>
+            <td>
+              <div style="display: flex; gap: 0.5rem;">
+                <button
+                  onclick="openEditModal({{ product.id }}, '{{ product.name|escapejs }}', '{{ product.slug }}', '{{ product.category_slug|escapejs }}', '{{ product.description|escapejs }}', '{{ product.base_price }}', {{ product.featured|lower }})"
+                  class="btn btn-secondary btn-sm"
+                >
+                  <i class="fa-solid fa-edit"></i>
+                  Edit
+                </button>
+                <button
+                  onclick="openVariantsModal({{ product.id }}, '{{ product.name|escapejs }}')"
+                  class="btn btn-secondary btn-sm"
+                  title="Manage size/color variants"
+                >
+                  <i class="fa-solid fa-shapes"></i>
+                  Variants
+                </button>
+              </div>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Edit Product Modal -->
+  <div class="modal-overlay" id="editModal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2 id="edit_modal_title">Edit Product</h2>
+        <button class="modal-close" onclick="closeEditModal()">
+          <i class="fa-solid fa-times"></i>
+        </button>
+      </div>
+      <div class="modal-body">
+        <form id="editProductForm">
+          <input type="hidden" id="edit_product_id">
+
+          <div class="form-group">
+            <label for="edit_name">Product Name</label>
+            <input type="text" id="edit_name" required>
+          </div>
+
+          <div class="form-group">
+            <label for="edit_slug">URL Slug</label>
+            <input type="text" id="edit_slug" required>
+            <small style="color: #64748b; font-size: 0.8125rem; display: block; margin-top: 0.25rem;">
+              Used in product URLs (e.g., /products/<strong>classic-tee</strong>)
+            </small>
+          </div>
+
+          <div class="form-group">
+            <label for="edit_category">Category</label>
+            <select id="edit_category">
+              <option value="">Uncategorized</option>
+              {% for category in categories %}
+              <option value="{{ category.slug }}">{{ category.name }}</option>
+              {% endfor %}
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label for="edit_description">Description</label>
+            <textarea id="edit_description"></textarea>
+          </div>
+
+          <div class="form-group">
+            <label for="edit_base_price">Base Price ($)</label>
+            <input type="number" id="edit_base_price" step="0.01" required>
+          </div>
+
+          <div class="form-group">
+            <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+              <input type="checkbox" id="edit_featured" style="width: auto;">
+              <span>Feature on homepage</span>
+            </label>
+          </div>
+        </form>
+      </div>
+
+      <!-- Preview Body (Hidden by default) -->
+      <div class="modal-body" id="preview_body" style="padding: 0; display: none; max-height: 85vh; overflow-y: auto;">
+        <div style="display: grid; grid-template-columns: 45% 55%; gap: 0;">
+          <!-- Left Side - Product Images -->
+          <div style="background: linear-gradient(135deg, #fafafa 0%, #f5f5f5 100%); padding: 2rem; display: flex; flex-direction: column; gap: 0.75rem;">
+            <div id="preview_main_image" style="width: 100%; aspect-ratio: 1; background: white; border-radius: 12px; overflow: hidden; box-shadow: 0 6px 20px rgba(0, 0, 0, 0.1);">
+              <img id="preview_main_img" src="" alt="" style="width: 100%; height: 100%; object-fit: cover;">
+            </div>
+            <div style="display: flex; gap: 0.5rem;" id="preview_thumbs_container">
+              <!-- Thumbnails will be populated by JavaScript -->
+            </div>
+          </div>
+
+          <!-- Right Side - Product Details -->
+          <div style="background: white; padding: 2rem; display: flex; flex-direction: column;">
+            <!-- Category & Featured Badge -->
+            <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.75rem;">
+              <span id="preview_category" style="display: inline-block; padding: 0.25rem 0.75rem; background: #f3f4f6; color: #6b7280; border-radius: 6px; font-size: 0.7rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em;">Category</span>
+              <span id="preview_featured_badge" style="display: none; padding: 0.25rem 0.75rem; background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%); color: #92400e; border-radius: 6px; font-size: 0.7rem; font-weight: 600;">
+                <i class="fa-solid fa-star"></i> Featured
+              </span>
+            </div>
+
+            <!-- Product Name -->
+            <h1 id="preview_name" style="font-size: 1.5rem; font-weight: 700; color: #111827; margin-bottom: 0.75rem; line-height: 1.2;">Product Name</h1>
+
+            <!-- Price -->
+            <div style="margin-bottom: 1rem;">
+              <span style="font-size: 1.75rem; font-weight: 700; color: #111827;">$<span id="preview_price">0.00</span></span>
+            </div>
+
+            <!-- Description -->
+            <div style="margin-bottom: 1.25rem; padding-bottom: 1.25rem; border-bottom: 1px solid #e5e7eb;">
+              <p id="preview_description" style="color: #6b7280; line-height: 1.6; font-size: 0.875rem;">Product description will appear here...</p>
+            </div>
+
+            <!-- Size Selector -->
+            <div style="margin-bottom: 1rem;">
+              <label style="display: block; font-size: 0.8125rem; font-weight: 600; color: #374151; margin-bottom: 0.5rem;">Size</label>
+              <div style="display: flex; gap: 0.375rem; flex-wrap: wrap;">
+                <button style="padding: 0.375rem 0.875rem; border: 2px solid #e5e7eb; background: white; border-radius: 6px; font-size: 0.8125rem; font-weight: 500; color: #374151; cursor: pointer; transition: all 0.2s;">XS</button>
+                <button style="padding: 0.375rem 0.875rem; border: 2px solid #667eea; background: #667eea; border-radius: 6px; font-size: 0.8125rem; font-weight: 500; color: white; cursor: pointer; transition: all 0.2s;">S</button>
+                <button style="padding: 0.375rem 0.875rem; border: 2px solid #e5e7eb; background: white; border-radius: 6px; font-size: 0.8125rem; font-weight: 500; color: #374151; cursor: pointer; transition: all 0.2s;">M</button>
+                <button style="padding: 0.375rem 0.875rem; border: 2px solid #e5e7eb; background: white; border-radius: 6px; font-size: 0.8125rem; font-weight: 500; color: #374151; cursor: pointer; transition: all 0.2s;">L</button>
+                <button style="padding: 0.375rem 0.875rem; border: 2px solid #e5e7eb; background: white; border-radius: 6px; font-size: 0.8125rem; font-weight: 500; color: #374151; cursor: pointer; transition: all 0.2s;">XL</button>
+              </div>
+            </div>
+
+            <!-- Color Selector -->
+            <div style="margin-bottom: 1.25rem;">
+              <label style="display: block; font-size: 0.8125rem; font-weight: 600; color: #374151; margin-bottom: 0.5rem;">Color</label>
+              <div style="display: flex; gap: 0.5rem;">
+                <button style="width: 36px; height: 36px; border: 2px solid #667eea; background: #1f2937; border-radius: 50%; cursor: pointer; box-shadow: 0 2px 4px rgba(0,0,0,0.1);"></button>
+                <button style="width: 36px; height: 36px; border: 2px solid #d1d5db; background: #f9fafb; border-radius: 50%; cursor: pointer; box-shadow: 0 2px 4px rgba(0,0,0,0.1);"></button>
+                <button style="width: 36px; height: 36px; border: 2px solid #e5e7eb; background: #3b82f6; border-radius: 50%; cursor: pointer; box-shadow: 0 2px 4px rgba(0,0,0,0.1);"></button>
+                <button style="width: 36px; height: 36px; border: 2px solid #e5e7eb; background: #ef4444; border-radius: 50%; cursor: pointer; box-shadow: 0 2px 4px rgba(0,0,0,0.1);"></button>
+              </div>
+            </div>
+
+            <!-- Quantity -->
+            <div style="margin-bottom: 1.25rem;">
+              <label style="display: block; font-size: 0.8125rem; font-weight: 600; color: #374151; margin-bottom: 0.5rem;">Quantity</label>
+              <div style="display: flex; align-items: center; gap: 0.75rem;">
+                <button style="width: 36px; height: 36px; border: 2px solid #e5e7eb; background: white; border-radius: 6px; font-size: 1.125rem; font-weight: 600; color: #374151; cursor: pointer; display: flex; align-items: center; justify-content: center;">−</button>
+                <span style="font-size: 1rem; font-weight: 600; color: #111827; min-width: 24px; text-align: center;">1</span>
+                <button style="width: 36px; height: 36px; border: 2px solid #e5e7eb; background: white; border-radius: 6px; font-size: 1.125rem; font-weight: 600; color: #374151; cursor: pointer; display: flex; align-items: center; justify-content: center;">+</button>
+              </div>
+            </div>
+
+            <!-- Add to Cart Button -->
+            <button style="width: 100%; padding: 0.875rem; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; border-radius: 8px; font-size: 0.9375rem; font-weight: 600; cursor: pointer; transition: all 0.2s; margin-bottom: 0.75rem; box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);">
+              <i class="fa-solid fa-shopping-cart"></i> Add to Cart
+            </button>
+
+            <!-- Buy Now Button -->
+            <button style="width: 100%; padding: 0.875rem; background: white; color: #667eea; border: 2px solid #667eea; border-radius: 8px; font-size: 0.9375rem; font-weight: 600; cursor: pointer; transition: all 0.2s; margin-bottom: 1rem;">
+              Buy Now
+            </button>
+
+            <!-- Additional Info -->
+            <div style="padding-top: 1rem; border-top: 1px solid #e5e7eb; font-size: 0.75rem; color: #6b7280;">
+              <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.375rem;">
+                <i class="fa-solid fa-truck"></i> Free shipping on orders over $75
+              </div>
+              <div style="display: flex; align-items: center; gap: 0.5rem;">
+                <i class="fa-solid fa-rotate-left"></i> 30-day return policy
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="modal-footer" id="edit_modal_footer">
+        <button class="btn btn-secondary" id="btn_cancel" onclick="closeEditModal()">Cancel</button>
+        <div style="margin-left: auto; display: flex; gap: 0.5rem;">
+          <button class="btn btn-secondary" id="btn_back_to_edit" onclick="closePreview()" style="display: none;">
+            <i class="fa-solid fa-arrow-left"></i>
+            Back to Edit
+          </button>
+          <button class="btn btn-secondary" id="btn_preview" onclick="previewProduct()">
+            <i class="fa-solid fa-eye"></i>
+            Preview
+          </button>
+          <button class="btn btn-primary" id="btn_save" onclick="saveProduct()">
+            <i class="fa-solid fa-save"></i>
+            Save Changes
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Variants Modal -->
+  <div class="modal-overlay" id="variantsModal">
+    <div class="modal-content" style="max-width: 1400px; max-height: 95vh;">
+      <div class="modal-header" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-bottom: none;">
+        <h2 id="variants_modal_title" style="color: white; display: flex; align-items: center; gap: 0.75rem;">
+          <i class="fa-solid fa-shapes"></i> Product Variants
+        </h2>
+        <button class="modal-close" onclick="closeVariantsModal()" style="color: white; background: rgba(255, 255, 255, 0.1);">
+          <i class="fa-solid fa-times"></i>
+        </button>
+      </div>
+      <div class="modal-body" style="max-height: calc(95vh - 180px); overflow-y: auto; background: #f8fafc;">
+        <input type="hidden" id="variants_product_id">
+
+        <!-- Summary Stats -->
+        <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 1.25rem; margin-bottom: 2rem;">
+          <div style="background: white; border: 1px solid #e2e8f0; border-radius: 12px; padding: 1.5rem; text-align: center; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04); transition: all 0.3s;">
+            <div style="color: #667eea; font-size: 2rem; margin-bottom: 0.5rem;">
+              <i class="fa-solid fa-layer-group"></i>
+            </div>
+            <div style="color: #64748b; font-size: 0.6875rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 0.5rem;">Total Variants</div>
+            <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; font-size: 2rem; font-weight: 800; letter-spacing: -0.02em;" id="total_variants_stat">0</div>
+          </div>
+          <div style="background: white; border: 1px solid #e2e8f0; border-radius: 12px; padding: 1.5rem; text-align: center; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04); transition: all 0.3s;">
+            <div style="color: #10b981; font-size: 2rem; margin-bottom: 0.5rem;">
+              <i class="fa-solid fa-boxes-stacked"></i>
+            </div>
+            <div style="color: #64748b; font-size: 0.6875rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 0.5rem;">Total Stock</div>
+            <div style="color: #10b981; font-size: 2rem; font-weight: 800; letter-spacing: -0.02em;" id="total_stock_stat">0</div>
+          </div>
+          <div style="background: white; border: 1px solid #e2e8f0; border-radius: 12px; padding: 1.5rem; text-align: center; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04); transition: all 0.3s;">
+            <div style="color: #f59e0b; font-size: 2rem; margin-bottom: 0.5rem;">
+              <i class="fa-solid fa-circle-check"></i>
+            </div>
+            <div style="color: #64748b; font-size: 0.6875rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 0.5rem;">Active Variants</div>
+            <div style="color: #f59e0b; font-size: 2rem; font-weight: 800; letter-spacing: -0.02em;" id="active_variants_stat">0</div>
+          </div>
+          <div style="background: white; border: 1px solid #e2e8f0; border-radius: 12px; padding: 1.5rem; text-align: center; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04); transition: all 0.3s;">
+            <div style="color: #ef4444; font-size: 2rem; margin-bottom: 0.5rem;">
+              <i class="fa-solid fa-triangle-exclamation"></i>
+            </div>
+            <div style="color: #64748b; font-size: 0.6875rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 0.5rem;">Low/Out Stock</div>
+            <div style="color: #ef4444; font-size: 2rem; font-weight: 800; letter-spacing: -0.02em;" id="low_stock_stat">0</div>
+          </div>
+        </div>
+
+        <!-- Action Bar -->
+        <div style="display: flex; gap: 1rem; margin-bottom: 1.5rem; align-items: center;">
+          <input
+            type="text"
+            id="search_variants"
+            placeholder="🔍 Search variants..."
+            onkeyup="filterVariants()"
+            style="flex: 1; padding: 0.75rem 1rem; border: 1px solid #d1d5db; border-radius: 8px; font-size: 0.875rem;"
+          >
+          <button onclick="openAddVariantForm()" class="btn btn-primary" style="background: white; color: #667eea; border: 2px solid #667eea; padding: 0.75rem 1.5rem; box-shadow: 0 2px 8px rgba(102, 126, 234, 0.15); white-space: nowrap; font-weight: 600;">
+            <i class="fa-solid fa-plus"></i> Add Variant
+          </button>
+        </div>
+
+        <!-- Variants List -->
+        <div id="variants_list">
+          <!-- Variants will be loaded here -->
+          <div style="text-align: center; padding: 2rem; color: #64748b;">
+            <i class="fa-solid fa-spinner fa-spin" style="font-size: 2rem; margin-bottom: 0.5rem;"></i>
+            <p>Loading variants...</p>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer" style="background: #f8fafc; border-top: 1px solid #e2e8f0; padding: 1.5rem 2rem;">
+        <button class="btn btn-secondary" onclick="closeVariantsModal()" style="padding: 0.75rem 2rem;">
+          <i class="fa-solid fa-times"></i> Close
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Add/Edit Variant Modal -->
+  <div class="modal-overlay" id="variantFormModal">
+    <div class="modal-content" style="max-width: 800px; max-height: 95vh;">
+      <div class="modal-header" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-bottom: none;">
+        <h2 id="variant_form_title" style="color: white; display: flex; align-items: center; gap: 0.75rem;">
+          <i class="fa-solid fa-plus-circle"></i> Add New Variant
+        </h2>
+        <button class="modal-close" onclick="closeVariantForm()" style="color: white; background: rgba(255, 255, 255, 0.1);">
+          <i class="fa-solid fa-times"></i>
+        </button>
+      </div>
+      <div class="modal-body" style="max-height: calc(95vh - 180px); overflow-y: auto; background: #f8fafc;">
+        <input type="hidden" id="edit_variant_id">
+
+        <!-- Core Fields -->
+        <div style="background: white; border: 1px solid #e2e8f0; border-radius: 12px; padding: 1.5rem; margin-bottom: 1.5rem; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);">
+          <h3 style="font-size: 0.9375rem; font-weight: 700; color: #1e293b; margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem;">
+            <i class="fa-solid fa-info-circle" style="color: #667eea; font-size: 0.875rem;"></i> Variant Details
+          </h3>
+          <div id="variant_attributes_container" style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 1rem; margin-bottom: 1rem;">
+            <!-- Attributes will be loaded dynamically based on category -->
+          </div>
+          <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 1rem;">
+            <div class="form-group">
+              <label for="variant_sku">SKU</label>
+              <div style="display: flex; gap: 0.5rem;">
+                <input type="text" id="variant_sku" placeholder="Leave blank to auto-generate" style="flex: 1;">
+                <button type="button" onclick="generateVariantSKU()" class="btn btn-secondary" style="padding: 0.5rem 1rem; white-space: nowrap;">
+                  <i class="fa-solid fa-wand-magic-sparkles"></i> Generate
+                </button>
+              </div>
+            </div>
+            <div class="form-group">
+              <label for="variant_stock">Stock Quantity *</label>
+              <input type="number" id="variant_stock" min="0" value="0" required>
+            </div>
+            <div class="form-group">
+              <label for="variant_price">Price ($) *</label>
+              <input type="number" id="variant_price" step="0.01" min="0" required>
+            </div>
+          </div>
+        </div>
+
+        <!-- Images -->
+        <div style="background: white; border: 1px solid #e2e8f0; border-radius: 12px; padding: 1.5rem; margin-bottom: 1.5rem; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);">
+          <h3 style="font-size: 0.9375rem; font-weight: 700; color: #1e293b; margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem;">
+            <i class="fa-solid fa-images" style="color: #667eea; font-size: 0.875rem;"></i> Images
+          </h3>
+          <div id="variant_images_container" style="display: flex; gap: 0.75rem; flex-wrap: wrap; margin-bottom: 1rem;">
+            <!-- Image previews will appear here -->
+          </div>
+          <div style="display: flex; gap: 0.5rem;">
+            <input type="file" id="variant_image_upload" accept="image/*" multiple style="display: none;" onchange="handleVariantImageUpload(event)">
+            <button type="button" onclick="document.getElementById('variant_image_upload').click()" class="btn btn-secondary">
+              <i class="fa-solid fa-image"></i>
+              Upload Images
+            </button>
+            <button type="button" onclick="addImageByURL()" class="btn btn-secondary">
+              <i class="fa-solid fa-link"></i>
+              Add from URL
+            </button>
+          </div>
+        </div>
+
+        <!-- Custom Fields -->
+        <div style="background: white; border: 1px solid #e2e8f0; border-radius: 12px; padding: 1.5rem; margin-bottom: 1.5rem; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+            <h3 style="font-size: 0.9375rem; font-weight: 700; color: #1e293b; margin: 0; display: flex; align-items: center; gap: 0.5rem;">
+              <i class="fa-solid fa-sliders" style="color: #667eea; font-size: 0.875rem;"></i> Custom Fields
+            </h3>
+            <button type="button" onclick="addCustomField()" class="btn btn-secondary btn-sm">
+              <i class="fa-solid fa-plus"></i>
+              Add Field
+            </button>
+          </div>
+          <div id="custom_fields_container">
+            <!-- Custom fields will appear here -->
+            <p style="color: #64748b; font-size: 0.875rem; font-style: italic;">No custom fields added yet.</p>
+          </div>
+        </div>
+
+      </div>
+      <div class="modal-footer" style="background: #f8fafc; border-top: 1px solid #e2e8f0; padding: 1.5rem 2rem; display: flex; gap: 1rem; justify-content: flex-end;">
+        <button class="btn btn-secondary" onclick="closeVariantForm()" style="padding: 0.75rem 2rem;">
+          <i class="fa-solid fa-times"></i> Cancel
+        </button>
+        <button class="btn btn-primary" onclick="saveVariant()" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border: none; padding: 0.75rem 2rem; box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);">
+          <i class="fa-solid fa-save"></i>
+          Save Variant
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Product Preview Functions - v3.0 - BUTTON TOGGLE FIX
+    console.log('Script loaded - v3.0');
+
+    function getCookie(name) {
+      // First try to get from cookie
+      let cookieValue = null;
+      if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+          const cookie = cookies[i].trim();
+          if (cookie.substring(0, name.length + 1) === (name + '=')) {
+            cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+            break;
+          }
+        }
+      }
+
+      // If not found in cookie and we're looking for csrftoken, try meta tag
+      if (!cookieValue && name === 'csrftoken') {
+        const metaTag = document.querySelector('meta[name="csrf-token"]');
+        if (metaTag) {
+          cookieValue = metaTag.getAttribute('content');
+        }
+      }
+
+      return cookieValue;
+    }
+
+    function toggleActive(element) {
+      const productId = element.dataset.productId;
+      const csrftoken = getCookie('csrftoken');
+
+      fetch(window.location.pathname, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded',
+          'X-CSRFToken': csrftoken,
+        },
+        body: new URLSearchParams({
+          'action': 'toggle_active',
+          'product_id': productId
+        })
+      })
+      .then(response => response.json())
+      .then(data => {
+        if (data.success) {
+          location.reload();
+        }
+      });
+    }
+
+    function updatePrice(input) {
+      const productId = input.dataset.productId;
+      const newPrice = input.value;
+      const csrftoken = getCookie('csrftoken');
+
+      fetch(window.location.pathname, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded',
+          'X-CSRFToken': csrftoken,
+        },
+        body: new URLSearchParams({
+          'action': 'update_price',
+          'product_id': productId,
+          'price': newPrice
+        })
+      })
+      .then(response => response.json())
+      .then(data => {
+        if (data.success) {
+          input.style.borderColor = '#10b981';
+          setTimeout(() => {
+            input.style.borderColor = '#e2e8f0';
+          }, 1000);
+        }
+      });
+    }
+
+    function openEditModal(id, name, slug, category, description, price, featured) {
+      document.getElementById('edit_product_id').value = id;
+      document.getElementById('edit_name').value = name;
+      document.getElementById('edit_slug').value = slug;
+      document.getElementById('edit_category').value = category;
+      document.getElementById('edit_description').value = description;
+      document.getElementById('edit_base_price').value = price;
+      document.getElementById('edit_featured').checked = featured;
+
+      document.getElementById('editModal').classList.add('active');
+    }
+
+    function closeEditModal() {
+      // Reset to edit view if in preview mode
+      if (document.getElementById('preview_body').style.display === 'block') {
+        closePreview();
+      }
+      document.getElementById('editModal').classList.remove('active');
+    }
+
+    function saveProduct() {
+      const productId = document.getElementById('edit_product_id').value;
+      const csrftoken = document.querySelector('meta[name="csrf-token"]').content;
+
+      const formData = new FormData();
+      formData.append('csrfmiddlewaretoken', csrftoken);
+      formData.append('action', 'update_product');
+      formData.append('product_id', productId);
+      formData.append('name', document.getElementById('edit_name').value);
+      formData.append('slug', document.getElementById('edit_slug').value);
+      formData.append('category', document.getElementById('edit_category').value);
+      formData.append('description', document.getElementById('edit_description').value);
+      formData.append('base_price', document.getElementById('edit_base_price').value);
+      formData.append('featured', document.getElementById('edit_featured').checked ? 'true' : 'false');
+
+      console.log('Saving product with data:', {
+        action: 'update_product',
+        product_id: productId,
+        name: document.getElementById('edit_name').value,
+        slug: document.getElementById('edit_slug').value,
+        category: document.getElementById('edit_category').value
+      });
+
+      fetch(window.location.pathname, {
+        method: 'POST',
+        headers: {
+          'X-CSRFToken': csrftoken,
+        },
+        body: formData
+      })
+      .then(response => {
+        console.log('Response status:', response.status);
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        return response.json();
+      })
+      .then(data => {
+        console.log('Response data:', data);
+        if (data.success) {
+          closeEditModal();
+          location.reload();
+        } else {
+          alert('Error: ' + (data.error || 'Failed to save product'));
+        }
+      })
+      .catch(error => {
+        console.error('Save error:', error);
+        alert('Error saving product: ' + error.message);
+      });
+    }
+
+    // Close modal on overlay click
+    document.getElementById('editModal').addEventListener('click', function(e) {
+      if (e.target === this) {
+        closeEditModal();
+      }
+    });
+
+    // Close modals on Escape key
+    document.addEventListener('keydown', function(e) {
+      if (e.key === 'Escape') {
+        closeEditModal();
+      }
+    });
+
+    function previewProduct() {
+      console.log('previewProduct() called - v3.0');
+
+      // Get values from edit form
+      const name = document.getElementById('edit_name').value || 'Product Name';
+      const category = document.getElementById('edit_category').value || 'Uncategorized';
+      const description = document.getElementById('edit_description').value || 'This is a high-quality product made with premium materials. Perfect for everyday wear and built to last.';
+      const price = parseFloat(document.getElementById('edit_base_price').value || 0).toFixed(2);
+      const featured = document.getElementById('edit_featured').checked;
+
+      // Hide all modal-body elements first
+      const modalBodies = document.querySelectorAll('#editModal .modal-body');
+      modalBodies.forEach(body => body.style.display = 'none');
+
+      // Show preview body
+      document.getElementById('preview_body').style.display = 'block';
+
+      // Update modal title
+      document.querySelector('#edit_modal_title').innerHTML = '<i class="fa-solid fa-eye"></i> Product Preview';
+
+      // Update modal width for preview
+      document.querySelector('#editModal .modal-content').style.maxWidth = '950px';
+
+      // Populate preview data
+      document.getElementById('preview_name').textContent = name;
+      document.getElementById('preview_category').textContent = category;
+      document.getElementById('preview_description').textContent = description;
+      document.getElementById('preview_price').textContent = price;
+
+      // Generate random animal images
+      const animalImages = [
+        'photo-1574158622682-e40e69881006', // Cat
+        'photo-1583337130417-3346a1be7dee', // Dog
+        'photo-1437622368342-7a3d73a34c8f', // Owl
+        'photo-1598386993441-06c0c1a6b7c3', // Fox
+        'photo-1484406566174-9da000fda645', // Panda
+        'photo-1535591273668-578e31182c4f', // Koala
+        'photo-1530595467537-0b5996c41f2d', // Red Panda
+        'photo-1425082661705-1834bfd09dca', // Penguin
+        'photo-1602491453631-e2a5ad90a131', // Tiger
+        'photo-1564349683136-77e08dba1ef7', // Elephant
+      ];
+
+      // Pick 3 random images
+      const shuffled = animalImages.sort(() => 0.5 - Math.random());
+      const selectedImages = shuffled.slice(0, 3);
+
+      // Set main image (first selected)
+      const mainImageUrl = `https://images.unsplash.com/${selectedImages[0]}?w=600&h=600&fit=crop&q=90`;
+      document.getElementById('preview_main_img').src = mainImageUrl;
+      document.getElementById('preview_main_img').alt = name;
+
+      // Generate thumbnails
+      const thumbsContainer = document.getElementById('preview_thumbs_container');
+      thumbsContainer.innerHTML = '';
+      selectedImages.forEach((imageId, index) => {
+        const thumb = document.createElement('div');
+        thumb.className = 'preview_thumb';
+        thumb.onclick = function() { changePreviewImage(this); };
+        thumb.style.cssText = `width: 70px; height: 70px; background: white; border-radius: 8px; overflow: hidden; cursor: pointer; border: 2px solid ${index === 0 ? '#667eea' : 'transparent'}; transition: all 0.2s; box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);`;
+
+        const img = document.createElement('img');
+        img.src = `https://images.unsplash.com/${imageId}?w=150&h=150&fit=crop&q=80`;
+        img.style.cssText = 'width: 100%; height: 100%; object-fit: cover;';
+
+        thumb.appendChild(img);
+        thumbsContainer.appendChild(thumb);
+      });
+
+      // Update featured badge
+      const featuredBadge = document.getElementById('preview_featured_badge');
+      featuredBadge.style.display = featured ? 'inline-block' : 'none';
+
+      // Hide Preview button, show Back to Edit button
+      console.log('Attempting to toggle buttons...');
+      const btnCancel = document.getElementById('btn_cancel');
+      const btnPreview = document.getElementById('btn_preview');
+      const btnBackToEdit = document.getElementById('btn_back_to_edit');
+      const btnSave = document.getElementById('btn_save');
+
+      console.log('Buttons found:', {
+        btnCancel: !!btnCancel,
+        btnPreview: !!btnPreview,
+        btnBackToEdit: !!btnBackToEdit,
+        btnSave: !!btnSave
+      });
+
+      if (btnCancel) btnCancel.style.display = 'none';
+      if (btnPreview) btnPreview.style.display = 'none';
+      if (btnBackToEdit) {
+        btnBackToEdit.style.display = 'inline-flex';
+        console.log('Back to Edit button should now be visible');
+      }
+      if (btnSave) btnSave.style.display = 'inline-flex';
+
+      console.log('Button toggle complete');
+    }
+
+    function changePreviewImage(thumbElement) {
+      // Remove active border from all thumbnails
+      document.querySelectorAll('.preview_thumb').forEach(t => {
+        t.style.border = '2px solid transparent';
+      });
+
+      // Add active border to clicked thumbnail
+      thumbElement.style.border = '2px solid #667eea';
+
+      // Change main image
+      const thumbImg = thumbElement.querySelector('img');
+      const mainImg = document.getElementById('preview_main_img');
+      mainImg.src = thumbImg.src.replace('w=150&h=150', 'w=600&h=600');
+    }
+
+    function closePreview() {
+      // Hide preview body
+      document.getElementById('preview_body').style.display = 'none';
+
+      // Show edit form body
+      const editBody = document.querySelector('#editModal .modal-body:not(#preview_body)');
+      if (editBody) {
+        editBody.style.display = 'block';
+      }
+
+      // Restore modal title
+      document.querySelector('#edit_modal_title').textContent = 'Edit Product';
+
+      // Restore modal width
+      document.querySelector('#editModal .modal-content').style.maxWidth = '600px';
+
+      // Show Preview button, hide Back to Edit button
+      document.getElementById('btn_cancel').style.display = 'inline-flex';
+      document.getElementById('btn_preview').style.display = 'inline-flex';
+      document.getElementById('btn_back_to_edit').style.display = 'none';
+      document.getElementById('btn_save').style.display = 'inline-flex';
+    }
+
+    // Global variants data
+    let allVariants = [];
+    let variantImages = [];
+    let customFieldsData = {};
+
+    // Variants Modal Functions
+    function openVariantsModal(productId, productName) {
+      document.getElementById('variants_product_id').value = productId;
+      document.getElementById('variants_modal_title').innerHTML = `<i class="fa-solid fa-shapes"></i> Variants: ${productName}`;
+      document.getElementById('variantsModal').classList.add('active');
+
+      // Load sizes, colors, and materials
+      loadSizesColorsMaterials();
+
+      // Load existing variants
+      loadVariants(productId);
+    }
+
+    function closeVariantsModal() {
+      document.getElementById('variantsModal').classList.remove('active');
+      // Reload page to refresh counts
+      location.reload();
+    }
+
+    function openAddVariantForm() {
+      console.log('Opening add variant form');
+      document.getElementById('edit_variant_id').value = '';
+      document.getElementById('variant_form_title').innerHTML = '<i class="fa-solid fa-plus-circle"></i> Add New Variant';
+
+      // Reset form fields
+      document.getElementById('variant_sku').value = '';
+      document.getElementById('variant_stock').value = '0';
+      document.getElementById('variant_price').value = '';
+
+      // Clear images and custom fields
+      variantImages = [];
+      customFieldsData = {};
+      document.getElementById('variant_images_container').innerHTML = '';
+      document.getElementById('custom_fields_container').innerHTML = '<p style="color: #64748b; font-size: 0.875rem; font-style: italic;">No custom fields added yet.</p>';
+
+      // Load dynamic attributes based on category
+      loadVariantAttributes();
+
+      document.getElementById('variantFormModal').classList.add('active');
+    }
+
+    function loadVariantAttributes() {
+      // Get product ID from the variants modal
+      const productId = document.getElementById('variants_product_id').value;
+      const csrftoken = getCookie('csrftoken');
+
+      console.log('Loading variant attributes for product:', productId);
+      console.log('CSRF token:', csrftoken);
+      console.log('CSRF token length:', csrftoken ? csrftoken.length : 'null');
+
+      // Fetch category attributes from backend
+      fetch(window.location.pathname, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded',
+          'X-CSRFToken': csrftoken,
+        },
+        body: new URLSearchParams({
+          'action': 'get_product_category_attributes',
+          'product_id': productId
+        })
+      })
+      .then(response => {
+        console.log('Response status:', response.status);
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        return response.json();
+      })
+      .then(data => {
+        console.log('Category attributes response:', data);
+
+        if (!data.success) {
+          console.error('Failed to load category attributes:', data.error);
+          alert('Error: ' + data.error);
+          return;
+        }
+
+        // Build form fields dynamically based on category
+        const container = document.getElementById('variant_attributes_container');
+        let fieldsHTML = '';
+
+        // Add Size field if category uses it
+        if (data.uses_size) {
+          fieldsHTML += `
+            <div class="form-group">
+              <label for="variant_size">Size *</label>
+              <select id="variant_size" required>
+                <option value="">Select size...</option>
+              </select>
+            </div>
+          `;
+        }
+
+        // Add Color field if category uses it
+        if (data.uses_color) {
+          fieldsHTML += `
+            <div class="form-group">
+              <label for="variant_color">Color *</label>
+              <select id="variant_color" required>
+                <option value="">Select color...</option>
+              </select>
+            </div>
+          `;
+        }
+
+        // Add Material field if category uses it
+        if (data.uses_material) {
+          fieldsHTML += `
+            <div class="form-group">
+              <label for="variant_material">Material</label>
+              <select id="variant_material">
+                <option value="">Select material...</option>
+              </select>
+            </div>
+          `;
+        }
+
+        // Add custom attributes
+        if (data.custom_attributes && data.custom_attributes.length > 0) {
+          data.custom_attributes.forEach((attr, index) => {
+            fieldsHTML += `
+              <div class="form-group">
+                <label for="variant_custom_${index}">${attr.name}${attr.required ? ' *' : ''}</label>
+                ${attr.type === 'select' && attr.options ? `
+                  <select id="variant_custom_${index}" ${attr.required ? 'required' : ''}>
+                    <option value="">Select ${attr.name.toLowerCase()}...</option>
+                    ${attr.options.map(opt => `<option value="${opt}">${opt}</option>`).join('')}
+                  </select>
+                ` : `
+                  <input type="text" id="variant_custom_${index}" ${attr.required ? 'required' : ''} placeholder="Enter ${attr.name.toLowerCase()}">
+                `}
+              </div>
+            `;
+          });
+        }
+
+        container.innerHTML = fieldsHTML;
+
+        // Show common fields as quick-add buttons
+        if (data.common_fields && data.common_fields.length > 0) {
+          const customFieldsSection = document.querySelector('#custom_fields_container').parentElement;
+
+          // Remove any existing quick-add section
+          const existingQuickAdd = customFieldsSection.querySelector('.quick-add-fields');
+          if (existingQuickAdd) {
+            existingQuickAdd.remove();
+          }
+
+          // Add quick-add buttons section
+          let quickAddHTML = `
+            <div class="quick-add-fields" style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid #e2e8f0;">
+              <div style="font-size: 0.8125rem; font-weight: 600; color: #64748b; margin-bottom: 0.75rem;">
+                <i class="fa-solid fa-lightbulb" style="color: #f59e0b;"></i> Common fields for ${data.category_name}:
+              </div>
+              <div style="display: flex; flex-wrap: wrap; gap: 0.5rem;">
+          `;
+
+          data.common_fields.forEach((field, index) => {
+            quickAddHTML += `
+              <button type="button" onclick="addSavedField('${field.name.toLowerCase().replace(/\s+/g, '_')}', '${field.name}')"
+                      class="btn btn-secondary btn-sm"
+                      style="background: #f8fafc; color: #475569; border: 1px solid #e2e8f0;">
+                <i class="fa-solid fa-plus"></i> ${field.name}
+              </button>
+            `;
+          });
+
+          quickAddHTML += `
+              </div>
+            </div>
+          `;
+
+          customFieldsSection.insertAdjacentHTML('beforeend', quickAddHTML);
+        }
+
+        // Load the options for standard attributes
+        loadFormDropdowns();
+      })
+      .catch(error => {
+        console.error('Error loading variant attributes:', error);
+        console.error('Error details:', {
+          message: error.message,
+          stack: error.stack
+        });
+        alert('Error loading variant attributes: ' + error.message + '\n\nCheck the browser console for details.');
+      });
+    }
+
+    function closeVariantForm() {
+      document.getElementById('variantFormModal').classList.remove('active');
+    }
+
+    function generateVariantSKU() {
+      // Get the selected attribute values
+      const sizeSelect = document.getElementById('variant_size');
+      const colorSelect = document.getElementById('variant_color');
+      const materialSelect = document.getElementById('variant_material');
+
+      // Get product name from the modal title
+      const titleText = document.getElementById('variants_modal_title').textContent;
+      const productName = titleText.replace('Variants:', '').trim();
+
+      // Build SKU parts
+      let skuParts = [];
+
+      // Add product name part (first word or abbreviation)
+      if (productName) {
+        const productPart = productName.split(' ').slice(0, 2).join('').toUpperCase();
+        skuParts.push(productPart);
+      }
+
+      // Add size if selected
+      if (sizeSelect && sizeSelect.value) {
+        const sizeText = sizeSelect.options[sizeSelect.selectedIndex].text;
+        skuParts.push(sizeText.toUpperCase().replace(/\s+/g, ''));
+      }
+
+      // Add color if selected
+      if (colorSelect && colorSelect.value) {
+        const colorText = colorSelect.options[colorSelect.selectedIndex].text;
+        skuParts.push(colorText.toUpperCase().replace(/\s+/g, ''));
+      }
+
+      // Add material if selected
+      if (materialSelect && materialSelect.value) {
+        const materialText = materialSelect.options[materialSelect.selectedIndex].text;
+        skuParts.push(materialText.toUpperCase().replace(/\s+/g, ''));
+      }
+
+      // Join with hyphens
+      const sku = skuParts.join('-');
+
+      // Set the SKU field
+      document.getElementById('variant_sku').value = sku;
+    }
+
+    function loadSizesColorsMaterials() {
+      const csrftoken = getCookie('csrftoken');
+
+      fetch(window.location.pathname, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded',
+          'X-CSRFToken': csrftoken,
+        },
+        body: new URLSearchParams({
+          'action': 'get_sizes_colors_materials'
+        })
+      })
+      .then(response => response.json())
+      .then(data => {
+        if (data.success) {
+          // Populate filter dropdowns
+          const filterSize = document.getElementById('filter_size');
+          filterSize.innerHTML = '<option value="">All Sizes</option>';
+          data.sizes.forEach(size => {
+            const option = document.createElement('option');
+            option.value = size.label;
+            option.textContent = size.label;
+            filterSize.appendChild(option);
+          });
+
+          const filterColor = document.getElementById('filter_color');
+          filterColor.innerHTML = '<option value="">All Colors</option>';
+          data.colors.forEach(color => {
+            const option = document.createElement('option');
+            option.value = color.name;
+            option.textContent = color.name;
+            filterColor.appendChild(option);
+          });
+
+          const filterMaterial = document.getElementById('filter_material');
+          filterMaterial.innerHTML = '<option value="">All Materials</option>';
+          if (data.materials) {
+            data.materials.forEach(material => {
+              const option = document.createElement('option');
+              option.value = material.name;
+              option.textContent = material.name;
+              filterMaterial.appendChild(option);
+            });
+          }
+        }
+      });
+    }
+
+    function loadFormDropdowns() {
+      const csrftoken = getCookie('csrftoken');
+
+      fetch(window.location.pathname, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded',
+          'X-CSRFToken': csrftoken,
+        },
+        body: new URLSearchParams({
+          'action': 'get_sizes_colors_materials'
+        })
+      })
+      .then(response => response.json())
+      .then(data => {
+        if (data.success) {
+          // Populate Size dropdown if it exists
+          const sizeSelect = document.getElementById('variant_size');
+          if (sizeSelect) {
+            sizeSelect.innerHTML = '<option value="">Select size...</option>';
+            data.sizes.forEach(size => {
+              const option = document.createElement('option');
+              option.value = size.id;
+              option.textContent = size.label;
+              sizeSelect.appendChild(option);
+            });
+          }
+
+          // Populate Color dropdown if it exists
+          const colorSelect = document.getElementById('variant_color');
+          if (colorSelect) {
+            colorSelect.innerHTML = '<option value="">Select color...</option>';
+            data.colors.forEach(color => {
+              const option = document.createElement('option');
+              option.value = color.id;
+              option.textContent = color.name;
+              colorSelect.appendChild(option);
+            });
+          }
+
+          // Populate Material dropdown if it exists
+          const materialSelect = document.getElementById('variant_material');
+          if (materialSelect && data.materials) {
+            materialSelect.innerHTML = '<option value="">Select material...</option>';
+            data.materials.forEach(material => {
+              const option = document.createElement('option');
+              option.value = material.id;
+              option.textContent = material.name;
+              materialSelect.appendChild(option);
+            });
+          }
+        }
+      });
+    }
+
+    function loadVariants(productId) {
+      const csrftoken = getCookie('csrftoken');
+      console.log('Loading variants for product:', productId);
+
+      fetch(window.location.pathname, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded',
+          'X-CSRFToken': csrftoken,
+        },
+        body: new URLSearchParams({
+          'action': 'get_variants',
+          'product_id': productId
+        })
+      })
+      .then(response => {
+        console.log('Response status:', response.status);
+        return response.json();
+      })
+      .then(data => {
+        console.log('Variants data:', data);
+        if (data.success) {
+          allVariants = data.variants;
+          displayVariants(allVariants);
+        } else {
+          console.error('Failed to load variants:', data.error);
+          document.getElementById('variants_list').innerHTML = `
+            <div style="text-align: center; padding: 3rem; color: #ef4444;">
+              <i class="fa-solid fa-exclamation-triangle" style="font-size: 3rem; opacity: 0.3; margin-bottom: 0.5rem;"></i>
+              <p>Error loading variants: ${data.error || 'Unknown error'}</p>
+            </div>
+          `;
+        }
+      })
+      .catch(error => {
+        console.error('Error loading variants:', error);
+        document.getElementById('variants_list').innerHTML = `
+          <div style="text-align: center; padding: 3rem; color: #ef4444;">
+            <i class="fa-solid fa-exclamation-triangle" style="font-size: 3rem; opacity: 0.3; margin-bottom: 0.5rem;"></i>
+            <p>Error loading variants. Please try again.</p>
+          </div>
+        `;
+      });
+    }
+
+    function displayVariants(variants) {
+      const variantsList = document.getElementById('variants_list');
+
+      // Update stats
+      const totalStock = variants.reduce((sum, v) => sum + v.stock_quantity, 0);
+      const activeCount = variants.filter(v => v.is_active).length;
+      const lowStockCount = variants.filter(v => v.stock_quantity <= 10).length;
+
+      document.getElementById('total_variants_stat').textContent = variants.length;
+      document.getElementById('total_stock_stat').textContent = totalStock;
+      document.getElementById('active_variants_stat').textContent = activeCount;
+      document.getElementById('low_stock_stat').textContent = lowStockCount;
+
+      if (variants.length === 0) {
+        variantsList.innerHTML = `
+          <div style="text-align: center; padding: 3rem; color: #64748b;">
+            <i class="fa-solid fa-inbox" style="font-size: 3rem; opacity: 0.3; margin-bottom: 0.5rem;"></i>
+            <p>No variants yet. Click "Add New Variant" above to create your first variant.</p>
+          </div>
+        `;
+        return;
+      }
+
+      variantsList.innerHTML = '';
+
+      // Create table view
+      const table = document.createElement('table');
+      table.style.cssText = 'width: 100%; border-collapse: separate; border-spacing: 0; background: white; border-radius: 12px; overflow: hidden; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);';
+
+      table.innerHTML = `
+        <thead>
+          <tr style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+            <th style="padding: 1rem; text-align: left; color: white; font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em;">Attributes</th>
+            <th style="padding: 1rem; text-align: left; color: white; font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em;">SKU</th>
+            <th style="padding: 1rem; text-align: center; color: white; font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em;">Stock</th>
+            <th style="padding: 1rem; text-align: center; color: white; font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em;">Price</th>
+            <th style="padding: 1rem; text-align: center; color: white; font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em;">Status</th>
+            <th style="padding: 1rem; text-align: center; color: white; font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em;">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${variants.map((variant, index) => {
+            const stockBadgeColor = variant.stock_quantity === 0 ? '#fee2e2' : variant.stock_quantity < 10 ? '#fef3c7' : '#d1fae5';
+            const stockTextColor = variant.stock_quantity === 0 ? '#991b1b' : variant.stock_quantity < 10 ? '#92400e' : '#065f46';
+            const rowBg = index % 2 === 0 ? '#ffffff' : '#f8fafc';
+
+            return `
+              <tr style="background: ${rowBg}; border-bottom: 1px solid #e2e8f0; transition: all 0.2s;"
+                  onmouseenter="this.style.background='#f1f5f9'"
+                  onmouseleave="this.style.background='${rowBg}'">
+                <td style="padding: 1rem;">
+                  <div style="font-weight: 600; color: #0f172a; font-size: 0.9375rem; margin-bottom: 0.25rem;">
+                    ${variant.size} / ${variant.color}
+                  </div>
+                  ${variant.material ? `<div style="font-size: 0.8125rem; color: #64748b;">${variant.material}</div>` : ''}
+                </td>
+                <td style="padding: 1rem;">
+                  <div style="font-family: monospace; font-size: 0.8125rem; color: #475569; font-weight: 500;">${variant.sku}</div>
+                </td>
+                <td style="padding: 1rem; text-align: center;">
+                  <span style="background: ${stockBadgeColor}; color: ${stockTextColor}; padding: 0.375rem 0.75rem; border-radius: 6px; font-size: 0.8125rem; font-weight: 600; display: inline-block; min-width: 60px;">
+                    ${variant.stock_quantity}
+                  </span>
+                </td>
+                <td style="padding: 1rem; text-align: center;">
+                  <input
+                    type="number"
+                    value="${variant.price}"
+                    step="0.01"
+                    onchange="updateVariantPrice(${variant.id}, this.value)"
+                    style="width: 80px; padding: 0.5rem; border: 1px solid #d1d5db; border-radius: 6px; font-size: 0.875rem; font-weight: 600; text-align: center;"
+                  >
+                </td>
+                <td style="padding: 1rem; text-align: center;">
+                  <span class="badge ${variant.is_active ? 'active' : 'inactive'}" style="cursor: pointer; font-size: 0.75rem;" onclick="toggleVariantActive(${variant.id})">
+                    <i class="fa-solid fa-${variant.is_active ? 'check-circle' : 'times-circle'}"></i>
+                    ${variant.is_active ? 'Active' : 'Inactive'}
+                  </span>
+                </td>
+                <td style="padding: 1rem; text-align: center;">
+                  <div style="display: inline-flex; gap: 0.5rem;">
+                    <button
+                      onclick="editVariant(${variant.id})"
+                      class="btn btn-secondary btn-sm"
+                      title="Edit"
+                      style="padding: 0.5rem 0.75rem;"
+                    >
+                      <i class="fa-solid fa-edit"></i>
+                    </button>
+                    <button
+                      onclick="deleteVariant(${variant.id})"
+                      class="btn btn-secondary btn-sm"
+                      style="background: #fee2e2; color: #991b1b; border-color: #fecaca; padding: 0.5rem 0.75rem;"
+                      title="Delete"
+                    >
+                      <i class="fa-solid fa-trash"></i>
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            `;
+          }).join('')}
+        </tbody>
+      `;
+
+      variantsList.appendChild(table);
+    }
+
+    function editVariant(variantId) {
+      // Find the variant in allVariants
+      const variant = allVariants.find(v => v.id === variantId);
+      if (!variant) return;
+
+      // Populate form
+      document.getElementById('edit_variant_id').value = variant.id;
+      document.getElementById('variant_form_title').textContent = 'Edit Variant';
+      document.getElementById('variant_size').value = variant.size_id;
+      document.getElementById('variant_color').value = variant.color_id;
+      document.getElementById('variant_material').value = variant.material_id || '';
+      document.getElementById('variant_sku').value = variant.sku;
+      document.getElementById('variant_stock').value = variant.stock_quantity;
+      document.getElementById('variant_price').value = variant.price;
+
+      // Load images
+      variantImages = variant.images || [];
+      displayVariantImages();
+
+      // Load custom fields
+      const container = document.getElementById('custom_fields_container');
+      container.innerHTML = '';
+      if (variant.custom_fields && Object.keys(variant.custom_fields).length > 0) {
+        Object.entries(variant.custom_fields).forEach(([name, value]) => {
+          const fieldDiv = document.createElement('div');
+          fieldDiv.style.cssText = 'display: grid; grid-template-columns: 1fr 2fr auto; gap: 0.5rem; margin-bottom: 0.75rem; align-items: end;';
+          fieldDiv.innerHTML = `
+            <div class="form-group" style="margin-bottom: 0;">
+              <label style="font-size: 0.75rem;">Field Name</label>
+              <input type="text" class="custom-field-name" value="${name}" style="padding: 0.5rem; border: 1px solid #e2e8f0; border-radius: 6px; font-size: 0.875rem;">
+            </div>
+            <div class="form-group" style="margin-bottom: 0;">
+              <label style="font-size: 0.75rem;">Value</label>
+              <input type="text" class="custom-field-value" value="${value}" style="padding: 0.5rem; border: 1px solid #e2e8f0; border-radius: 6px; font-size: 0.875rem;">
+            </div>
+            <button type="button" onclick="this.parentElement.remove()" class="btn btn-secondary btn-sm" style="background: #fee2e2; color: #991b1b;">
+              <i class="fa-solid fa-trash"></i>
+            </button>
+          `;
+          container.appendChild(fieldDiv);
+        });
+      } else {
+        container.innerHTML = '<p style="color: #64748b; font-size: 0.875rem; font-style: italic;">No custom fields added yet.</p>';
+      }
+
+      // Load form dropdowns and open modal
+      loadFormDropdowns();
+      document.getElementById('variantFormModal').classList.add('active');
+    }
+
+    function addVariant() {
+      const productId = document.getElementById('variants_product_id').value;
+      const sizeId = document.getElementById('new_variant_size').value;
+      const colorId = document.getElementById('new_variant_color').value;
+      const stock = document.getElementById('new_variant_stock').value;
+      const price = document.getElementById('new_variant_price').value;
+
+      if (!sizeId || !colorId) {
+        alert('Please select both size and color');
+        return;
+      }
+
+      if (!price) {
+        alert('Please enter a price');
+        return;
+      }
+
+      const csrftoken = getCookie('csrftoken');
+
+      fetch(window.location.pathname, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded',
+          'X-CSRFToken': csrftoken,
+        },
+        body: new URLSearchParams({
+          'action': 'add_variant',
+          'product_id': productId,
+          'size_id': sizeId,
+          'color_id': colorId,
+          'stock_quantity': stock,
+          'price': price
+        })
+      })
+      .then(response => response.json())
+      .then(data => {
+        if (data.success) {
+          // Reset form
+          document.getElementById('new_variant_size').value = '';
+          document.getElementById('new_variant_color').value = '';
+          document.getElementById('new_variant_stock').value = '0';
+          document.getElementById('new_variant_price').value = '';
+
+          // Reload variants
+          loadVariants(productId);
+        } else {
+          alert('Error: ' + (data.error || 'Failed to add variant'));
+        }
+      });
+    }
+
+    function updateVariantPrice(variantId, newPrice) {
+      const csrftoken = getCookie('csrftoken');
+
+      fetch(window.location.pathname, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded',
+          'X-CSRFToken': csrftoken,
+        },
+        body: new URLSearchParams({
+          'action': 'update_variant_price',
+          'variant_id': variantId,
+          'price': newPrice
+        })
+      })
+      .then(response => response.json())
+      .then(data => {
+        if (data.success) {
+          // Visual feedback
+          event.target.style.borderColor = '#10b981';
+          setTimeout(() => {
+            event.target.style.borderColor = '#e2e8f0';
+          }, 1000);
+        }
+      });
+    }
+
+    function toggleVariantActive(variantId) {
+      const csrftoken = getCookie('csrftoken');
+
+      fetch(window.location.pathname, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded',
+          'X-CSRFToken': csrftoken,
+        },
+        body: new URLSearchParams({
+          'action': 'toggle_variant_active',
+          'variant_id': variantId
+        })
+      })
+      .then(response => response.json())
+      .then(data => {
+        if (data.success) {
+          const productId = document.getElementById('variants_product_id').value;
+          loadVariants(productId);
+        }
+      });
+    }
+
+    function deleteVariant(variantId) {
+      if (!confirm('Are you sure you want to delete this variant?')) {
+        return;
+      }
+
+      const csrftoken = getCookie('csrftoken');
+
+      fetch(window.location.pathname, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded',
+          'X-CSRFToken': csrftoken,
+        },
+        body: new URLSearchParams({
+          'action': 'delete_variant',
+          'variant_id': variantId
+        })
+      })
+      .then(response => response.json())
+      .then(data => {
+        if (data.success) {
+          const productId = document.getElementById('variants_product_id').value;
+          loadVariants(productId);
+        } else {
+          alert('Error: ' + (data.error || 'Failed to delete variant'));
+        }
+      });
+    }
+
+    // Image handling functions
+    function handleVariantImageUpload(event) {
+      const files = event.target.files;
+      for (let file of files) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+          variantImages.push(e.target.result);
+          displayVariantImages();
+        };
+        reader.readAsDataURL(file);
+      }
+    }
+
+    function addImageByURL() {
+      const url = prompt('Enter image URL:');
+      if (url) {
+        variantImages.push(url);
+        displayVariantImages();
+      }
+    }
+
+    function displayVariantImages() {
+      const container = document.getElementById('variant_images_container');
+      container.innerHTML = '';
+
+      variantImages.forEach((img, index) => {
+        const imgDiv = document.createElement('div');
+        imgDiv.style.cssText = 'position: relative; width: 100px; height: 100px; border-radius: 8px; overflow: hidden; border: 2px solid #e2e8f0;';
+        imgDiv.innerHTML = `
+          <img src="${img}" style="width: 100%; height: 100%; object-fit: cover;">
+          <button onclick="removeVariantImage(${index})" style="position: absolute; top: 4px; right: 4px; background: rgba(239, 68, 68, 0.9); color: white; border: none; border-radius: 4px; width: 24px; height: 24px; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 0.75rem;">
+            <i class="fa-solid fa-times"></i>
+          </button>
+        `;
+        container.appendChild(imgDiv);
+      });
+    }
+
+    function removeVariantImage(index) {
+      variantImages.splice(index, 1);
+      displayVariantImages();
+    }
+
+    // Custom fields functions
+    let customFieldCounter = 0;
+    function addCustomField() {
+      const container = document.getElementById('custom_fields_container');
+      if (container.querySelector('p')) {
+        container.innerHTML = '';
+      }
+
+      const fieldId = `custom_field_${customFieldCounter++}`;
+      const fieldDiv = document.createElement('div');
+      fieldDiv.style.cssText = 'display: grid; grid-template-columns: 1fr 2fr auto; gap: 0.5rem; margin-bottom: 0.75rem; align-items: end;';
+      fieldDiv.innerHTML = `
+        <div class="form-group" style="margin-bottom: 0;">
+          <label style="font-size: 0.75rem;">Field Name</label>
+          <input type="text" class="custom-field-name" placeholder="e.g. Weight" style="padding: 0.5rem; border: 1px solid #e2e8f0; border-radius: 6px; font-size: 0.875rem;">
+        </div>
+        <div class="form-group" style="margin-bottom: 0;">
+          <label style="font-size: 0.75rem;">Value</label>
+          <input type="text" class="custom-field-value" placeholder="e.g. 8 oz" style="padding: 0.5rem; border: 1px solid #e2e8f0; border-radius: 6px; font-size: 0.875rem;">
+        </div>
+        <button type="button" onclick="this.parentElement.remove()" class="btn btn-secondary btn-sm" style="background: #fee2e2; color: #991b1b;">
+          <i class="fa-solid fa-trash"></i>
+        </button>
+      `;
+      container.appendChild(fieldDiv);
+    }
+
+    function addSavedField(key, label) {
+      const container = document.getElementById('custom_fields_container');
+      if (container.querySelector('p')) {
+        container.innerHTML = '';
+      }
+
+      const fieldDiv = document.createElement('div');
+      fieldDiv.style.cssText = 'display: grid; grid-template-columns: 1fr 2fr auto; gap: 0.5rem; margin-bottom: 0.75rem; align-items: end;';
+      fieldDiv.innerHTML = `
+        <div class="form-group" style="margin-bottom: 0;">
+          <label style="font-size: 0.75rem;">Field Name</label>
+          <input type="text" class="custom-field-name" value="${label}" style="padding: 0.5rem; border: 1px solid #e2e8f0; border-radius: 6px; font-size: 0.875rem;">
+        </div>
+        <div class="form-group" style="margin-bottom: 0;">
+          <label style="font-size: 0.75rem;">Value</label>
+          <input type="text" class="custom-field-value" placeholder="Enter value..." style="padding: 0.5rem; border: 1px solid #e2e8f0; border-radius: 6px; font-size: 0.875rem;">
+        </div>
+        <button type="button" onclick="this.parentElement.remove()" class="btn btn-secondary btn-sm" style="background: #fee2e2; color: #991b1b;">
+          <i class="fa-solid fa-trash"></i>
+        </button>
+      `;
+      container.appendChild(fieldDiv);
+    }
+
+    // Filter and sort functions
+    function filterVariants() {
+      const searchTerm = document.getElementById('search_variants').value.toLowerCase();
+      const filterSize = document.getElementById('filter_size').value;
+      const filterColor = document.getElementById('filter_color').value;
+      const filterMaterial = document.getElementById('filter_material').value;
+      const filterStatus = document.getElementById('filter_status').value;
+
+      const filtered = allVariants.filter(v => {
+        const matchesSearch = !searchTerm ||
+          v.sku.toLowerCase().includes(searchTerm) ||
+          v.size.toLowerCase().includes(searchTerm) ||
+          v.color.toLowerCase().includes(searchTerm) ||
+          (v.material && v.material.toLowerCase().includes(searchTerm));
+
+        const matchesSize = !filterSize || v.size === filterSize;
+        const matchesColor = !filterColor || v.color === filterColor;
+        const matchesMaterial = !filterMaterial || v.material === filterMaterial;
+
+        let matchesStatus = true;
+        if (filterStatus === 'active') matchesStatus = v.is_active;
+        if (filterStatus === 'inactive') matchesStatus = !v.is_active;
+        if (filterStatus === 'in_stock') matchesStatus = v.stock_quantity > 10;
+        if (filterStatus === 'low_stock') matchesStatus = v.stock_quantity > 0 && v.stock_quantity <= 10;
+        if (filterStatus === 'out_of_stock') matchesStatus = v.stock_quantity === 0;
+
+        return matchesSearch && matchesSize && matchesColor && matchesMaterial && matchesStatus;
+      });
+
+      displayVariants(filtered);
+    }
+
+    function sortVariants() {
+      const sortBy = document.getElementById('sort_variants').value;
+
+      allVariants.sort((a, b) => {
+        switch (sortBy) {
+          case 'name':
+            return `${a.size}-${a.color}`.localeCompare(`${b.size}-${b.color}`);
+          case 'name_desc':
+            return `${b.size}-${b.color}`.localeCompare(`${a.size}-${a.color}`);
+          case 'price_asc':
+            return parseFloat(a.price) - parseFloat(b.price);
+          case 'price_desc':
+            return parseFloat(b.price) - parseFloat(a.price);
+          case 'stock_asc':
+            return a.stock_quantity - b.stock_quantity;
+          case 'stock_desc':
+            return b.stock_quantity - a.stock_quantity;
+          case 'created':
+            return b.id - a.id;
+          default:
+            return 0;
+        }
+      });
+
+      filterVariants(); // Apply current filters after sorting
+    }
+
+    // Save variant function
+    function saveVariant() {
+      const variantId = document.getElementById('edit_variant_id').value;
+      const productId = document.getElementById('variants_product_id').value;
+      const sizeId = document.getElementById('variant_size').value;
+      const colorId = document.getElementById('variant_color').value;
+      const materialId = document.getElementById('variant_material').value;
+      const sku = document.getElementById('variant_sku').value;
+      const stock = document.getElementById('variant_stock').value;
+      const price = document.getElementById('variant_price').value;
+
+      if (!sizeId || !colorId) {
+        alert('Please select both size and color');
+        return;
+      }
+
+      if (!price) {
+        alert('Please enter a price');
+        return;
+      }
+
+      // Collect custom fields
+      const customFields = {};
+      document.querySelectorAll('#custom_fields_container > div').forEach(div => {
+        const name = div.querySelector('.custom-field-name').value;
+        const value = div.querySelector('.custom-field-value').value;
+        if (name && value) {
+          customFields[name] = value;
+        }
+      });
+
+      const csrftoken = getCookie('csrftoken');
+      const formData = new URLSearchParams({
+        'action': variantId ? 'update_variant' : 'add_variant',
+        'product_id': productId,
+        'size_id': sizeId,
+        'color_id': colorId,
+        'material_id': materialId,
+        'sku': sku,
+        'stock_quantity': stock,
+        'price': price,
+        'images': JSON.stringify(variantImages),
+        'custom_fields': JSON.stringify(customFields)
+      });
+
+      if (variantId) {
+        formData.append('variant_id', variantId);
+      }
+
+      fetch(window.location.pathname, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded',
+          'X-CSRFToken': csrftoken,
+        },
+        body: formData
+      })
+      .then(response => response.json())
+      .then(data => {
+        if (data.success) {
+          closeVariantForm();
+          loadVariants(productId);
+        } else {
+          alert('Error: ' + (data.error || 'Failed to save variant'));
+        }
+      });
+    }
+
+    // Close variants modal on overlay click
+    document.getElementById('variantsModal').addEventListener('click', function(e) {
+      if (e.target === this) {
+        closeVariantsModal();
+      }
+    });
+
+    // Close variant form modal on overlay click
+    document.getElementById('variantFormModal').addEventListener('click', function(e) {
+      if (e.target === this) {
+        closeVariantForm();
+      }
+    });
+  </script>
+
+  <!-- Add Product Popup -->
+  <div class="popup-overlay" id="add-product-overlay"></div>
+  <div class="add-product-popup" id="add-product-popup">
+    <div class="popup-header">
+      <h3 style="font-size: 1.5rem; font-weight: 700; color: #111827;">Add New Product</h3>
+      <button onclick="closeAddProductPopup()" style="background: none; border: none; font-size: 1.5rem; color: #9ca3af; cursor: pointer; padding: 0; width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; border-radius: 8px; transition: all 0.2s;">
+        <i class="fa-solid fa-times"></i>
+      </button>
+    </div>
+
+    <form id="add-product-form" method="POST" style="padding: 2rem;">
+      {% csrf_token %}
+      <input type="hidden" name="action" value="create_product">
+
+      <div class="form-group">
+        <label for="add_name">Product Name <span style="color: #ef4444;">*</span></label>
+        <input type="text" id="add_name" name="name" class="form-input" placeholder="e.g., Classic T-Shirt" required>
+      </div>
+
+      <div class="form-group">
+        <label for="add_slug">URL Slug <span style="color: #ef4444;">*</span></label>
+        <input type="text" id="add_slug" name="slug" class="form-input" placeholder="e.g., classic-tshirt" required>
+        <small style="color: #64748b; font-size: 0.8125rem; display: block; margin-top: 0.25rem;">
+          Used in product URLs (e.g., /products/<strong>classic-tee</strong>). Auto-generated from name if left empty.
+        </small>
+      </div>
+
+      <div class="form-group">
+        <label for="add_category">Category</label>
+        <select id="add_category" name="category" class="form-input">
+          <option value="">Uncategorized</option>
+          {% for category in categories %}
+          <option value="{{ category.slug }}">{{ category.name }}</option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label for="add_description">Description</label>
+        <textarea id="add_description" name="description" class="form-input" rows="4" placeholder="Enter product description..."></textarea>
+      </div>
+
+      <div class="form-group">
+        <label for="add_base_price">Base Price ($) <span style="color: #ef4444;">*</span></label>
+        <input type="number" id="add_base_price" name="base_price" class="form-input" step="0.01" min="0" placeholder="0.00" required>
+      </div>
+
+      <div class="form-group">
+        <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+          <input type="checkbox" id="add_featured" name="featured" style="width: auto; cursor: pointer;">
+          <span>Feature on homepage</span>
+        </label>
+      </div>
+
+      <div style="display: flex; gap: 1rem; margin-top: 2rem; padding-top: 2rem; border-top: 2px solid #f1f5f9;">
+        <button type="button" onclick="closeAddProductPopup()" class="btn" style="flex: 1; background: #f1f5f9; color: #64748b;">
+          Cancel
+        </button>
+        <button type="submit" class="btn btn-primary" style="flex: 2;">
+          <i class="fa-solid fa-plus"></i> Create Product
+        </button>
+      </div>
+    </form>
+  </div>
+
+  <style>
+    .popup-overlay {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.5);
+      backdrop-filter: blur(4px);
+      z-index: 999;
+    }
+
+    .popup-overlay.active {
+      display: block;
+    }
+
+    .add-product-popup {
+      display: none;
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background: white;
+      border-radius: 16px;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+      z-index: 1000;
+      max-width: 600px;
+      width: 90%;
+      max-height: 90vh;
+      overflow-y: auto;
+    }
+
+    .add-product-popup.active {
+      display: block;
+    }
+
+    .popup-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 2rem;
+      padding-bottom: 1rem;
+      border-bottom: 2px solid #f1f5f9;
+    }
+
+    .popup-header button:hover {
+      background: #f1f5f9;
+      color: #111827;
+    }
+
+    .form-input {
+      width: 100%;
+      padding: 0.75rem;
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+      font-size: 0.875rem;
+      transition: all 0.2s;
+    }
+
+    .form-input:focus {
+      outline: none;
+      border-color: #667eea;
+      box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+    }
+  </style>
+
+  <script>
+    function openAddProductPopup() {
+      document.getElementById('add-product-overlay').classList.add('active');
+      document.getElementById('add-product-popup').classList.add('active');
+      // Auto-generate slug from name
+      document.getElementById('add_name').addEventListener('input', function() {
+        if (!document.getElementById('add_slug').value) {
+          const slug = this.value.toLowerCase()
+            .replace(/[^a-z0-9]+/g, '-')
+            .replace(/^-|-$/g, '');
+          document.getElementById('add_slug').value = slug;
+        }
+      });
+    }
+
+    function closeAddProductPopup() {
+      document.getElementById('add-product-overlay').classList.remove('active');
+      document.getElementById('add-product-popup').classList.remove('active');
+      document.getElementById('add-product-form').reset();
+    }
+
+    // Close popup when clicking overlay
+    document.getElementById('add-product-overlay').addEventListener('click', closeAddProductPopup);
+  </script>
+</body>
+</html>

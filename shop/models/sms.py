@@ -1,9 +1,19 @@
 from django.db import models
+from django.core.validators import RegexValidator
 from django.contrib.auth.models import User
 
 
-class EmailSubscription(models.Model):
-    email = models.EmailField(unique=True)
+class SMSSubscription(models.Model):
+    phone_regex = RegexValidator(
+        regex=r'^\+?1?\d{9,15}$',
+        message="Phone number must be entered in the format: '+999999999'. Up to 15 digits allowed."
+    )
+
+    phone_number = models.CharField(
+        validators=[phone_regex],
+        max_length=17,
+        unique=True
+    )
     is_confirmed = models.BooleanField(default=False)
     subscribed_at = models.DateTimeField(auto_now_add=True)
     confirmed_at = models.DateTimeField(null=True, blank=True)
@@ -13,27 +23,25 @@ class EmailSubscription(models.Model):
     is_active = models.BooleanField(default=True)
     unsubscribed_at = models.DateTimeField(null=True, blank=True)
 
-    # unsub_token = models.CharField(max_length=64, unique=True)
-
     class Meta:
-        verbose_name = "Email Subscription"
-        verbose_name_plural = "Email Subscriptions"
+        verbose_name = "SMS Subscription"
+        verbose_name_plural = "SMS Subscriptions"
         ordering = ['-subscribed_at']
 
     def __str__(self):
-        return self.email
+        return self.phone_number
 
 
-class EmailTemplate(models.Model):
+class SMSTemplate(models.Model):
     """
-    Reusable email templates with variable support.
+    Reusable SMS message templates with variable support.
     Variables can be used like: {first_name}, {code}, {link}, etc.
     """
     TEMPLATE_TYPES = [
         ('welcome', 'Welcome Message'),
-        ('confirmation', 'Confirmation Email'),
-        ('promotion', 'Promotional Email'),
-        ('newsletter', 'Newsletter'),
+        ('confirmation', 'Confirmation Code'),
+        ('promotion', 'Promotional Message'),
+        ('reminder', 'Reminder'),
         ('announcement', 'Announcement'),
         ('custom', 'Custom'),
     ]
@@ -47,15 +55,9 @@ class EmailTemplate(models.Model):
 
     name = models.CharField(max_length=100, unique=True)
     template_type = models.CharField(max_length=20, choices=TEMPLATE_TYPES, default='custom')
-
-    # Email content
-    subject = models.CharField(max_length=200, help_text="Email subject line. Supports variables like {first_name}")
-    html_body = models.TextField(
-        help_text="HTML email body. Use {variable_name} for dynamic content."
-    )
-    text_body = models.TextField(
-        blank=True,
-        help_text="Plain text version (optional, will be auto-generated from HTML if empty)"
+    message_body = models.TextField(
+        max_length=1600,  # SMS can be up to 1600 chars for concatenated messages
+        help_text="Use {variable_name} for dynamic content. Example: 'Hi {first_name}, your code is {code}'"
     )
 
     # Automatic trigger configuration
@@ -75,8 +77,8 @@ class EmailTemplate(models.Model):
     times_used = models.IntegerField(default=0)
 
     class Meta:
-        verbose_name = "Email Template"
-        verbose_name_plural = "Email Templates"
+        verbose_name = "SMS Template"
+        verbose_name_plural = "SMS Templates"
         ordering = ['template_type', 'name']
 
     def __str__(self):
@@ -90,25 +92,18 @@ class EmailTemplate(models.Model):
             **kwargs: Variables to substitute in the template
 
         Returns:
-            tuple: (rendered_subject, rendered_html_body, rendered_text_body)
+            str: Rendered message
         """
-        subject = self.subject
-        html_body = self.html_body
-        text_body = self.text_body
-
+        message = self.message_body
         for key, value in kwargs.items():
             placeholder = "{" + key + "}"
-            subject = subject.replace(placeholder, str(value))
-            html_body = html_body.replace(placeholder, str(value))
-            if text_body:
-                text_body = text_body.replace(placeholder, str(value))
-
-        return subject, html_body, text_body
+            message = message.replace(placeholder, str(value))
+        return message
 
 
-class EmailCampaign(models.Model):
+class SMSCampaign(models.Model):
     """
-    Email marketing campaigns that can be scheduled and tracked.
+    SMS marketing campaigns that can be scheduled and tracked.
     """
     STATUS_CHOICES = [
         ('draft', 'Draft'),
@@ -120,7 +115,7 @@ class EmailCampaign(models.Model):
     ]
 
     name = models.CharField(max_length=200)
-    template = models.ForeignKey(EmailTemplate, on_delete=models.PROTECT, related_name='campaigns')
+    template = models.ForeignKey(SMSTemplate, on_delete=models.PROTECT, related_name='campaigns')
 
     # Targeting
     send_to_all_active = models.BooleanField(
@@ -145,47 +140,45 @@ class EmailCampaign(models.Model):
     notes = models.TextField(blank=True)
 
     class Meta:
-        verbose_name = "Email Campaign"
-        verbose_name_plural = "Email Campaigns"
+        verbose_name = "SMS Campaign"
+        verbose_name_plural = "SMS Campaigns"
         ordering = ['-created_at']
 
     def __str__(self):
         return f"{self.name} ({self.get_status_display()})"
 
 
-class EmailLog(models.Model):
+class SMSLog(models.Model):
     """
-    Log of all emails sent for tracking and debugging.
+    Log of all SMS messages sent for tracking and debugging.
     """
     STATUS_CHOICES = [
         ('queued', 'Queued'),
         ('sent', 'Sent'),
         ('delivered', 'Delivered'),
         ('failed', 'Failed'),
-        ('bounced', 'Bounced'),
+        ('undelivered', 'Undelivered'),
     ]
 
     subscription = models.ForeignKey(
-        EmailSubscription,
+        SMSSubscription,
         on_delete=models.SET_NULL,
         null=True,
         blank=True,
-        related_name='email_logs'
+        related_name='sms_logs'
     )
-    email_address = models.EmailField()
-    subject = models.CharField(max_length=200)
-    html_body = models.TextField()
-    text_body = models.TextField(blank=True)
+    phone_number = models.CharField(max_length=17)
+    message_body = models.TextField()
 
     campaign = models.ForeignKey(
-        EmailCampaign,
+        SMSCampaign,
         on_delete=models.SET_NULL,
         null=True,
         blank=True,
         related_name='logs'
     )
     template = models.ForeignKey(
-        EmailTemplate,
+        SMSTemplate,
         on_delete=models.SET_NULL,
         null=True,
         blank=True,
@@ -193,16 +186,18 @@ class EmailLog(models.Model):
     )
 
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='queued')
+    twilio_sid = models.CharField(max_length=34, blank=True)  # Twilio message SID
 
     sent_at = models.DateTimeField(auto_now_add=True)
     delivered_at = models.DateTimeField(null=True, blank=True)
 
     error_message = models.TextField(blank=True)
+    cost = models.DecimalField(max_digits=6, decimal_places=4, null=True, blank=True)
 
     class Meta:
-        verbose_name = "Email Log"
-        verbose_name_plural = "Email Logs"
+        verbose_name = "SMS Log"
+        verbose_name_plural = "SMS Logs"
         ordering = ['-sent_at']
 
     def __str__(self):
-        return f"Email to {self.email_address} - {self.status}"
+        return f"SMS to {self.phone_number} - {self.status}"

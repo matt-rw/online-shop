@@ -1,0 +1,331 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin Dashboard - Blueprint Apparel</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    body {
+      font-family: 'Inter', sans-serif;
+      background:
+        linear-gradient(135deg, rgba(102, 126, 234, 0.9) 0%, rgba(118, 75, 162, 0.9) 100%),
+        repeating-linear-gradient(0deg, transparent, transparent 35px, rgba(255,255,255,.03) 35px, rgba(255,255,255,.03) 36px),
+        repeating-linear-gradient(90deg, transparent, transparent 35px, rgba(255,255,255,.03) 35px, rgba(255,255,255,.03) 36px);
+      background-attachment: fixed;
+      min-height: 100vh;
+      padding: 2rem;
+    }
+    .container {
+      max-width: 1400px;
+      margin: 0 auto;
+    }
+    .header {
+      background: white;
+      border-radius: 12px;
+      padding: 2rem;
+      margin-bottom: 2rem;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+    .header h1 {
+      color: #1a202c;
+      font-size: 2.5rem;
+      font-weight: 700;
+      margin-bottom: 0.5rem;
+    }
+    .header p {
+      color: #667eea;
+      font-size: 1.125rem;
+    }
+    .quick-stats {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 1rem;
+      margin-bottom: 2rem;
+    }
+    .stat-box {
+      background: white;
+      border-radius: 8px;
+      padding: 1.25rem;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+      text-align: center;
+    }
+    .stat-box h4 {
+      color: #718096;
+      font-size: 0.75rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-bottom: 0.5rem;
+    }
+    .stat-box .number {
+      color: #667eea;
+      font-size: 2rem;
+      font-weight: 700;
+    }
+    .admin-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+      gap: 1.5rem;
+      margin-bottom: 2rem;
+    }
+    .admin-card {
+      background: white;
+      border-radius: 12px;
+      padding: 1.75rem;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+      transition: transform 0.2s, box-shadow 0.2s;
+      text-decoration: none;
+      color: inherit;
+      display: block;
+    }
+    .admin-card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 8px 12px rgba(0, 0, 0, 0.15);
+    }
+    .admin-card .icon {
+      font-size: 2.5rem;
+      margin-bottom: 1rem;
+    }
+    .admin-card h3 {
+      color: #1a202c;
+      font-size: 1.25rem;
+      font-weight: 700;
+      margin-bottom: 0.5rem;
+    }
+    .admin-card p {
+      color: #718096;
+      font-size: 0.875rem;
+      line-height: 1.5;
+    }
+    .section {
+      background: white;
+      border-radius: 12px;
+      padding: 2rem;
+      margin-bottom: 2rem;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+    .section h2 {
+      color: #1a202c;
+      font-size: 1.5rem;
+      font-weight: 700;
+      margin-bottom: 1.5rem;
+      padding-bottom: 0.75rem;
+      border-bottom: 2px solid #e2e8f0;
+    }
+    .form-group {
+      margin-bottom: 1.5rem;
+    }
+    .form-group label {
+      display: block;
+      color: #4a5568;
+      font-weight: 600;
+      margin-bottom: 0.5rem;
+    }
+    .form-group input[type="text"],
+    .form-group textarea {
+      width: 100%;
+      padding: 0.75rem;
+      border: 1px solid #e2e8f0;
+      border-radius: 6px;
+      font-family: inherit;
+    }
+    .form-group textarea {
+      min-height: 100px;
+      resize: vertical;
+    }
+    .btn {
+      padding: 0.75rem 1.5rem;
+      border-radius: 6px;
+      border: none;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+      text-decoration: none;
+      display: inline-block;
+    }
+    .btn-primary {
+      background: #667eea;
+      color: white;
+    }
+    .btn-primary:hover {
+      background: #5a67d8;
+    }
+    .current-image {
+      max-width: 400px;
+      border-radius: 8px;
+      margin: 1rem 0;
+    }
+    .alert {
+      padding: 1rem;
+      border-radius: 8px;
+      margin-bottom: 1rem;
+    }
+    .alert-success {
+      background: #c6f6d5;
+      color: #22543d;
+      border-left: 4px solid #38a169;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>🎯 Admin Dashboard</h1>
+      <p>Central control panel for Blueprint Apparel • {{ cst_time|date:"F j, Y g:i A" }} CST</p>
+    </div>
+
+    {% if messages %}
+      {% for message in messages %}
+        <div class="alert alert-{{ message.tags }}">{{ message }}</div>
+      {% endfor %}
+    {% endif %}
+
+    <!-- Quick Stats -->
+    <div class="quick-stats">
+      <div class="stat-box">
+        <h4>Total Users</h4>
+        <div class="number">{{ stats.total_users }}</div>
+      </div>
+      <div class="stat-box">
+        <h4>Email Subscribers</h4>
+        <div class="number">{{ stats.total_email_subs }}</div>
+      </div>
+      <div class="stat-box">
+        <h4>SMS Subscribers</h4>
+        <div class="number">{{ stats.total_sms_subs }}</div>
+      </div>
+      <div class="stat-box">
+        <h4>Products</h4>
+        <div class="number">{{ stats.total_products }}</div>
+      </div>
+    </div>
+
+    <!-- Section Header: Marketing Campaigns -->
+    <div style="margin: 2rem 0 1rem 0;">
+      <h2 style="color: white; font-size: 1.125rem; font-weight: 700; margin: 0; text-transform: uppercase; letter-spacing: 0.05em;">📨 Marketing Campaigns</h2>
+    </div>
+
+    <div class="admin-grid">
+      <!-- Campaigns -->
+      <a href="{% url 'admin_campaigns_list' %}" class="admin-card">
+        <div class="icon">🎯</div>
+        <h3>Campaigns</h3>
+        <p>Create and manage campaigns with scheduled email and SMS messages.</p>
+      </a>
+
+      <!-- Email Templates -->
+      <a href="/admin/email/templates/" class="admin-card">
+        <div class="icon">📄</div>
+        <h3>Email Templates</h3>
+        <p>Create and manage email templates with HTML support.</p>
+      </a>
+
+      <!-- SMS Templates -->
+      <a href="/admin/sms/templates/" class="admin-card">
+        <div class="icon">📝</div>
+        <h3>SMS Templates</h3>
+        <p>Create and manage SMS templates with variable support.</p>
+      </a>
+    </div>
+
+    <!-- Section Header: Subscribers -->
+    <div style="margin: 2rem 0 1rem 0;">
+      <h2 style="color: white; font-size: 1.125rem; font-weight: 700; margin: 0; text-transform: uppercase; letter-spacing: 0.05em;">👥 Subscribers</h2>
+    </div>
+
+    <div class="admin-grid">
+      <!-- Subscribers -->
+      <a href="/admin/subscribers/" class="admin-card">
+        <div class="icon">👥</div>
+        <h3>All Subscribers</h3>
+        <p>{{ stats.total_email_subs }} email, {{ stats.total_sms_subs }} SMS. Toggle between lists and manage groups.</p>
+      </a>
+
+      <!-- Email Subscribers -->
+      <a href="/admin/subscribers/?type=email" class="admin-card">
+        <div class="icon">✉️</div>
+        <h3>Email Subscribers</h3>
+        <p>{{ stats.total_email_subs }} total. {{ stats.new_email_subs_24h }} new in last 24h.</p>
+      </a>
+
+      <!-- SMS Subscribers -->
+      <a href="/admin/subscribers/?type=sms" class="admin-card">
+        <div class="icon">📱</div>
+        <h3>SMS Subscribers</h3>
+        <p>{{ stats.total_sms_subs }} total. {{ stats.new_sms_subs_24h }} new in last 24h.</p>
+      </a>
+    </div>
+
+    <!-- Section Header: Dashboards -->
+    <div style="margin: 2rem 0 1rem 0;">
+      <h2 style="color: white; font-size: 1.125rem; font-weight: 700; margin: 0; text-transform: uppercase; letter-spacing: 0.05em;">📊 Dashboards</h2>
+    </div>
+
+    <div class="admin-grid">
+      <!-- Email Dashboard -->
+      <a href="/admin/email/" class="admin-card">
+        <div class="icon">📊</div>
+        <h3>Email Dashboard</h3>
+        <p>View email stats, recent sends, and performance metrics.</p>
+      </a>
+
+      <!-- SMS Dashboard -->
+      <a href="/admin/sms/" class="admin-card">
+        <div class="icon">📈</div>
+        <h3>SMS Dashboard</h3>
+        <p>View SMS stats, recent sends, and delivery reports.</p>
+      </a>
+    </div>
+
+    <!-- Section Header: Analytics & Settings -->
+    <div style="margin: 2rem 0 1rem 0;">
+      <h2 style="color: white; font-size: 1.125rem; font-weight: 700; margin: 0; text-transform: uppercase; letter-spacing: 0.05em;">⚙️ Analytics & Settings</h2>
+    </div>
+
+    <div class="admin-grid">
+      <!-- Visitors Analytics -->
+      <a href="/admin/visitors/" class="admin-card">
+        <div class="icon">📊</div>
+        <h3>Visitor Analytics</h3>
+        <p>Track site visitors, page views, traffic sources, and locations.</p>
+      </a>
+
+      <!-- Security Dashboard -->
+      <a href="/admin/security/" class="admin-card">
+        <div class="icon">🔒</div>
+        <h3>Security & System</h3>
+        <p>Monitor system health, security settings, and server resources.</p>
+      </a>
+
+      <!-- Homepage Settings -->
+      <a href="/admin/homepage/" class="admin-card">
+        <div class="icon">🏠</div>
+        <h3>Homepage Settings</h3>
+        <p>Manage homepage hero image, title, and featured content.</p>
+      </a>
+
+      <!-- Django Admin -->
+      <a href="/django-admin/" class="admin-card">
+        <div class="icon">⚙️</div>
+        <h3>Django Admin</h3>
+        <p>Direct access to all models, products, orders, and database.</p>
+      </a>
+
+      <!-- Site Settings -->
+      <a href="/django-admin/shop/sitesettings/1/change/" class="admin-card">
+        <div class="icon">🎨</div>
+        <h3>Site Settings</h3>
+        <p>Manage site-wide settings, contact info, and social links.</p>
+      </a>
+    </div>
+
+  </div>
+</body>
+</html>

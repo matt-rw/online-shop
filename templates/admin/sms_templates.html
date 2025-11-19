@@ -1,0 +1,391 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SMS Templates - Blueprint Apparel</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: 'Inter', sans-serif;
+      background: linear-gradient(135deg, rgba(102, 126, 234, 0.9) 0%, rgba(118, 75, 162, 0.9) 100%);
+      background-attachment: fixed;
+      min-height: 100vh;
+      padding: 2rem;
+    }
+    .container { max-width: 1400px; margin: 0 auto; }
+    .header {
+      background: white;
+      border-radius: 12px;
+      padding: 2rem;
+      margin-bottom: 2rem;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+    .header h1 { color: #1a202c; font-size: 2rem; font-weight: 700; margin-bottom: 0.5rem; }
+    .header p { color: #667eea; font-size: 1.125rem; }
+    .nav-links { display: flex; gap: 1rem; margin-top: 1rem; flex-wrap: wrap; }
+    .nav-links a {
+      color: #667eea;
+      text-decoration: none;
+      padding: 0.5rem 1rem;
+      border-radius: 6px;
+      transition: background 0.2s;
+    }
+    .nav-links a:hover { background: #f7fafc; }
+    .two-column {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 2rem;
+    }
+    @media (max-width: 1024px) {
+      .two-column { grid-template-columns: 1fr; }
+    }
+    .section {
+      background: white;
+      border-radius: 12px;
+      padding: 2rem;
+      margin-bottom: 2rem;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+    .section h2 {
+      color: #1a202c;
+      font-size: 1.5rem;
+      font-weight: 700;
+      margin-bottom: 1.5rem;
+      padding-bottom: 0.75rem;
+      border-bottom: 2px solid #e2e8f0;
+    }
+    .form-group { margin-bottom: 1.5rem; }
+    .form-group label {
+      display: block;
+      color: #4a5568;
+      font-weight: 600;
+      margin-bottom: 0.5rem;
+      font-size: 0.875rem;
+    }
+    .form-group input, .form-group select, .form-group textarea {
+      width: 100%;
+      padding: 0.75rem;
+      border: 2px solid #e2e8f0;
+      border-radius: 6px;
+      font-family: inherit;
+      font-size: 1rem;
+      transition: border-color 0.2s;
+    }
+    .form-group input:focus, .form-group select:focus, .form-group textarea:focus {
+      outline: none;
+      border-color: #667eea;
+    }
+    .form-group textarea {
+      min-height: 150px;
+      resize: vertical;
+      font-family: 'Courier New', monospace;
+    }
+    .form-group small {
+      display: block;
+      color: #718096;
+      margin-top: 0.25rem;
+      font-size: 0.875rem;
+    }
+    .char-counter {
+      text-align: right;
+      color: #718096;
+      font-size: 0.875rem;
+      margin-top: 0.5rem;
+    }
+    .char-counter.warning { color: #ed8936; }
+    .char-counter.error { color: #f56565; }
+    .variable-buttons {
+      display: flex;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+      margin-bottom: 1rem;
+    }
+    .var-btn {
+      padding: 0.375rem 0.75rem;
+      background: #e2e8f0;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 0.875rem;
+      color: #4a5568;
+      transition: all 0.2s;
+    }
+    .var-btn:hover {
+      background: #cbd5e0;
+    }
+    .btn {
+      padding: 0.75rem 1.5rem;
+      border-radius: 6px;
+      border: none;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+      font-size: 1rem;
+    }
+    .btn-primary { background: #667eea; color: white; }
+    .btn-primary:hover { background: #5a67d8; }
+    .btn-secondary { background: #e2e8f0; color: #4a5568; }
+    .btn-secondary:hover { background: #cbd5e0; }
+    .btn-danger {
+      background: #f56565;
+      color: white;
+      padding: 0.5rem 1rem;
+      font-size: 0.875rem;
+    }
+    .btn-danger:hover { background: #e53e3e; }
+    .alert {
+      padding: 1rem;
+      border-radius: 8px;
+      margin-bottom: 1rem;
+    }
+    .alert-success { background: #c6f6d5; color: #22543d; border-left: 4px solid #38a169; }
+    .alert-error { background: #fed7d7; color: #742a2a; border-left: 4px solid #e53e3e; }
+    .template-card {
+      background: #f7fafc;
+      border: 2px solid #e2e8f0;
+      border-radius: 8px;
+      padding: 1.5rem;
+      margin-bottom: 1rem;
+      transition: all 0.2s;
+    }
+    .template-card:hover {
+      border-color: #667eea;
+      box-shadow: 0 2px 8px rgba(102, 126, 234, 0.1);
+    }
+    .template-card h3 {
+      color: #1a202c;
+      font-size: 1.125rem;
+      margin-bottom: 0.5rem;
+    }
+    .template-card .meta {
+      color: #718096;
+      font-size: 0.875rem;
+      margin-bottom: 1rem;
+    }
+    .template-card .message-preview {
+      background: white;
+      border: 1px solid #e2e8f0;
+      border-radius: 4px;
+      padding: 1rem;
+      margin-bottom: 1rem;
+      font-family: 'Courier New', monospace;
+      font-size: 0.875rem;
+      color: #2d3748;
+    }
+    .template-card .actions {
+      display: flex;
+      gap: 0.5rem;
+    }
+    .badge {
+      display: inline-block;
+      padding: 0.25rem 0.75rem;
+      border-radius: 9999px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      margin-right: 0.5rem;
+    }
+    .badge-active { background: #c6f6d5; color: #22543d; }
+    .badge-inactive { background: #e2e8f0; color: #4a5568; }
+    .info-box {
+      background: #ebf8ff;
+      border-left: 4px solid #4299e1;
+      padding: 1rem;
+      border-radius: 4px;
+      margin-bottom: 1.5rem;
+    }
+    .info-box h4 {
+      color: #2c5282;
+      font-size: 0.875rem;
+      font-weight: 600;
+      margin-bottom: 0.5rem;
+    }
+    .info-box p {
+      color: #2c5282;
+      font-size: 0.875rem;
+      line-height: 1.5;
+    }
+    .checkbox-group {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    .checkbox-group input[type="checkbox"] {
+      width: auto;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>📱 SMS Templates</h1>
+      <p>Create and manage reusable SMS message templates</p>
+      <div class="nav-links">
+        <a href="/admin/">← Admin Home</a>
+        <a href="/admin/sms/">SMS Dashboard</a>
+        <a href="/admin/sms/campaigns/">Campaigns</a>
+      </div>
+    </div>
+
+    {% if messages %}
+      {% for message in messages %}
+        <div class="alert alert-{{ message.tags }}">{{ message }}</div>
+      {% endfor %}
+    {% endif %}
+
+    <div class="two-column">
+      <!-- Create/Edit Template Form -->
+      <div class="section">
+        <h2>{% if edit_template %}Edit{% else %}Create{% endif %} Template</h2>
+
+        <div class="info-box">
+          <h4>💡 Variables</h4>
+          <p>Use variables like {first_name}, {code}, {link} to personalize messages. Click the buttons below to insert them.</p>
+        </div>
+
+        <form method="POST" id="templateForm">
+          {% csrf_token %}
+          <input type="hidden" name="action" value="{% if edit_template %}update{% else %}create{% endif %}">
+          {% if edit_template %}
+            <input type="hidden" name="template_id" value="{{ edit_template.id }}">
+          {% endif %}
+
+          <div class="form-group">
+            <label for="name">Template Name *</label>
+            <input type="text" name="name" id="name" required
+                   value="{% if edit_template %}{{ edit_template.name }}{% endif %}"
+                   placeholder="e.g., Welcome SMS">
+          </div>
+
+          <div class="form-group">
+            <label for="template_type">Template Type *</label>
+            <select name="template_type" id="template_type" required>
+              {% for value, label in template_types %}
+                <option value="{{ value }}" {% if edit_template and edit_template.template_type == value %}selected{% endif %}>{{ label }}</option>
+              {% endfor %}
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label for="auto_trigger">Auto Trigger *</label>
+            <select name="auto_trigger" id="auto_trigger" required>
+              {% for value, label in trigger_types %}
+                <option value="{{ value }}" {% if edit_template and edit_template.auto_trigger == value %}selected{% endif %}>{{ label }}</option>
+              {% endfor %}
+            </select>
+            <small>When should this template be automatically sent?</small>
+          </div>
+
+          <div class="form-group">
+            <label for="message_body">Message Content *</label>
+            <div class="variable-buttons">
+              <button type="button" class="var-btn" onclick="insertVariable('first_name')">+{first_name}</button>
+              <button type="button" class="var-btn" onclick="insertVariable('last_name')">+{last_name}</button>
+              <button type="button" class="var-btn" onclick="insertVariable('code')">+{code}</button>
+              <button type="button" class="var-btn" onclick="insertVariable('link')">+{link}</button>
+            </div>
+            <textarea name="message_body" id="message_body" required
+                      placeholder="Welcome to Blueprint, {first_name}! Reply STOP to unsubscribe.">{% if edit_template %}{{ edit_template.message_body }}{% endif %}</textarea>
+            <div class="char-counter" id="charCounter">0 / 160 characters</div>
+            <small>SMS messages over 160 characters will be sent as multiple messages.</small>
+          </div>
+
+          {% if edit_template %}
+            <div class="form-group">
+              <div class="checkbox-group">
+                <input type="checkbox" name="is_active" id="is_active" {% if edit_template.is_active %}checked{% endif %}>
+                <label for="is_active" style="margin: 0;">Template is Active</label>
+              </div>
+            </div>
+          {% endif %}
+
+          <div style="display: flex; gap: 1rem;">
+            <button type="submit" class="btn btn-primary">
+              {% if edit_template %}Update Template{% else %}Create Template{% endif %}
+            </button>
+            {% if edit_template %}
+              <a href="/admin/sms/templates/" class="btn btn-secondary" style="text-decoration: none; display: inline-block; line-height: 1.5;">Cancel</a>
+            {% endif %}
+          </div>
+        </form>
+      </div>
+
+      <!-- Templates List -->
+      <div class="section">
+        <h2>All Templates ({{ templates|length }})</h2>
+
+        {% if templates %}
+          {% for template in templates %}
+            <div class="template-card">
+              <h3>{{ template.name }}</h3>
+              <div class="meta">
+                <span class="badge {% if template.is_active %}badge-active{% else %}badge-inactive{% endif %}">
+                  {% if template.is_active %}Active{% else %}Inactive{% endif %}
+                </span>
+                {{ template.get_template_type_display }} • {{ template.get_auto_trigger_display }}
+                <br>
+                Used {{ template.times_used }} times • Updated {{ template.updated_at|date:"M d, Y" }}
+              </div>
+              <div class="message-preview">{{ template.message_body|truncatewords:30 }}</div>
+              <div class="actions">
+                <a href="/admin/sms/templates/?edit={{ template.id }}" class="btn btn-secondary" style="text-decoration: none;">Edit</a>
+                <form method="POST" style="display: inline;">
+                  {% csrf_token %}
+                  <input type="hidden" name="action" value="delete">
+                  <input type="hidden" name="template_id" value="{{ template.id }}">
+                  <button type="submit" class="btn btn-danger" onclick="return confirm('Delete this template?')">Delete</button>
+                </form>
+              </div>
+            </div>
+          {% endfor %}
+        {% else %}
+          <p style="text-align: center; color: #a0aec0; padding: 2rem;">
+            No templates yet. Create your first template!
+          </p>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Character counter
+    const textarea = document.getElementById('message_body');
+    const counter = document.getElementById('charCounter');
+
+    function updateCounter() {
+      const length = textarea.value.length;
+      counter.textContent = `${length} / 160 characters`;
+
+      if (length > 320) {
+        counter.classList.add('error');
+        counter.classList.remove('warning');
+      } else if (length > 160) {
+        counter.classList.add('warning');
+        counter.classList.remove('error');
+      } else {
+        counter.classList.remove('warning', 'error');
+      }
+    }
+
+    textarea.addEventListener('input', updateCounter);
+    updateCounter();
+
+    // Insert variable at cursor position
+    function insertVariable(varName) {
+      const cursorPos = textarea.selectionStart;
+      const textBefore = textarea.value.substring(0, cursorPos);
+      const textAfter = textarea.value.substring(cursorPos);
+      const variable = `{${varName}}`;
+
+      textarea.value = textBefore + variable + textAfter;
+      textarea.focus();
+      textarea.selectionStart = textarea.selectionEnd = cursorPos + variable.length;
+
+      updateCounter();
+    }
+  </script>
+</body>
+</html>

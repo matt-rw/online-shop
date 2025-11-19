@@ -1,0 +1,291 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Email Campaigns - Blueprint Apparel</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: 'Inter', sans-serif;
+      background: linear-gradient(135deg, rgba(102, 126, 234, 0.9) 0%, rgba(118, 75, 162, 0.9) 100%);
+      background-attachment: fixed;
+      min-height: 100vh;
+      padding: 2rem;
+    }
+    .container { max-width: 1200px; margin: 0 auto; }
+    .header {
+      background: white;
+      border-radius: 12px;
+      padding: 2rem;
+      margin-bottom: 2rem;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+    .header h1 { color: #1a202c; font-size: 2rem; font-weight: 700; margin-bottom: 0.5rem; }
+    .header p { color: #667eea; font-size: 1.125rem; }
+    .nav-links {
+      display: flex;
+      gap: 1rem;
+      margin-top: 1rem;
+      flex-wrap: wrap;
+    }
+    .nav-links a {
+      color: #667eea;
+      text-decoration: none;
+      padding: 0.5rem 1rem;
+      border-radius: 6px;
+      transition: background 0.2s;
+    }
+    .nav-links a:hover { background: #f7fafc; }
+    .section {
+      background: white;
+      border-radius: 12px;
+      padding: 2rem;
+      margin-bottom: 2rem;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+    .section h2 {
+      color: #1a202c;
+      font-size: 1.5rem;
+      font-weight: 700;
+      margin-bottom: 1.5rem;
+      padding-bottom: 0.75rem;
+      border-bottom: 2px solid #e2e8f0;
+    }
+    .form-group {
+      margin-bottom: 1.5rem;
+    }
+    .form-group label {
+      display: block;
+      color: #4a5568;
+      font-weight: 600;
+      margin-bottom: 0.5rem;
+      font-size: 0.875rem;
+    }
+    .form-group input, .form-group select, .form-group textarea {
+      width: 100%;
+      padding: 0.75rem;
+      border: 2px solid #e2e8f0;
+      border-radius: 6px;
+      font-family: inherit;
+      font-size: 1rem;
+      transition: border-color 0.2s;
+    }
+    .form-group input:focus, .form-group select:focus, .form-group textarea:focus {
+      outline: none;
+      border-color: #667eea;
+    }
+    .form-group textarea {
+      min-height: 100px;
+      resize: vertical;
+    }
+    .form-group small {
+      display: block;
+      color: #718096;
+      margin-top: 0.25rem;
+      font-size: 0.875rem;
+    }
+    .btn {
+      padding: 0.75rem 1.5rem;
+      border-radius: 6px;
+      border: none;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+      font-size: 1rem;
+    }
+    .btn-primary {
+      background: #667eea;
+      color: white;
+    }
+    .btn-primary:hover {
+      background: #5a67d8;
+    }
+    .btn-danger {
+      background: #f56565;
+      color: white;
+      padding: 0.5rem 1rem;
+      font-size: 0.875rem;
+    }
+    .btn-danger:hover {
+      background: #e53e3e;
+    }
+    .btn-success {
+      background: #48bb78;
+      color: white;
+      padding: 0.5rem 1rem;
+      font-size: 0.875rem;
+    }
+    .btn-success:hover {
+      background: #38a169;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 1rem;
+    }
+    th {
+      text-align: left;
+      padding: 0.75rem;
+      background: #f7fafc;
+      color: #4a5568;
+      font-weight: 600;
+      font-size: 0.875rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+    td {
+      padding: 0.75rem;
+      border-top: 1px solid #e2e8f0;
+      color: #2d3748;
+    }
+    .badge {
+      display: inline-block;
+      padding: 0.25rem 0.75rem;
+      border-radius: 9999px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      text-transform: uppercase;
+    }
+    .badge-draft { background: #e2e8f0; color: #4a5568; }
+    .badge-scheduled { background: #feebc8; color: #744210; }
+    .badge-sending { background: #bee3f8; color: #2c5282; }
+    .badge-sent { background: #c6f6d5; color: #22543d; }
+    .badge-cancelled { background: #fed7d7; color: #742a2a; }
+    .alert {
+      padding: 1rem;
+      border-radius: 8px;
+      margin-bottom: 1rem;
+    }
+    .alert-success { background: #c6f6d5; color: #22543d; border-left: 4px solid #38a169; }
+    .alert-error { background: #fed7d7; color: #742a2a; border-left: 4px solid #e53e3e; }
+    .action-buttons {
+      display: flex;
+      gap: 0.5rem;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>✉️ Email Campaigns</h1>
+      <p>Create and manage your Email marketing campaigns</p>
+      <div class="nav-links">
+        <a href="/admin/">← Admin Home</a>
+        <a href="/admin/email/">Email Dashboard</a>
+        <a href="/admin/email/templates/">Manage Templates</a>
+      </div>
+    </div>
+
+    {% if messages %}
+      {% for message in messages %}
+        <div class="alert alert-{{ message.tags }}">{{ message }}</div>
+      {% endfor %}
+    {% endif %}
+
+    <!-- Create Campaign Form -->
+    <div class="section">
+      <h2>Create New Campaign</h2>
+      <form method="POST">
+        {% csrf_token %}
+        <input type="hidden" name="action" value="create">
+
+        <div class="form-group">
+          <label for="name">Campaign Name *</label>
+          <input type="text" name="name" id="name" required placeholder="e.g., Spring Sale 2025">
+        </div>
+
+        <div class="form-group">
+          <label for="template">Email Template *</label>
+          <select name="template" id="template" required>
+            <option value="">-- Select a template --</option>
+            {% for template in templates %}
+              <option value="{{ template.id }}">{{ template.name }} ({{ template.get_template_type_display }})</option>
+            {% endfor %}
+          </select>
+          <small>Choose a template or <a href="/admin/email/templates/">create a new one</a></small>
+        </div>
+
+        <div class="form-group">
+          <label for="scheduled_at">Schedule For (optional)</label>
+          <input type="datetime-local" name="scheduled_at" id="scheduled_at">
+          <small>Leave empty to save as draft. Campaign will send automatically at this time if scheduled.</small>
+        </div>
+
+        <div class="form-group">
+          <label for="notes">Notes (optional)</label>
+          <textarea name="notes" id="notes" placeholder="Campaign notes, target audience, goals, etc."></textarea>
+        </div>
+
+        <button type="submit" class="btn btn-primary">Create Campaign</button>
+      </form>
+    </div>
+
+    <!-- Campaigns List -->
+    <div class="section">
+      <h2>All Campaigns ({{ campaigns|length }})</h2>
+
+      {% if campaigns %}
+        <table>
+          <thead>
+            <tr>
+              <th>Name</th>
+              <th>Template</th>
+              <th>Status</th>
+              <th>Scheduled</th>
+              <th>Progress</th>
+              <th>Created</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for campaign in campaigns %}
+              <tr>
+                <td><strong>{{ campaign.name }}</strong></td>
+                <td>{{ campaign.template.name }}</td>
+                <td>
+                  <span class="badge badge-{{ campaign.status }}">{{ campaign.get_status_display }}</span>
+                </td>
+                <td>{{ campaign.scheduled_at|date:"M d, Y g:i A"|default:"—" }}</td>
+                <td>
+                  {% if campaign.total_recipients > 0 %}
+                    {{ campaign.sent_count }}/{{ campaign.total_recipients }}
+                  {% else %}
+                    Not sent
+                  {% endif %}
+                </td>
+                <td>{{ campaign.created_at|date:"M d, Y" }}</td>
+                <td>
+                  <div class="action-buttons">
+                    {% if campaign.status == 'draft' or campaign.status == 'scheduled' %}
+                      <form method="POST" action="/admin/email/" style="display: inline;">
+                        {% csrf_token %}
+                        <input type="hidden" name="action" value="send_campaign">
+                        <input type="hidden" name="campaign_id" value="{{ campaign.id }}">
+                        <button type="submit" class="btn btn-success" onclick="return confirm('Send this campaign now?')">Send Now</button>
+                      </form>
+                    {% endif %}
+
+                    <form method="POST" style="display: inline;">
+                      {% csrf_token %}
+                      <input type="hidden" name="action" value="delete">
+                      <input type="hidden" name="campaign_id" value="{{ campaign.id }}">
+                      <button type="submit" class="btn btn-danger" onclick="return confirm('Delete this campaign?')">Delete</button>
+                    </form>
+                  </div>
+                </td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      {% else %}
+        <p style="text-align: center; color: #a0aec0; padding: 2rem;">
+          No campaigns yet. Create your first campaign above!
+        </p>
+      {% endif %}
+    </div>
+  </div>
+</body>
+</html>

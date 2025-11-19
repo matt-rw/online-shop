@@ -74,7 +74,11 @@ INSTALLED_APPS = [
     # Optional social providers (uncomment as needed)
     # "allauth.socialaccount.providers.google",
     # "allauth.socialaccount.providers.facebook",
-    # "django_browser_reload",
+    # django-browser_reload
+    # Two-Factor Authentication
+    "django_otp",
+    "django_otp.plugins.otp_totp",
+    "django_otp.plugins.otp_static",
 ]
 
 MIDDLEWARE = [
@@ -82,10 +86,12 @@ MIDDLEWARE = [
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
+    "django_otp.middleware.OTPMiddleware",  # Two-Factor Authentication
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
     "django.middleware.security.SecurityMiddleware",
     "allauth.account.middleware.AccountMiddleware",  # Required by allauth
+    "shop.middleware.analytics.VisitorTrackingMiddleware",  # Track visitor analytics
     "wagtail.contrib.redirects.middleware.RedirectMiddleware",
     # "django_browser_reload.middleware.BrowserReloadMiddleware",
 ]
@@ -238,6 +244,11 @@ EMAIL_HOST_USER = get_env_variable('EMAIL_HOST_USER', '')
 EMAIL_HOST_PASSWORD = get_env_variable('EMAIL_HOST_PASSWORD', '')
 DEFAULT_FROM_EMAIL = get_env_variable('DEFAULT_FROM_EMAIL', EMAIL_HOST_USER or 'noreply@example.com')
 
+# TWILIO SMS
+TWILIO_ACCOUNT_SID = get_env_variable('TWILIO_ACCOUNT_SID', '')
+TWILIO_AUTH_TOKEN = get_env_variable('TWILIO_AUTH_TOKEN', '')
+TWILIO_PHONE_NUMBER = get_env_variable('TWILIO_PHONE_NUMBER', '')
+
 # DJANGO-ALLAUTH CONFIGURATION
 SITE_ID = 1  # Required by django.contrib.sites
 
@@ -265,6 +276,10 @@ ACCOUNT_SIGNUP_REDIRECT_URL = '/'
 
 # Session settings
 ACCOUNT_SESSION_REMEMBER = True  # Remember me by default
+
+# GEOIP SETTINGS
+# Path to GeoLite2 database for visitor location tracking
+GEOIP_PATH = os.path.join(BASE_DIR, 'geoip')
 
 # SECURITY HEADERS
 # Prevent clickjacking attacks by preventing your site from being embedded in iframes

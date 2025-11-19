@@ -1,0 +1,378 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Promotions - Blueprint Apparel</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: 'Inter', sans-serif;
+      background: #f1f5f9;
+      min-height: 100vh;
+    }
+    .nav-links {
+      background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+      padding: 1rem 2rem;
+      display: flex;
+      gap: 0.75rem;
+    }
+    .nav-link {
+      background: rgba(255, 255, 255, 0.15);
+      color: white;
+      padding: 0.5rem 1rem;
+      border-radius: 8px;
+      text-decoration: none;
+      font-size: 0.875rem;
+      font-weight: 500;
+      transition: all 0.3s;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+    .nav-link:hover {
+      background: rgba(255, 255, 255, 0.25);
+      transform: translateY(-1px);
+    }
+    .top-bar {
+      background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+      padding: 2rem 0;
+      box-shadow: 0 4px 20px rgba(245, 158, 11, 0.15);
+      margin-bottom: 2rem;
+    }
+    .container {
+      max-width: 1600px;
+      margin: 0 auto;
+      padding: 0 2rem;
+    }
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1rem;
+    }
+
+    .header h1 {
+      color: white;
+      font-size: 2.5rem;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+    }
+    .main-content {
+      padding: 0 2rem 2rem 2rem;
+      max-width: 1600px;
+      margin: 0 auto;
+    }
+    .quick-stats {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 1.5rem;
+      margin-bottom: 3rem;
+      margin-top: -4rem;
+      position: relative;
+      z-index: 10;
+    }
+    .stat-box {
+      background: white;
+      border-radius: 16px;
+      padding: 1.75rem;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+      text-align: center;
+      border: 1px solid rgba(226, 232, 240, 0.8);
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .stat-box::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 4px;
+      background: linear-gradient(90deg, #f59e0b, #d97706);
+      opacity: 0;
+      transition: opacity 0.3s;
+    }
+
+    .stat-box:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 12px 28px rgba(0, 0, 0, 0.12);
+    }
+
+    .stat-box:hover::before {
+      opacity: 1;
+    }
+    .stat-box h4 {
+      color: #64748b;
+      font-size: 0.75rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      margin-bottom: 0.75rem;
+    }
+    .stat-box .number {
+      background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      font-size: 2.25rem;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+    }
+    .stat-box .icon {
+      font-size: 1.75rem;
+      margin-bottom: 0.75rem;
+      color: #f59e0b;
+    }
+    .discounts-section {
+      background: white;
+      border-radius: 16px;
+      padding: 2rem;
+      box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
+      border: 1px solid #e2e8f0;
+      margin-bottom: 2rem;
+    }
+    .section-title {
+      color: #1e293b;
+      font-size: 1.5rem;
+      font-weight: 700;
+      margin-bottom: 1.5rem;
+      padding-left: 1rem;
+      position: relative;
+    }
+    .section-title::before {
+      content: '';
+      position: absolute;
+      left: 0;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 4px;
+      height: 28px;
+      background: linear-gradient(180deg, #f59e0b, #d97706);
+      border-radius: 2px;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+    th {
+      background: #f8fafc;
+      color: #64748b;
+      font-size: 0.75rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      padding: 1rem;
+      text-align: left;
+      border-bottom: 2px solid #e2e8f0;
+    }
+    td {
+      padding: 1.25rem 1rem;
+      border-bottom: 1px solid #f1f5f9;
+      color: #334155;
+    }
+    tbody tr:hover {
+      background: #f8fafc;
+    }
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.375rem;
+      padding: 0.375rem 0.75rem;
+      border-radius: 8px;
+      font-size: 0.75rem;
+      font-weight: 600;
+    }
+    .badge.active {
+      background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%);
+      color: #065f46;
+    }
+    .badge.inactive {
+      background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%);
+      color: #991b1b;
+    }
+    .badge.percentage {
+      background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);
+      color: #1e40af;
+    }
+    .badge.fixed {
+      background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+      color: #92400e;
+    }
+    .badge.bogo {
+      background: linear-gradient(135deg, #fce7f3 0%, #fbcfe8 100%);
+      color: #831843;
+    }
+    .badge.free_shipping {
+      background: linear-gradient(135deg, #e0e7ff 0%, #c7d2fe 100%);
+      color: #3730a3;
+    }
+    .btn {
+      padding: 0.5rem 1rem;
+      border-radius: 8px;
+      font-size: 0.875rem;
+      font-weight: 600;
+      border: none;
+      cursor: pointer;
+      transition: all 0.2s;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    .btn-primary {
+      background: white;
+      color: #f59e0b;
+      padding: 0.875rem 1.75rem;
+      border-radius: 12px;
+      text-decoration: none;
+      font-weight: 700;
+      font-size: 1rem;
+      transition: all 0.3s;
+      border: none;
+      cursor: pointer;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    .btn-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+    }
+    .btn-sm {
+      padding: 0.375rem 0.75rem;
+      font-size: 0.8125rem;
+    }
+    .empty-state {
+      text-align: center;
+      padding: 4rem 2rem;
+      color: #64748b;
+    }
+    .empty-state-icon {
+      font-size: 4rem;
+      margin-bottom: 1rem;
+      opacity: 0.5;
+    }
+  </style>
+</head>
+<body>
+  <div class="nav-links">
+    <a href="{% url 'admin_home' %}" class="nav-link">← Back</a>
+  </div>
+
+  <div class="top-bar">
+    <div class="container">
+      <div class="header">
+        <h1>Promotions</h1>
+        <button onclick="alert('Create promotion feature coming soon!')" class="btn-primary">+ Create Promotion</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="main-content">
+    <div class="quick-stats">
+      <div class="stat-box">
+        <div class="icon"><i class="fa-solid fa-tags"></i></div>
+        <h4>Total Promotions</h4>
+        <div class="number">{{ discounts.count }}</div>
+      </div>
+      <div class="stat-box">
+        <div class="icon"><i class="fa-solid fa-check-circle"></i></div>
+        <h4>Active</h4>
+        <div class="number">{{ active_discounts }}</div>
+      </div>
+      <div class="stat-box">
+        <div class="icon"><i class="fa-solid fa-clock"></i></div>
+        <h4>Currently Valid</h4>
+        <div class="number">{{ valid_discounts_count }}</div>
+      </div>
+      <div class="stat-box">
+        <div class="icon"><i class="fa-solid fa-chart-line"></i></div>
+        <h4>Total Uses</h4>
+        <div class="number">{{ total_uses }}</div>
+      </div>
+    </div>
+
+    <div class="discounts-section">
+      <h2 class="section-title">All Promotions</h2>
+      {% if discounts %}
+      <table>
+        <thead>
+          <tr>
+            <th>Name & Code</th>
+            <th>Type & Value</th>
+            <th>Valid Period</th>
+            <th>Usage</th>
+            <th>Status</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for discount in discounts %}
+          <tr>
+            <td>
+              <div style="font-weight: 600; color: #0f172a;">{{ discount.name }}</div>
+              {% if discount.code %}
+              <div style="font-size: 0.75rem; color: #64748b; margin-top: 0.25rem;">
+                Code: <strong>{{ discount.code }}</strong>
+              </div>
+              {% else %}
+              <div style="font-size: 0.75rem; color: #64748b; margin-top: 0.25rem;">
+                Auto-apply
+              </div>
+              {% endif %}
+            </td>
+            <td>
+              <span class="badge {{ discount.discount_type }}">
+                {% if discount.discount_type == 'percentage' %}
+                  {{ discount.value }}% OFF
+                {% elif discount.discount_type == 'fixed' %}
+                  ${{ discount.value }} OFF
+                {% elif discount.discount_type == 'bogo' %}
+                  BOGO
+                {% elif discount.discount_type == 'free_shipping' %}
+                  FREE SHIPPING
+                {% endif %}
+              </span>
+            </td>
+            <td>
+              <div style="font-size: 0.875rem;">
+                <strong>From:</strong> {{ discount.valid_from|date:"M d, Y" }}
+              </div>
+              {% if discount.valid_until %}
+              <div style="font-size: 0.875rem; color: #64748b;">
+                <strong>Until:</strong> {{ discount.valid_until|date:"M d, Y" }}
+              </div>
+              {% else %}
+              <div style="font-size: 0.875rem; color: #64748b;">
+                No expiration
+              </div>
+              {% endif %}
+            </td>
+            <td>
+              <strong>{{ discount.times_used }}</strong>
+              {% if discount.max_uses %}
+              / {{ discount.max_uses }}
+              {% endif %}
+            </td>
+            <td>
+              <span class="badge {% if discount.is_active %}active{% else %}inactive{% endif %}">
+                {% if discount.is_active %}Active{% else %}Inactive{% endif %}
+              </span>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+      {% else %}
+      <div class="empty-state">
+        <div class="empty-state-icon">🏷️</div>
+        <h3>No promotions yet</h3>
+        <p>Create your first promotional deal to get started.</p>
+      </div>
+      {% endif %}
+    </div>
+  </div>
+</body>
+</html>

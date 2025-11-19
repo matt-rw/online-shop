@@ -1,0 +1,395 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Visitors Analytics - Blueprint Apparel</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: 'Inter', sans-serif;
+      background: linear-gradient(135deg, rgba(102, 126, 234, 0.9) 0%, rgba(118, 75, 162, 0.9) 100%);
+      background-attachment: fixed;
+      min-height: 100vh;
+      padding: 2rem;
+    }
+    .container { max-width: 1400px; margin: 0 auto; }
+    .header {
+      background: white;
+      border-radius: 12px;
+      padding: 2rem;
+      margin-bottom: 2rem;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+    .header h1 { color: #1a202c; font-size: 2rem; font-weight: 700; margin-bottom: 0.5rem; }
+    .header p { color: #667eea; font-size: 1.125rem; }
+    .nav-links {
+      display: flex;
+      gap: 1rem;
+      margin-top: 1rem;
+      flex-wrap: wrap;
+    }
+    .nav-links a {
+      color: #667eea;
+      text-decoration: none;
+      padding: 0.5rem 1rem;
+      border-radius: 6px;
+      transition: background 0.2s;
+    }
+    .nav-links a:hover { background: #f7fafc; }
+    .quick-stats {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 1.5rem;
+      margin-bottom: 2rem;
+    }
+    .stat-box {
+      background: white;
+      border-radius: 12px;
+      padding: 1.5rem;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+    .stat-box h4 {
+      color: #718096;
+      font-size: 0.875rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-bottom: 0.5rem;
+    }
+    .stat-box .number {
+      color: #667eea;
+      font-size: 2rem;
+      font-weight: 700;
+    }
+    .stat-box .change {
+      color: #48bb78;
+      font-size: 0.875rem;
+      margin-top: 0.5rem;
+    }
+    .section {
+      background: white;
+      border-radius: 12px;
+      padding: 2rem;
+      margin-bottom: 2rem;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+    .section h2 {
+      color: #1a202c;
+      font-size: 1.5rem;
+      font-weight: 700;
+      margin-bottom: 1.5rem;
+      padding-bottom: 0.75rem;
+      border-bottom: 2px solid #e2e8f0;
+    }
+    .two-column {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 2rem;
+    }
+    @media (max-width: 1024px) {
+      .two-column { grid-template-columns: 1fr; }
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 1rem;
+    }
+    th {
+      text-align: left;
+      padding: 0.75rem;
+      background: #f7fafc;
+      color: #4a5568;
+      font-weight: 600;
+      font-size: 0.875rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+    td {
+      padding: 0.75rem;
+      border-top: 1px solid #e2e8f0;
+      color: #2d3748;
+    }
+    .badge {
+      display: inline-block;
+      padding: 0.25rem 0.75rem;
+      border-radius: 9999px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      text-transform: uppercase;
+    }
+    .badge-desktop { background: #bee3f8; color: #2c5282; }
+    .badge-mobile { background: #c6f6d5; color: #22543d; }
+    .badge-tablet { background: #feebc8; color: #744210; }
+    .badge-bot { background: #e2e8f0; color: #4a5568; }
+    .chart-container {
+      position: relative;
+      height: 300px;
+      margin-top: 1rem;
+    }
+    .referrer-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0.75rem;
+      border-bottom: 1px solid #e2e8f0;
+    }
+    .referrer-item:last-child {
+      border-bottom: none;
+    }
+    .referrer-name {
+      font-weight: 600;
+      color: #2d3748;
+    }
+    .referrer-count {
+      color: #667eea;
+      font-weight: 700;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>👥 Visitor Analytics</h1>
+      <p>Track site visitors, page views, and traffic sources • {{ cst_time|date:"F j, Y g:i A" }} CST</p>
+      <div class="nav-links">
+        <a href="/admin/">← Admin Home</a>
+      </div>
+    </div>
+
+    <!-- Quick Stats -->
+    <div class="quick-stats">
+      <div class="stat-box">
+        <h4>Today's Visits</h4>
+        <div class="number">{{ stats.visits_today }}</div>
+      </div>
+      <div class="stat-box">
+        <h4>Page Views Today</h4>
+        <div class="number">{{ stats.page_views_today }}</div>
+      </div>
+      <div class="stat-box">
+        <h4>Active Sessions</h4>
+        <div class="number">{{ stats.active_sessions }}</div>
+      </div>
+      <div class="stat-box">
+        <h4>Total Visits (30d)</h4>
+        <div class="number">{{ stats.visits_30d }}</div>
+      </div>
+      <div class="stat-box">
+        <h4>Avg Pages/Session</h4>
+        <div class="number">{{ stats.avg_pages_per_session|floatformat:1 }}</div>
+      </div>
+      <div class="stat-box">
+        <h4>Mobile Traffic</h4>
+        <div class="number">{{ stats.mobile_percent|floatformat:0 }}%</div>
+      </div>
+    </div>
+
+    <!-- Page Views Chart -->
+    <div class="section">
+      <h2>Page Views (Last 7 Days)</h2>
+      <div class="chart-container">
+        <canvas id="pageViewsChart"></canvas>
+      </div>
+    </div>
+
+    <div class="two-column">
+      <!-- Top Countries -->
+      <div class="section">
+        <h2>Top Countries</h2>
+        {% if top_countries %}
+          {% for country in top_countries %}
+            <div class="referrer-item">
+              <div class="referrer-name">
+                {% if country.country_name %}
+                  {{ country.country_name }} ({{ country.country }})
+                {% else %}
+                  Unknown
+                {% endif %}
+              </div>
+              <div class="referrer-count">{{ country.count }} visits</div>
+            </div>
+          {% endfor %}
+        {% else %}
+          <p style="text-align: center; color: #a0aec0; padding: 2rem;">No location data yet</p>
+        {% endif %}
+      </div>
+
+      <!-- Top Cities -->
+      <div class="section">
+        <h2>Top Cities</h2>
+        {% if top_cities %}
+          {% for city in top_cities %}
+            <div class="referrer-item">
+              <div class="referrer-name">
+                {% if city.city %}
+                  {{ city.city }}, {{ city.region }}
+                {% else %}
+                  Unknown
+                {% endif %}
+              </div>
+              <div class="referrer-count">{{ city.count }} visits</div>
+            </div>
+          {% endfor %}
+        {% else %}
+          <p style="text-align: center; color: #a0aec0; padding: 2rem;">No location data yet</p>
+        {% endif %}
+      </div>
+    </div>
+
+    <div class="two-column">
+      <!-- Top Referrers -->
+      <div class="section">
+        <h2>Top Referrers</h2>
+        {% if top_referrers %}
+          {% for referrer in top_referrers %}
+            <div class="referrer-item">
+              <div class="referrer-name">
+                {% if referrer.referrer_domain %}
+                  {{ referrer.referrer_domain }}
+                {% else %}
+                  Direct / None
+                {% endif %}
+              </div>
+              <div class="referrer-count">{{ referrer.count }} visits</div>
+            </div>
+          {% endfor %}
+        {% else %}
+          <p style="text-align: center; color: #a0aec0; padding: 2rem;">No referrer data yet</p>
+        {% endif %}
+      </div>
+
+      <!-- Device Breakdown -->
+      <div class="section">
+        <h2>Device Types</h2>
+        <div class="chart-container">
+          <canvas id="deviceChart"></canvas>
+        </div>
+      </div>
+    </div>
+
+    <!-- Top Pages -->
+    <div class="section">
+      <h2>Most Visited Pages</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>Page</th>
+            <th>Views</th>
+            <th>Unique Visitors</th>
+            <th>Avg Time (ms)</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for page in top_pages %}
+            <tr>
+              <td><strong>{{ page.path }}</strong></td>
+              <td>{{ page.views }}</td>
+              <td>{{ page.unique_visitors }}</td>
+              <td>{{ page.avg_time|floatformat:0 }}</td>
+            </tr>
+          {% empty %}
+            <tr>
+              <td colspan="4" style="text-align: center; color: #a0aec0;">No page data yet</td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Recent Visitors -->
+    <div class="section">
+      <h2>Recent Visitors</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>Time</th>
+            <th>Page</th>
+            <th>Location</th>
+            <th>Device</th>
+            <th>Browser</th>
+            <th>Referrer</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for view in recent_views %}
+            <tr>
+              <td>{{ view.viewed_at|date:"M d, g:i A" }}</td>
+              <td>{{ view.path }}</td>
+              <td>
+                {% if view.city %}
+                  {{ view.city }}, {{ view.country }}
+                {% elif view.country_name %}
+                  {{ view.country_name }}
+                {% else %}
+                  Unknown
+                {% endif %}
+              </td>
+              <td><span class="badge badge-{{ view.device_type }}">{{ view.device_type|capfirst }}</span></td>
+              <td>{{ view.browser }}</td>
+              <td>{{ view.referrer_domain|default:"Direct" }}</td>
+            </tr>
+          {% empty %}
+            <tr>
+              <td colspan="6" style="text-align: center; color: #a0aec0;">No visitors yet</td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <script>
+    // Page Views Chart
+    const pageViewsData = [
+      {% for day in page_views_7d %}
+        { date: '{{ day.date }}', count: {{ day.count }} }{% if not forloop.last %},{% endif %}
+      {% endfor %}
+    ];
+
+    new Chart(document.getElementById('pageViewsChart'), {
+      type: 'line',
+      data: {
+        labels: pageViewsData.map(d => d.date),
+        datasets: [{
+          label: 'Page Views',
+          data: pageViewsData.map(d => d.count),
+          borderColor: '#667eea',
+          backgroundColor: 'rgba(102, 126, 234, 0.1)',
+          tension: 0.3,
+          fill: true
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { display: false }
+        },
+        scales: {
+          y: { beginAtZero: true }
+        }
+      }
+    });
+
+    // Device Chart
+    new Chart(document.getElementById('deviceChart'), {
+      type: 'doughnut',
+      data: {
+        labels: {{ device_labels|safe }},
+        datasets: [{
+          data: {{ device_counts|safe }},
+          backgroundColor: ['#667eea', '#48bb78', '#ed8936', '#a0aec0']
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false
+      }
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,495 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Returns &amp; Exchanges - Blueprint Apparel</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background: #f1f5f9;
+      min-height: 100vh;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
+
+    .nav-links {
+      background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+      padding: 1rem 2rem;
+      display: flex;
+      gap: 0.75rem;
+      align-items: center;
+    }
+
+    .nav-link {
+      background: rgba(255, 255, 255, 0.15);
+      backdrop-filter: blur(10px);
+      color: white;
+      padding: 0.5rem 1rem;
+      border-radius: 8px;
+      text-decoration: none;
+      font-size: 0.875rem;
+      font-weight: 500;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .nav-link:hover {
+      background: rgba(255, 255, 255, 0.25);
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    }
+    .top-bar {
+      background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+      padding: 2rem 0;
+      box-shadow: 0 4px 20px rgba(239, 68, 68, 0.15);
+      margin-bottom: 2rem;
+    }
+
+    .container {
+      max-width: 1600px;
+      margin: 0 auto;
+      padding: 0 2rem;
+    }
+
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1rem;
+    }
+
+    .header h1 {
+      color: white;
+      font-size: 2.5rem;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+    }
+
+    .btn-primary {
+      background: white;
+      color: #ef4444;
+      padding: 0.875rem 1.75rem;
+      border-radius: 12px;
+      text-decoration: none;
+      font-weight: 700;
+      font-size: 1rem;
+      transition: all 0.3s;
+      border: none;
+      cursor: pointer;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .btn-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+    }
+    .main-content {
+      padding: 0 2rem 2rem 2rem;
+      max-width: 1600px;
+      margin: 0 auto;
+    }
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 1.5rem;
+      margin-bottom: 3rem;
+      margin-top: -4rem;
+      position: relative;
+      z-index: 10;
+    }
+
+    .stat-card {
+      background: white;
+      border-radius: 16px;
+      padding: 1.75rem;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+      text-align: center;
+      border: 1px solid rgba(226, 232, 240, 0.8);
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .stat-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 4px;
+      background: linear-gradient(90deg, #ef4444, #dc2626);
+      opacity: 0;
+      transition: opacity 0.3s;
+    }
+
+    .stat-card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 12px 28px rgba(0, 0, 0, 0.12);
+    }
+
+    .stat-card:hover::before {
+      opacity: 1;
+    }
+
+    .stat-card h3 {
+      color: #64748b;
+      font-size: 0.75rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      margin-bottom: 0.75rem;
+    }
+
+    .stat-card .number {
+      background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      font-size: 2.25rem;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+    }
+
+    .stat-card .icon {
+      font-size: 1.75rem;
+      margin-bottom: 0.75rem;
+      color: #ef4444;
+    }
+    .btn {
+      padding: 0.5rem 1rem;
+      border-radius: 8px;
+      font-size: 0.875rem;
+      font-weight: 500;
+      border: none;
+      cursor: pointer;
+      transition: all 0.2s;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    .btn-sm {
+      padding: 0.375rem 0.75rem;
+      font-size: 0.8125rem;
+    }
+    .return-card {
+      background: white;
+      border-radius: 12px;
+      padding: 1.5rem;
+      margin-bottom: 1rem;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+      border-left: 4px solid;
+    }
+    .return-card.pending { border-left-color: #f59e0b; }
+    .return-card.in-transit { border-left-color: #3b82f6; }
+    .return-card.delivered { border-left-color: #ef4444; }
+    .return-card.delayed { border-left-color: #ef4444; }
+    .status-badge {
+      display: inline-block;
+      padding: 0.25rem 0.75rem;
+      border-radius: 12px;
+      font-size: 0.75rem;
+      font-weight: 500;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+    .status-badge.pending {
+      background: #fef3c7;
+      color: #92400e;
+    }
+    .status-badge.in-transit {
+      background: #dbeafe;
+      color: #1e40af;
+    }
+    .status-badge.delivered {
+      background: #d1fae5;
+      color: #065f46;
+    }
+    .status-badge.delayed {
+      background: #fee2e2;
+      color: #991b1b;
+    }
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.5);
+      z-index: 1000;
+      align-items: center;
+      justify-content: center;
+    }
+    .modal-overlay.active {
+      display: flex;
+    }
+    .modal-content {
+      background: white;
+      border-radius: 16px;
+      padding: 2rem;
+      max-width: 600px;
+      width: 90%;
+      max-height: 90vh;
+      overflow-y: auto;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+    }
+    .form-group {
+      margin-bottom: 1.5rem;
+    }
+    .form-group label {
+      display: block;
+      font-weight: 500;
+      margin-bottom: 0.5rem;
+      color: #0f172a;
+      font-size: 0.875rem;
+    }
+    .form-group input,
+    .form-group select,
+    .form-group textarea {
+      width: 100%;
+      padding: 0.625rem 0.875rem;
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+      font-size: 0.875rem;
+      font-family: 'Inter', sans-serif;
+    }
+    .btn-secondary {
+      background: #f1f5f9;
+      color: #64748b;
+      border: 1px solid #e2e8f0;
+    }
+    .btn-secondary:hover {
+      background: #e2e8f0;
+    }
+  </style>
+</head>
+<body>
+  <div class="nav-links">
+    <a href="{% url 'admin_home' %}" class="nav-link">← Back</a>
+  </div>
+
+  <div class="top-bar">
+    <div class="container">
+      <div class="header">
+        <h1>Returns & Exchanges</h1>
+        <button class="btn-primary" onclick="openCreateReturnModal()">+ Add Return</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="main-content">
+    <!-- Stats Grid -->
+    <div class="stats-grid">
+      <div class="stat-card pending">
+        <div class="icon"><i class="fa-solid fa-clock"></i></div>
+        <h3>Pending</h3>
+        <div class="number">{{ stats.pending }}</div>
+      </div>
+      <div class="stat-card in-transit">
+        <div class="icon"><i class="fa-solid fa-truck-arrow-right"></i></div>
+        <h3>In Transit</h3>
+        <div class="number">{{ stats.in_transit }}</div>
+      </div>
+      <div class="stat-card delivered">
+        <div class="icon"><i class="fa-solid fa-circle-check"></i></div>
+        <h3>Delivered</h3>
+        <div class="number">{{ stats.delivered }}</div>
+      </div>
+      <div class="stat-card delayed">
+        <div class="icon"><i class="fa-solid fa-exclamation-circle"></i></div>
+        <h3>Delayed</h3>
+        <div class="number">{{ stats.delayed }}</div>
+      </div>
+    </div>
+
+    <!-- Returns List -->
+    <div style="background: white; border-radius: 16px; padding: 2rem; box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);">
+      <h2 style="font-size: 1.5rem; font-weight: 700; margin-bottom: 1.5rem;">All Returns ({{ returns|length }})</h2>
+
+      {% if returns %}
+        {% for return in returns %}
+        <div class="return-card {{ return.status }}">
+          <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 1rem;">
+            <div>
+              <h3 style="font-size: 1.125rem; font-weight: 700; color: #0f172a; margin-bottom: 0.5rem;">
+                {{ return.tracking_number }}
+              </h3>
+              <span class="status-badge {{ return.status }}">{{ return.status|title }}</span>
+            </div>
+            <button class="btn btn-secondary btn-sm" onclick="openEditReturnModal({{ return.id }})">
+              <i class="fa-solid fa-edit"></i> Edit
+            </button>
+          </div>
+
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin-top: 1rem;">
+            <div>
+              <div style="font-size: 0.75rem; color: #64748b; font-weight: 600; text-transform: uppercase; margin-bottom: 0.25rem;">Supplier</div>
+              <div style="color: #0f172a; font-weight: 500;">{{ return.supplier }}</div>
+            </div>
+            <div>
+              <div style="font-size: 0.75rem; color: #64748b; font-weight: 600; text-transform: uppercase; margin-bottom: 0.25rem;">Expected Date</div>
+              <div style="color: #0f172a; font-weight: 500;">{{ return.expected_date|date:"M d, Y" }}</div>
+            </div>
+            <div>
+              <div style="font-size: 0.75rem; color: #64748b; font-weight: 600; text-transform: uppercase; margin-bottom: 0.25rem;">Items</div>
+              <div style="color: #0f172a; font-weight: 500;">{{ return.item_count }} items</div>
+            </div>
+          </div>
+
+          {% if return.notes %}
+          <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid #e2e8f0;">
+            <div style="font-size: 0.75rem; color: #64748b; font-weight: 600; text-transform: uppercase; margin-bottom: 0.25rem;">Notes</div>
+            <div style="color: #64748b; font-size: 0.875rem;">{{ return.notes }}</div>
+          </div>
+          {% endif %}
+        </div>
+        {% endfor %}
+      {% else %}
+        <div style="text-align: center; padding: 4rem 2rem; color: #64748b;">
+          <i class="fa-solid fa-box-open" style="font-size: 4rem; opacity: 0.3; margin-bottom: 1rem;"></i>
+          <p>No returns yet. Add your first return to get started.</p>
+        </div>
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- Return Modal -->
+  <div class="modal-overlay" id="returnModal">
+    <div class="modal-content">
+      <h2 id="modalTitle" style="font-size: 1.75rem; font-weight: 700; margin-bottom: 1.5rem;">Add Return</h2>
+
+      <form id="returnForm">
+        <input type="hidden" id="returnId">
+
+        <div class="form-group">
+          <label for="trackingNumber">Tracking Number *</label>
+          <input type="text" id="trackingNumber" required>
+        </div>
+
+        <div class="form-group">
+          <label for="supplier">Supplier *</label>
+          <input type="text" id="supplier" required>
+        </div>
+
+        <div class="form-group">
+          <label for="status">Status *</label>
+          <select id="status" required>
+            <option value="pending">Pending</option>
+            <option value="in-transit">In Transit</option>
+            <option value="delivered">Delivered</option>
+            <option value="delayed">Delayed</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label for="expectedDate">Expected Delivery Date *</label>
+          <input type="date" id="expectedDate" required>
+        </div>
+
+        <div class="form-group">
+          <label for="itemCount">Number of Items *</label>
+          <input type="number" id="itemCount" min="1" required>
+        </div>
+
+        <div class="form-group">
+          <label for="notes">Notes</label>
+          <textarea id="notes" rows="3"></textarea>
+        </div>
+
+        <div style="display: flex; gap: 1rem; margin-top: 2rem;">
+          <button type="submit" class="btn btn-primary">
+            <i class="fa-solid fa-save"></i> Save Return
+          </button>
+          <button type="button" class="btn btn-secondary" onclick="closeReturnModal()">
+            Cancel
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script>
+    let returnsData = {{ returns_json|safe }};
+
+    function openCreateReturnModal() {
+      document.getElementById('modalTitle').textContent = 'Add Return';
+      document.getElementById('returnForm').reset();
+      document.getElementById('returnId').value = '';
+      document.getElementById('returnModal').classList.add('active');
+    }
+
+    function openEditReturnModal(returnId) {
+      const return = returnsData.find(s => s.id === returnId);
+      if (!return) return;
+
+      document.getElementById('modalTitle').textContent = 'Edit Return';
+      document.getElementById('returnId').value = return.id;
+      document.getElementById('trackingNumber').value = return.tracking_number;
+      document.getElementById('supplier').value = return.supplier;
+      document.getElementById('status').value = return.status;
+      document.getElementById('expectedDate').value = return.expected_date;
+      document.getElementById('itemCount').value = return.item_count;
+      document.getElementById('notes').value = return.notes || '';
+
+      document.getElementById('returnModal').classList.add('active');
+    }
+
+    function closeReturnModal() {
+      document.getElementById('returnModal').classList.remove('active');
+    }
+
+    document.getElementById('returnForm').addEventListener('submit', async function(e) {
+      e.preventDefault();
+
+      const returnId = document.getElementById('returnId').value;
+      const formData = new FormData();
+
+      formData.append('action', returnId ? 'update_return' : 'create_return');
+      if (returnId) formData.append('return_id', returnId);
+      formData.append('tracking_number', document.getElementById('trackingNumber').value);
+      formData.append('supplier', document.getElementById('supplier').value);
+      formData.append('status', document.getElementById('status').value);
+      formData.append('expected_date', document.getElementById('expectedDate').value);
+      formData.append('item_count', document.getElementById('itemCount').value);
+      formData.append('notes', document.getElementById('notes').value);
+      formData.append('csrfmiddlewaretoken', '{{ csrf_token }}');
+
+      try {
+        const response = await fetch('{% url "admin_returns" %}', {
+          method: 'POST',
+          body: formData
+        });
+
+        if (response.ok) {
+          location.reload();
+        } else {
+          alert('Error saving return');
+        }
+      } catch (error) {
+        console.error('Error:', error);
+        alert('Error saving return');
+      }
+    });
+
+    // Close modal on overlay click
+    document.getElementById('returnModal').addEventListener('click', function(e) {
+      if (e.target === this) {
+        closeReturnModal();
+      }
+    });
+  </script>
+</body>
+</html>

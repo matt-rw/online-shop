@@ -11,6 +11,9 @@ urlpatterns = [
     # Email subscription
     path('subscribe/', views.subscribe, name='subscribe'),
 
+    # SMS subscription
+    path('subscribe/sms/', views.subscribe_sms, name='subscribe_sms'),
+
     # Cart management
     path('cart/', cart_views.cart_view, name='cart'),
     path('cart/add/', cart_views.add_to_cart_view, name='add_to_cart'),

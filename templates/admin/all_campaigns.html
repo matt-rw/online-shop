@@ -1,0 +1,275 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>All Campaigns - Blueprint Apparel</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: 'Inter', sans-serif;
+      background: linear-gradient(135deg, rgba(102, 126, 234, 0.9) 0%, rgba(118, 75, 162, 0.9) 100%);
+      background-attachment: fixed;
+      min-height: 100vh;
+      padding: 2rem;
+    }
+    .container { max-width: 1400px; margin: 0 auto; }
+    .header {
+      background: white;
+      border-radius: 12px;
+      padding: 2rem;
+      margin-bottom: 2rem;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+    .header h1 { color: #1a202c; font-size: 2rem; font-weight: 700; margin-bottom: 0.5rem; }
+    .header p { color: #667eea; font-size: 1.125rem; }
+    .nav-links {
+      display: flex;
+      gap: 1rem;
+      margin-top: 1rem;
+      flex-wrap: wrap;
+    }
+    .nav-links a {
+      color: #667eea;
+      text-decoration: none;
+      padding: 0.5rem 1rem;
+      border-radius: 6px;
+      transition: background 0.2s;
+    }
+    .nav-links a:hover { background: #f7fafc; }
+    .section {
+      background: white;
+      border-radius: 12px;
+      padding: 2rem;
+      margin-bottom: 2rem;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+    .section h2 {
+      color: #1a202c;
+      font-size: 1.5rem;
+      font-weight: 700;
+      margin-bottom: 1.5rem;
+      padding-bottom: 0.75rem;
+      border-bottom: 2px solid #e2e8f0;
+    }
+    .filter-tabs {
+      display: flex;
+      gap: 0.5rem;
+      margin-bottom: 1.5rem;
+    }
+    .filter-tab {
+      padding: 0.5rem 1rem;
+      border-radius: 6px;
+      border: 2px solid #e2e8f0;
+      background: white;
+      color: #4a5568;
+      cursor: pointer;
+      font-weight: 600;
+      transition: all 0.2s;
+    }
+    .filter-tab:hover {
+      border-color: #667eea;
+      color: #667eea;
+    }
+    .filter-tab.active {
+      background: #667eea;
+      color: white;
+      border-color: #667eea;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 1rem;
+    }
+    th {
+      text-align: left;
+      padding: 0.75rem;
+      background: #f7fafc;
+      color: #4a5568;
+      font-weight: 600;
+      font-size: 0.875rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+    td {
+      padding: 0.75rem;
+      border-top: 1px solid #e2e8f0;
+      color: #2d3748;
+    }
+    .badge {
+      display: inline-block;
+      padding: 0.25rem 0.75rem;
+      border-radius: 9999px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      margin-right: 0.5rem;
+    }
+    .badge-draft { background: #e2e8f0; color: #4a5568; }
+    .badge-scheduled { background: #feebc8; color: #744210; }
+    .badge-sending { background: #bee3f8; color: #2c5282; }
+    .badge-sent { background: #c6f6d5; color: #22543d; }
+    .badge-cancelled { background: #fed7d7; color: #742a2a; }
+    .badge-email { background: #bee3f8; color: #2c5282; }
+    .badge-sms { background: #c6f6d5; color: #22543d; }
+    .action-buttons {
+      display: flex;
+      gap: 0.5rem;
+    }
+    .btn {
+      padding: 0.5rem 1rem;
+      border-radius: 6px;
+      border: none;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+      font-size: 0.875rem;
+      text-decoration: none;
+      display: inline-block;
+    }
+    .btn-primary { background: #667eea; color: white; }
+    .btn-primary:hover { background: #5a67d8; }
+    .btn-success { background: #48bb78; color: white; }
+    .btn-success:hover { background: #38a169; }
+    .btn-danger { background: #f56565; color: white; }
+    .btn-danger:hover { background: #e53e3e; }
+    .alert {
+      padding: 1rem;
+      border-radius: 8px;
+      margin-bottom: 1rem;
+    }
+    .alert-success { background: #c6f6d5; color: #22543d; border-left: 4px solid #38a169; }
+    .alert-error { background: #fed7d7; color: #742a2a; border-left: 4px solid #e53e3e; }
+    .quick-actions {
+      display: flex;
+      gap: 1rem;
+      margin-bottom: 1.5rem;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>📋 All Campaigns</h1>
+      <p>Manage all email and SMS marketing campaigns • {{ cst_time|date:"F j, Y g:i A" }} CST</p>
+      <div class="nav-links">
+        <a href="/admin/">← Admin Home</a>
+        <a href="/admin/email/campaigns/">Email Campaigns</a>
+        <a href="/admin/sms/campaigns/">SMS Campaigns</a>
+      </div>
+    </div>
+
+    {% if messages %}
+      {% for message in messages %}
+        <div class="alert alert-{{ message.tags }}">{{ message }}</div>
+      {% endfor %}
+    {% endif %}
+
+    <!-- Quick Actions -->
+    <div class="section">
+      <h2>Quick Actions</h2>
+      <div class="quick-actions">
+        <a href="/admin/email/campaigns/" class="btn btn-primary">+ New Email Campaign</a>
+        <a href="/admin/sms/campaigns/" class="btn btn-primary">+ New SMS Campaign</a>
+        <a href="/admin/email/templates/" class="btn btn-success">Email Templates</a>
+        <a href="/admin/sms/templates/" class="btn btn-success">SMS Templates</a>
+      </div>
+    </div>
+
+    <!-- Campaigns List -->
+    <div class="section">
+      <h2>All Campaigns ({{ campaigns|length }})</h2>
+
+      <!-- Filter Tabs -->
+      <div class="filter-tabs">
+        <button class="filter-tab active" onclick="filterCampaigns('all')">All</button>
+        <button class="filter-tab" onclick="filterCampaigns('email')">Email Only</button>
+        <button class="filter-tab" onclick="filterCampaigns('sms')">SMS Only</button>
+        <button class="filter-tab" onclick="filterCampaigns('draft')">Drafts</button>
+        <button class="filter-tab" onclick="filterCampaigns('scheduled')">Scheduled</button>
+        <button class="filter-tab" onclick="filterCampaigns('sent')">Sent</button>
+      </div>
+
+      {% if campaigns %}
+        <table id="campaignsTable">
+          <thead>
+            <tr>
+              <th>Type</th>
+              <th>Name</th>
+              <th>Template</th>
+              <th>Status</th>
+              <th>Scheduled</th>
+              <th>Progress</th>
+              <th>Created</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for campaign in campaigns %}
+              <tr data-type="{{ campaign.type }}" data-status="{{ campaign.status }}">
+                <td><span class="badge badge-{{ campaign.type }}">{{ campaign.type|upper }}</span></td>
+                <td><strong>{{ campaign.name }}</strong></td>
+                <td>{{ campaign.template.name }}</td>
+                <td><span class="badge badge-{{ campaign.status }}">{{ campaign.get_status_display }}</span></td>
+                <td>{{ campaign.scheduled_at|date:"M d, Y g:i A"|default:"—" }}</td>
+                <td>
+                  {% if campaign.total_recipients > 0 %}
+                    {{ campaign.sent_count }}/{{ campaign.total_recipients }}
+                  {% else %}
+                    Not sent
+                  {% endif %}
+                </td>
+                <td>{{ campaign.created_at|date:"M d, Y" }}</td>
+                <td>
+                  <div class="action-buttons">
+                    {% if campaign.status == 'draft' or campaign.status == 'scheduled' %}
+                      <form method="POST" action="{% if campaign.type == 'email' %}/admin/email/{% else %}/admin/sms/{% endif %}" style="display: inline;">
+                        {% csrf_token %}
+                        <input type="hidden" name="action" value="send_campaign">
+                        <input type="hidden" name="campaign_id" value="{{ campaign.id }}">
+                        <button type="submit" class="btn btn-success" onclick="return confirm('Send this campaign now?')">Send</button>
+                      </form>
+                    {% endif %}
+                    <a href="{% if campaign.type == 'email' %}/admin/email/campaigns/{% else %}/admin/sms/campaigns/{% endif %}" class="btn btn-primary">View</a>
+                  </div>
+                </td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      {% else %}
+        <p style="text-align: center; color: #a0aec0; padding: 2rem;">
+          No campaigns yet. Create your first campaign!
+        </p>
+      {% endif %}
+    </div>
+  </div>
+
+  <script>
+    function filterCampaigns(filter) {
+      const rows = document.querySelectorAll('#campaignsTable tbody tr');
+      const tabs = document.querySelectorAll('.filter-tab');
+
+      // Update active tab
+      tabs.forEach(tab => tab.classList.remove('active'));
+      event.target.classList.add('active');
+
+      // Filter rows
+      rows.forEach(row => {
+        const type = row.dataset.type;
+        const status = row.dataset.status;
+
+        if (filter === 'all') {
+          row.style.display = '';
+        } else if (filter === 'email' || filter === 'sms') {
+          row.style.display = type === filter ? '' : 'none';
+        } else {
+          row.style.display = status === filter ? '' : 'none';
+        }
+      });
+    }
+  </script>
+</body>
+</html>

@@ -117,8 +117,18 @@
       </div>
     {% endif %}
 
+    <!-- Subscription Type Toggle -->
+    <div class="flex gap-4 mb-6 justify-center">
+      <button type="button" onclick="showEmailForm()" id="email-tab" class="px-6 py-2 rounded-md font-semibold transition bg-gray-600 text-white">
+        Email
+      </button>
+      <button type="button" onclick="showSMSForm()" id="sms-tab" class="px-6 py-2 rounded-md font-semibold transition bg-gray-200 text-gray-700 hover:bg-gray-300">
+        SMS
+      </button>
+    </div>
+
     <!-- Email Signup Form -->
-    <form action="{% url 'shop:subscribe' %}" method="POST" class="flex flex-col sm:flex-row gap-3">
+    <form id="email-form" action="{% url 'shop:subscribe' %}" method="POST" class="flex flex-col sm:flex-row gap-3">
       {% csrf_token %}
       <input
         type="email"
@@ -134,6 +144,28 @@
         Sign Up
       </button>
     </form>
+
+    <!-- SMS Signup Form -->
+    <form id="sms-form" action="{% url 'shop:subscribe_sms' %}" method="POST" class="flex flex-col sm:flex-row gap-3 hidden">
+      {% csrf_token %}
+      <input
+        type="tel"
+        name="phone_number"
+        placeholder="Enter your phone number"
+        required
+        pattern="[0-9\+\-\(\)\s]+"
+        class="flex-1 px-4 py-2 rounded-md border text-xl text-black border-black"
+      />
+      <button
+        type="submit"
+        class="px-6 py-2 rounded-md bg-gray-600 text-white font-semibold hover:bg-indigo-500 transition"
+      >
+        Sign Up
+      </button>
+    </form>
+    <p id="sms-disclaimer" class="text-xs text-gray-600 mt-2 hidden">
+      By subscribing, you agree to receive marketing text messages. Message and data rates may apply. Reply STOP to unsubscribe.
+    </p>
   </div>
 
   <!-- Brand Story -->
@@ -350,5 +382,26 @@
       }, 4000); // Show for 4 seconds
     }
   });
+
+  // Toggle between email and SMS subscription forms
+  function showEmailForm() {
+    document.getElementById('email-form').classList.remove('hidden');
+    document.getElementById('sms-form').classList.add('hidden');
+    document.getElementById('sms-disclaimer').classList.add('hidden');
+    document.getElementById('email-tab').classList.add('bg-gray-600', 'text-white');
+    document.getElementById('email-tab').classList.remove('bg-gray-200', 'text-gray-700');
+    document.getElementById('sms-tab').classList.remove('bg-gray-600', 'text-white');
+    document.getElementById('sms-tab').classList.add('bg-gray-200', 'text-gray-700');
+  }
+
+  function showSMSForm() {
+    document.getElementById('email-form').classList.add('hidden');
+    document.getElementById('sms-form').classList.remove('hidden');
+    document.getElementById('sms-disclaimer').classList.remove('hidden');
+    document.getElementById('sms-tab').classList.add('bg-gray-600', 'text-white');
+    document.getElementById('sms-tab').classList.remove('bg-gray-200', 'text-gray-700');
+    document.getElementById('email-tab').classList.remove('bg-gray-600', 'text-white');
+    document.getElementById('email-tab').classList.add('bg-gray-200', 'text-gray-700');
+  }
 </script>
 {% endblock %}

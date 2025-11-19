@@ -4,931 +4,881 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Subscribers & Users - Blueprint Apparel</title>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
-  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <title>Subscribers - Blueprint Apparel</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <style>
     * {
       margin: 0;
       padding: 0;
       box-sizing: border-box;
     }
+
     body {
       font-family: 'Inter', sans-serif;
-      background:
-        linear-gradient(135deg, rgba(102, 126, 234, 0.9) 0%, rgba(118, 75, 162, 0.9) 100%),
-        repeating-linear-gradient(0deg, transparent, transparent 35px, rgba(255,255,255,.03) 35px, rgba(255,255,255,.03) 36px),
-        repeating-linear-gradient(90deg, transparent, transparent 35px, rgba(255,255,255,.03) 35px, rgba(255,255,255,.03) 36px),
-        radial-gradient(circle at 20% 30%, rgba(255,255,255,0.1) 0%, transparent 50%),
-        radial-gradient(circle at 80% 70%, rgba(255,255,255,0.08) 0%, transparent 50%),
-        radial-gradient(circle at 50% 50%, rgba(118, 75, 162, 0.3) 0%, transparent 100%);
-      background-attachment: fixed;
+      background: #f1f5f9;
       min-height: 100vh;
-      padding: 2rem;
-      position: relative;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
     }
-    body::before {
+
+    .nav-links {
+      background: linear-gradient(135deg, #06b6d4 0%, #0891b2 100%);
+      padding: 1rem 2rem;
+      display: flex;
+      gap: 0.75rem;
+      align-items: center;
+    }
+
+    .nav-link {
+      background: rgba(255, 255, 255, 0.15);
+      backdrop-filter: blur(10px);
+      color: white;
+      padding: 0.5rem 1rem;
+      border-radius: 8px;
+      text-decoration: none;
+      font-size: 0.875rem;
+      font-weight: 500;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .nav-link:hover {
+      background: rgba(255, 255, 255, 0.25);
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    }
+
+    .top-bar {
+      background: linear-gradient(135deg, #06b6d4 0%, #0891b2 100%);
+      padding: 2rem 0;
+      box-shadow: 0 4px 20px rgba(6, 182, 212, 0.15);
+      margin-bottom: 2rem;
+    }
+
+    .container {
+      max-width: 1600px;
+      margin: 0 auto;
+      padding: 0 2rem;
+    }
+
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1rem;
+    }
+
+    .header h1 {
+      color: white;
+      font-size: 2.5rem;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+    }
+
+    .main-content {
+      padding: 0 2rem 2rem 2rem;
+      max-width: 1600px;
+      margin: 0 auto;
+    }
+
+    .quick-stats {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 1.5rem;
+      margin-bottom: 3rem;
+      margin-top: -4rem;
+      position: relative;
+      z-index: 10;
+    }
+
+    .stat-box {
+      background: white;
+      border-radius: 16px;
+      padding: 2rem;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+      text-align: center;
+      border: 1px solid rgba(226, 232, 240, 0.8);
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .stat-box::before {
       content: '';
-      position: fixed;
+      position: absolute;
       top: 0;
       left: 0;
       right: 0;
-      bottom: 0;
-      background-image:
-        radial-gradient(circle at 15% 15%, rgba(255,255,255,0.15) 2px, transparent 2px),
-        radial-gradient(circle at 85% 45%, rgba(255,255,255,0.15) 3px, transparent 3px),
-        radial-gradient(circle at 45% 75%, rgba(255,255,255,0.12) 2px, transparent 2px),
-        radial-gradient(circle at 65% 25%, rgba(255,255,255,0.1) 2px, transparent 2px);
-      background-size: 100% 100%;
-      pointer-events: none;
-      z-index: 0;
+      height: 4px;
+      background: linear-gradient(90deg, #06b6d4, #0891b2);
+      opacity: 0;
+      transition: opacity 0.3s;
     }
-    .container {
-      max-width: 1200px;
-      margin: 0 auto;
-      position: relative;
-      z-index: 1;
+
+    .stat-box:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 12px 28px rgba(0, 0, 0, 0.12);
     }
-    .header {
-      background: white;
-      border-radius: 12px;
-      padding: 2rem;
-      margin-bottom: 2rem;
-      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+
+    .stat-box:hover::before {
+      opacity: 1;
     }
-    .header h1 {
-      color: #1a202c;
-      font-size: 2rem;
-      font-weight: 700;
-      margin-bottom: 0.75rem;
-    }
-    .header p {
-      color: #667eea;
-      font-size: 1.125rem;
-      font-weight: 500;
-      letter-spacing: 0.025em;
-      opacity: 0.9;
-    }
-    .stats {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-      gap: 1rem;
-      margin-bottom: 2rem;
-    }
-    .stat-card {
-      background: white;
-      border-radius: 12px;
-      padding: 1.5rem;
-      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-    }
-    .stat-card h3 {
-      color: #718096;
-      font-size: 0.875rem;
+
+    .stat-box h4 {
+      color: #64748b;
+      font-size: 0.8125rem;
       font-weight: 600;
       text-transform: uppercase;
-      letter-spacing: 0.05em;
-      margin-bottom: 0.5rem;
+      letter-spacing: 0.08em;
+      margin-bottom: 0.75rem;
     }
-    .stat-card .number {
-      color: #667eea;
-      font-size: 2.5rem;
-      font-weight: 700;
+
+    .stat-box .number {
+      background: linear-gradient(135deg, #06b6d4 0%, #0891b2 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      font-size: 2.75rem;
+      font-weight: 800;
+      letter-spacing: -0.02em;
     }
-    .section {
-      background: white;
-      border-radius: 12px;
-      padding: 2rem;
+
+    .stat-box .icon {
+      font-size: 2rem;
+      margin-bottom: 1rem;
+      color: #06b6d4;
+    }
+
+    .tables-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 2rem;
       margin-bottom: 2rem;
-      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
     }
-    .section h2 {
-      color: #1a202c;
+
+    .table-section {
+      background: white;
+      border-radius: 16px;
+      padding: 2rem;
+      box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
+      border: 1px solid #e2e8f0;
+    }
+
+    .chart-section {
+      background: white;
+      border-radius: 16px;
+      padding: 2rem;
+      box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
+      border: 1px solid #e2e8f0;
+      margin-bottom: 2rem;
+    }
+
+    .chart-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 2rem;
+    }
+
+    .timeframe-buttons {
+      display: flex;
+      gap: 0.5rem;
+    }
+
+    .timeframe-btn {
+      padding: 0.5rem 1rem;
+      border: 1px solid #e2e8f0;
+      background: white;
+      border-radius: 8px;
+      font-size: 0.875rem;
+      font-weight: 500;
+      color: #64748b;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .timeframe-btn:hover {
+      background: #f8fafc;
+      border-color: #06b6d4;
+      color: #06b6d4;
+    }
+
+    .timeframe-btn.active {
+      background: linear-gradient(135deg, #06b6d4 0%, #0891b2 100%);
+      color: white;
+      border-color: #06b6d4;
+    }
+
+    @media (max-width: 1200px) {
+      .tables-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .bottom-sections {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 2rem;
+      margin-bottom: 2rem;
+    }
+
+    @media (max-width: 1200px) {
+      .bottom-sections {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .sources-section {
+      background: white;
+      border-radius: 16px;
+      padding: 2rem;
+      box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
+      border: 1px solid #e2e8f0;
+    }
+
+    .activity-section {
+      background: white;
+      border-radius: 16px;
+      padding: 2rem;
+      box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
+      border: 1px solid #e2e8f0;
+    }
+
+    .activity-item {
+      padding: 1rem;
+      border-bottom: 1px solid #f1f5f9;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      transition: background 0.2s;
+    }
+
+    .activity-item:hover {
+      background: #f8fafc;
+    }
+
+    .activity-item:last-child {
+      border-bottom: none;
+    }
+
+    .activity-info {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+
+    .activity-icon {
+      width: 40px;
+      height: 40px;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.125rem;
+    }
+
+    .activity-icon.email {
+      background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);
+      color: #1e40af;
+    }
+
+    .activity-icon.sms {
+      background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%);
+      color: #065f46;
+    }
+
+    .activity-contact {
+      font-weight: 600;
+      color: #0f172a;
+      font-size: 0.9375rem;
+    }
+
+    .activity-source {
+      font-size: 0.75rem;
+      color: #64748b;
+      margin-top: 0.25rem;
+    }
+
+    .activity-time {
+      font-size: 0.8125rem;
+      color: #64748b;
+      text-align: right;
+    }
+
+    .export-section {
+      background: white;
+      border-radius: 16px;
+      padding: 2rem;
+      box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
+      border: 1px solid #e2e8f0;
+      margin-bottom: 2rem;
+    }
+
+    .export-buttons {
+      display: flex;
+      gap: 1rem;
+      flex-wrap: wrap;
+    }
+
+    .export-btn {
+      padding: 0.75rem 1.5rem;
+      background: linear-gradient(135deg, #06b6d4 0%, #0891b2 100%);
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-size: 0.875rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      text-decoration: none;
+    }
+
+    .export-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(6, 182, 212, 0.3);
+    }
+
+    .export-btn i {
+      font-size: 1rem;
+    }
+
+    .table-wrapper {
+      max-height: 400px;
+      overflow-y: auto;
+      overflow-x: auto;
+      border-radius: 8px;
+    }
+
+    .table-wrapper::-webkit-scrollbar {
+      width: 8px;
+      height: 8px;
+    }
+
+    .table-wrapper::-webkit-scrollbar-track {
+      background: #f1f5f9;
+      border-radius: 4px;
+    }
+
+    .table-wrapper::-webkit-scrollbar-thumb {
+      background: #cbd5e1;
+      border-radius: 4px;
+    }
+
+    .table-wrapper::-webkit-scrollbar-thumb:hover {
+      background: #94a3b8;
+    }
+
+    .section-title {
+      color: #1e293b;
       font-size: 1.5rem;
       font-weight: 700;
+      letter-spacing: -0.02em;
       margin-bottom: 1.5rem;
-      padding-bottom: 1rem;
-      border-bottom: 2px solid #e2e8f0;
+      position: relative;
+      padding-left: 1rem;
     }
+
+    .section-title::before {
+      content: '';
+      position: absolute;
+      left: 0;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 4px;
+      height: 28px;
+      background: linear-gradient(180deg, #06b6d4, #0891b2);
+      border-radius: 2px;
+    }
+
     table {
       width: 100%;
       border-collapse: collapse;
     }
+
     th {
-      text-align: left;
-      padding: 1rem;
-      background: #f7fafc;
-      color: #4a5568;
-      font-weight: 600;
-      font-size: 0.875rem;
+      background: #f8fafc;
+      color: #64748b;
+      font-size: 0.75rem;
+      font-weight: 700;
       text-transform: uppercase;
-      letter-spacing: 0.05em;
+      letter-spacing: 0.08em;
+      padding: 1rem;
+      text-align: left;
       border-bottom: 2px solid #e2e8f0;
     }
+
     td {
-      padding: 1rem;
-      border-bottom: 1px solid #e2e8f0;
-      color: #2d3748;
+      padding: 1.25rem 1rem;
+      border-bottom: 1px solid #f1f5f9;
+      color: #334155;
     }
-    tr:hover {
-      background: #f7fafc;
+
+    tbody tr {
+      cursor: pointer;
+      transition: all 0.2s;
     }
+
+    tbody tr:hover {
+      background: #f8fafc;
+    }
+
     .badge {
-      display: inline-block;
-      padding: 0.25rem 0.75rem;
-      border-radius: 9999px;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.375rem;
+      padding: 0.375rem 0.75rem;
+      border-radius: 8px;
       font-size: 0.75rem;
       font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
     }
-    .badge-success {
-      background: #c6f6d5;
-      color: #22543d;
+
+    .badge.email {
+      background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);
+      color: #1e40af;
     }
-    .badge-warning {
-      background: #fef5e7;
-      color: #975a16;
+
+    .badge.sms {
+      background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%);
+      color: #065f46;
     }
-    .badge-info {
-      background: #bee3f8;
-      color: #2c5282;
+
+    .badge.both {
+      background: linear-gradient(135deg, #e0e7ff 0%, #c7d2fe 100%);
+      color: #4338ca;
     }
-    .back-link {
-      display: inline-block;
-      margin-top: 2rem;
-      padding: 0.75rem 1.5rem;
-      background: white;
-      color: #667eea;
-      text-decoration: none;
-      border-radius: 8px;
-      font-weight: 600;
-      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-      transition: all 0.2s;
+
+    .empty-state {
+      text-align: center;
+      padding: 4rem 2rem;
+      color: #64748b;
     }
-    .back-link:hover {
-      background: #667eea;
-      color: white;
-      transform: translateY(-2px);
-      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
-    }
-    .upload-section {
-      background: white;
-      border-radius: 12px;
-      padding: 2rem;
-      margin-bottom: 2rem;
-      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-    }
-    .upload-form {
-      display: flex;
-      gap: 1rem;
-      align-items: flex-end;
-      flex-wrap: wrap;
-    }
-    .file-input-wrapper {
-      flex: 1;
-      min-width: 250px;
-    }
-    .file-input-wrapper label {
-      display: block;
-      color: #4a5568;
-      font-weight: 600;
-      margin-bottom: 0.5rem;
-      font-size: 0.875rem;
-    }
-    .file-input {
-      width: 100%;
-      padding: 0.75rem;
-      border: 2px dashed #cbd5e0;
-      border-radius: 8px;
-      background: #f7fafc;
-      cursor: pointer;
-      transition: all 0.2s;
-    }
-    .file-input:hover {
-      border-color: #667eea;
-      background: #edf2f7;
-    }
-    .upload-btn {
-      padding: 0.5rem 1.5rem;
-      background: #667eea;
-      color: white;
-      border: none;
-      border-radius: 6px;
-      font-weight: 600;
-      font-size: 0.875rem;
-      cursor: pointer;
-      transition: all 0.2s;
-      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-    }
-    .upload-btn:hover {
-      background: #5568d3;
-      transform: translateY(-2px);
-      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
-    }
-    .csv-help {
-      color: #718096;
-      font-size: 0.875rem;
-      margin-top: 0.5rem;
-    }
-    .messages {
-      margin-bottom: 2rem;
-    }
-    .message {
-      padding: 1rem 1.5rem;
-      border-radius: 8px;
-      margin-bottom: 0.5rem;
-      font-weight: 500;
-    }
-    .message-success {
-      background: #c6f6d5;
-      color: #22543d;
-      border-left: 4px solid #38a169;
-    }
-    .message-error {
-      background: #fed7d7;
-      color: #742a2a;
-      border-left: 4px solid #e53e3e;
-    }
-    .message-warning {
-      background: #fef5e7;
-      color: #975a16;
-      border-left: 4px solid #dd6b20;
-    }
-    .message-info {
-      background: #bee3f8;
-      color: #2c5282;
-      border-left: 4px solid #3182ce;
-    }
-    @keyframes shake {
-      0%, 100% { transform: translateX(0); }
-      10%, 30%, 50%, 70%, 90% { transform: translateX(-10px); }
-      20%, 40%, 60%, 80% { transform: translateX(10px); }
-    }
-    .shake {
-      animation: shake 0.5s;
-    }
-    .period-selector {
-      display: flex;
-      gap: 0;
-      margin-bottom: 1.5rem;
-      justify-content: flex-end;
-      flex-wrap: wrap;
-    }
-    .period-btn {
-      padding: 0.65rem 1.2rem;
-      border: 1px solid #e2e8f0;
-      background: #f7fafc;
-      color: #4a5568;
-      border-right: none;
-      font-weight: 600;
-      font-size: 0.875rem;
-      cursor: pointer;
-      transition: all 0.2s;
-      text-decoration: none;
-    }
-    .period-btn:first-child {
-      border-radius: 8px 0 0 8px;
-    }
-    .period-btn:last-child {
-      border-radius: 0 8px 8px 0;
-      border-right: 1px solid #e2e8f0;
-    }
-    .period-btn:hover {
-      background: #edf2f7;
-      color: #667eea;
-    }
-    .period-btn.active {
-      background: #667eea;
-      color: white;
-      font-weight: 700;
-      border-color: #667eea;
-    }
-    .delete-btn {
-      background: transparent;
-      border: none;
-      color: #e53e3e;
-      cursor: pointer;
-      font-size: 1.2rem;
-      padding: 0.25rem 0.5rem;
-      transition: all 0.2s;
-      line-height: 1;
-    }
-    .delete-btn:hover {
-      color: #c53030;
-      transform: scale(1.2);
-    }
-    .modal {
-      display: none;
-      position: fixed;
-      z-index: 1000;
-      left: 0;
-      top: 0;
-      width: 100%;
-      height: 100%;
-      background-color: rgba(0,0,0,0.5);
-      align-items: center;
-      justify-content: center;
-    }
-    .modal.show {
-      display: flex;
-    }
-    .modal-content {
-      background: white;
-      padding: 2rem;
-      border-radius: 12px;
-      max-width: 400px;
-      width: 90%;
-      box-shadow: 0 10px 25px rgba(0,0,0,0.3);
-    }
-    .modal-content h3 {
-      color: #1a202c;
+
+    .empty-state-icon {
+      font-size: 4rem;
       margin-bottom: 1rem;
-      font-size: 1.25rem;
+      opacity: 0.5;
     }
-    .modal-content p {
-      color: #4a5568;
-      margin-bottom: 1.5rem;
-    }
-    .modal-actions {
-      display: flex;
-      gap: 1rem;
-      justify-content: flex-end;
-    }
-    .modal-btn {
-      padding: 0.5rem 1.5rem;
-      border: none;
-      border-radius: 6px;
-      font-weight: 600;
-      cursor: pointer;
-      transition: all 0.2s;
-    }
-    .modal-btn-cancel {
-      background: #e2e8f0;
-      color: #4a5568;
-    }
-    .modal-btn-cancel:hover {
-      background: #cbd5e0;
-    }
-    .modal-btn-delete {
-      background: #e53e3e;
-      color: white;
-    }
-    .modal-btn-delete:hover {
-      background: #c53030;
-    }
-    @media (max-width: 1024px) {
-      .csv-help {
-        font-size: 0.75rem;
-      }
-      .csv-help code {
-        font-size: 0.7rem;
-        word-break: break-all;
-      }
-    }
+
     @media (max-width: 768px) {
-      body {
-        padding: 1rem;
-      }
       .header h1 {
-        font-size: 1.5rem;
+        font-size: 2rem;
       }
-      table {
-        font-size: 0.875rem;
-      }
-      th, td {
-        padding: 0.75rem 0.5rem;
-      }
-      .period-selector {
-        justify-content: center;
-      }
-      .period-btn {
-        padding: 0.5rem 0.8rem;
-        font-size: 0.75rem;
-      }
-      .csv-help {
-        font-size: 0.7rem;
-      }
-      .csv-help code {
-        font-size: 0.65rem;
+      .quick-stats {
+        grid-template-columns: 1fr;
+        margin-top: -3rem;
       }
     }
   </style>
 </head>
 <body>
-  <!-- Server Time - Top Right Corner -->
-  <div style="position: fixed; top: 1rem; right: 1rem; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 0.75rem 1.25rem; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.2); z-index: 1000;">
-    <div style="color: rgba(255,255,255,0.8); font-size: 0.75rem; margin-bottom: 0.25rem; text-align: center;">Server Time</div>
-    <div style="color: white; font-size: 0.875rem; font-weight: 600; text-align: center;">{{ server_time|date:"M d, Y - g:i A" }}</div>
-    <div style="color: rgba(255,255,255,0.7); font-size: 0.7rem; margin-top: 0.375rem; text-align: center;">CST: {{ cst_time|date:"g:i A" }}</div>
+  <div class="nav-links">
+    <a href="{% url 'admin_home' %}" class="nav-link">← Back</a>
   </div>
 
-  <div class="container">
-    <!-- Header -->
-    <div class="header">
-      <h1>Subscribers & Users Dashboard</h1>
-      <p>Blueprint Apparel - Admin View</p>
+  <div class="top-bar">
+    <div class="container">
+      <div class="header">
+        <h1>Subscribers</h1>
+      </div>
     </div>
+  </div>
 
-    <!-- Messages -->
-    {% if messages %}
-    <div class="messages">
-      {% for message in messages %}
-      <div class="message message-{{ message.tags }}">
-        {{ message }}
+  <div class="main-content">
+    <!-- Quick Stats -->
+    <div class="quick-stats">
+      <div class="stat-box">
+        <div class="icon"><i class="fa-solid fa-envelope"></i></div>
+        <h4>Email Subscribers</h4>
+        <div class="number">{{ email_subscribers.count }}</div>
       </div>
-      {% endfor %}
-    </div>
-    {% endif %}
-
-    <!-- Stats -->
-    <div class="stats">
-      <div class="stat-card">
-        <h3>Total Subscribers</h3>
-        <div class="number">{{ total_subscribers }}</div>
+      <div class="stat-box">
+        <div class="icon"><i class="fa-solid fa-message"></i></div>
+        <h4>SMS Subscribers</h4>
+        <div class="number">{{ sms_subscribers.count }}</div>
       </div>
-      <div class="stat-card">
-        <h3>Confirmed</h3>
-        <div class="number">{{ confirmed_subscribers }}</div>
+      <div class="stat-box">
+        <div class="icon"><i class="fa-solid fa-users"></i></div>
+        <h4>Total Unique</h4>
+        <div class="number">{{ total_unique }}</div>
       </div>
-      <div class="stat-card">
-        <h3>Registered Users</h3>
-        <div class="number">{{ total_users }}</div>
-      </div>
-      <div class="stat-card" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border: none;">
-        <h3 style="color: white;">Last 7 Days (subs)</h3>
-        <div style="display: flex; align-items: center; gap: 1rem;">
-          <div class="number" style="color: white;">{{ last_7_days_signups }}</div>
-          {% if last_7_days_percent_change > 0 %}
-          <div style="background: rgba(255,255,255,0.2); padding: 0.4rem 0.75rem; border-radius: 20px; font-size: 0.875rem; font-weight: 700; color: white;">
-            ↑ {{ last_7_days_percent_change|floatformat:0 }}%
-          </div>
-          {% elif last_7_days_percent_change < 0 %}
-          <div style="background: rgba(255,255,255,0.2); padding: 0.4rem 0.75rem; border-radius: 20px; font-size: 0.875rem; font-weight: 700; color: white;">
-            ↓ {{ last_7_days_percent_change|floatformat:0|cut:"-" }}%
-          </div>
-          {% else %}
-          <div style="background: rgba(255,255,255,0.2); padding: 0.4rem 0.75rem; border-radius: 20px; font-size: 0.875rem; font-weight: 700; color: white;">
-            0%
-          </div>
-          {% endif %}
-        </div>
-        {% if last_7_days_signups_list %}
-        <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid rgba(255,255,255,0.2);">
-          {% for subscriber in last_7_days_signups_list %}
-          <div style="color: rgba(255,255,255,0.9); font-size: 0.875rem; padding: 0.25rem 0;">
-            {{ subscriber.email }}
-          </div>
-          {% endfor %}
-        </div>
-        {% endif %}
+      <div class="stat-box">
+        <div class="icon"><i class="fa-solid fa-user-plus"></i></div>
+        <h4>New (24h)</h4>
+        <div class="number">{{ new_24h }}</div>
       </div>
     </div>
 
     <!-- Subscriber Growth Chart -->
-    <div class="section">
-      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem;">
-        <h2 style="margin: 0;">Subscriber Growth</h2>
-        <div class="period-selector">
-          <a href="?period=7" class="period-btn {% if selected_period == '7' %}active{% endif %}">7 Days</a>
-          <a href="?period=30" class="period-btn {% if selected_period == '30' or not selected_period %}active{% endif %}">30 Days</a>
-          <a href="?period=90" class="period-btn {% if selected_period == '90' %}active{% endif %}">90 Days</a>
-          <a href="?period=weekly" class="period-btn {% if selected_period == 'weekly' %}active{% endif %}">Weekly</a>
-          <a href="?period=monthly" class="period-btn {% if selected_period == 'monthly' %}active{% endif %}">Monthly</a>
+    <div class="chart-section">
+      <div class="chart-header">
+        <h2 class="section-title" style="margin-bottom: 0;">Subscriber Growth</h2>
+        <div class="timeframe-buttons">
+          <button class="timeframe-btn" onclick="updateChart('7')">7 Days</button>
+          <button class="timeframe-btn active" onclick="updateChart('30')">30 Days</button>
+          <button class="timeframe-btn" onclick="updateChart('90')">90 Days</button>
+          <button class="timeframe-btn" onclick="updateChart('365')">1 Year</button>
         </div>
       </div>
-      <div style="position: relative; height: 300px;">
-        <canvas id="subscriberChart"></canvas>
-      </div>
-      {% if selected_period == 'weekly' %}
-      <p style="text-align: center; color: #718096; font-size: 0.875rem; margin-top: 1rem; font-style: italic;">
-        Weekly (every Sunday)
-      </p>
-      {% endif %}
-      {% if selected_period == 'monthly' %}
-      <p style="text-align: center; color: #718096; font-size: 0.875rem; margin-top: 1rem; font-style: italic;">
-        Monthly (1st of each month)
-      </p>
-      {% endif %}
+      <canvas id="subscribersChart" height="80"></canvas>
     </div>
 
-    <!-- Email Subscribers -->
-    <div class="section">
-      <h2>Email Subscribers</h2>
-      {% if subscribers %}
-      <div style="overflow-x: auto;">
-        <table>
-          <thead>
-            <tr>
-              <th>Email</th>
-              <th>Status</th>
-              <th>Source</th>
-              <th>Subscribed</th>
-              <th style="width: 80px; text-align: center;">Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {% for sub in subscribers %}
-            <tr>
-              <td>{{ sub.email }}</td>
-              <td>
-                {% if sub.is_confirmed %}
-                  <span class="badge badge-success">✓ Confirmed</span>
+    <!-- Email & SMS Subscribers Side by Side -->
+    <div class="tables-grid">
+      <!-- Email Subscribers -->
+      <div class="table-section">
+        <h2 class="section-title">Email Subscribers</h2>
+        {% if email_subscribers %}
+        <div class="table-wrapper">
+          <table>
+            <thead>
+              <tr>
+                <th>Email</th>
+                <th>Name</th>
+                <th>Status</th>
+                <th>Subscribed</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for subscriber in email_subscribers %}
+              <tr>
+                <td><strong style="color: #0f172a;">{{ subscriber.email }}</strong></td>
+                <td>{{ subscriber.name|default:"—" }}</td>
+                <td>
+                  <span class="badge email">
+                    <i class="fa-solid fa-envelope"></i>
+                    Email
+                  </span>
+                </td>
+                <td style="color: #64748b; font-size: 0.875rem;">{{ subscriber.subscribed_at|date:"M d, Y g:i A" }}</td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+        {% else %}
+        <div class="empty-state">
+          <div class="empty-state-icon">📭</div>
+          <h3>No email subscribers yet</h3>
+          <p>Email subscribers will appear here once they sign up.</p>
+        </div>
+        {% endif %}
+      </div>
+
+      <!-- SMS Subscribers -->
+      <div class="table-section">
+        <h2 class="section-title">SMS Subscribers</h2>
+        {% if sms_subscribers %}
+        <div class="table-wrapper">
+          <table>
+            <thead>
+              <tr>
+                <th>Phone</th>
+                <th>Name</th>
+                <th>Status</th>
+                <th>Subscribed</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for subscriber in sms_subscribers %}
+              <tr>
+                <td><strong style="color: #0f172a;">{{ subscriber.phone_number }}</strong></td>
+                <td>{{ subscriber.name|default:"—" }}</td>
+                <td>
+                  <span class="badge sms">
+                    <i class="fa-solid fa-message"></i>
+                    SMS
+                  </span>
+                </td>
+                <td style="color: #64748b; font-size: 0.875rem;">{{ subscriber.subscribed_at|date:"M d, Y g:i A" }}</td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+        {% else %}
+        <div class="empty-state">
+          <div class="empty-state-icon">📱</div>
+          <h3>No SMS subscribers yet</h3>
+          <p>SMS subscribers will appear here once they sign up.</p>
+        </div>
+        {% endif %}
+      </div>
+    </div>
+
+    <!-- Export Section -->
+    <div class="export-section">
+      <h2 class="section-title">Export Subscribers</h2>
+      <div class="export-buttons">
+        <a href="{% url 'admin_subscribers' %}?export=email" class="export-btn">
+          <i class="fa-solid fa-download"></i>
+          Export Email Subscribers
+        </a>
+        <a href="{% url 'admin_subscribers' %}?export=sms" class="export-btn">
+          <i class="fa-solid fa-download"></i>
+          Export SMS Subscribers
+        </a>
+        <a href="{% url 'admin_subscribers' %}?export=all" class="export-btn">
+          <i class="fa-solid fa-download"></i>
+          Export All
+        </a>
+      </div>
+    </div>
+
+    <!-- Bottom Sections: Sources & Recent Activity -->
+    <div class="bottom-sections">
+      <!-- Subscriber Status -->
+      <div class="sources-section">
+        <h2 class="section-title">Subscriber Status</h2>
+        <div style="max-width: 300px; margin: 0 auto;">
+          <canvas id="sourcesChart" height="250"></canvas>
+        </div>
+      </div>
+
+      <!-- Recent Activity -->
+      <div class="activity-section">
+        <h2 class="section-title">Recent Activity</h2>
+        <div style="max-height: 400px; overflow-y: auto;">
+          {% for activity in recent_activity %}
+          <div class="activity-item">
+            <div class="activity-info">
+              <div class="activity-icon {{ activity.type }}">
+                {% if activity.type == 'email' %}
+                  <i class="fa-solid fa-envelope"></i>
                 {% else %}
-                  <span class="badge badge-warning">⏳ Pending</span>
+                  <i class="fa-solid fa-message"></i>
                 {% endif %}
-              </td>
-              <td><span class="badge badge-info">{{ sub.source }}</span></td>
-              <td>{{ sub.subscribed_at|date:"M d, Y - g:i A" }}</td>
-              <td style="text-align: center;">
-                <button class="delete-btn" onclick="confirmDelete('subscriber', {{ sub.id }}, '{{ sub.email }}')">✕</button>
-              </td>
-            </tr>
-            {% endfor %}
-          </tbody>
-        </table>
-      </div>
-
-      <!-- Pagination for Subscribers -->
-      {% if subscribers.paginator %}
-      <div style="display: flex; justify-content: center; align-items: center; gap: 0; margin-top: 1.5rem;">
-        {% if subscribers.has_previous %}
-        <a href="?subscribers_page={{ subscribers.previous_page_number }}{% if selected_period %}&period={{ selected_period }}{% endif %}"
-           style="padding: 0.5rem 1rem; background: #f7fafc; color: #4a5568; text-decoration: none; font-weight: 600; font-size: 0.875rem; transition: all 0.2s; cursor: pointer; border: 1px solid #e2e8f0; border-radius: 8px 0 0 8px; border-right: none;"
-           onmouseover="this.style.background='#edf2f7'; this.style.color='#667eea';"
-           onmouseout="this.style.background='#f7fafc'; this.style.color='#4a5568';">
-          ← Previous
-        </a>
-        {% else %}
-        <span style="padding: 0.5rem 1rem; background: #f7fafc; color: #cbd5e0; font-weight: 600; font-size: 0.875rem; cursor: not-allowed; border: 1px solid #e2e8f0; border-radius: 8px 0 0 8px; border-right: none;">
-          ← Previous
-        </span>
-        {% endif %}
-
-        <span style="padding: 0.5rem 1rem; background: #edf2f7; color: #4a5568; font-weight: 600; font-size: 0.875rem; border: 1px solid #e2e8f0; margin-left: -1px; margin-right: -1px;">
-          Page {{ subscribers.number }} of {{ subscribers.paginator.num_pages }}
-        </span>
-
-        {% if subscribers.has_next %}
-        <a href="?subscribers_page={{ subscribers.next_page_number }}{% if selected_period %}&period={{ selected_period }}{% endif %}"
-           style="padding: 0.5rem 1rem; background: #f7fafc; color: #4a5568; text-decoration: none; font-weight: 600; font-size: 0.875rem; transition: all 0.2s; cursor: pointer; border: 1px solid #e2e8f0; border-radius: 0 8px 8px 0; border-left: none;"
-           onmouseover="this.style.background='#edf2f7'; this.style.color='#667eea';"
-           onmouseout="this.style.background='#f7fafc'; this.style.color='#4a5568';">
-          Next →
-        </a>
-        {% else %}
-        <span style="padding: 0.5rem 1rem; background: #f7fafc; color: #cbd5e0; font-weight: 600; font-size: 0.875rem; cursor: not-allowed; border: 1px solid #e2e8f0; border-radius: 0 8px 8px 0; border-left: none;">
-          Next →
-        </span>
-        {% endif %}
-      </div>
-      {% endif %}
-
-      {% else %}
-      <p style="color: #718096; text-align: center; padding: 2rem;">No subscribers yet.</p>
-      {% endif %}
-
-      <!-- Add Single Subscriber -->
-      <div style="margin-top: 2rem; padding-top: 2rem; border-top: 2px solid #e2e8f0;">
-        <h3 style="color: #1a202c; font-size: 1.1rem; font-weight: 700; margin-bottom: 1rem;">Add Subscriber</h3>
-        <form method="POST" style="display: flex; gap: 0.75rem; align-items: flex-end; flex-wrap: wrap;">
-          {% csrf_token %}
-          <div style="flex: 1; min-width: 250px;">
-            <label for="single_email" style="display: block; font-size: 0.875rem; font-weight: 600; color: #4a5568; margin-bottom: 0.5rem;">Email Address</label>
-            <input type="email" name="single_email" id="single_email" placeholder="user@example.com" required
-                   style="width: 100%; padding: 0.5rem 0.75rem; border: 1px solid #e2e8f0; border-radius: 6px; font-size: 0.875rem;">
+              </div>
+              <div>
+                <div class="activity-contact">{{ activity.contact }}</div>
+                <div class="activity-source">via {{ activity.source }}</div>
+              </div>
+            </div>
+            <div class="activity-time">
+              {{ activity.subscribed_at|timesince }} ago
+            </div>
           </div>
-          <button type="submit" style="padding: 0.5rem 1.5rem; background: #667eea; color: white; border: none; border-radius: 6px; font-weight: 600; font-size: 0.875rem; cursor: pointer; transition: all 0.2s;"
-                  onmouseover="this.style.background='#5568d3'"
-                  onmouseout="this.style.background='#667eea'">
-            Add
-          </button>
-        </form>
-      </div>
-
-      <!-- CSV Upload for Subscribers -->
-      <div style="margin-top: 2rem; padding-top: 2rem; border-top: 2px solid #e2e8f0;">
-        <h3 style="color: #1a202c; font-size: 1.1rem; font-weight: 700; margin-bottom: 1rem;">Upload Subscribers (CSV)</h3>
-        <form method="POST" enctype="multipart/form-data" style="display: flex; gap: 0.75rem; align-items: center; flex-wrap: wrap;">
-          {% csrf_token %}
-          <div style="flex: 1; min-width: 250px;">
-            <label for="subscriber_csv" style="display: block; font-size: 0.875rem; font-weight: 600; color: #4a5568; margin-bottom: 0.5rem;">Choose CSV File</label>
-            <input type="file" name="subscriber_csv" id="subscriber_csv" accept=".csv" class="file-input" required>
-          </div>
-          <button type="button" class="upload-btn" onclick="showBetaMessage(this)" style="margin-top: 1.5rem;">Upload</button>
-          <div class="csv-help" style="width: 100%;">
-            <strong>Required column:</strong> <code>email</code><br>
-            <strong>Optional columns:</strong> <code>is_confirmed</code> (true/false), <code>source</code> (text)<br>
-            <strong>Example:</strong><br>
-            <code style="display: block; background: #f7fafc; padding: 0.5rem; border-radius: 4px; margin-top: 0.5rem;">
-              email,is_confirmed,source<br>
-              user@example.com,true,newsletter<br>
-              another@example.com,false,landing_page
-            </code>
-          </div>
-        </form>
+          {% endfor %}
+        </div>
       </div>
     </div>
-
-    <!-- Registered Users -->
-    <div class="section">
-      <h2>Registered Users</h2>
-      {% if users %}
-      <div style="overflow-x: auto;">
-        <table>
-          <thead>
-            <tr>
-              <th>Username</th>
-              <th>Email</th>
-              <th>Status</th>
-              <th>Joined</th>
-              <th style="width: 80px; text-align: center;">Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {% for user in users %}
-            <tr>
-              <td>{{ user.username }}</td>
-              <td>{{ user.email }}</td>
-              <td>
-                {% if user.is_staff %}
-                  <span class="badge badge-success">👑 Staff</span>
-                {% elif user.is_active %}
-                  <span class="badge badge-info">Active</span>
-                {% else %}
-                  <span class="badge badge-warning">Inactive</span>
-                {% endif %}
-              </td>
-              <td>{{ user.date_joined|date:"M d, Y - g:i A" }}</td>
-              <td style="text-align: center;">
-                {% if not user.is_staff %}
-                <button class="delete-btn" onclick="confirmDelete('user', {{ user.id }}, '{{ user.username }}')">✕</button>
-                {% endif %}
-              </td>
-            </tr>
-            {% endfor %}
-          </tbody>
-        </table>
-      </div>
-
-      <!-- Pagination for Users -->
-      {% if users.paginator %}
-      <div style="display: flex; justify-content: center; align-items: center; gap: 0; margin-top: 1.5rem;">
-        {% if users.has_previous %}
-        <a href="?users_page={{ users.previous_page_number }}{% if selected_period %}&period={{ selected_period }}{% endif %}{% if request.GET.subscribers_page %}&subscribers_page={{ request.GET.subscribers_page }}{% endif %}"
-           style="padding: 0.5rem 1rem; background: #f7fafc; color: #4a5568; text-decoration: none; font-weight: 600; font-size: 0.875rem; transition: all 0.2s; cursor: pointer; border: 1px solid #e2e8f0; border-radius: 8px 0 0 8px; border-right: none;"
-           onmouseover="this.style.background='#edf2f7'; this.style.color='#667eea';"
-           onmouseout="this.style.background='#f7fafc'; this.style.color='#4a5568';">
-          ← Previous
-        </a>
-        {% else %}
-        <span style="padding: 0.5rem 1rem; background: #f7fafc; color: #cbd5e0; font-weight: 600; font-size: 0.875rem; cursor: not-allowed; border: 1px solid #e2e8f0; border-radius: 8px 0 0 8px; border-right: none;">
-          ← Previous
-        </span>
-        {% endif %}
-
-        <span style="padding: 0.5rem 1rem; background: #edf2f7; color: #4a5568; font-weight: 600; font-size: 0.875rem; border: 1px solid #e2e8f0; margin-left: -1px; margin-right: -1px;">
-          Page {{ users.number }} of {{ users.paginator.num_pages }}
-        </span>
-
-        {% if users.has_next %}
-        <a href="?users_page={{ users.next_page_number }}{% if selected_period %}&period={{ selected_period }}{% endif %}{% if request.GET.subscribers_page %}&subscribers_page={{ request.GET.subscribers_page }}{% endif %}"
-           style="padding: 0.5rem 1rem; background: #f7fafc; color: #4a5568; text-decoration: none; font-weight: 600; font-size: 0.875rem; transition: all 0.2s; cursor: pointer; border: 1px solid #e2e8f0; border-radius: 0 8px 8px 0; border-left: none;"
-           onmouseover="this.style.background='#edf2f7'; this.style.color='#667eea';"
-           onmouseout="this.style.background='#f7fafc'; this.style.color='#4a5568';">
-          Next →
-        </a>
-        {% else %}
-        <span style="padding: 0.5rem 1rem; background: #f7fafc; color: #cbd5e0; font-weight: 600; font-size: 0.875rem; cursor: not-allowed; border: 1px solid #e2e8f0; border-radius: 0 8px 8px 0; border-left: none;">
-          Next →
-        </span>
-        {% endif %}
-      </div>
-      {% endif %}
-
-      {% else %}
-      <p style="color: #718096; text-align: center; padding: 2rem;">No registered users yet.</p>
-      {% endif %}
-
-      <!-- CSV Upload for Users -->
-      <div style="margin-top: 2rem; padding-top: 2rem; border-top: 2px solid #e2e8f0;">
-        <h3 style="color: #1a202c; font-size: 1.1rem; font-weight: 700; margin-bottom: 1rem;">Upload Users (CSV)</h3>
-        <form method="POST" enctype="multipart/form-data" style="display: flex; gap: 0.75rem; align-items: center; flex-wrap: wrap;">
-          {% csrf_token %}
-          <div style="flex: 1; min-width: 250px;">
-            <label for="user_csv" style="display: block; font-size: 0.875rem; font-weight: 600; color: #4a5568; margin-bottom: 0.5rem;">Choose CSV File</label>
-            <input type="file" name="user_csv" id="user_csv" accept=".csv" class="file-input" required>
-          </div>
-          <button type="button" class="upload-btn" onclick="showBetaMessage(this)" style="margin-top: 1.5rem;">Upload</button>
-          <div class="csv-help" style="width: 100%;">
-            <strong>Required columns:</strong> <code>username</code>, <code>email</code><br>
-            <strong>Optional columns:</strong> <code>password</code> (if omitted, random password generated)<br>
-            <strong>Example:</strong><br>
-            <code style="display: block; background: #f7fafc; padding: 0.5rem; border-radius: 4px; margin-top: 0.5rem;">
-              username,email,password<br>
-              johndoe,john@example.com,securepass123<br>
-              janedoe,jane@example.com,<br>
-            </code>
-            <em style="display: block; margin-top: 0.5rem; color: #975a16;">⚠️ Note: Users created without passwords will have random passwords. They'll need to reset via "Forgot Password".</em>
-          </div>
-        </form>
-      </div>
-
-      <!-- Admin Note -->
-      <div style="margin-top: 2rem; padding: 1.5rem; background: #edf2f7; border-left: 4px solid #667eea; border-radius: 8px;">
-        <h4 style="color: #1a202c; font-weight: 700; margin-bottom: 0.5rem;">👑 Creating Admin/Staff Users</h4>
-        <p style="color: #4a5568; font-size: 0.875rem; line-height: 1.6;">
-          Users uploaded via CSV are created as regular users. To grant admin/staff privileges, use the Django admin interface
-          (<a href="/admin/auth/user/" style="color: #667eea; text-decoration: underline;">User Management</a>)
-          or run this command in the Render shell:
-        </p>
-        <code style="display: block; background: #2d3748; color: #48bb78; padding: 1rem; border-radius: 4px; margin-top: 0.75rem; font-size: 0.875rem;">
-          python manage.py createsuperuser
-        </code>
-        <p style="color: #718096; font-size: 0.8rem; margin-top: 0.75rem; font-style: italic;">
-          For existing users, edit them in <a href="/admin/auth/user/" style="color: #667eea;">Django Admin → Users</a> and check "Staff status" or "Superuser status".
-        </p>
-      </div>
-    </div>
-
-    <!-- Back to Admin -->
-    <!-- <a href="/admin/" class="back-link">← Back to Admin</a> -->
   </div>
 
   <script>
-    // Initialize subscriber growth chart
-    const ctx = document.getElementById('subscriberChart');
-    const subscriberChart = new Chart(ctx, {
-      type: 'line',
-      data: {
-        labels: {{ chart_labels|safe }},
-        datasets: [{
-          label: 'New Subscribers',
-          data: {{ chart_data|safe }},
-          borderColor: '#667eea',
-          backgroundColor: 'rgba(102, 126, 234, 0.1)',
-          borderWidth: 3,
-          fill: true,
-          tension: 0.4,
-          pointRadius: 4,
-          pointBackgroundColor: '#667eea',
-          pointBorderColor: '#fff',
-          pointBorderWidth: 2,
-          pointHoverRadius: 6,
-        }]
-      },
-      options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        plugins: {
-          legend: {
-            display: false
+    let subscribersChart = null;
+    let currentPeriod = '30';
+
+    // Initialize chart with data from server
+    const chartData = {
+      '7': {{ chart_data_7|safe }},
+      '30': {{ chart_data_30|safe }},
+      '90': {{ chart_data_90|safe }},
+      '365': {{ chart_data_365|safe }}
+    };
+
+    function initChart() {
+      const ctx = document.getElementById('subscribersChart').getContext('2d');
+      const data = chartData[currentPeriod];
+
+      subscribersChart = new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels: data.labels,
+          datasets: [
+            {
+              label: 'Email Subscribers',
+              data: data.email,
+              borderColor: '#3b82f6',
+              backgroundColor: 'rgba(59, 130, 246, 0.1)',
+              tension: 0.4,
+              fill: true,
+              borderWidth: 2,
+              pointRadius: 3,
+              pointBackgroundColor: '#3b82f6',
+              pointBorderColor: '#fff',
+              pointBorderWidth: 2,
+              pointHoverRadius: 5
+            },
+            {
+              label: 'SMS Subscribers',
+              data: data.sms,
+              borderColor: '#10b981',
+              backgroundColor: 'rgba(16, 185, 129, 0.1)',
+              tension: 0.4,
+              fill: true,
+              borderWidth: 2,
+              pointRadius: 3,
+              pointBackgroundColor: '#10b981',
+              pointBorderColor: '#fff',
+              pointBorderWidth: 2,
+              pointHoverRadius: 5
+            }
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: true,
+          interaction: {
+            mode: 'index',
+            intersect: false,
           },
-          tooltip: {
-            backgroundColor: '#1a202c',
-            titleColor: '#fff',
-            bodyColor: '#fff',
-            padding: 12,
-            displayColors: false,
-            callbacks: {
-              label: function(context) {
-                return context.parsed.y + ' subscriber' + (context.parsed.y !== 1 ? 's' : '');
+          plugins: {
+            legend: {
+              display: true,
+              position: 'top',
+              labels: {
+                usePointStyle: true,
+                padding: 15,
+                font: {
+                  family: 'Inter',
+                  size: 12,
+                  weight: '500'
+                }
+              }
+            },
+            tooltip: {
+              backgroundColor: 'rgba(0, 0, 0, 0.8)',
+              padding: 12,
+              titleFont: {
+                size: 13,
+                weight: '600'
+              },
+              bodyFont: {
+                size: 12
+              },
+              borderColor: 'rgba(255, 255, 255, 0.1)',
+              borderWidth: 1
+            }
+          },
+          scales: {
+            y: {
+              beginAtZero: true,
+              ticks: {
+                precision: 0,
+                font: {
+                  family: 'Inter',
+                  size: 11
+                },
+                color: '#64748b'
+              },
+              grid: {
+                color: 'rgba(0, 0, 0, 0.05)',
+                drawBorder: false
+              }
+            },
+            x: {
+              ticks: {
+                font: {
+                  family: 'Inter',
+                  size: 11
+                },
+                color: '#64748b',
+                maxRotation: 45,
+                minRotation: 0
+              },
+              grid: {
+                display: false,
+                drawBorder: false
               }
             }
           }
+        }
+      });
+    }
+
+    function updateChart(period) {
+      currentPeriod = period;
+
+      // Update active button
+      document.querySelectorAll('.timeframe-btn').forEach(btn => {
+        btn.classList.remove('active');
+      });
+      event.target.classList.add('active');
+
+      // Update chart data
+      const data = chartData[period];
+      subscribersChart.data.labels = data.labels;
+      subscribersChart.data.datasets[0].data = data.email;
+      subscribersChart.data.datasets[1].data = data.sms;
+      subscribersChart.update();
+    }
+
+    // Initialize status pie chart
+    function initSourcesChart() {
+      const ctx = document.getElementById('sourcesChart').getContext('2d');
+      const statusData = {{ status_data|safe }};
+
+      new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+          labels: statusData.labels,
+          datasets: [{
+            data: statusData.values,
+            backgroundColor: [
+              '#10b981',  // Active & Confirmed - Green
+              '#06b6d4',  // Active & Unconfirmed - Cyan
+              '#f59e0b',  // Inactive - Orange
+            ],
+            borderWidth: 3,
+            borderColor: '#fff',
+            hoverOffset: 8
+          }]
         },
-        scales: {
-          y: {
-            beginAtZero: true,
-            ticks: {
-              stepSize: 1,
-              color: '#718096'
+        options: {
+          responsive: true,
+          maintainAspectRatio: true,
+          rotation: -20,  // Tilt the start angle
+          circumference: 340,  // Make it slightly less than full circle for 3D effect
+          plugins: {
+            legend: {
+              position: 'bottom',
+              labels: {
+                padding: 15,
+                font: {
+                  family: 'Inter',
+                  size: 11,
+                  weight: '500'
+                },
+                usePointStyle: true,
+                pointStyle: 'circle'
+              }
             },
-            grid: {
-              color: 'rgba(0, 0, 0, 0.05)'
-            }
-          },
-          x: {
-            ticks: {
-              color: '#718096',
-              maxRotation: 45,
-              minRotation: 45
-            },
-            grid: {
-              display: false
+            tooltip: {
+              backgroundColor: 'rgba(0, 0, 0, 0.85)',
+              padding: 12,
+              titleFont: {
+                size: 13,
+                weight: '600'
+              },
+              bodyFont: {
+                size: 12
+              },
+              callbacks: {
+                label: function(context) {
+                  const label = context.label || '';
+                  const value = context.parsed || 0;
+                  const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                  const percentage = ((value / total) * 100).toFixed(1);
+                  return label + ': ' + value + ' (' + percentage + '%)';
+                }
+              }
             }
           }
         }
-      }
+      });
+    }
+
+    // Initialize all charts when page loads
+    document.addEventListener('DOMContentLoaded', () => {
+      initChart();
+      initSourcesChart();
     });
-
-    function showBetaMessage(button) {
-      // Add shake animation to button
-      button.classList.add('shake');
-
-      // Remove shake class after animation completes
-      setTimeout(() => {
-        button.classList.remove('shake');
-      }, 500);
-
-      // Create or find messages container
-      let messagesDiv = document.querySelector('.messages');
-      if (!messagesDiv) {
-        messagesDiv = document.createElement('div');
-        messagesDiv.className = 'messages';
-        const header = document.querySelector('.header');
-        header.parentNode.insertBefore(messagesDiv, header.nextSibling);
-      }
-
-      // Create error message
-      const messageDiv = document.createElement('div');
-      messageDiv.className = 'message message-warning';
-      messageDiv.textContent = 'This feature is still in beta.';
-
-      // Add message to top
-      messagesDiv.insertBefore(messageDiv, messagesDiv.firstChild);
-
-      // Scroll to top to show message
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-
-      // Remove message after 5 seconds
-      setTimeout(() => {
-        messageDiv.style.transition = 'opacity 0.5s';
-        messageDiv.style.opacity = '0';
-        setTimeout(() => {
-          messageDiv.remove();
-        }, 500);
-      }, 5000);
-    }
-
-    // Delete confirmation modal
-    let deleteType = '';
-    let deleteId = '';
-    let deleteName = '';
-
-    function confirmDelete(type, id, name) {
-      deleteType = type;
-      deleteId = id;
-      deleteName = name;
-
-      const modal = document.getElementById('deleteModal');
-      const message = document.getElementById('deleteMessage');
-      message.textContent = `Are you sure you want to delete ${type} "${name}"? This action cannot be undone.`;
-      modal.classList.add('show');
-    }
-
-    function closeModal() {
-      const modal = document.getElementById('deleteModal');
-      modal.classList.remove('show');
-    }
-
-    function executeDelete() {
-      // Create form and submit
-      const form = document.createElement('form');
-      form.method = 'POST';
-      form.action = '';
-
-      const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]');
-      if (csrfToken) {
-        const csrfInput = document.createElement('input');
-        csrfInput.type = 'hidden';
-        csrfInput.name = 'csrfmiddlewaretoken';
-        csrfInput.value = csrfToken.value;
-        form.appendChild(csrfInput);
-      }
-
-      const actionInput = document.createElement('input');
-      actionInput.type = 'hidden';
-      actionInput.name = 'delete_action';
-      actionInput.value = deleteType;
-      form.appendChild(actionInput);
-
-      const idInput = document.createElement('input');
-      idInput.type = 'hidden';
-      idInput.name = 'delete_id';
-      idInput.value = deleteId;
-      form.appendChild(idInput);
-
-      document.body.appendChild(form);
-      form.submit();
-    }
-
-    // Close modal when clicking outside
-    window.onclick = function(event) {
-      const modal = document.getElementById('deleteModal');
-      if (event.target === modal) {
-        closeModal();
-      }
-    }
   </script>
-
-  <!-- Delete Confirmation Modal -->
-  <div id="deleteModal" class="modal">
-    <div class="modal-content">
-      <h3>Confirm Delete</h3>
-      <p id="deleteMessage"></p>
-      <div class="modal-actions">
-        <button class="modal-btn modal-btn-cancel" onclick="closeModal()">Cancel</button>
-        <button class="modal-btn modal-btn-delete" onclick="executeDelete()">Delete</button>
-      </div>
-    </div>
-  </div>
 </body>
 </html>

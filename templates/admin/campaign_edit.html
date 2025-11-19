@@ -1,0 +1,466 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Edit Campaign - {{ campaign.name }}</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    body {
+      font-family: 'Inter', sans-serif;
+      background: #f8fafc;
+      min-height: 100vh;
+      padding: 0;
+    }
+    .container {
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 0;
+    }
+    .top-bar {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      padding: 1.5rem 2rem;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    }
+    .nav-links {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      padding: 1rem 2rem;
+      display: flex;
+      gap: 0.75rem;
+      align-items: center;
+    }
+    .nav-link {
+      background: rgba(255, 255, 255, 0.15);
+      backdrop-filter: blur(10px);
+      color: white;
+      padding: 0.5rem 1rem;
+      border-radius: 8px;
+      text-decoration: none;
+      font-size: 0.875rem;
+      font-weight: 500;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+    .nav-link:hover {
+      background: rgba(255, 255, 255, 0.25);
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    }
+    .header {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      padding: 2rem 0;
+      margin-bottom: 2rem;
+      box-shadow: 0 4px 20px rgba(102, 126, 234, 0.15);
+    }
+    .header h1 {
+      color: white;
+      font-size: 2.5rem;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+    }
+    .header p {
+      color: rgba(255, 255, 255, 0.9);
+      font-size: 1.125rem;
+      font-weight: 400;
+    }
+    .main-content {
+      padding: 2rem;
+      max-width: 1400px;
+      margin: 0 auto;
+    }
+    .content-box {
+      background: white;
+      border-radius: 16px;
+      padding: 2.5rem;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05), 0 10px 40px rgba(0, 0, 0, 0.03);
+      margin-bottom: 2rem;
+      border: 1px solid #e2e8f0;
+    }
+    .section-title {
+      font-size: 1.75rem;
+      font-weight: 700;
+      color: #1e293b;
+      margin-bottom: 2rem;
+      padding-bottom: 1rem;
+      border-bottom: 3px solid #f1f5f9;
+      position: relative;
+    }
+    .section-title::before {
+      content: '';
+      position: absolute;
+      bottom: -3px;
+      left: 0;
+      width: 60px;
+      height: 3px;
+      background: linear-gradient(90deg, #667eea, #764ba2);
+      border-radius: 2px;
+    }
+    .form-group {
+      margin-bottom: 1.5rem;
+    }
+    label {
+      display: block;
+      font-weight: 600;
+      color: #334155;
+      margin-bottom: 0.625rem;
+      font-size: 0.9375rem;
+      letter-spacing: -0.01em;
+    }
+    input[type="text"],
+    input[type="number"],
+    input[type="datetime-local"],
+    textarea,
+    select {
+      width: 100%;
+      padding: 0.875rem 1rem;
+      border: 2px solid #e2e8f0;
+      border-radius: 10px;
+      font-size: 1rem;
+      font-family: 'Inter', sans-serif;
+      transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+      background: #f8fafc;
+    }
+    input[type="text"]:focus,
+    input[type="number"]:focus,
+    input[type="datetime-local"]:focus,
+    textarea:focus,
+    select:focus {
+      outline: none;
+      border-color: #667eea;
+      box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.1);
+      background: white;
+      transform: translateY(-1px);
+    }
+    textarea {
+      min-height: 100px;
+      resize: vertical;
+    }
+    .btn {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      padding: 0.875rem 2rem;
+      border-radius: 10px;
+      text-decoration: none;
+      font-weight: 600;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      border: none;
+      cursor: pointer;
+      font-size: 1rem;
+      display: inline-block;
+      box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+      letter-spacing: 0.01em;
+    }
+    .btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 20px rgba(102, 126, 234, 0.4);
+    }
+    .btn-success {
+      background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+      box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+    }
+    .btn-success:hover {
+      box-shadow: 0 8px 20px rgba(16, 185, 129, 0.4);
+    }
+    .btn-secondary {
+      background: #e2e8f0;
+      color: #475569;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+    }
+    .btn-secondary:hover {
+      background: #cbd5e0;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    }
+    .btn-danger {
+      background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+      box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
+    }
+    .btn-danger:hover {
+      box-shadow: 0 8px 20px rgba(239, 68, 68, 0.4);
+    }
+    .btn-small {
+      padding: 0.5rem 1.25rem;
+      font-size: 0.875rem;
+    }
+    .messages {
+      margin-bottom: 1rem;
+    }
+    .message {
+      padding: 1rem;
+      border-radius: 8px;
+      margin-bottom: 0.5rem;
+    }
+    .message.success {
+      background: #c6f6d5;
+      color: #22543d;
+    }
+    .message.error {
+      background: #fed7d7;
+      color: #742a2a;
+    }
+    .message-item {
+      background: #f7fafc;
+      border-radius: 8px;
+      padding: 1.5rem;
+      margin-bottom: 1rem;
+      border-left: 4px solid #667eea;
+    }
+    .message-item-email {
+      border-left-color: #48bb78;
+    }
+    .message-item-sms {
+      border-left-color: #4299e1;
+    }
+    .message-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: start;
+      margin-bottom: 0.75rem;
+    }
+    .message-title {
+      font-size: 1.125rem;
+      font-weight: 700;
+      color: #1a202c;
+    }
+    .message-badge {
+      padding: 0.25rem 0.75rem;
+      border-radius: 12px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      margin-left: 0.5rem;
+    }
+    .badge-email {
+      background: #c6f6d5;
+      color: #22543d;
+    }
+    .badge-sms {
+      background: #bee3f8;
+      color: #2c5282;
+    }
+    .message-details {
+      font-size: 0.875rem;
+      color: #718096;
+      line-height: 1.6;
+    }
+    .empty-state {
+      text-align: center;
+      padding: 3rem 2rem;
+      color: #718096;
+    }
+    .form-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1rem;
+    }
+    #messageForm {
+      background: #f7fafc;
+      padding: 1.5rem;
+      border-radius: 8px;
+      margin-top: 1rem;
+    }
+    #templateFields {
+      display: none;
+    }
+    #delayFields {
+      display: none;
+    }
+    #specificDateField {
+      display: none;
+    }
+  </style>
+</head>
+<body>
+  <div class="nav-links">
+    <a href="{% url 'admin_campaigns_list' %}" class="nav-link">← Back</a>
+  </div>
+
+  {% if messages %}
+  <div class="messages" style="max-width: 1400px; margin: 1rem auto; padding: 0 2rem;">
+    {% for message in messages %}
+    <div class="message {{ message.tags }}">{{ message }}</div>
+    {% endfor %}
+  </div>
+  {% endif %}
+
+  <div class="header">
+    <div class="container">
+      <h1>{{ campaign.name }}</h1>
+    </div>
+  </div>
+
+  <div class="container">
+
+    <!-- Campaign Settings -->
+    <div class="content-box">
+      <h2 class="section-title">Campaign Settings</h2>
+      <form method="POST">
+        {% csrf_token %}
+        <input type="hidden" name="action" value="update_campaign">
+
+        <div class="form-group">
+          <label for="name">Campaign Name *</label>
+          <input type="text" id="name" name="name" value="{{ campaign.name }}" required>
+        </div>
+
+        <div class="form-group">
+          <label for="description">Description</label>
+          <textarea id="description" name="description">{{ campaign.description }}</textarea>
+        </div>
+
+        <div class="form-group">
+          <label for="target_group">Target Group</label>
+          <input type="text" id="target_group" name="target_group" value="{{ campaign.target_group }}">
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label for="active_from">Active From</label>
+            <input type="datetime-local" id="active_from" name="active_from" value="{% if campaign.active_from %}{{ campaign.active_from|date:'Y-m-d\TH:i' }}{% endif %}">
+          </div>
+
+          <div class="form-group">
+            <label for="active_until">Active Until</label>
+            <input type="datetime-local" id="active_until" name="active_until" value="{% if campaign.active_until %}{{ campaign.active_until|date:'Y-m-d\TH:i' }}{% endif %}">
+          </div>
+        </div>
+
+        <button type="submit" class="btn btn-success">Update Campaign</button>
+      </form>
+    </div>
+
+    <!-- Campaign Overview -->
+    <div class="content-box">
+      <h2 class="section-title">Campaign Overview</h2>
+
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin-bottom: 2rem;">
+        <div style="background: #f7fafc; padding: 1.5rem; border-radius: 8px; text-align: center;">
+          <div style="font-size: 2rem; font-weight: 700; color: #667eea;">{{ messages_list.count }}</div>
+          <div style="color: #718096; font-size: 0.875rem; font-weight: 600; text-transform: uppercase;">Total Messages</div>
+        </div>
+        <div style="background: #f7fafc; padding: 1.5rem; border-radius: 8px; text-align: center;">
+          <div style="font-size: 2rem; font-weight: 700; color: #48bb78;">{{ campaign.sent_messages }}</div>
+          <div style="color: #718096; font-size: 0.875rem; font-weight: 600; text-transform: uppercase;">Sent</div>
+        </div>
+        <div style="background: #f7fafc; padding: 1.5rem; border-radius: 8px; text-align: center;">
+          <div style="font-size: 2rem; font-weight: 700; color: #ed8936;">{{ messages_list|length|add:"-"|add:campaign.sent_messages }}</div>
+          <div style="color: #718096; font-size: 0.875rem; font-weight: 600; text-transform: uppercase;">Pending</div>
+        </div>
+      </div>
+
+      <!-- Timeline Visualization -->
+      {% if messages_list %}
+      <div style="background: #f7fafc; padding: 2rem; border-radius: 8px; margin-bottom: 2rem;">
+        <h3 style="margin-bottom: 1.5rem; color: #1a202c; font-size: 1.125rem; font-weight: 700;">Campaign Timeline</h3>
+        <div style="position: relative;">
+          {% for msg in messages_list %}
+          <div style="display: flex; align-items: start; margin-bottom: 1.5rem; {% if forloop.last %}margin-bottom: 0;{% endif %}">
+            <div style="min-width: 60px; padding-right: 1rem; text-align: right;">
+              <div style="font-size: 0.75rem; color: #718096; font-weight: 600;">STEP {{ forloop.counter }}</div>
+            </div>
+            <div style="position: relative; padding-top: 0.25rem;">
+              <div style="width: 16px; height: 16px; border-radius: 50%; background: {% if msg.message_type == 'email' %}#48bb78{% else %}#4299e1{% endif %}; border: 3px solid white; box-shadow: 0 0 0 2px {% if msg.message_type == 'email' %}#48bb78{% else %}#4299e1{% endif %};"></div>
+              {% if not forloop.last %}
+              <div style="position: absolute; left: 7px; top: 20px; width: 2px; height: 40px; background: #cbd5e0;"></div>
+              {% endif %}
+            </div>
+            <div style="flex: 1; padding-left: 1.5rem;">
+              <div style="background: white; padding: 1rem; border-radius: 8px; border-left: 3px solid {% if msg.message_type == 'email' %}#48bb78{% else %}#4299e1{% endif %};">
+                <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 0.5rem;">
+                  <div>
+                    <strong style="color: #1a202c; font-size: 1rem;">{{ msg.name }}</strong>
+                    <span style="margin-left: 0.5rem; padding: 0.125rem 0.5rem; background: {% if msg.message_type == 'email' %}#c6f6d5{% else %}#bee3f8{% endif %}; color: {% if msg.message_type == 'email' %}#22543d{% else %}#2c5282{% endif %}; border-radius: 6px; font-size: 0.625rem; font-weight: 700; text-transform: uppercase;">{{ msg.get_message_type_display }}</span>
+                  </div>
+                  <form method="POST" style="display: inline;" onsubmit="return confirm('Delete this message?');">
+                    {% csrf_token %}
+                    <input type="hidden" name="action" value="delete_message">
+                    <input type="hidden" name="message_id" value="{{ msg.id }}">
+                    <button type="submit" style="background: #fed7d7; color: #742a2a; border: none; padding: 0.25rem 0.75rem; border-radius: 6px; font-size: 0.75rem; cursor: pointer; font-weight: 600;">Delete</button>
+                  </form>
+                </div>
+                <div style="font-size: 0.875rem; color: #4a5568; line-height: 1.6;">
+                  <strong>Send:</strong>
+                  {% if msg.trigger_type == 'immediate' %}
+                    Immediately when campaign starts
+                  {% elif msg.trigger_type == 'delay' %}
+                    {{ msg.delay_days }} days{% if msg.delay_hours %}, {{ msg.delay_hours }} hours{% endif %} after previous message
+                  {% elif msg.trigger_type == 'specific_date' %}
+                    {{ msg.scheduled_date|date:"M d, Y g:i A" }}
+                  {% endif %}
+                  <br>
+                  {% if msg.email_template %}
+                    <strong>Template:</strong> {{ msg.email_template.name }}
+                  {% elif msg.sms_template %}
+                    <strong>Template:</strong> {{ msg.sms_template.name }}
+                  {% elif msg.custom_content %}
+                    <strong>Content:</strong> {{ msg.custom_content|truncatewords:15 }}
+                  {% endif %}
+                  <br>
+                  <span style="{% if msg.status == 'sent' %}color: #38a169;{% elif msg.status == 'failed' %}color: #e53e3e;{% else %}color: #718096;{% endif %} font-weight: 600;">{{ msg.get_status_display }}</span>
+                  {% if msg.total_recipients > 0 %}
+                  | Recipients: {{ msg.total_recipients }} | Sent: {{ msg.sent_count }}{% if msg.failed_count > 0 %} | Failed: {{ msg.failed_count }}{% endif %}
+                  {% endif %}
+                </div>
+              </div>
+            </div>
+          </div>
+          {% endfor %}
+        </div>
+      </div>
+      {% else %}
+      <div style="background: #f7fafc; padding: 3rem; border-radius: 8px; text-align: center; color: #718096;">
+        <div style="font-size: 3rem; margin-bottom: 1rem;">📭</div>
+        <h3 style="color: #4a5568; margin-bottom: 0.5rem;">No messages in this campaign yet</h3>
+        <p>Go to the <a href="{% url 'admin_campaigns_list' %}" style="color: #667eea; font-weight: 600; text-decoration: none;">campaigns page</a> to add messages using the timeline</p>
+      </div>
+      {% endif %}
+    </div>
+  </div>
+
+  <script>
+    function toggleTemplateFields() {
+      const messageType = document.getElementById('message_type').value;
+      const templateFields = document.getElementById('templateFields');
+      const emailTemplateField = document.getElementById('emailTemplateField');
+      const smsTemplateField = document.getElementById('smsTemplateField');
+      const customSubjectField = document.getElementById('customSubjectField');
+
+      if (messageType === 'email') {
+        templateFields.style.display = 'block';
+        emailTemplateField.style.display = 'block';
+        smsTemplateField.style.display = 'none';
+        customSubjectField.style.display = 'block';
+      } else if (messageType === 'sms') {
+        templateFields.style.display = 'block';
+        emailTemplateField.style.display = 'none';
+        smsTemplateField.style.display = 'block';
+        customSubjectField.style.display = 'none';
+      } else {
+        templateFields.style.display = 'none';
+      }
+    }
+
+    function toggleTriggerFields() {
+      const triggerType = document.getElementById('trigger_type').value;
+      const delayFields = document.getElementById('delayFields');
+      const specificDateField = document.getElementById('specificDateField');
+
+      if (triggerType === 'delay') {
+        delayFields.style.display = 'block';
+        specificDateField.style.display = 'none';
+      } else if (triggerType === 'specific_date') {
+        delayFields.style.display = 'none';
+        specificDateField.style.display = 'block';
+      } else {
+        delayFields.style.display = 'none';
+        specificDateField.style.display = 'none';
+      }
+    }
+  </script>
+</body>
+</html>

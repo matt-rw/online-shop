@@ -1,0 +1,4258 @@
+{% load static tz %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Campaigns - Blueprint Apparel Admin</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/nouislider@15.7.1/dist/nouislider.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background: #f1f5f9;
+      min-height: 100vh;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
+
+    .top-bar {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      padding: 2rem 0;
+      box-shadow: 0 4px 20px rgba(102, 126, 234, 0.15);
+      margin-bottom: 2rem;
+    }
+
+    .container {
+      max-width: 1600px;
+      margin: 0 auto;
+      padding: 0 2rem;
+    }
+
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1rem;
+    }
+
+    .header h1 {
+      color: white;
+      font-size: 2.5rem;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+    }
+
+    .nav-links {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      padding: 1rem 2rem;
+      display: flex;
+      gap: 0.75rem;
+      align-items: center;
+    }
+
+    .nav-link {
+      background: rgba(255, 255, 255, 0.15);
+      backdrop-filter: blur(10px);
+      color: white;
+      padding: 0.5rem 1rem;
+      border-radius: 8px;
+      text-decoration: none;
+      font-size: 0.875rem;
+      font-weight: 500;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .nav-link:hover {
+      background: rgba(255, 255, 255, 0.25);
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    }
+
+    .btn-primary {
+      background: white;
+      color: #667eea;
+      padding: 0.875rem 1.75rem;
+      border-radius: 12px;
+      text-decoration: none;
+      font-weight: 700;
+      font-size: 1rem;
+      transition: all 0.3s;
+      border: none;
+      cursor: pointer;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .btn-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+    }
+
+    .main-content {
+      padding: 0 2rem 2rem 2rem;
+      max-width: 1600px;
+      margin: 0 auto;
+    }
+
+    .stats-overview {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 1.5rem;
+      margin-bottom: 3rem;
+      margin-top: -4rem;
+      position: relative;
+      z-index: 10;
+    }
+
+    .stat-card {
+      background: white;
+      border-radius: 16px;
+      padding: 1.75rem;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+      text-align: center;
+      border: 1px solid rgba(226, 232, 240, 0.8);
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .stat-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 4px;
+      background: linear-gradient(90deg, #667eea, #764ba2);
+      opacity: 0;
+      transition: opacity 0.3s;
+    }
+
+    .stat-card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 12px 28px rgba(0, 0, 0, 0.12);
+    }
+
+    .stat-card:hover::before {
+      opacity: 1;
+    }
+
+    .stat-card h3 {
+      color: #64748b;
+      font-size: 0.75rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      margin-bottom: 0.75rem;
+    }
+
+    .stat-card .number {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      font-size: 2.25rem;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+    }
+
+    .stat-card .icon {
+      font-size: 1.75rem;
+      margin-bottom: 0.75rem;
+      color: #667eea;
+    }
+
+    .timeline-section {
+      background: white;
+      border-radius: 16px;
+      padding: 2rem;
+      box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
+      border: 1px solid #e2e8f0;
+      margin-top: 2rem;
+      margin-bottom: 2rem;
+    }
+
+    .section-title {
+      color: #1e293b;
+      font-size: 1.5rem;
+      font-weight: 700;
+      margin-bottom: 1.5rem;
+      padding-left: 1rem;
+      border-left: 4px solid #667eea;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .collapse-btn {
+      background: rgba(102, 126, 234, 0.1);
+      border: 1px solid rgba(102, 126, 234, 0.2);
+      color: #667eea;
+      padding: 0.5rem 1rem;
+      border-radius: 8px;
+      font-size: 0.8125rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .collapse-btn:hover {
+      background: rgba(102, 126, 234, 0.15);
+      border-color: rgba(102, 126, 234, 0.3);
+    }
+
+    .collapse-icon {
+      transition: transform 0.3s;
+      font-size: 0.75rem;
+    }
+
+    .collapse-icon.collapsed {
+      transform: rotate(-90deg);
+    }
+
+    .collapsible-content {
+      max-height: 5000px;
+      overflow: hidden;
+      transition: max-height 0.5s ease-out, opacity 0.3s ease-out;
+      opacity: 1;
+    }
+
+    .collapsible-content.collapsed {
+      max-height: 0;
+      opacity: 0;
+    }
+
+    .timeline {
+      position: relative;
+      padding: 2rem 0;
+    }
+
+    .timeline-item {
+      display: grid;
+      grid-template-columns: 140px 1fr;
+      gap: 2rem;
+      margin-bottom: 2.5rem;
+      position: relative;
+    }
+
+    .timeline-item:not(:last-child)::before {
+      content: '';
+      position: absolute;
+      left: 70px;
+      top: 60px;
+      bottom: -30px;
+      width: 2px;
+      background: linear-gradient(180deg, #667eea, #e2e8f0);
+    }
+
+    .timeline-date {
+      text-align: right;
+      padding-top: 0.5rem;
+    }
+
+    .timeline-date .month {
+      color: #667eea;
+      font-size: 0.875rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .timeline-date .day {
+      color: #1e293b;
+      font-size: 2rem;
+      font-weight: 800;
+      line-height: 1;
+    }
+
+    .timeline-date .year {
+      color: #64748b;
+      font-size: 0.875rem;
+      font-weight: 500;
+    }
+
+    .timeline-dot {
+      position: absolute;
+      left: 64px;
+      top: 20px;
+      width: 14px;
+      height: 14px;
+      background: white;
+      border: 3px solid #667eea;
+      border-radius: 50%;
+      box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.1);
+      z-index: 2;
+    }
+
+    .timeline-content {
+      background: #f8fafc;
+      border-radius: 12px;
+      padding: 1.5rem;
+      border: 1px solid #e2e8f0;
+      position: relative;
+    }
+
+    .timeline-content h4 {
+      color: #1e293b;
+      font-size: 1.25rem;
+      font-weight: 700;
+      margin-bottom: 0.5rem;
+    }
+
+    .timeline-content p {
+      color: #64748b;
+      font-size: 0.9375rem;
+      line-height: 1.6;
+      margin-bottom: 1rem;
+    }
+
+    .timeline-meta {
+      display: flex;
+      gap: 1.5rem;
+      margin-bottom: 1rem;
+      flex-wrap: wrap;
+    }
+
+    .timeline-meta-item {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      color: #64748b;
+      font-size: 0.875rem;
+    }
+
+    .timeline-meta-item strong {
+      color: #1e293b;
+      font-weight: 600;
+    }
+
+    .status-badge {
+      display: inline-flex;
+      align-items: center;
+      padding: 0.375rem 0.875rem;
+      border-radius: 20px;
+      font-size: 0.8125rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .status-upcoming {
+      background: linear-gradient(135deg, #e0e7ff, #ddd6fe);
+      color: #5b21b6;
+    }
+
+    .status-active {
+      background: linear-gradient(135deg, #d1fae5, #a7f3d0);
+      color: #065f46;
+    }
+
+    .status-completed {
+      background: linear-gradient(135deg, #dbeafe, #bfdbfe);
+      color: #1e40af;
+    }
+
+    .status-draft {
+      background: linear-gradient(135deg, #f1f5f9, #e2e8f0);
+      color: #475569;
+    }
+
+    .campaign-actions {
+      display: flex;
+      gap: 0.75rem;
+      margin-top: 1rem;
+    }
+
+    .btn-edit {
+      background: linear-gradient(135deg, #667eea, #764ba2);
+      color: white;
+      padding: 0.625rem 1.25rem;
+      border-radius: 8px;
+      text-decoration: none;
+      font-weight: 600;
+      font-size: 0.875rem;
+      transition: all 0.3s;
+      border: none;
+      cursor: pointer;
+    }
+
+    .btn-edit:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+    }
+
+    .btn-delete {
+      background: white;
+      color: #dc2626;
+      padding: 0.625rem 1.25rem;
+      border-radius: 8px;
+      font-weight: 600;
+      font-size: 0.875rem;
+      transition: all 0.3s;
+      border: 2px solid #fecaca;
+      cursor: pointer;
+    }
+
+    .btn-delete:hover {
+      background: #fef2f2;
+      border-color: #dc2626;
+    }
+
+    .all-campaigns-table {
+      background: white;
+      border-radius: 16px;
+      padding: 2rem;
+      box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
+      border: 1px solid #e2e8f0;
+      overflow-x: auto;
+    }
+
+    .campaigns-table-wrapper {
+      max-height: 800px;
+      overflow-y: auto;
+      margin-bottom: 1rem;
+      border-radius: 8px;
+    }
+
+    .campaigns-table-wrapper::-webkit-scrollbar {
+      width: 8px;
+    }
+
+    .campaigns-table-wrapper::-webkit-scrollbar-track {
+      background: #f1f5f9;
+      border-radius: 4px;
+    }
+
+    .campaigns-table-wrapper::-webkit-scrollbar-thumb {
+      background: #cbd5e1;
+      border-radius: 4px;
+    }
+
+    .campaigns-table-wrapper::-webkit-scrollbar-thumb:hover {
+      background: #94a3b8;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    th {
+      background: #f8fafc;
+      color: #64748b;
+      font-size: 0.75rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      padding: 1rem;
+      text-align: left;
+      border-bottom: 2px solid #e2e8f0;
+    }
+
+    td {
+      padding: 1.25rem 1rem;
+      border-bottom: 1px solid #f1f5f9;
+      color: #334155;
+    }
+
+    tbody tr {
+      cursor: pointer;
+    }
+
+    tbody tr:hover {
+      background: #f8fafc;
+    }
+
+    .empty-state {
+      text-align: center;
+      padding: 4rem 2rem;
+      background: white;
+      border-radius: 16px;
+      box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
+      border: 2px dashed #e2e8f0;
+    }
+
+    .empty-state-icon {
+      font-size: 4rem;
+      margin-bottom: 1rem;
+      opacity: 0.5;
+    }
+
+    .recent-messages-section {
+      background: white;
+      border-radius: 16px;
+      padding: 2rem;
+      box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
+      border: 1px solid #e2e8f0;
+    }
+
+    .recent-messages-grid {
+      margin-top: 1.5rem;
+      background: #f8fafc;
+      border-radius: 12px;
+      padding: 0.5rem;
+      border: 1px solid #e2e8f0;
+      max-height: 600px;
+      overflow-y: auto;
+    }
+
+    .recent-messages-grid::-webkit-scrollbar {
+      width: 8px;
+    }
+
+    .recent-messages-grid::-webkit-scrollbar-track {
+      background: #f1f5f9;
+      border-radius: 4px;
+    }
+
+    .recent-messages-grid::-webkit-scrollbar-thumb {
+      background: #cbd5e1;
+      border-radius: 4px;
+    }
+
+    .recent-messages-grid::-webkit-scrollbar-thumb:hover {
+      background: #94a3b8;
+    }
+
+    .recent-message-card {
+      padding: 1rem 1.25rem;
+      border-bottom: 1px solid #e2e8f0;
+      transition: all 0.2s;
+      display: flex;
+      align-items: center;
+      gap: 1.5rem;
+      font-size: 0.9375rem;
+      background: white;
+      margin-bottom: 0.25rem;
+      border-radius: 8px;
+    }
+
+    .recent-message-card:last-child {
+      border-bottom: none;
+    }
+
+    .recent-message-card:hover {
+      background: #f8fafc;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+    }
+
+    .message-card-header {
+      display: flex;
+      align-items: center;
+      gap: 0.875rem;
+      min-width: 220px;
+    }
+
+    .message-type-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.375rem 0.75rem;
+      border-radius: 8px;
+      font-size: 0.75rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      white-space: nowrap;
+    }
+
+    .message-type-badge.email {
+      background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);
+      color: #1e40af;
+    }
+
+    .message-type-badge.sms {
+      background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%);
+      color: #065f46;
+    }
+
+    .message-type-badge.instagram {
+      background: linear-gradient(135deg, #fce7f3 0%, #fbcfe8 100%);
+      color: #9f1239;
+    }
+
+    .message-type-badge.tiktok {
+      background: linear-gradient(135deg, #ecfeff 0%, #cffafe 100%);
+      color: #164e63;
+    }
+
+    .message-type-badge.snapchat {
+      background: linear-gradient(135deg, #fefce8 0%, #fef08a 100%);
+      color: #713f12;
+    }
+
+    .message-type-badge.youtube {
+      background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%);
+      color: #991b1b;
+    }
+
+    .message-type-badge.promotion {
+      background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+      color: #92400e;
+    }
+
+    .message-card-body {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      gap: 1.75rem;
+      color: #1e293b;
+    }
+
+    .message-card-body h4 {
+      font-size: 0.9375rem;
+      font-weight: 600;
+      color: #0f172a;
+      margin: 0;
+      line-height: 1.5;
+      min-width: 280px;
+    }
+
+    .campaign-reference {
+      margin: 0;
+      min-width: 180px;
+      font-size: 0.875rem;
+      color: #64748b;
+    }
+
+    .campaign-reference a {
+      color: #667eea !important;
+      text-decoration: none;
+      font-weight: 600;
+    }
+
+    .campaign-reference a:hover {
+      color: #5568d3 !important;
+      text-decoration: underline;
+    }
+
+    .message-subject {
+      font-size: 0.875rem;
+      color: #64748b;
+      margin: 0;
+      flex: 1;
+    }
+
+    .message-card-footer {
+      padding: 0;
+      border: none;
+      min-width: 220px;
+      font-size: 0.875rem;
+      color: #475569;
+      font-weight: 500;
+    }
+
+    .message-card-footer i {
+      margin-right: 0.5rem;
+      color: #94a3b8;
+    }
+
+    .status-badge-container {
+      position: relative;
+    }
+
+    .clickable-status {
+      cursor: pointer;
+      user-select: none;
+      transition: all 0.2s;
+    }
+
+    .clickable-status:hover {
+      opacity: 0.8;
+      transform: scale(1.05);
+    }
+
+    .status-dropdown {
+      position: absolute;
+      top: 100%;
+      right: 0;
+      margin-top: 0.5rem;
+      background: #1e293b;
+      border: 1px solid #475569;
+      border-radius: 8px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+      z-index: 100;
+      display: none;
+      min-width: 120px;
+    }
+
+    .status-dropdown.active {
+      display: block;
+    }
+
+    .status-option {
+      padding: 0.5rem 0.75rem;
+      color: #e2e8f0;
+      font-size: 0.8125rem;
+      cursor: pointer;
+      transition: background 0.2s;
+      text-transform: lowercase;
+    }
+
+    .status-option:first-child {
+      border-radius: 8px 8px 0 0;
+    }
+
+    .status-option:last-child {
+      border-radius: 0 0 8px 8px;
+    }
+
+    .status-option:hover {
+      background: #334155;
+      color: #f1f5f9;
+    }
+
+    .empty-state h2 {
+      color: #1e293b;
+      font-size: 1.75rem;
+      font-weight: 700;
+      margin-bottom: 0.75rem;
+    }
+
+    .empty-state p {
+      color: #64748b;
+      font-size: 1.0625rem;
+      margin-bottom: 2rem;
+    }
+
+    .messages {
+      margin-bottom: 1.5rem;
+      position: relative;
+      z-index: 20;
+    }
+
+    .message {
+      padding: 1.25rem 1.5rem;
+      border-radius: 12px;
+      margin-bottom: 1rem;
+      animation: slideIn 0.3s ease-out;
+      font-weight: 500;
+    }
+
+    .message.success {
+      background: linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%);
+      color: #065f46;
+      border-left: 4px solid #10b981;
+    }
+
+    .message.error {
+      background: linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%);
+      color: #991b1b;
+      border-left: 4px solid #dc2626;
+    }
+
+    @keyframes slideIn {
+      from {
+        opacity: 0;
+        transform: translateY(-10px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .progress-bar {
+      height: 6px;
+      background: #e2e8f0;
+      border-radius: 3px;
+      overflow: hidden;
+      margin-top: 0.75rem;
+    }
+
+    .progress-fill {
+      height: 100%;
+      background: linear-gradient(90deg, #667eea, #764ba2);
+      border-radius: 3px;
+      transition: width 0.5s ease;
+    }
+
+    .timeline-row {
+      background: linear-gradient(to bottom, #fafbfc, #ffffff);
+      border-top: 1px solid #f1f5f9;
+    }
+
+    .timeline-row td {
+      padding: 0 !important;
+    }
+
+    .message-timeline-container {
+      padding: 1.5rem 2rem 2rem 2rem;
+      overflow: visible;
+    }
+
+    .timeline-header {
+      font-size: 0.6875rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: #94a3b8;
+      margin-bottom: 1rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .message-timeline-wrapper {
+      display: flex;
+      align-items: flex-start;
+      gap: 1rem;
+    }
+
+    .message-timeline {
+      display: flex;
+      align-items: flex-start;
+      gap: 0.5rem;
+      position: relative;
+      padding: 0.5rem 0 3.5rem 0;
+      flex: 1;
+      min-height: 120px; /* Dynamic height set by JavaScript based on stacking */
+    }
+
+    .timeline-line {
+      position: absolute;
+      bottom: 32px;
+      left: 0;
+      right: 0;
+      height: 2px;
+      background: linear-gradient(to right, #e2e8f0 0%, #94a3b8 50%, #e2e8f0 100%);
+      z-index: 0;
+    }
+
+    .timeline-months {
+      position: absolute;
+      bottom: -4px;
+      left: 0;
+      right: 0;
+      padding: 0;
+      font-size: 0.75rem;
+      color: #475569;
+      font-weight: 600;
+      pointer-events: none;
+      height: 20px;
+      z-index: 5;
+    }
+
+    .timeline-month {
+      position: absolute;
+      transform: translateX(-50%);
+      white-space: nowrap;
+      font-size: 0.6875rem;
+      color: #475569;
+      font-weight: 600;
+      z-index: 10;
+    }
+
+    .timeline-month-name {
+      position: absolute;
+      transform: translateX(-50%);
+      white-space: nowrap;
+      font-size: 0.8125rem;
+      color: #1e293b;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      top: 18px;
+      z-index: 10;
+    }
+
+    .timeline-ticks {
+      position: absolute;
+      bottom: 32px;
+      left: 0;
+      right: 0;
+      height: 24px;
+      pointer-events: none;
+    }
+
+    .timeline-tick {
+      position: absolute;
+      width: 2px;
+      height: 8px;
+      background: #cbd5e1;
+      bottom: -8px;
+      border-radius: 1px;
+    }
+
+    .timeline-tick.major {
+      height: 12px;
+      bottom: -12px;
+      background: #94a3b8;
+      width: 2px;
+    }
+
+    .timeline-today-indicator {
+      position: absolute;
+      width: 3px;
+      height: 20px;
+      background: #3b82f6;
+      bottom: -10px;
+      z-index: 1;
+      box-shadow: 0 0 8px rgba(59, 130, 246, 0.5);
+    }
+
+    .timeline-today-indicator::before {
+      content: 'TODAY';
+      position: absolute;
+      bottom: -24px;
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: 0.6875rem;
+      font-weight: 700;
+      color: #3b82f6;
+      white-space: nowrap;
+      letter-spacing: 0.05em;
+    }
+
+    .add-message-btn {
+      position: absolute;
+      z-index: 200;
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: grab;
+      transition: box-shadow 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      background: rgba(255, 255, 255, 0.7);
+      backdrop-filter: blur(4px);
+      border: 2px dashed #cbd5e1;
+      color: #94a3b8;
+      font-size: 0.875rem;
+      bottom: 18px;
+      touch-action: none;
+    }
+
+    .add-message-btn i {
+      line-height: 1;
+    }
+
+    .add-message-btn:hover {
+      border-color: #667eea;
+      color: #667eea;
+      box-shadow: 0 4px 12px rgba(102, 126, 234, 0.2);
+    }
+
+    .add-message-btn:active {
+      cursor: grabbing;
+      transform: scale(1.05);
+    }
+
+    .add-message-btn.dragging {
+      cursor: grabbing;
+      transform: scale(1.1);
+      box-shadow: 0 8px 20px rgba(102, 126, 234, 0.3);
+      border-color: #667eea;
+      color: #667eea;
+      border-style: solid;
+    }
+
+    .message-type-selector {
+      display: none;
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background: white;
+      border-radius: 16px;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+      border: 2px solid #e2e8f0;
+      padding: 0;
+      z-index: 1000;
+      width: 90%;
+      max-width: 900px;
+      max-height: 85vh;
+      overflow: hidden;
+      flex-direction: column;
+    }
+
+    .message-type-selector.active {
+      display: flex;
+    }
+
+    .popup-content-wrapper {
+      overflow-y: auto;
+      padding: 2rem;
+      flex: 1;
+    }
+
+    .popup-overlay {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.25);
+      backdrop-filter: blur(4px);
+      -webkit-backdrop-filter: blur(4px);
+      z-index: 999;
+    }
+
+    .popup-overlay.active {
+      display: block;
+    }
+
+
+    .popup-title {
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: #1e293b;
+      margin-bottom: 0.5rem;
+    }
+
+    .popup-subtitle {
+      font-size: 0.875rem;
+      color: #64748b;
+    }
+
+    .type-selection {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .type-card {
+      padding: 1.5rem;
+      border: 2px solid #e2e8f0;
+      border-radius: 12px;
+      cursor: pointer;
+      transition: all 0.3s;
+      text-align: center;
+    }
+
+    .type-card:hover {
+      border-color: #667eea;
+      background: #f8fafc;
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(102, 126, 234, 0.15);
+    }
+
+    .type-card.selected {
+      border-color: #667eea;
+      background: linear-gradient(135deg, #f0f4ff, #f8fafc);
+      box-shadow: 0 4px 12px rgba(102, 126, 234, 0.2);
+    }
+
+    .type-card.disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+      pointer-events: none;
+    }
+
+    .type-card-icon {
+      font-size: 2.5rem;
+      margin-bottom: 0.75rem;
+    }
+
+    .type-card-title {
+      font-size: 1rem;
+      font-weight: 700;
+      color: #1e293b;
+    }
+
+    .radio-card {
+      position: relative;
+      display: block;
+      padding: 1rem;
+      border: 2px solid #e2e8f0;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      background: white;
+    }
+
+    .radio-card:hover {
+      border-color: #94a3b8;
+      background: #f8fafc;
+    }
+
+    .radio-card input[type="radio"] {
+      position: absolute;
+      top: 1rem;
+      right: 1rem;
+      width: 18px;
+      height: 18px;
+      cursor: pointer;
+    }
+
+    .radio-card input[type="radio"]:checked + .radio-card-content {
+      opacity: 1;
+    }
+
+    .radio-card:has(input[type="radio"]:checked) {
+      border-color: #667eea;
+      background: linear-gradient(135deg, #f8f9ff 0%, #f0f1ff 100%);
+      box-shadow: 0 2px 8px rgba(102, 126, 234, 0.15);
+    }
+
+    .radio-card-content {
+      opacity: 0.7;
+      transition: opacity 0.2s ease;
+    }
+
+    .radio-card-title {
+      font-size: 0.9375rem;
+      font-weight: 700;
+      color: #1e293b;
+      margin-bottom: 0.25rem;
+    }
+
+    .radio-card-title i {
+      margin-right: 0.5rem;
+      color: #667eea;
+    }
+
+    .radio-card-desc {
+      font-size: 0.8125rem;
+      color: #64748b;
+      line-height: 1.4;
+    }
+
+    .product-checkbox-container {
+      max-height: 200px;
+      overflow-y: auto;
+      border: 2px solid #e2e8f0;
+      border-radius: 8px;
+      padding: 0.5rem;
+      background: white;
+    }
+
+    .product-checkbox-item {
+      position: relative;
+      display: flex;
+      align-items: center;
+      padding: 0.75rem;
+      margin-bottom: 0.25rem;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: background 0.2s ease;
+    }
+
+    .product-checkbox-item:hover {
+      background: #f8fafc;
+    }
+
+    .product-checkbox-item input[type="checkbox"] {
+      position: absolute;
+      opacity: 0;
+      cursor: pointer;
+    }
+
+    .product-checkbox-item .checkbox-label {
+      flex: 1;
+      font-size: 0.875rem;
+      color: #1e293b;
+      padding-left: 2rem;
+    }
+
+    .product-checkbox-item .checkbox-checkmark {
+      position: absolute;
+      left: 0.75rem;
+      width: 20px;
+      height: 20px;
+      border: 2px solid #cbd5e1;
+      border-radius: 4px;
+      background: white;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.2s ease;
+    }
+
+    .product-checkbox-item .checkbox-checkmark i {
+      font-size: 0.75rem;
+      color: white;
+      opacity: 0;
+      transition: opacity 0.2s ease;
+    }
+
+    .product-checkbox-item input[type="checkbox"]:checked ~ .checkbox-checkmark {
+      background: #667eea;
+      border-color: #667eea;
+    }
+
+    .product-checkbox-item input[type="checkbox"]:checked ~ .checkbox-checkmark i {
+      opacity: 1;
+    }
+
+    .product-checkbox-item.select-all-item {
+      background: #f8fafc;
+      margin-bottom: 0;
+    }
+
+    .product-checkbox-item.select-all-item .checkbox-label {
+      color: #667eea;
+    }
+
+    .product-checkbox-divider {
+      height: 1px;
+      background: #e2e8f0;
+      margin: 0.5rem 0;
+    }
+
+    .message-form {
+      display: none;
+    }
+
+    .message-form.active {
+      display: block;
+    }
+
+    .form-group {
+      margin-bottom: 1.25rem;
+    }
+
+    .form-label {
+      display: block;
+      font-size: 0.875rem;
+      font-weight: 600;
+      color: #1e293b;
+      margin-bottom: 0.5rem;
+    }
+
+    .form-input {
+      width: 100%;
+      padding: 0.75rem 1rem;
+      border: 2px solid #e2e8f0;
+      border-radius: 8px;
+      font-size: 0.9375rem;
+      font-family: 'Inter', sans-serif;
+      transition: all 0.2s;
+    }
+
+    .form-input:focus {
+      outline: none;
+      border-color: #667eea;
+      box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+    }
+
+    .form-textarea {
+      min-height: 120px;
+      resize: vertical;
+    }
+
+    .popup-actions {
+      display: flex;
+      gap: 1rem;
+    }
+
+    .btn-popup-cancel {
+      flex: 1;
+      background: white;
+      color: #64748b;
+      padding: 0.875rem 1.5rem;
+      border-radius: 10px;
+      font-weight: 600;
+      font-size: 0.9375rem;
+      border: 2px solid #e2e8f0;
+      cursor: pointer;
+      transition: all 0.3s;
+    }
+
+    .btn-popup-cancel:hover {
+      background: #f8fafc;
+      border-color: #cbd5e1;
+    }
+
+    .btn-popup-save {
+      flex: 1;
+      background: linear-gradient(135deg, #667eea, #764ba2);
+      color: white;
+      padding: 0.875rem 1.5rem;
+      border-radius: 10px;
+      font-weight: 600;
+      font-size: 0.9375rem;
+      border: none;
+      cursor: pointer;
+      transition: all 0.3s;
+      box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+    }
+
+    .btn-popup-save:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 20px rgba(102, 126, 234, 0.4);
+    }
+
+    .btn-popup-delete {
+      background: #dc2626;
+      color: white;
+      padding: 0.875rem 1.5rem;
+      border-radius: 10px;
+      font-weight: 600;
+      font-size: 0.9375rem;
+      border: none;
+      cursor: pointer;
+      transition: all 0.3s;
+      box-shadow: 0 4px 12px rgba(220, 38, 38, 0.3);
+    }
+
+    .btn-popup-delete:hover {
+      background: #b91c1c;
+      transform: translateY(-2px);
+      box-shadow: 0 8px 20px rgba(220, 38, 38, 0.4);
+    }
+
+
+    .message-bubble {
+      position: absolute;
+      z-index: 100;
+      flex-shrink: 0;
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: grab;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      background: white;
+      border: 2.5px solid;
+      bottom: 20px;
+      touch-action: none;
+      font-size: 0.75rem;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
+    }
+
+    .message-bubble::before {
+      content: '';
+      position: absolute;
+      width: 2px;
+      height: var(--stack-height, 0);
+      background: linear-gradient(to top, currentColor 0%, transparent 100%);
+      top: 100%;
+      left: 50%;
+      transform: translateX(-50%);
+      opacity: 0.5;
+      pointer-events: none;
+    }
+
+    .message-bubble.dragging {
+      cursor: grabbing;
+      transform: scale(1.5);
+      z-index: 10;
+    }
+
+    .drag-date-preview {
+      position: fixed;
+      background: linear-gradient(135deg, #1e293b 0%, #334155 100%);
+      color: white;
+      padding: 0.625rem 1rem;
+      border-radius: 10px;
+      font-size: 0.875rem;
+      font-weight: 700;
+      pointer-events: none;
+      z-index: 10000;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(255, 255, 255, 0.1);
+      white-space: nowrap;
+      opacity: 0;
+      transition: opacity 0.15s ease-out;
+      transform: translateY(-8px);
+    }
+
+    .drag-date-preview.visible {
+      opacity: 1;
+    }
+
+    .message-bubble.email {
+      border-color: #3b82f6;
+      background: radial-gradient(circle at 30% 30%, #eff6ff, #dbeafe);
+      color: #1e40af;
+      box-shadow: 0 2px 8px rgba(59, 130, 246, 0.3), inset 0 1px 2px rgba(255, 255, 255, 0.8);
+    }
+
+    .message-bubble.email.sent {
+      border-color: #3b82f6;
+      background: linear-gradient(135deg, #3b82f6, #2563eb);
+      color: white;
+      box-shadow: 0 4px 14px rgba(59, 130, 246, 0.25);
+    }
+
+    .message-bubble.sms {
+      border-color: #10b981;
+      background: linear-gradient(135deg, #d1fae5, #6ee7b7);
+      color: #065f46;
+      box-shadow: 0 2px 8px rgba(16, 185, 129, 0.3), 0 0 0 2px rgba(16, 185, 129, 0.1);
+    }
+
+    .message-bubble.sms.sent {
+      border-color: #10b981;
+      background: linear-gradient(135deg, #10b981, #059669);
+      color: white;
+      box-shadow: 0 4px 14px rgba(16, 185, 129, 0.25);
+    }
+
+    .message-bubble.instagram {
+      border-color: #e4405f;
+      background: linear-gradient(135deg, #fce7f3 0%, #fbcfe8 100%);
+      color: #9f1239;
+    }
+
+    .message-bubble.instagram.sent {
+      border-color: #e4405f;
+      background: linear-gradient(135deg, #e4405f, #c13584);
+      color: white;
+      box-shadow: 0 4px 14px rgba(228, 64, 95, 0.25);
+    }
+
+    .message-bubble.tiktok {
+      border-color: #00f2ea;
+      background: linear-gradient(135deg, #ecfeff 0%, #cffafe 100%);
+      color: #164e63;
+    }
+
+    .message-bubble.tiktok.sent {
+      border-color: #00f2ea;
+      background: linear-gradient(135deg, #00f2ea, #ff0050);
+      color: white;
+      box-shadow: 0 4px 14px rgba(0, 242, 234, 0.25);
+    }
+
+    .message-bubble.snapchat {
+      border-color: #fffc00;
+      background: linear-gradient(135deg, #fefce8 0%, #fef08a 100%);
+      color: #713f12;
+    }
+
+    .message-bubble.snapchat.sent {
+      border-color: #fffc00;
+      background: linear-gradient(135deg, #fffc00, #eab308);
+      color: #422006;
+      box-shadow: 0 4px 14px rgba(255, 252, 0, 0.25);
+    }
+
+    .message-bubble.youtube {
+      border-color: #ff0000;
+      background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%);
+      color: #991b1b;
+    }
+
+    .message-bubble.youtube.sent {
+      border-color: #ff0000;
+      background: linear-gradient(135deg, #ff0000, #dc2626);
+      color: white;
+      box-shadow: 0 4px 14px rgba(255, 0, 0, 0.25);
+    }
+
+    .message-bubble.promotion {
+      border-color: #f59e0b;
+      background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+      color: #92400e;
+    }
+
+    .message-bubble.promotion.sent {
+      border-color: #f59e0b;
+      background: linear-gradient(135deg, #f59e0b, #d97706);
+      color: white;
+      box-shadow: 0 4px 14px rgba(245, 158, 11, 0.25);
+    }
+
+    .message-bubble.product {
+      border-color: #8b5cf6;
+      background: linear-gradient(135deg, #f3e8ff 0%, #e9d5ff 100%);
+      color: #5b21b6;
+    }
+
+    .message-bubble.product.sent {
+      border-color: #8b5cf6;
+      background: linear-gradient(135deg, #8b5cf6, #7c3aed);
+      color: white;
+      box-shadow: 0 4px 14px rgba(139, 92, 246, 0.25);
+    }
+
+    /* Draft status - gray styling for all message types */
+    .message-bubble.draft {
+      border-color: #94a3b8 !important;
+      background: linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 100%) !important;
+      color: #475569 !important;
+      box-shadow: 0 2px 8px rgba(148, 163, 184, 0.3) !important;
+      opacity: 0.85;
+    }
+
+    .message-bubble.draft:hover {
+      opacity: 1;
+      box-shadow: 0 4px 16px rgba(148, 163, 184, 0.4) !important;
+    }
+
+    .message-bubble-icon {
+      display: none;
+    }
+
+    .message-bubble:hover {
+      transform: scale(1.1);
+      z-index: 999;
+    }
+
+    .message-bubble.email:hover {
+      box-shadow: 0 4px 16px rgba(59, 130, 246, 0.4);
+    }
+
+    .message-bubble.sms:hover {
+      box-shadow: 0 4px 16px rgba(16, 185, 129, 0.4);
+    }
+
+    .message-bubble-tooltip {
+      position: absolute;
+      bottom: calc(100% + 12px);
+      left: 50%;
+      transform: translateX(-50%) scale(1);
+      background: rgba(15, 23, 42, 0.95);
+      backdrop-filter: blur(8px);
+      color: white;
+      padding: 0.625rem 1rem;
+      border-radius: 8px;
+      font-size: 0.8125rem;
+      font-weight: 500;
+      white-space: nowrap;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.2s cubic-bezier(0.4, 0, 0.2, 1), transform 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
+      width: 180px;
+      text-align: center;
+      z-index: 1000;
+      transform-origin: center bottom;
+    }
+
+    .message-bubble-tooltip::after {
+      content: '';
+      position: absolute;
+      top: 100%;
+      left: 50%;
+      transform: translateX(-50%);
+      border: 6px solid transparent;
+      border-top-color: rgba(15, 23, 42, 0.95);
+    }
+
+    .message-bubble:hover .message-bubble-tooltip,
+    .message-bubble.dragging .message-bubble-tooltip {
+      opacity: 1;
+      transform: translateX(-50%) translateY(-4px) scale(0.909);
+    }
+
+    .message-bubble-tooltip > div {
+      font-size: 0.6875rem !important;
+      margin-top: 0.25rem !important;
+    }
+
+    .message-bubble-tooltip .tooltip-date {
+      font-size: 0.6875rem !important;
+      opacity: 0.9 !important;
+      margin-top: 0.375rem !important;
+      font-weight: 600 !important;
+    }
+
+    .message-date {
+      display: none; /* Hidden - using X-axis labels instead */
+    }
+
+    .message-date-day {
+      display: none;
+      font-weight: 700;
+    }
+
+    .add-date-display {
+      position: absolute;
+      top: calc(100% + 8px);
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: 0.6875rem;
+      font-weight: 700;
+      color: #667eea;
+      white-space: nowrap;
+      text-align: center;
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(8px);
+      padding: 0.5rem 0.75rem;
+      border-radius: 6px;
+      box-shadow: 0 4px 12px rgba(102, 126, 234, 0.25);
+      border: 1px solid rgba(102, 126, 234, 0.2);
+      display: flex;
+      flex-direction: column;
+      gap: 0.375rem;
+      opacity: 0;
+      visibility: hidden;
+      transition: opacity 0.2s ease-out, visibility 0.2s ease-out;
+      pointer-events: none;
+      min-width: 150px;
+    }
+
+    .add-message-btn:hover .add-date-display,
+    .add-message-btn.dragging .add-date-display,
+    .add-message-btn.pinned .add-date-display {
+      opacity: 1;
+      visibility: visible;
+    }
+
+    .add-message-btn.pinned .add-date-display {
+      pointer-events: auto;
+    }
+
+    .add-time-input {
+      font-size: 0.875rem;
+      padding: 0.5rem 0.75rem;
+      border: 1px solid #cbd5e1;
+      border-radius: 8px;
+      font-family: 'Inter', sans-serif;
+      font-weight: 500;
+      margin-top: 0.5rem;
+      background: white;
+      color: #334155;
+      transition: all 0.2s;
+      cursor: pointer;
+      box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+    }
+
+    .add-time-input:hover {
+      border-color: #94a3b8;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
+    }
+
+    .add-time-input:focus {
+      outline: none;
+      border-color: #667eea;
+      box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1), 0 1px 3px rgba(0, 0, 0, 0.1);
+    }
+
+    .timeline-stats {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+      font-size: 0.6875rem;
+      color: #64748b;
+      padding: 0.75rem 1rem;
+      background: #f8fafc;
+      border-radius: 8px;
+      border: 1px solid #e2e8f0;
+      flex-shrink: 0;
+      align-self: flex-start;
+    }
+
+    .timeline-stat {
+      display: flex;
+      align-items: center;
+      gap: 0.375rem;
+      font-weight: 500;
+    }
+
+    .timeline-stat-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+
+    .timeline-stat-dot.email {
+      background: #3b82f6;
+      box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
+    }
+
+    .timeline-stat-dot.sms {
+      background: #10b981;
+      box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.15);
+    }
+
+    .timeline-stat-dot.instagram {
+      background: #e4405f;
+      box-shadow: 0 0 0 3px rgba(228, 64, 95, 0.15);
+    }
+
+    .timeline-stat-dot.tiktok {
+      background: #00f2ea;
+      box-shadow: 0 0 0 3px rgba(0, 242, 234, 0.15);
+    }
+
+    .timeline-stat-dot.snapchat {
+      background: #fffc00;
+      box-shadow: 0 0 0 3px rgba(255, 252, 0, 0.15);
+    }
+
+    .no-messages-hint {
+      color: #94a3b8;
+      font-size: 0.875rem;
+      font-style: italic;
+      padding: 1rem 0;
+    }
+
+    .operating-window-cell {
+      position: relative;
+      cursor: pointer;
+      min-width: 280px;
+      max-width: 350px;
+    }
+
+    .operating-window-display {
+      padding: 0.5rem;
+      border-radius: 6px;
+      transition: background 0.2s;
+    }
+
+    .operating-window-display:hover {
+      background: #f1f5f9;
+    }
+
+    .edit-icon {
+      display: inline-block;
+      margin-left: 0.5rem;
+      opacity: 0;
+      transition: opacity 0.2s;
+      color: #667eea;
+      font-size: 0.75rem;
+    }
+
+    .operating-window-cell:hover .edit-icon {
+      opacity: 1;
+    }
+
+    .operating-window-form {
+      display: none;
+      padding: 1.5rem;
+      background: white;
+      border-radius: 12px;
+      border: 2px solid #667eea;
+      box-shadow: 0 12px 40px rgba(0, 0, 0, 0.2);
+      width: 380px;
+      position: fixed;
+      z-index: 1000;
+    }
+
+    .operating-window-form.active {
+      display: block;
+    }
+
+    .operating-window-form::before {
+      content: '';
+      position: absolute;
+      top: -10px;
+      left: 20px;
+      width: 0;
+      height: 0;
+      border-left: 10px solid transparent;
+      border-right: 10px solid transparent;
+      border-bottom: 10px solid #667eea;
+    }
+
+    .operating-window-form::after {
+      content: '';
+      position: absolute;
+      top: -8px;
+      left: 21px;
+      width: 0;
+      height: 0;
+      border-left: 9px solid transparent;
+      border-right: 9px solid transparent;
+      border-bottom: 9px solid white;
+    }
+
+    .slider-container {
+      margin: 1.5rem 0;
+    }
+
+    .slider-label {
+      font-size: 0.8125rem;
+      font-weight: 600;
+      color: #1e293b;
+      margin-bottom: 1.5rem;
+      text-align: center;
+    }
+
+    .date-slider {
+      margin: 2rem 1rem;
+    }
+
+    .date-display {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 1.5rem;
+      gap: 1rem;
+    }
+
+    .date-value {
+      flex: 1;
+      text-align: center;
+      padding: 0.75rem;
+      background: white;
+      border-radius: 8px;
+      border: 2px solid #e2e8f0;
+    }
+
+    .date-value-label {
+      font-size: 0.6875rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: #94a3b8;
+      margin-bottom: 0.375rem;
+    }
+
+    .date-value-text {
+      font-size: 0.9375rem;
+      font-weight: 600;
+      color: #1e293b;
+    }
+
+    /* NoUiSlider custom styling */
+    .noUi-target {
+      background: #e2e8f0;
+      border: none;
+      box-shadow: none;
+      height: 8px;
+      border-radius: 4px;
+    }
+
+    .noUi-connect {
+      background: linear-gradient(90deg, #667eea, #764ba2);
+      box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
+    }
+
+    .noUi-handle {
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      background: white;
+      border: 3px solid #667eea;
+      box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+      cursor: grab;
+      top: -8px;
+    }
+
+    .noUi-handle:active {
+      cursor: grabbing;
+      transform: scale(1.1);
+    }
+
+    .noUi-handle:before,
+    .noUi-handle:after {
+      display: none;
+    }
+
+    .noUi-tooltip {
+      background: #1e293b;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      padding: 0.5rem 0.75rem;
+      font-size: 0.75rem;
+      font-weight: 600;
+      font-family: 'Inter', sans-serif;
+    }
+
+    .form-actions {
+      display: flex;
+      gap: 0.5rem;
+      margin-top: 0.75rem;
+    }
+
+    .btn-save {
+      background: linear-gradient(135deg, #667eea, #764ba2);
+      color: white;
+      padding: 0.5rem 1rem;
+      border-radius: 6px;
+      font-weight: 600;
+      font-size: 0.8125rem;
+      border: none;
+      cursor: pointer;
+      transition: all 0.3s;
+    }
+
+    .btn-save:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+    }
+
+    .btn-cancel {
+      background: white;
+      color: #64748b;
+      padding: 0.5rem 1rem;
+      border-radius: 6px;
+      font-weight: 600;
+      font-size: 0.8125rem;
+      border: 1px solid #e2e8f0;
+      cursor: pointer;
+      transition: all 0.3s;
+    }
+
+    .btn-cancel:hover {
+      background: #f8fafc;
+      border-color: #cbd5e1;
+    }
+
+    @media (max-width: 768px) {
+      .header h1 {
+        font-size: 1.75rem;
+      }
+
+      .timeline-item {
+        grid-template-columns: 1fr;
+        gap: 1rem;
+      }
+
+      .timeline-date {
+        text-align: left;
+      }
+
+      .timeline-item:not(:last-child)::before {
+        display: none;
+      }
+
+      .timeline-dot {
+        display: none;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="nav-links">
+    <a href="{% url 'admin_home' %}" class="nav-link">← Back</a>
+  </div>
+
+  <div class="top-bar">
+    <div class="container">
+      <div class="header">
+        <h1>Campaigns</h1>
+        <a href="{% url 'admin_campaign_create' %}" class="btn-primary">+ Create Campaign</a>
+      </div>
+    </div>
+  </div>
+
+  <div class="main-content">
+    {% if messages %}
+    <div class="messages">
+      {% for message in messages %}
+      <div class="message {{ message.tags }}">{{ message }}</div>
+      {% endfor %}
+    </div>
+    {% endif %}
+
+    {% if campaigns %}
+    <!-- Stats Overview -->
+    <div class="stats-overview">
+      <div class="stat-card">
+        <div class="icon"><i class="fa-solid fa-bullhorn"></i></div>
+        <h3>Total Campaigns</h3>
+        <div class="number">{{ total_campaigns }}</div>
+      </div>
+      <div class="stat-card">
+        <div class="icon"><i class="fa-solid fa-play-circle"></i></div>
+        <h3>Active Now</h3>
+        <div class="number">{{ active_campaigns }}</div>
+      </div>
+      <div class="stat-card">
+        <div class="icon"><i class="fa-solid fa-calendar-days"></i></div>
+        <h3>Upcoming</h3>
+        <div class="number">{{ upcoming_campaigns }}</div>
+      </div>
+      <div class="stat-card">
+        <div class="icon"><i class="fa-solid fa-envelope"></i></div>
+        <h3>Total Messages</h3>
+        <div class="number">{{ total_messages }}</div>
+      </div>
+      <div class="stat-card">
+        <div class="icon"><i class="fa-solid fa-paper-plane"></i></div>
+        <h3>Messages Sent</h3>
+        <div class="number">{{ sent_messages }}</div>
+      </div>
+    </div>
+
+    <!-- All Campaigns Table -->
+    <div class="all-campaigns-table">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+        <h2 class="section-title" style="margin-bottom: 0;">All Campaigns</h2>
+        <div style="display: flex; flex-direction: column; align-items: flex-end; gap: 0.5rem;">
+          <!-- Small Legend -->
+          <div style="display: flex; align-items: center; gap: 0.75rem; font-size: 0.75rem; color: #64748b; flex-wrap: wrap;">
+            <div style="display: flex; align-items: center; gap: 0.375rem;">
+              <div style="width: 14px; height: 14px; border-radius: 50%; border: 2px solid #3b82f6; background: radial-gradient(circle at 30% 30%, #eff6ff, #dbeafe);"></div>
+              <span>Email</span>
+            </div>
+            <div style="display: flex; align-items: center; gap: 0.375rem;">
+              <div style="width: 14px; height: 14px; border-radius: 50%; border: 2px solid #10b981; background: linear-gradient(135deg, #d1fae5, #6ee7b7);"></div>
+              <span>SMS</span>
+            </div>
+            <div style="display: flex; align-items: center; gap: 0.375rem;">
+              <div style="width: 14px; height: 14px; border-radius: 50%; border: 2px solid #e4405f; background: linear-gradient(135deg, #fce7f3, #fbcfe8);"></div>
+              <span>Instagram</span>
+            </div>
+            <div style="display: flex; align-items: center; gap: 0.375rem;">
+              <div style="width: 14px; height: 14px; border-radius: 50%; border: 2px solid #00f2ea; background: linear-gradient(135deg, #ecfeff, #cffafe);"></div>
+              <span>TikTok</span>
+            </div>
+            <div style="display: flex; align-items: center; gap: 0.375rem;">
+              <div style="width: 14px; height: 14px; border-radius: 50%; border: 2px solid #fffc00; background: linear-gradient(135deg, #fefce8, #fef08a);"></div>
+              <span>Snapchat</span>
+            </div>
+            <div style="display: flex; align-items: center; gap: 0.375rem;">
+              <div style="width: 14px; height: 14px; border-radius: 50%; border: 2px solid #ff0000; background: linear-gradient(135deg, #fee2e2, #fecaca);"></div>
+              <span>YouTube</span>
+            </div>
+            <div style="display: flex; align-items: center; gap: 0.375rem;">
+              <div style="width: 14px; height: 14px; border-radius: 50%; border: 2px solid #f59e0b; background: linear-gradient(135deg, #fef3c7, #fde68a);"></div>
+              <span>Promotion</span>
+            </div>
+            <div style="display: flex; align-items: center; gap: 0.375rem;">
+              <div style="width: 14px; height: 14px; border-radius: 50%; border: 2px solid #8b5cf6; background: linear-gradient(135deg, #f3e8ff, #e9d5ff);"></div>
+              <span>Product</span>
+            </div>
+          </div>
+          <!-- Timeline Period Selector -->
+          <div style="display: flex; align-items: center; gap: 0.75rem;">
+            <label style="font-size: 0.875rem; color: #64748b; font-weight: 600;">Timeline Period:</label>
+            <select id="timelinePeriod" onchange="updateTimelinePeriod(this.value)" style="padding: 0.625rem 1rem; border: 1px solid #e2e8f0; border-radius: 8px; font-size: 0.875rem; font-weight: 500; color: #334155; background: white; cursor: pointer; transition: all 0.2s;">
+              <option value="7">7 Days</option>
+              <option value="14">14 Days</option>
+              <option value="30">1 Month</option>
+              <option value="60">2 Months</option>
+              <option value="90" selected>3 Months</option>
+              <option value="180">6 Months</option>
+              <option value="365">1 Year</option>
+            </select>
+          </div>
+        </div>
+      </div>
+      <div class="campaigns-table-wrapper">
+        <table>
+          <thead>
+            <tr>
+              <th>Campaign Name</th>
+              <th>Status</th>
+              <th>Operating Window</th>
+              <th>Target Group</th>
+              <th>Messages</th>
+              <th>Progress</th>
+              <th>Created</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for campaign in campaigns %}
+          <tr onclick="window.location.href='{% url 'admin_campaign_edit' campaign.id %}'">
+            <td>
+              <strong style="color: #1e293b; font-weight: 600;">{{ campaign.name }}</strong>
+              {% if campaign.description %}
+              <br><small style="color: #94a3b8;">{{ campaign.description|truncatewords:10 }}</small>
+              {% endif %}
+            </td>
+            <td>
+              <div class="status-badge-container" onclick="event.stopPropagation()">
+                <span class="status-badge status-{{ campaign.display_status }} clickable-status" onclick="toggleCampaignStatusDropdown({{ campaign.id }})">
+                  {{ campaign.display_status }}
+                </span>
+                <div class="status-dropdown" id="campaign-status-dropdown-{{ campaign.id }}">
+                  <div class="status-option" onclick="changeCampaignStatus({{ campaign.id }}, 'draft')">draft</div>
+                  <div class="status-option" onclick="changeCampaignStatus({{ campaign.id }}, 'active')">active</div>
+                  <div class="status-option" onclick="changeCampaignStatus({{ campaign.id }}, 'paused')">paused</div>
+                  <div class="status-option" onclick="changeCampaignStatus({{ campaign.id }}, 'completed')">completed</div>
+                </div>
+              </div>
+            </td>
+            <td class="operating-window-cell" style="font-size: 0.875rem;" onclick="event.stopPropagation()">
+              <div class="operating-window-display" onclick="toggleEditWindow({{ campaign.id }})">
+                {% if campaign.active_from or campaign.active_until %}
+                  {% if campaign.active_from %}
+                    {{ campaign.active_from|date:"M d, Y" }}
+                  {% endif %}
+                  {% if campaign.active_from and campaign.active_until %}
+                    <br>to<br>
+                  {% endif %}
+                  {% if campaign.active_until %}
+                    {{ campaign.active_until|date:"M d, Y" }}
+                  {% endif %}
+                {% else %}
+                  <span style="color: #cbd5e1;">Not set</span>
+                {% endif %}
+                <span class="edit-icon">✎</span>
+              </div>
+              <div class="operating-window-form" id="edit-window-{{ campaign.id }}">
+                <form method="POST" onsubmit="return saveWindow(event, {{ campaign.id }})">
+                  {% csrf_token %}
+                  <input type="hidden" name="action" value="update_window">
+                  <input type="hidden" name="campaign_id" value="{{ campaign.id }}">
+                  <input type="hidden" id="active_from_{{ campaign.id }}" name="active_from" value="{% if campaign.active_from %}{{ campaign.active_from|date:'Y-m-d\TH:i' }}{% endif %}">
+                  <input type="hidden" id="active_until_{{ campaign.id }}" name="active_until" value="{% if campaign.active_until %}{{ campaign.active_until|date:'Y-m-d\TH:i' }}{% endif %}">
+
+                  <div class="slider-label">Adjust Operating Window</div>
+                  <div class="slider-container">
+                    <div class="date-slider" id="date-slider-{{ campaign.id }}"></div>
+                    <div class="date-display">
+                      <div class="date-value">
+                        <div class="date-value-label">Active From</div>
+                        <div class="date-value-text" id="from-display-{{ campaign.id }}">Not set</div>
+                        <input type="time" id="from-time-{{ campaign.id }}" class="form-input" style="margin-top: 0.5rem; padding: 0.5rem; font-size: 0.875rem;" value="09:00">
+                      </div>
+                      <div class="date-value">
+                        <div class="date-value-label">Active Until</div>
+                        <div class="date-value-text" id="until-display-{{ campaign.id }}">Not set</div>
+                        <input type="time" id="until-time-{{ campaign.id }}" class="form-input" style="margin-top: 0.5rem; padding: 0.5rem; font-size: 0.875rem;" value="17:00">
+                      </div>
+                    </div>
+                  </div>
+                  <div class="form-actions">
+                    <button type="submit" class="btn-save">Save Changes</button>
+                    <button type="button" class="btn-cancel" onclick="toggleEditWindow({{ campaign.id }})">Cancel</button>
+                  </div>
+                </form>
+              </div>
+            </td>
+            <td>{{ campaign.target_group|default:"All" }}</td>
+            <td style="font-weight: 600;">{{ campaign.total_messages }}</td>
+            <td>
+              <div style="font-size: 0.875rem; color: #64748b; margin-bottom: 0.25rem;">
+                {{ campaign.sent_messages }}/{{ campaign.total_messages }}
+              </div>
+              <div class="progress-bar">
+                <div class="progress-fill" style="width: {{ campaign.progress_percentage }}%"></div>
+              </div>
+            </td>
+            <td style="font-size: 0.875rem; color: #64748b;">{{ campaign.created_at|date:"M d, Y" }}</td>
+          </tr>
+          <tr class="timeline-row">
+            <td colspan="7">
+              <div class="message-timeline-container">
+                {% if campaign.message_sequence %}
+                <div class="timeline-header">
+                  <span>Message Sequence</span>
+                  <span style="color: #cbd5e1;">•</span>
+                  <span style="font-weight: 400; text-transform: none;">{{ campaign.message_sequence|length }} message{{ campaign.message_sequence|length|pluralize }}</span>
+                </div>
+                <div class="message-timeline-wrapper">
+                  <div class="message-timeline" id="timeline-{{ campaign.id }}">
+                    <div class="timeline-line"></div>
+                    <div class="timeline-ticks" id="ticks-{{ campaign.id }}"></div>
+                    <div class="timeline-months" id="months-{{ campaign.id }}"></div>
+                    {% for message in campaign.message_sequence %}
+                    <div class="message-bubble {{ message.message_type }} {{ message.status }}"
+                         data-message-id="{{ message.id }}"
+                         data-campaign-id="{{ campaign.id }}"
+                         {% if message.scheduled_date %}data-scheduled-date="{{ message.scheduled_date|date:'Y-m-d' }}" data-scheduled-time="{{ message.scheduled_date|date:'H:i' }}"{% endif %}>
+                      <span class="message-bubble-icon">
+                        {% if message.message_type == 'email' %}
+                          ✉
+                        {% else %}
+                          💬
+                        {% endif %}
+                      </span>
+                      <div class="message-bubble-tooltip">
+                        {{ message.name }}
+                        <div style="font-size: 0.6875rem; opacity: 0.8; margin-top: 0.25rem;">
+                          {{ message.message_type|upper }} • {{ message.status|title }}
+                        </div>
+                        <div class="tooltip-date" style="font-size: 0.6875rem; opacity: 0.9; margin-top: 0.375rem; font-weight: 600;">
+                          {% if message.sent_at %}
+                            {{ message.sent_at|date:"M d, Y" }} at {{ message.sent_at|date:"g:i A" }}
+                          {% elif message.scheduled_date %}
+                            {{ message.scheduled_date|date:"M d, Y" }} at {{ message.scheduled_date|date:"g:i A" }}
+                          {% else %}
+                            Not scheduled
+                          {% endif %}
+                        </div>
+                      </div>
+                      <div class="message-date">
+                        {% if message.sent_at %}
+                          <div class="message-date-day">{{ message.sent_at|date:"M d" }}</div>
+                          <div>{{ message.sent_at|date:"Y" }}</div>
+                        {% elif message.scheduled_date %}
+                          <div class="message-date-day">{{ message.scheduled_date|date:"M d" }}</div>
+                          <div>{{ message.scheduled_date|date:"Y" }}</div>
+                        {% else %}
+                          <div style="color: #cbd5e1;">Not set</div>
+                        {% endif %}
+                      </div>
+                    </div>
+                    {% endfor %}
+                    <div class="add-message-btn" id="add-btn-{{ campaign.id }}" data-campaign-id="{{ campaign.id }}">
+                      <i class="fa-solid fa-plus"></i>
+                      <div class="add-date-display" id="add-date-{{ campaign.id }}">
+                        <span id="add-date-text-{{ campaign.id }}"></span>
+                        <input type="time" id="add-time-{{ campaign.id }}" class="add-time-input" value="09:00">
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                {% else %}
+                <div class="timeline-header">
+                  <span>Message Sequence</span>
+                  <span style="color: #cbd5e1;">•</span>
+                  <span style="font-weight: 400; text-transform: none;">0 messages</span>
+                </div>
+                <div class="message-timeline-wrapper">
+                  <div class="message-timeline" id="timeline-{{ campaign.id }}">
+                    <div class="timeline-line"></div>
+                    <div class="timeline-ticks" id="ticks-{{ campaign.id }}"></div>
+                    <div class="timeline-months" id="months-{{ campaign.id }}"></div>
+                    <div class="add-message-btn" id="add-btn-{{ campaign.id }}" data-campaign-id="{{ campaign.id }}">
+                      <i class="fa-solid fa-plus"></i>
+                      <div class="add-date-display" id="add-date-{{ campaign.id }}">
+                        <span id="add-date-text-{{ campaign.id }}"></span>
+                        <input type="time" id="add-time-{{ campaign.id }}" class="add-time-input" value="09:00">
+                      </div>
+                    </div>
+                  </div>
+                  <div class="timeline-stats">
+                    <div class="timeline-stat">
+                      <div class="timeline-stat-dot email"></div>
+                      <span>0 Email</span>
+                    </div>
+                    <div class="timeline-stat">
+                      <div class="timeline-stat-dot sms"></div>
+                      <span>0 SMS</span>
+                    </div>
+                  </div>
+                </div>
+                {% endif %}
+              </div>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+      </div>
+
+      <div style="margin-top: 2rem; text-align: center;">
+        <a href="{% url 'admin_campaign_create' %}" class="btn-primary">+ Create New Campaign</a>
+      </div>
+    </div>
+
+    <!-- Upcoming Messages Section -->
+    <div class="recent-messages-section" style="margin-top: 2rem;">
+      <h2 class="section-title">Upcoming Messages</h2>
+      <div class="recent-messages-grid">
+        {% if upcoming_messages %}
+          {% for message in upcoming_messages %}
+          <div class="recent-message-card">
+            <div class="message-card-header">
+              <div class="message-type-badge {{ message.message_type }}">
+                {% if message.message_type == 'email' %}
+                  <i class="fa-solid fa-envelope"></i> EMAIL
+                {% elif message.message_type == 'sms' %}
+                  <i class="fa-solid fa-comment-sms"></i> SMS
+                {% elif message.message_type == 'instagram' %}
+                  <i class="fa-brands fa-instagram"></i> IG
+                {% elif message.message_type == 'tiktok' %}
+                  <i class="fa-brands fa-tiktok"></i> TIKTOK
+                {% elif message.message_type == 'snapchat' %}
+                  <i class="fa-brands fa-snapchat"></i> SNAP
+                {% elif message.message_type == 'youtube' %}
+                  <i class="fa-brands fa-youtube"></i> YOUTUBE
+                {% elif message.message_type == 'promotion' %}
+                  <i class="fa-solid fa-tags"></i> PROMO
+                {% endif %}
+              </div>
+              <div class="status-badge-container">
+                <span class="status-badge status-{{ message.status }} clickable-status" onclick="toggleStatusDropdown({{ message.id }})">
+                  {{ message.status }}
+                </span>
+                <div class="status-dropdown" id="status-dropdown-{{ message.id }}">
+                  <div class="status-option" onclick="changeMessageStatus({{ message.id }}, 'pending')">pending</div>
+                  <div class="status-option" onclick="changeMessageStatus({{ message.id }}, 'scheduled')">scheduled</div>
+                  <div class="status-option" onclick="changeMessageStatus({{ message.id }}, 'sent')">sent</div>
+                  <div class="status-option" onclick="changeMessageStatus({{ message.id }}, 'failed')">failed</div>
+                  <div class="status-option" onclick="changeMessageStatus({{ message.id }}, 'cancelled')">cancelled</div>
+                  <div class="status-option" onclick="changeMessageStatus({{ message.id }}, 'draft')">draft</div>
+                </div>
+              </div>
+            </div>
+            <div class="message-card-body">
+              <div class="message-card-footer">
+                {% if message.scheduled_date %}
+                  <i class="fa-regular fa-clock"></i> {{ message.scheduled_date|date:"M d, Y g:i A" }}
+                {% else %}
+                  <i class="fa-regular fa-calendar"></i> Not scheduled
+                {% endif %}
+              </div>
+              <p class="campaign-reference">
+                <a href="{% url 'admin_campaign_edit' message.campaign_id %}">{{ message.campaign_name }}</a>
+              </p>
+              <h4>{{ message.name|truncatewords:12 }}</h4>
+              {% if message.custom_subject %}
+              <p class="message-subject">{{ message.custom_subject|truncatewords:15 }}</p>
+              {% endif %}
+            </div>
+          </div>
+          {% endfor %}
+        {% else %}
+          <div style="padding: 2rem; text-align: center; color: #94a3b8; font-size: 0.875rem;">
+            No upcoming messages scheduled. All messages have been sent or there are no messages yet.
+          </div>
+        {% endif %}
+      </div>
+    </div>
+
+    <!-- Recent Messages Section -->
+    <div class="recent-messages-section" style="margin-top: 2rem;">
+      <h2 class="section-title">Recently Sent Messages</h2>
+      <div class="recent-messages-grid">
+        {% if recent_messages %}
+          {% for message in recent_messages %}
+          <div class="recent-message-card">
+            <div class="message-card-header">
+              <div class="message-type-badge {{ message.message_type }}">
+                {% if message.message_type == 'email' %}
+                  <i class="fa-solid fa-envelope"></i> EMAIL
+                {% elif message.message_type == 'sms' %}
+                  <i class="fa-solid fa-comment-sms"></i> SMS
+                {% elif message.message_type == 'instagram' %}
+                  <i class="fa-brands fa-instagram"></i> IG
+                {% elif message.message_type == 'tiktok' %}
+                  <i class="fa-brands fa-tiktok"></i> TIKTOK
+                {% elif message.message_type == 'snapchat' %}
+                  <i class="fa-brands fa-snapchat"></i> SNAP
+                {% elif message.message_type == 'youtube' %}
+                  <i class="fa-brands fa-youtube"></i> YOUTUBE
+                {% elif message.message_type == 'promotion' %}
+                  <i class="fa-solid fa-tags"></i> PROMO
+                {% endif %}
+              </div>
+              <div class="status-badge-container">
+                <span class="status-badge status-{{ message.status }} clickable-status" onclick="toggleStatusDropdown({{ message.id }})">
+                  {{ message.status }}
+                </span>
+                <div class="status-dropdown" id="status-dropdown-{{ message.id }}">
+                  <div class="status-option" onclick="changeMessageStatus({{ message.id }}, 'pending')">pending</div>
+                  <div class="status-option" onclick="changeMessageStatus({{ message.id }}, 'scheduled')">scheduled</div>
+                  <div class="status-option" onclick="changeMessageStatus({{ message.id }}, 'sent')">sent</div>
+                  <div class="status-option" onclick="changeMessageStatus({{ message.id }}, 'failed')">failed</div>
+                  <div class="status-option" onclick="changeMessageStatus({{ message.id }}, 'cancelled')">cancelled</div>
+                  <div class="status-option" onclick="changeMessageStatus({{ message.id }}, 'draft')">draft</div>
+                </div>
+              </div>
+            </div>
+            <div class="message-card-body">
+              <div class="message-card-footer">
+                <i class="fa-solid fa-check-circle"></i> {{ message.sent_at|date:"M d, Y g:i A" }}
+              </div>
+              <p class="campaign-reference">
+                <a href="{% url 'admin_campaign_edit' message.campaign_id %}">{{ message.campaign_name }}</a>
+              </p>
+              <h4>{{ message.name|truncatewords:12 }}</h4>
+              {% if message.custom_subject %}
+              <p class="message-subject">{{ message.custom_subject|truncatewords:15 }}</p>
+              {% endif %}
+            </div>
+          </div>
+          {% endfor %}
+        {% else %}
+          <div style="padding: 2rem; text-align: center; color: #94a3b8; font-size: 0.875rem;">
+            No messages have been sent yet. Messages will appear here once they are sent.
+          </div>
+        {% endif %}
+      </div>
+    </div>
+
+    {% else %}
+    <!-- Empty State -->
+    <div class="empty-state">
+      <div class="empty-state-icon">🎯</div>
+      <h2>No Campaigns Yet</h2>
+      <p>Create your first marketing campaign to start scheduling email and SMS messages to your subscribers.</p>
+      <a href="{% url 'admin_campaign_create' %}" class="btn-primary">+ Create Your First Campaign</a>
+    </div>
+    {% endif %}
+  </div>
+
+  <!-- Message Creation Popup -->
+  <div class="popup-overlay" id="popup-overlay"></div>
+  <div class="message-type-selector" id="message-popup">
+    <div class="popup-header" style="padding: 2rem; padding-bottom: 1rem; border-bottom: 2px solid #f1f5f9; flex-shrink: 0;">
+      <h3 class="popup-title">Add Message to Campaign</h3>
+      <p class="popup-subtitle">Choose message type and fill in the details</p>
+    </div>
+
+    <div class="popup-content-wrapper">
+      <div class="type-selection" style="grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); margin-bottom: 1.5rem;">
+        <div class="type-card" id="type-email" onclick="selectType('email')">
+          <div class="type-card-icon"><i class="fa-solid fa-envelope"></i></div>
+          <div class="type-card-title">Email</div>
+        </div>
+        <div class="type-card" id="type-sms" onclick="selectType('sms')">
+          <div class="type-card-icon"><i class="fa-solid fa-comment-sms"></i></div>
+          <div class="type-card-title">SMS</div>
+        </div>
+        <div class="type-card" id="type-instagram" onclick="selectType('instagram')">
+          <div class="type-card-icon"><i class="fa-brands fa-instagram"></i></div>
+          <div class="type-card-title">Instagram</div>
+        </div>
+        <div class="type-card" id="type-tiktok" onclick="selectType('tiktok')">
+          <div class="type-card-icon"><i class="fa-brands fa-tiktok"></i></div>
+          <div class="type-card-title">TikTok</div>
+        </div>
+        <div class="type-card" id="type-snapchat" onclick="selectType('snapchat')">
+          <div class="type-card-icon"><i class="fa-brands fa-snapchat"></i></div>
+          <div class="type-card-title">Snapchat</div>
+        </div>
+        <div class="type-card" id="type-youtube" onclick="selectType('youtube')">
+          <div class="type-card-icon"><i class="fa-brands fa-youtube"></i></div>
+          <div class="type-card-title">YouTube</div>
+        </div>
+        <div class="type-card" id="type-promotion" onclick="selectType('promotion')">
+          <div class="type-card-icon"><i class="fa-solid fa-tags"></i></div>
+          <div class="type-card-title">Promotion</div>
+        </div>
+        <div class="type-card" id="type-product" onclick="selectType('product')">
+          <div class="type-card-icon"><i class="fa-solid fa-box"></i></div>
+          <div class="type-card-title">Product</div>
+        </div>
+      </div>
+
+    <form id="message-form" method="POST" action="{% url 'admin_campaigns_list' %}" enctype="multipart/form-data" novalidate>
+      {% csrf_token %}
+      <input type="hidden" id="form-action" name="action" value="add_message">
+      <input type="hidden" id="form-campaign-id" name="campaign_id">
+      <input type="hidden" id="form-message-type" name="message_type">
+      <input type="hidden" id="form-message-id" name="message_id">
+      <input type="hidden" id="form-scheduled-date" name="scheduled_date">
+
+      <!-- Scheduled Time (Common for all message types) -->
+      <div class="form-group" style="margin-bottom: 1.5rem;">
+        <label class="form-label" style="display: flex; align-items: center; gap: 0.5rem;">
+          <i class="fa-regular fa-clock" style="color: #64748b;"></i>
+          Scheduled Time
+        </label>
+        <input type="time" id="form-scheduled-time" name="scheduled_time" class="form-input" value="09:00" style="max-width: 200px; font-weight: 500; cursor: pointer;">
+        <small style="color: #64748b; font-size: 0.75rem; display: block; margin-top: 0.5rem;">
+          <i class="fa-solid fa-circle-info" style="color: #94a3b8; font-size: 0.7rem;"></i>
+          Message will be sent at this time on the scheduled date
+        </small>
+      </div>
+
+      <!-- Send Mode (Common for all message types) -->
+      <div class="form-group" style="margin-bottom: 1.5rem;">
+        <label class="form-label" style="display: flex; align-items: center; gap: 0.5rem;">
+          <i class="fa-solid fa-paper-plane" style="color: #64748b;"></i>
+          Send Mode
+        </label>
+        <select id="form-send-mode" name="send_mode" class="form-input" style="max-width: 300px;">
+          <option value="auto">Auto-send (Send at scheduled time)</option>
+          <option value="draft">Save as Draft (Review before sending)</option>
+          <option value="manual">Manual Approval Required</option>
+        </select>
+        <small style="color: #64748b; font-size: 0.75rem; display: block; margin-top: 0.5rem;">
+          <i class="fa-solid fa-circle-info" style="color: #94a3b8; font-size: 0.7rem;"></i>
+          Draft messages appear gray on the timeline and won't auto-send
+        </small>
+      </div>
+
+      <!-- Email Form -->
+      <div id="email-form" class="message-form">
+        <div class="form-group">
+          <label class="form-label">Recipients</label>
+          <select name="email_recipient" class="form-input">
+            <option value="all">All Email Subscribers</option>
+            <option value="new_customers">New Customers (Last 30 days)</option>
+            <option value="vip">VIP Customers</option>
+            <option value="inactive">Inactive Customers</option>
+            <option value="custom">Custom Selection...</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Send Mode</label>
+          <select name="email_send_mode" class="form-input">
+            <option value="auto">Auto-send (Send automatically at scheduled time)</option>
+            <option value="draft">Save as Draft (Review before sending)</option>
+            <option value="manual">Manual Approval Required</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Subject Line</label>
+          <input type="text" id="email_subject" name="email_subject" class="form-input" placeholder="Enter email subject">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Email Body</label>
+          <div id="email_body_editor" style="background: white; border: 2px solid #e2e8f0; border-radius: 8px;"></div>
+          <textarea id="email_body" name="email_body" style="display: none;"></textarea>
+          <small style="color: #64748b; font-size: 0.75rem;">Use the toolbar to format text, insert images, and add links</small>
+        </div>
+      </div>
+
+      <!-- SMS Form -->
+      <div id="sms-form" class="message-form">
+        <div class="form-group">
+          <label class="form-label">Recipients</label>
+          <select name="sms_to" class="form-input">
+            <option value="all">All SMS Subscribers</option>
+            <option value="new_customers">New Customers (Last 30 days)</option>
+            <option value="vip">VIP Customers</option>
+            <option value="inactive">Inactive Customers</option>
+            <option value="custom">Custom Selection...</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Send Mode</label>
+          <select name="sms_send_mode" class="form-input">
+            <option value="auto">Auto-send (Send automatically at scheduled time)</option>
+            <option value="draft">Save as Draft (Review before sending)</option>
+            <option value="manual">Manual Approval Required</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Message</label>
+          <textarea id="sms_message" name="sms_message" class="form-input form-textarea" placeholder="Enter your SMS message here..." maxlength="160"></textarea>
+          <small style="color: #64748b; font-size: 0.75rem;">Maximum 160 characters (text only, no images)</small>
+        </div>
+      </div>
+
+      <!-- Instagram Form -->
+      <div id="instagram-form" class="message-form">
+        <div class="form-group">
+          <label class="form-label">Caption</label>
+          <textarea name="instagram_caption" class="form-input form-textarea" placeholder="Enter your Instagram caption..." rows="3"></textarea>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Media URL</label>
+          <input type="text" name="instagram_media" class="form-input" placeholder="Paste image/video URL">
+          <small style="color: #64748b; font-size: 0.75rem;">Link to photo or video for this post</small>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Notes & Content Ideas</label>
+          <textarea name="instagram_notes" class="form-input form-textarea" placeholder="Content ideas, hashtags, reminders..." rows="3"></textarea>
+          <small style="color: #64748b; font-size: 0.75rem;">Internal notes to help plan and create this post</small>
+        </div>
+      </div>
+
+      <!-- TikTok Form -->
+      <div id="tiktok-form" class="message-form">
+        <div class="form-group">
+          <label class="form-label">Caption</label>
+          <textarea name="tiktok_caption" class="form-input form-textarea" placeholder="Enter your TikTok caption..." rows="3"></textarea>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Video URL</label>
+          <input type="text" name="tiktok_media" class="form-input" placeholder="Paste video URL or file location">
+          <small style="color: #64748b; font-size: 0.75rem;">Link to the video file or cloud storage location</small>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Notes & Content Ideas</label>
+          <textarea name="tiktok_notes" class="form-input form-textarea" placeholder="Video concept, trends to follow, music ideas..." rows="3"></textarea>
+          <small style="color: #64748b; font-size: 0.75rem;">Internal notes for video planning and production</small>
+        </div>
+      </div>
+
+      <!-- Snapchat Form -->
+      <div id="snapchat-form" class="message-form">
+        <div class="form-group">
+          <label class="form-label">Caption / Text</label>
+          <textarea name="snapchat_caption" class="form-input form-textarea" placeholder="Enter your Snapchat caption..." rows="2"></textarea>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Media URL</label>
+          <input type="text" name="snapchat_media" class="form-input" placeholder="Paste image/video URL">
+          <small style="color: #64748b; font-size: 0.75rem;">Link to snap content</small>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Notes & Content Ideas</label>
+          <textarea name="snapchat_notes" class="form-input form-textarea" placeholder="Story ideas, filters to use, timing notes..." rows="3"></textarea>
+          <small style="color: #64748b; font-size: 0.75rem;">Internal notes for snap planning</small>
+        </div>
+      </div>
+
+      <!-- YouTube Form -->
+      <div id="youtube-form" class="message-form">
+        <div class="form-group">
+          <label class="form-label">Video Title</label>
+          <input type="text" name="youtube_title" class="form-input" placeholder="Enter video title">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Video URL</label>
+          <input type="text" name="youtube_url" class="form-input" placeholder="Paste YouTube video URL">
+          <small style="color: #64748b; font-size: 0.75rem;">Link to your YouTube video</small>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Video Description / Notes</label>
+          <textarea name="youtube_description" class="form-input form-textarea" placeholder="Video description, content ideas, posting notes..." rows="3"></textarea>
+          <small style="color: #64748b; font-size: 0.75rem;">Internal notes for video planning</small>
+        </div>
+      </div>
+
+      <!-- Promotion Form -->
+      <div id="promotion-form" class="message-form">
+        <div class="form-group">
+          <label class="form-label">Promotion Title</label>
+          <input type="text" name="promotion_title" class="form-input" placeholder="e.g., 'Summer Sale 20% Off'" required>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Promotion Type</label>
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; margin-bottom: 0.5rem;">
+            <label class="radio-card" for="promotion_type_public">
+              <input type="radio" id="promotion_type_public" name="promotion_type" value="public" checked onchange="updatePromotionType()">
+              <div class="radio-card-content">
+                <div class="radio-card-title"><i class="fa-solid fa-bullhorn"></i> Public Sale</div>
+                <div class="radio-card-desc">Advertised promotion, no code needed</div>
+              </div>
+            </label>
+            <label class="radio-card" for="promotion_type_private">
+              <input type="radio" id="promotion_type_private" name="promotion_type" value="private" onchange="updatePromotionType()">
+              <div class="radio-card-content">
+                <div class="radio-card-title"><i class="fa-solid fa-lock"></i> Private/Code Only</div>
+                <div class="radio-card-desc">Requires discount code</div>
+              </div>
+            </label>
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Discount Type <span style="color: #ef4444;">*</span></label>
+          <select name="promotion_discount_type" id="promotion_discount_type" class="form-input" onchange="toggleDiscountAmount()">
+            <option value="percentage">Percentage Off</option>
+            <option value="fixed">Fixed Amount Off</option>
+            <option value="bogo">Buy One Get One Free</option>
+            <option value="free_shipping">Free Shipping</option>
+          </select>
+        </div>
+        <div class="form-group" id="promotion-discount-amount-section">
+          <label class="form-label">Discount Amount <span style="color: #ef4444;">*</span></label>
+          <div style="display: flex; gap: 0.5rem; align-items: center;">
+            <input type="number" name="promotion_discount_value" id="promotion_discount_value" class="form-input" placeholder="20" min="0" step="0.01" style="flex: 1;">
+            <span id="discount-unit" style="color: #64748b; font-weight: 600; min-width: 30px;">%</span>
+          </div>
+        </div>
+        <div class="form-group" id="promotion-code-section" style="display: none;">
+          <label class="form-label">Discount Code <span style="color: #ef4444;">*</span></label>
+          <div style="display: flex; gap: 0.5rem;">
+            <input type="text" name="promotion_code" id="promotion_code" class="form-input" placeholder="e.g., SAVE20" style="flex: 1; text-transform: uppercase;" oninput="this.value = this.value.toUpperCase()">
+            <button type="button" class="btn btn-secondary" onclick="generateDiscountCode()" style="padding: 0.5rem 1rem; white-space: nowrap;">
+              <i class="fa-solid fa-wand-magic-sparkles"></i> Generate
+            </button>
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Products/Variants</label>
+          <select name="promotion_products" id="promotion_products" class="form-input">
+            <option value="">All Products (No restriction)</option>
+            {% for product in products %}
+              <optgroup label="{{ product.name }}">
+                <option value="product_{{ product.id }}">{{ product.name }} (All Variants)</option>
+                {% for variant in product.variants.all %}
+                  <option value="variant_{{ variant.id }}">{{ product.name }} - {{ variant.name }}</option>
+                {% endfor %}
+              </optgroup>
+            {% endfor %}
+          </select>
+          <small style="color: #64748b; font-size: 0.75rem;">Select specific products or leave as "All Products" to apply to entire store</small>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Promotion Details</label>
+          <textarea name="promotion_details" class="form-input form-textarea" placeholder="Promotion details, terms & conditions, marketing copy..." rows="3"></textarea>
+        </div>
+      </div>
+
+      <!-- Product Form -->
+      <div id="product-form" class="message-form">
+        <div class="form-group">
+          <label class="form-label">Product/Variant <span style="color: #ef4444;">*</span></label>
+          <select name="product_variant" id="product_variant" class="form-input">
+            <option value="">Select a product or variant...</option>
+            {% for product in products %}
+              <optgroup label="{{ product.name }}">
+                <option value="product_{{ product.id }}">{{ product.name }} (All Variants)</option>
+                {% for variant in product.variants.all %}
+                  <option value="variant_{{ variant.id }}">{{ product.name }} - {{ variant.name }}</option>
+                {% endfor %}
+              </optgroup>
+            {% endfor %}
+          </select>
+          <small style="color: #64748b; font-size: 0.75rem;">Select the product or specific variant for this release</small>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Release Time <span style="color: #ef4444;">*</span></label>
+          <input type="time" name="product_release_time" class="form-input" value="09:00" style="max-width: 200px;">
+          <small style="color: #64748b; font-size: 0.75rem;">Time when the product becomes available for purchase</small>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Announcement Title</label>
+          <input type="text" name="product_announcement_title" class="form-input" placeholder="e.g., 'New Product Launch: Summer Collection'">
+          <small style="color: #64748b; font-size: 0.75rem;">Title for announcement (optional)</small>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Announcement Details</label>
+          <textarea name="product_announcement_details" class="form-input form-textarea" placeholder="Product description, features, pricing details..." rows="3"></textarea>
+          <small style="color: #64748b; font-size: 0.75rem;">Details to include in announcement messages</small>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Media URL</label>
+          <input type="text" name="product_media_url" class="form-input" placeholder="Paste product image/video URL">
+          <small style="color: #64748b; font-size: 0.75rem;">Link to product media for social announcements</small>
+        </div>
+      </div>
+
+      <div class="popup-actions" style="margin-top: 1.5rem; padding-top: 1.5rem; border-top: 2px solid #f1f5f9;">
+        <button type="button" class="btn-popup-cancel" onclick="closeMessagePopup()">Cancel</button>
+        <button type="button" id="btn-delete-message" class="btn-popup-delete" onclick="deleteMessage()" style="display: none;">Delete</button>
+        <button type="submit" class="btn-popup-save" id="btn-save-message">Create Message</button>
+      </div>
+    </form>
+    </div>
+  </div>
+
+  <link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/nouislider@15.7.1/dist/nouislider.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/wnumb@1.2.0/wNumb.min.js"></script>
+  <script src="https://cdn.quilljs.com/1.3.6/quill.js"></script>
+  <script>
+    const sliders = {};
+    let currentTimelinePeriod = 90; // Default to 3 months (90 days)
+
+    function updateTimelinePeriod(days) {
+      currentTimelinePeriod = parseInt(days);
+      // Re-initialize all timelines with new period
+      document.querySelectorAll('[id^="timeline-"]').forEach(timeline => {
+        const campaignId = timeline.id.replace('timeline-', '');
+        initTimelineMarkings(campaignId);
+        initMessageBubblePositions(timeline);
+      });
+    }
+
+    function toggleTimeline() {
+      const content = document.getElementById('timeline-content');
+      const icon = document.getElementById('timeline-icon');
+      const btnText = document.getElementById('timeline-btn-text');
+
+      if (content.classList.contains('collapsed')) {
+        content.classList.remove('collapsed');
+        icon.classList.remove('collapsed');
+        btnText.textContent = 'Collapse';
+      } else {
+        content.classList.add('collapsed');
+        icon.classList.add('collapsed');
+        btnText.textContent = 'Expand';
+      }
+    }
+
+    let draggedButton = null;
+    let dragOffset = 0;
+    let selectedDate = null;
+    let selectedCampaignId = null;
+    let isDragging = false;
+    let dragStartPos = { x: 0, y: 0 };
+
+    function initDraggableButtons() {
+      document.querySelectorAll('.add-message-btn').forEach(btn => {
+        const campaignId = btn.dataset.campaignId;
+        const timeline = btn.parentElement;
+
+        // Initialize timeline ticks and months
+        initTimelineMarkings(campaignId);
+
+        // Initialize message bubble positions
+        initMessageBubblePositions(timeline);
+
+        // Initialize at the end
+        btn.style.left = (timeline.offsetWidth - 36) + 'px';
+
+        btn.addEventListener('mousedown', startDrag);
+        btn.addEventListener('touchstart', startDrag);
+        btn.addEventListener('click', handlePlusClick);
+
+        // Make time input clickable without triggering drag
+        const timeInput = document.getElementById('add-time-' + campaignId);
+        if (timeInput) {
+          timeInput.addEventListener('mousedown', function(e) {
+            e.stopPropagation();
+          });
+          timeInput.addEventListener('click', function(e) {
+            e.stopPropagation();
+            this.focus();
+            this.showPicker();
+          });
+        }
+      });
+
+      // Make message bubbles draggable
+      document.querySelectorAll('.message-bubble').forEach(bubble => {
+        bubble.addEventListener('mousedown', startBubbleDrag);
+        bubble.addEventListener('touchstart', startBubbleDrag);
+      });
+    }
+
+    function initMessageBubblePositions(timeline) {
+      const bubbles = Array.from(timeline.querySelectorAll('.message-bubble'));
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+
+      // Calculate positions and detect collisions
+      const positions = [];
+
+      bubbles.forEach(bubble => {
+        const scheduledDate = bubble.dataset.scheduledDate;
+        if (scheduledDate) {
+          const msgDate = new Date(scheduledDate);
+          msgDate.setHours(0, 0, 0, 0);
+
+          // Calculate days from today
+          const diffTime = msgDate - today;
+          const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+
+          // Hide bubbles that are beyond the current timeline view
+          if (diffDays < 0 || diffDays > currentTimelinePeriod) {
+            bubble.style.display = 'none';
+            return;
+          } else {
+            bubble.style.display = 'flex';
+          }
+
+          // Calculate position based on current timeline period
+          const percentage = Math.max(0, Math.min(diffDays / currentTimelinePeriod, 1));
+          const position = percentage * timeline.offsetWidth;
+
+          positions.push({ bubble, position, diffDays });
+        } else {
+          bubble.style.display = 'none';
+        }
+      });
+
+      // Apply positions with improved vertical stacking for overlaps
+      const verticalGap = 20; // Vertical spacing between stacked bubbles (very compact)
+      const minHorizontalGap = 30; // Minimum horizontal pixels before stacking
+
+      console.log('Timeline positioning:', {
+        bubbleCount: positions.length,
+        timelineWidth: timeline.offsetWidth,
+        period: currentTimelinePeriod
+      });
+
+      // First pass: Set initial horizontal positions
+      positions.forEach((item, idx) => {
+        item.bubble.style.left = Math.max(0, item.position) + 'px';
+        console.log(`Bubble ${idx}: ${item.bubble.dataset.messageId}, days=${item.diffDays}, pos=${item.position.toFixed(1)}px`);
+      });
+
+      // Second pass: Apply vertical stacking for overlaps (stack upward from axis)
+      // Sort by diffDays first (chronological order), then by position
+      const sortedPositions = [...positions].sort((a, b) => {
+        if (a.diffDays !== b.diffDays) return a.diffDays - b.diffDays;
+        return a.position - b.position;
+      });
+
+      let maxVerticalLevel = 0;
+
+      for (let i = 0; i < sortedPositions.length; i++) {
+        const currentItem = sortedPositions[i];
+        const currentLeft = parseFloat(currentItem.bubble.style.left);
+        let verticalLevel = 0;
+        let foundLevel = false;
+
+        // Try to find a free vertical level (no limit)
+        while (!foundLevel) {
+          let levelClear = true;
+
+          // Check if this level conflicts with any already-placed bubble
+          for (let j = 0; j < i; j++) {
+            const otherItem = sortedPositions[j];
+            const otherLeft = parseFloat(otherItem.bubble.style.left);
+            const otherBottom = parseFloat(otherItem.bubble.style.bottom) || 20;
+            const otherLevel = Math.round((otherBottom - 20) / verticalGap);
+
+            const horizontalDistance = Math.abs(currentLeft - otherLeft);
+
+            // If at same level and too close horizontally, need to stack
+            if (otherLevel === verticalLevel && horizontalDistance <= minHorizontalGap) {
+              levelClear = false;
+              break;
+            }
+          }
+
+          if (levelClear) {
+            foundLevel = true;
+            const verticalOffset = verticalLevel * verticalGap;
+            const bottomPosition = 20 + verticalOffset; // Stack upward from base position (aligned with x-axis)
+            currentItem.bubble.style.bottom = bottomPosition + 'px';
+
+            // Track max level for dynamic height calculation
+            maxVerticalLevel = Math.max(maxVerticalLevel, verticalLevel);
+
+            // Add connector line if stacked
+            if (verticalOffset > 0) {
+              currentItem.bubble.style.setProperty('--stack-height', verticalOffset + 'px');
+            } else {
+              currentItem.bubble.style.setProperty('--stack-height', '0');
+            }
+
+            if (verticalLevel > 0) {
+              console.log(`  → Stacked at level ${verticalLevel}`);
+            }
+          } else {
+            verticalLevel++;
+          }
+        }
+      }
+
+      // Update timeline height based on max stack level
+      const baseHeight = 40; // Base height for timeline
+      const bubbleHeight = 20; // Approximate bubble height
+      const neededHeight = baseHeight + (maxVerticalLevel * verticalGap) + bubbleHeight + 10; // 10px extra padding
+      timeline.style.minHeight = Math.max(80, neededHeight) + 'px';
+
+      console.log(`Max stack level: ${maxVerticalLevel}, Timeline height: ${neededHeight}px`);
+    }
+
+    function updateTimelineHeight(timeline) {
+      const verticalGap = 20;
+      const bubbles = timeline.querySelectorAll('.message-bubble');
+      let maxBottom = 20;
+
+      bubbles.forEach(bubble => {
+        if (bubble.style.display !== 'none') {
+          const bottom = parseFloat(bubble.style.bottom) || 20;
+          maxBottom = Math.max(maxBottom, bottom);
+        }
+      });
+
+      const maxLevel = Math.round((maxBottom - 20) / verticalGap);
+      const baseHeight = 40;
+      const bubbleHeight = 20;
+      const neededHeight = baseHeight + (maxLevel * verticalGap) + bubbleHeight + 10;
+      timeline.style.minHeight = Math.max(80, neededHeight) + 'px';
+    }
+
+    let draggedBubble = null;
+    let bubbleDragOffset = 0;
+    let bubbleIsDragging = false;
+    let bubbleDragStartPos = { x: 0, y: 0 };
+    let originalBubblePosition = 0;
+
+    function startBubbleDrag(e) {
+      e.preventDefault();
+      e.stopPropagation();
+
+      draggedBubble = e.currentTarget;
+      const rect = draggedBubble.getBoundingClientRect();
+      const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+      const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+
+      bubbleDragOffset = clientX - rect.left;
+      bubbleDragStartPos = { x: clientX, y: clientY };
+      originalBubblePosition = parseFloat(draggedBubble.style.left) || 0;
+      bubbleIsDragging = false;
+
+      document.addEventListener('mousemove', dragBubble);
+      document.addEventListener('touchmove', dragBubble);
+      document.addEventListener('mouseup', stopBubbleDrag);
+      document.addEventListener('touchend', stopBubbleDrag);
+    }
+
+    function dragBubble(e) {
+      if (!draggedBubble) return;
+
+      const timeline = draggedBubble.parentElement;
+      const timelineRect = timeline.getBoundingClientRect();
+      const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+      const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+
+      // Immediately start dragging without threshold
+      if (!bubbleIsDragging) {
+        bubbleIsDragging = true;
+        draggedBubble.classList.add('dragging');
+      }
+
+      // Update position
+      let newLeft = clientX - timelineRect.left - bubbleDragOffset;
+      newLeft = Math.max(0, Math.min(newLeft, timeline.offsetWidth - 16));
+      draggedBubble.style.left = newLeft + 'px';
+
+      // Update the date display
+      updateBubbleDateDisplay(draggedBubble, newLeft, timeline.offsetWidth);
+    }
+
+    function showDragDatePreview(position, timelineWidth, mouseX, mouseY) {
+      const preview = document.getElementById('drag-date-preview');
+      if (!preview) {
+        console.warn('Drag date preview element not found');
+        return;
+      }
+
+      const today = new Date();
+      const percentage = position / timelineWidth;
+      const daysFromToday = Math.floor(percentage * currentTimelinePeriod);
+
+      const calculatedDate = new Date(today);
+      calculatedDate.setDate(calculatedDate.getDate() + daysFromToday);
+
+      const months = ['January', 'February', 'March', 'April', 'May', 'June',
+                      'July', 'August', 'September', 'October', 'November', 'December'];
+      const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+
+      const dateText = `${dayNames[calculatedDate.getDay()]}, ${months[calculatedDate.getMonth()]} ${calculatedDate.getDate()}, ${calculatedDate.getFullYear()}`;
+
+      preview.textContent = dateText;
+      preview.style.left = (mouseX + 24) + 'px';
+      preview.style.top = (mouseY - 50) + 'px';
+      preview.classList.add('visible');
+
+      console.log('Showing date preview:', dateText);
+    }
+
+    function hideDragDatePreview() {
+      const preview = document.getElementById('drag-date-preview');
+      if (preview) {
+        preview.classList.remove('visible');
+      }
+    }
+
+    function calculateDragPreviewStack(draggedBubble, timeline, newLeft) {
+      const verticalGap = 20;
+      const minHorizontalGap = 30;
+
+      // Get all visible bubbles including the one being dragged
+      const allBubbles = Array.from(timeline.querySelectorAll('.message-bubble'))
+        .filter(b => b.style.display !== 'none');
+
+      // Create positions array with current horizontal positions
+      const positions = allBubbles.map(bubble => {
+        const left = bubble === draggedBubble ? newLeft : parseFloat(bubble.style.left);
+        return { bubble, left };
+      });
+
+      // Sort by horizontal position
+      positions.sort((a, b) => a.left - b.left);
+
+      // Recalculate all vertical positions
+      for (let i = 0; i < positions.length; i++) {
+        const currentItem = positions[i];
+        const currentLeft = currentItem.left;
+        let verticalLevel = 0;
+        let foundLevel = false;
+
+        while (!foundLevel && verticalLevel < 50) {
+          let levelClear = true;
+
+          // Check conflicts with already-placed bubbles
+          for (let j = 0; j < i; j++) {
+            const otherItem = positions[j];
+            const otherLeft = otherItem.left;
+            const otherBottom = parseFloat(otherItem.bubble.style.bottom) || 20;
+            const otherLevel = Math.round((otherBottom - 20) / verticalGap);
+
+            const horizontalDistance = Math.abs(currentLeft - otherLeft);
+
+            if (otherLevel === verticalLevel && horizontalDistance <= minHorizontalGap) {
+              levelClear = false;
+              break;
+            }
+          }
+
+          if (levelClear) {
+            foundLevel = true;
+            const verticalOffset = verticalLevel * verticalGap;
+            const bottomPosition = 20 + verticalOffset;
+            currentItem.bubble.style.bottom = bottomPosition + 'px';
+
+            // Update connector line
+            if (verticalOffset > 0) {
+              currentItem.bubble.style.setProperty('--stack-height', verticalOffset + 'px');
+            } else {
+              currentItem.bubble.style.setProperty('--stack-height', '0');
+            }
+          } else {
+            verticalLevel++;
+          }
+        }
+      }
+    }
+
+    function stopBubbleDrag(e) {
+      if (!draggedBubble) return;
+
+      const wasDragging = bubbleIsDragging;
+      const timeline = draggedBubble.parentElement;
+      const bubble = draggedBubble;
+
+      draggedBubble.classList.remove('dragging');
+
+      document.removeEventListener('mousemove', dragBubble);
+      document.removeEventListener('touchmove', dragBubble);
+      document.removeEventListener('mouseup', stopBubbleDrag);
+      document.removeEventListener('touchend', stopBubbleDrag);
+
+      if (wasDragging) {
+        // Save the new position
+        const position = parseFloat(bubble.style.left);
+        const percentage = position / timeline.offsetWidth;
+        const daysFromToday = Math.round(percentage * currentTimelinePeriod); // Round to snap to nearest day
+
+        const today = new Date();
+        today.setHours(0, 0, 0, 0); // Reset to midnight
+        const newDate = new Date(today);
+        newDate.setDate(newDate.getDate() + daysFromToday);
+
+        // Preserve the existing time from the bubble's data attribute
+        const scheduledTime = bubble.dataset.scheduledTime;
+        if (scheduledTime) {
+          const [hours, minutes] = scheduledTime.split(':');
+          newDate.setHours(parseInt(hours), parseInt(minutes), 0, 0);
+        } else {
+          // Default to 9:00 AM if no time is set
+          newDate.setHours(9, 0, 0, 0);
+        }
+
+        // Update the bubble's data attribute with the new date (BEFORE recalculating positions)
+        const newDateStr = newDate.toISOString().split('T')[0];
+        bubble.dataset.scheduledDate = newDateStr;
+
+        // Snap the bubble position to the exact day
+        const exactPercentage = daysFromToday / currentTimelinePeriod;
+        const snappedPosition = exactPercentage * timeline.offsetWidth;
+        bubble.style.left = snappedPosition + 'px';
+
+        // Recalculate stacking with updated data
+        initMessageBubblePositions(timeline);
+
+        // Update the message's scheduled date via AJAX
+        updateMessageDate(bubble, newDate);
+
+        // Update timeline height based on current max stack
+        updateTimelineHeight(timeline);
+      } else {
+        // It was a click, not a drag - open edit popup
+        openEditMessagePopup(bubble);
+      }
+
+      bubbleIsDragging = false;
+      draggedBubble = null;
+    }
+
+    function updateBubbleDateDisplay(bubble, position, timelineWidth) {
+      const dateDisplay = bubble.querySelector('.message-date');
+      if (!dateDisplay) return;
+
+      const today = new Date();
+      const percentage = position / timelineWidth;
+      const daysFromToday = Math.floor(percentage * currentTimelinePeriod);
+
+      const calculatedDate = new Date(today);
+      calculatedDate.setDate(calculatedDate.getDate() + daysFromToday);
+
+      const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+      const dayDisplay = dateDisplay.querySelector('.message-date-day');
+      if (dayDisplay) {
+        dayDisplay.textContent = months[calculatedDate.getMonth()] + ' ' + calculatedDate.getDate();
+      }
+
+      // Update the next div with the year
+      const yearDiv = dayDisplay ? dayDisplay.nextElementSibling : null;
+      if (yearDiv) {
+        yearDiv.textContent = calculatedDate.getFullYear();
+      }
+
+      // Also update the tooltip date
+      const tooltipDate = bubble.querySelector('.tooltip-date');
+      if (tooltipDate) {
+        const monthsFull = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+        let formattedDate = `${monthsFull[calculatedDate.getMonth()]} ${calculatedDate.getDate()}, ${calculatedDate.getFullYear()}`;
+
+        // Preserve the time if it exists
+        const scheduledTime = bubble.dataset.scheduledTime;
+        if (scheduledTime) {
+          const [hours, minutes] = scheduledTime.split(':');
+          const hour12 = hours % 12 || 12;
+          const ampm = hours >= 12 ? 'PM' : 'AM';
+          formattedDate += ` at ${hour12}:${minutes} ${ampm}`;
+        }
+
+        tooltipDate.textContent = formattedDate;
+      }
+    }
+
+    function updateMessageDate(bubble, newDate) {
+      const messageId = bubble.dataset.messageId;
+      const campaignId = bubble.dataset.campaignId;
+      const dateStr = newDate.toISOString().split('T')[0];
+
+      console.log('Updating message date:', {
+        messageId,
+        campaignId,
+        dateStr,
+        currentPeriod: currentTimelinePeriod
+      });
+
+      // Create form data
+      const formData = new FormData();
+      formData.append('action', 'update_message_date');
+      formData.append('message_id', messageId);
+      formData.append('campaign_id', campaignId);
+      formData.append('scheduled_date', dateStr);
+
+      // Get CSRF token
+      const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+
+      fetch(window.location.href, {
+        method: 'POST',
+        body: formData,
+        headers: {
+          'X-CSRFToken': csrfToken,
+          'X-Requested-With': 'XMLHttpRequest'
+        }
+      })
+      .then(response => {
+        console.log('Response status:', response.status);
+        if (!response.ok) {
+          throw new Error('Network response was not ok: ' + response.status);
+        }
+        return response.json();
+      })
+      .then(data => {
+        console.log('Update response:', data);
+        if (data.success) {
+          console.log('Message date updated successfully to:', dateStr);
+          // Update the data attribute
+          bubble.dataset.scheduledDate = dateStr;
+
+          // Show success feedback
+          bubble.style.transform = 'scale(1.2)';
+          setTimeout(() => {
+            bubble.style.transform = '';
+          }, 200);
+        } else {
+          console.error('Error updating message date:', data.error);
+          alert('Error updating message date: ' + (data.error || 'Unknown error'));
+          // Reload to reset position
+          window.location.reload();
+        }
+      })
+      .catch(error => {
+        console.error('Fetch error:', error);
+        alert('Error updating message date: ' + error.message);
+        // Reload to reset position
+        window.location.reload();
+      });
+    }
+
+    function initTimelineMarkings(campaignId) {
+      const timeline = document.getElementById('timeline-' + campaignId);
+      const ticksContainer = document.getElementById('ticks-' + campaignId);
+      const monthsContainer = document.getElementById('months-' + campaignId);
+
+      if (!timeline || !ticksContainer || !monthsContainer) return;
+
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      const endDate = new Date(today);
+      endDate.setDate(endDate.getDate() + currentTimelinePeriod);
+
+      // Clear existing content
+      ticksContainer.innerHTML = '';
+      monthsContainer.innerHTML = '';
+
+      const timelineWidth = timeline.offsetWidth;
+
+      const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+      const monthNamesFull = ['January', 'February', 'March', 'April', 'May', 'June',
+                              'July', 'August', 'September', 'October', 'November', 'December'];
+
+      // Add daily tick marks
+      for (let day = 0; day <= currentTimelinePeriod; day++) {
+        const position = (day / currentTimelinePeriod) * timelineWidth;
+
+        const tick = document.createElement('div');
+        tick.className = 'timeline-tick';
+        tick.style.left = position + 'px';
+        ticksContainer.appendChild(tick);
+      }
+
+      // Add today indicator
+      const todayIndicator = document.createElement('div');
+      todayIndicator.className = 'timeline-today-indicator';
+      todayIndicator.style.left = '0px';
+      ticksContainer.appendChild(todayIndicator);
+
+      // Add date labels at specific intervals
+      let labelInterval;
+      if (currentTimelinePeriod <= 7) {
+        labelInterval = 1; // Every day
+      } else if (currentTimelinePeriod <= 14) {
+        labelInterval = 1; // Every day
+      } else if (currentTimelinePeriod <= 30) {
+        labelInterval = 2; // Every 2 days
+      } else if (currentTimelinePeriod <= 60) {
+        labelInterval = 3; // Every 3 days
+      } else if (currentTimelinePeriod <= 90) {
+        labelInterval = 5; // Every 5 days
+      } else if (currentTimelinePeriod <= 180) {
+        labelInterval = 7; // Weekly
+      } else {
+        labelInterval = 14; // Bi-weekly
+      }
+
+      for (let day = 0; day <= currentTimelinePeriod; day += labelInterval) {
+        if (day === 0) continue; // Skip "Today" - already shown by indicator
+
+        const labelDate = new Date(today);
+        labelDate.setDate(labelDate.getDate() + day);
+        const position = (day / currentTimelinePeriod) * timelineWidth;
+
+        const dateLabel = document.createElement('span');
+        dateLabel.className = 'timeline-month';
+        dateLabel.textContent = labelDate.getDate();
+        dateLabel.style.left = position + 'px';
+        monthsContainer.appendChild(dateLabel);
+      }
+
+      // Add month labels below - find month boundaries
+      const monthsMap = new Map();
+      for (let day = 0; day <= currentTimelinePeriod; day++) {
+        const checkDate = new Date(today);
+        checkDate.setDate(checkDate.getDate() + day);
+        const monthKey = checkDate.getFullYear() + '-' + checkDate.getMonth();
+
+        if (!monthsMap.has(monthKey)) {
+          monthsMap.set(monthKey, {
+            start: day,
+            end: day,
+            month: checkDate.getMonth(),
+            year: checkDate.getFullYear()
+          });
+        } else {
+          monthsMap.get(monthKey).end = day;
+        }
+      }
+
+      // Create month labels at the center of each month's range
+      monthsMap.forEach((data) => {
+        const middleDay = data.start + ((data.end - data.start) / 2);
+        const position = (middleDay / currentTimelinePeriod) * timelineWidth;
+
+        let monthText = monthNames[data.month];
+        if (data.year !== today.getFullYear()) {
+          monthText += ' ' + data.year;
+        }
+
+        const monthLabel = document.createElement('span');
+        monthLabel.className = 'timeline-month-name';
+        monthLabel.textContent = monthText;
+        monthLabel.style.left = position + 'px';
+        monthsContainer.appendChild(monthLabel);
+      });
+    }
+
+    function handlePlusClick(e) {
+      e.preventDefault();
+      e.stopPropagation();
+
+      // Only trigger if not currently dragging
+      if (!isDragging) {
+        const button = e.currentTarget;
+        const campaignId = button.dataset.campaignId;
+
+        // Open the message creation popup
+        if (campaignId) {
+          openMessagePopup(campaignId);
+        }
+      }
+    }
+
+    // Close pinned dropdown when clicking outside
+    document.addEventListener('click', function(e) {
+      if (!e.target.closest('.add-message-btn')) {
+        document.querySelectorAll('.add-message-btn.pinned').forEach(btn => {
+          btn.classList.remove('pinned');
+        });
+      }
+    });
+
+    function startDrag(e) {
+      e.preventDefault();
+      e.stopPropagation();
+
+      draggedButton = e.currentTarget;
+      const rect = draggedButton.getBoundingClientRect();
+      const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+      const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+
+      dragOffset = clientX - rect.left;
+      dragStartPos = { x: clientX, y: clientY };
+      isDragging = false;
+
+      document.addEventListener('mousemove', drag);
+      document.addEventListener('touchmove', drag);
+      document.addEventListener('mouseup', stopDrag);
+      document.addEventListener('touchend', stopDrag);
+    }
+
+    function drag(e) {
+      if (!draggedButton) return;
+
+      const timeline = draggedButton.parentElement;
+      const timelineRect = timeline.getBoundingClientRect();
+      const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+      const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+
+      // Check if user has moved enough to consider it a drag
+      const distanceMoved = Math.sqrt(
+        Math.pow(clientX - dragStartPos.x, 2) +
+        Math.pow(clientY - dragStartPos.y, 2)
+      );
+
+      if (distanceMoved > 5) {
+        isDragging = true;
+        draggedButton.classList.add('dragging');
+      }
+
+      // Only update position if actually dragging
+      if (isDragging) {
+        // Horizontal movement changes date
+        let newLeft = clientX - timelineRect.left - dragOffset;
+        newLeft = Math.max(0, Math.min(newLeft, timeline.offsetWidth - 28));
+        draggedButton.style.left = newLeft + 'px';
+
+        // Vertical movement changes time
+        const verticalDelta = clientY - dragStartPos.y;
+        updateTimeFromVerticalDrag(draggedButton, verticalDelta);
+
+        // Calculate and display date and time
+        updateDateDisplay(draggedButton, newLeft, timeline.offsetWidth);
+      }
+    }
+
+    function stopDrag(e) {
+      if (!draggedButton) return;
+
+      const wasDragging = isDragging;
+
+      console.log('stopDrag - wasDragging:', wasDragging);
+
+      draggedButton.classList.remove('dragging');
+
+      document.removeEventListener('mousemove', drag);
+      document.removeEventListener('touchmove', drag);
+      document.removeEventListener('mouseup', stopDrag);
+      document.removeEventListener('touchend', stopDrag);
+
+      // Reset isDragging after a delay to prevent click event from firing immediately
+      setTimeout(() => {
+        isDragging = false;
+        draggedButton = null;
+      }, 100);
+    }
+
+    function updateTimeFromVerticalDrag(btn, verticalDelta) {
+      const campaignId = btn.dataset.campaignId;
+      const timeInput = document.getElementById('add-time-' + campaignId);
+
+      // Convert vertical movement to time change (each 60px = 15 minutes, down = later)
+      const minutesChange = Math.floor(verticalDelta / 60) * 15;
+
+      // Get current time value
+      const currentTime = timeInput.value; // e.g., "09:00"
+      const [currentHours, currentMinutes] = currentTime.split(':').map(Number);
+
+      // Calculate new time in total minutes
+      let totalMinutes = (currentHours * 60) + currentMinutes + minutesChange;
+
+      // Constrain to 00:00 - 23:45 (in 15-minute increments)
+      totalMinutes = Math.max(0, Math.min(totalMinutes, 23 * 60 + 45));
+
+      // Convert back to hours and minutes
+      const newHours = Math.floor(totalMinutes / 60);
+      const newMinutes = totalMinutes % 60;
+
+      // Format as HH:MM
+      const newTime = String(newHours).padStart(2, '0') + ':' + String(newMinutes).padStart(2, '0');
+      timeInput.value = newTime;
+    }
+
+    function updateDateDisplay(btn, position, timelineWidth) {
+      const campaignId = btn.dataset.campaignId;
+      const dateTextDisplay = document.getElementById('add-date-text-' + campaignId);
+
+      // Calculate date based on position using current timeline period
+      const today = new Date();
+      const percentage = position / timelineWidth;
+      const daysFromToday = Math.floor(percentage * currentTimelinePeriod);
+
+      const calculatedDate = new Date(today);
+      calculatedDate.setDate(calculatedDate.getDate() + daysFromToday);
+
+      selectedDate = calculatedDate;
+      selectedCampaignId = campaignId;
+
+      const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+      dateTextDisplay.textContent = months[calculatedDate.getMonth()] + ' ' + calculatedDate.getDate() + ', ' + calculatedDate.getFullYear();
+    }
+
+    function selectMessageType(campaignId, messageType, customLabel) {
+      const selector = document.getElementById('selector-' + campaignId);
+      selector.classList.remove('active');
+
+      // Navigate to campaign edit with date and type
+      let url = `/admin/campaigns/${campaignId}/edit/?add=${messageType}`;
+      if (selectedDate && selectedCampaignId === campaignId) {
+        const dateStr = selectedDate.toISOString().split('T')[0];
+        url += `&date=${dateStr}`;
+      }
+      if (customLabel && customLabel !== 'Email' && customLabel !== 'SMS') {
+        url += `&label=${encodeURIComponent(customLabel)}`;
+      }
+      window.location.href = url;
+    }
+
+    function showCustomInput(campaignId) {
+      const customInput = document.getElementById('custom-input-' + campaignId);
+      const input = document.getElementById('custom-type-' + campaignId);
+
+      customInput.style.display = 'block';
+      input.focus();
+    }
+
+    // Close selector when clicking outside
+    document.addEventListener('click', function(event) {
+      if (!event.target.closest('.add-message-btn')) {
+        document.querySelectorAll('.message-type-selector.active').forEach(s => {
+          s.classList.remove('active');
+        });
+      }
+    });
+
+    // Initialize draggable buttons on page load
+    document.addEventListener('DOMContentLoaded', initDraggableButtons);
+
+    function initSlider(campaignId, activeFrom, activeUntil) {
+      const sliderElement = document.getElementById('date-slider-' + campaignId);
+      if (sliderElement.noUiSlider) {
+        return; // Already initialized
+      }
+
+      // Date range: 6 months before today to 1 year from now
+      const today = new Date();
+      const minDate = new Date(today.getFullYear(), today.getMonth() - 6, 1);
+      const maxDate = new Date(today.getFullYear() + 1, today.getMonth(), today.getDate());
+
+      // Parse existing dates or use defaults
+      let startValue = activeFrom ? new Date(activeFrom) : new Date();
+      let endValue = activeUntil ? new Date(activeUntil) : new Date(today.getTime() + 30 * 24 * 60 * 60 * 1000);
+
+      // Ensure values are within range
+      if (startValue < minDate) startValue = minDate;
+      if (endValue > maxDate) endValue = maxDate;
+
+      noUiSlider.create(sliderElement, {
+        start: [startValue.getTime(), endValue.getTime()],
+        connect: true,
+        range: {
+          'min': minDate.getTime(),
+          'max': maxDate.getTime()
+        },
+        step: 24 * 60 * 60 * 1000, // 1 day
+        tooltips: [
+          {to: value => formatDate(new Date(value))},
+          {to: value => formatDate(new Date(value))}
+        ]
+      });
+
+      sliderElement.noUiSlider.on('update', function(values) {
+        const fromDate = new Date(parseInt(values[0]));
+        const untilDate = new Date(parseInt(values[1]));
+
+        document.getElementById('from-display-' + campaignId).textContent = formatDateLong(fromDate);
+        document.getElementById('until-display-' + campaignId).textContent = formatDateLong(untilDate);
+
+        // Update hidden inputs with date and time
+        updateDateTimeInput(campaignId, 'from', fromDate);
+        updateDateTimeInput(campaignId, 'until', untilDate);
+      });
+
+      // Set initial time values if dates exist
+      if (activeFrom) {
+        const fromDate = new Date(activeFrom);
+        const fromTime = String(fromDate.getHours()).padStart(2, '0') + ':' + String(fromDate.getMinutes()).padStart(2, '0');
+        document.getElementById('from-time-' + campaignId).value = fromTime;
+      }
+      if (activeUntil) {
+        const untilDate = new Date(activeUntil);
+        const untilTime = String(untilDate.getHours()).padStart(2, '0') + ':' + String(untilDate.getMinutes()).padStart(2, '0');
+        document.getElementById('until-time-' + campaignId).value = untilTime;
+      }
+
+      // Update datetime when time changes
+      document.getElementById('from-time-' + campaignId).addEventListener('change', function() {
+        const values = sliderElement.noUiSlider.get();
+        const fromDate = new Date(parseInt(values[0]));
+        updateDateTimeInput(campaignId, 'from', fromDate);
+      });
+
+      document.getElementById('until-time-' + campaignId).addEventListener('change', function() {
+        const values = sliderElement.noUiSlider.get();
+        const untilDate = new Date(parseInt(values[1]));
+        updateDateTimeInput(campaignId, 'until', untilDate);
+      });
+
+      sliders[campaignId] = sliderElement;
+    }
+
+    function formatDate(date) {
+      const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+      return months[date.getMonth()] + ' ' + date.getDate() + ', ' + date.getFullYear();
+    }
+
+    function formatDateLong(date) {
+      const months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+      return months[date.getMonth()] + ' ' + date.getDate() + ', ' + date.getFullYear();
+    }
+
+    function formatDateTimeLocal(date) {
+      const year = date.getFullYear();
+      const month = String(date.getMonth() + 1).padStart(2, '0');
+      const day = String(date.getDate()).padStart(2, '0');
+      const hours = String(date.getHours()).padStart(2, '0');
+      const minutes = String(date.getMinutes()).padStart(2, '0');
+      return `${year}-${month}-${day}T${hours}:${minutes}`;
+    }
+
+    function updateDateTimeInput(campaignId, type, date) {
+      const timeInput = document.getElementById(type + '-time-' + campaignId);
+      const timeValue = timeInput.value; // e.g., "09:00"
+      const [hours, minutes] = timeValue.split(':');
+
+      // Create new date with the selected time
+      const combinedDate = new Date(date);
+      combinedDate.setHours(parseInt(hours));
+      combinedDate.setMinutes(parseInt(minutes));
+
+      // Update the hidden input
+      const inputId = type === 'from' ? 'active_from_' : 'active_until_';
+      document.getElementById(inputId + campaignId).value = formatDateTimeLocal(combinedDate);
+    }
+
+    function toggleEditWindow(campaignId, event) {
+      const form = document.getElementById('edit-window-' + campaignId);
+      const display = form.previousElementSibling;
+
+      if (form.classList.contains('active')) {
+        form.classList.remove('active');
+      } else {
+        // Close any other open forms
+        document.querySelectorAll('.operating-window-form.active').forEach(f => {
+          f.classList.remove('active');
+        });
+
+        // Get the position of the clicked element
+        const rect = display.getBoundingClientRect();
+
+        // Position the form below the display element
+        form.style.left = rect.left + 'px';
+        form.style.top = (rect.bottom + 10) + 'px';
+
+        // Initialize slider if not already done
+        const activeFrom = document.getElementById('active_from_' + campaignId).value;
+        const activeUntil = document.getElementById('active_until_' + campaignId).value;
+        initSlider(campaignId, activeFrom, activeUntil);
+
+        form.classList.add('active');
+      }
+    }
+
+    // Close form when clicking outside
+    document.addEventListener('click', function(event) {
+      if (!event.target.closest('.operating-window-cell')) {
+        document.querySelectorAll('.operating-window-form.active').forEach(f => {
+          f.classList.remove('active');
+        });
+      }
+    });
+
+    function saveWindow(event, campaignId) {
+      event.preventDefault();
+      const form = event.target;
+      const formData = new FormData(form);
+
+      fetch(window.location.href, {
+        method: 'POST',
+        body: formData,
+        headers: {
+          'X-Requested-With': 'XMLHttpRequest'
+        }
+      })
+      .then(response => response.json())
+      .then(data => {
+        if (data.success) {
+          // Reload the page to show updated dates
+          window.location.reload();
+        } else {
+          alert('Error updating operating window: ' + (data.error || 'Unknown error'));
+        }
+      })
+      .catch(error => {
+        console.error('Error:', error);
+        alert('Error updating operating window');
+      });
+
+      return false;
+    }
+
+    let currentCampaignId = null;
+    let typeCardsInitialized = false;
+
+    function openMessagePopup(campaignId) {
+      console.log('Opening popup for campaign:', campaignId);
+      currentCampaignId = campaignId;
+
+      const overlay = document.getElementById('popup-overlay');
+      const popup = document.getElementById('message-popup');
+
+      overlay.classList.add('active');
+      popup.classList.add('active');
+      document.getElementById('form-campaign-id').value = campaignId;
+
+      // Set scheduled date and time
+      let dateToUse;
+      if (selectedDate && selectedCampaignId === campaignId) {
+        dateToUse = new Date(selectedDate);
+      } else {
+        // Default to today if no date was selected
+        dateToUse = new Date();
+      }
+
+      // Get the time from the time input
+      const timeInput = document.getElementById('add-time-' + campaignId);
+      const timeValue = timeInput ? timeInput.value : '09:00';
+      const [hours, minutes] = timeValue.split(':');
+
+      // Create a new date with the selected time
+      dateToUse.setHours(parseInt(hours));
+      dateToUse.setMinutes(parseInt(minutes));
+
+      const dateStr = dateToUse.toISOString().split('T')[0];
+      document.getElementById('form-scheduled-date').value = dateStr;
+      console.log('Set scheduled date with time:', dateStr, timeValue);
+
+      // Initialize type card click handlers (only once)
+      if (!typeCardsInitialized) {
+        const emailCard = document.getElementById('type-email');
+        const smsCard = document.getElementById('type-sms');
+
+        if (emailCard) {
+          emailCard.addEventListener('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            console.log('Email card clicked via addEventListener');
+            selectType('email');
+          });
+        }
+
+        if (smsCard) {
+          smsCard.addEventListener('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            console.log('SMS card clicked via addEventListener');
+            selectType('sms');
+          });
+        }
+
+        typeCardsInitialized = true;
+        console.log('Type cards initialized');
+      }
+    }
+
+    function closeMessagePopup() {
+      // Clean up Quill editor
+      if (quillEditor) {
+        const container = document.getElementById('email_body_editor');
+        container.innerHTML = '';
+        quillEditor = null;
+      }
+
+      document.getElementById('popup-overlay').classList.remove('active');
+      document.getElementById('message-popup').classList.remove('active');
+      document.getElementById('email-form').classList.remove('active');
+      document.getElementById('sms-form').classList.remove('active');
+      document.getElementById('instagram-form').classList.remove('active');
+      document.getElementById('tiktok-form').classList.remove('active');
+      document.getElementById('snapchat-form').classList.remove('active');
+      document.getElementById('type-email').classList.remove('selected');
+      document.getElementById('type-sms').classList.remove('selected');
+      document.getElementById('type-instagram').classList.remove('selected');
+      document.getElementById('type-tiktok').classList.remove('selected');
+      document.getElementById('type-snapchat').classList.remove('selected');
+
+      // Re-enable type cards
+      document.querySelectorAll('.type-card').forEach(card => card.classList.remove('disabled'));
+
+      // Hide delete button and reset form action
+      document.getElementById('btn-delete-message').style.display = 'none';
+      document.getElementById('btn-save-message').textContent = 'Create Message';
+      document.getElementById('form-action').value = 'add_message';
+      document.getElementById('form-message-id').value = '';
+
+      document.getElementById('message-form').reset();
+    }
+
+    // Wait for DOM to be fully loaded
+    document.addEventListener('DOMContentLoaded', function() {
+      const messageForm = document.getElementById('message-form');
+
+      // Add form validation
+      if (messageForm) {
+        messageForm.addEventListener('submit', function(e) {
+          const messageType = document.getElementById('form-message-type').value;
+
+          // Validate message type is selected
+          if (!messageType) {
+            e.preventDefault();
+            alert('Please select a message type (Email, SMS, Instagram, etc.) before creating the message.');
+            return false;
+          }
+
+          // Validate product form if product type is selected
+          if (messageType === 'product') {
+            const productVariant = document.getElementById('product_variant').value;
+            if (!productVariant) {
+              e.preventDefault();
+              alert('Please select a product or variant for the product release.');
+              return false;
+            }
+          }
+
+          // Update Quill editor content to hidden textarea before submit
+          if (messageType === 'email' && quillEditor) {
+            document.getElementById('email_body').value = quillEditor.root.innerHTML;
+          }
+
+          // If form submission fails or takes too long, remove the overlay after 5 seconds
+          setTimeout(function() {
+            const overlay = document.getElementById('popup-overlay');
+            if (overlay && overlay.classList.contains('active')) {
+              overlay.classList.remove('active');
+              document.getElementById('message-popup').classList.remove('active');
+            }
+          }, 5000);
+        });
+      }
+    });
+
+    function openEditMessagePopup(bubble) {
+      const messageId = bubble.dataset.messageId;
+      const campaignId = bubble.dataset.campaignId;
+
+      // Fetch message data via AJAX
+      fetch(`/admin/campaigns/?action=get_message&message_id=${messageId}`, {
+        headers: {
+          'X-Requested-With': 'XMLHttpRequest'
+        }
+      })
+      .then(response => response.json())
+      .then(data => {
+        if (data.success) {
+          const message = data.message;
+
+          // Open popup
+          document.getElementById('popup-overlay').classList.add('active');
+          document.getElementById('message-popup').classList.add('active');
+
+          // Set form to edit mode
+          document.getElementById('form-action').value = 'edit_message';
+          document.getElementById('form-campaign-id').value = campaignId;
+          document.getElementById('form-message-id').value = messageId;
+          document.getElementById('form-message-type').value = message.message_type;
+
+          // Set scheduled time if available
+          if (message.scheduled_date) {
+            const schedDate = new Date(message.scheduled_date);
+            const hours = String(schedDate.getHours()).padStart(2, '0');
+            const minutes = String(schedDate.getMinutes()).padStart(2, '0');
+            document.getElementById('form-scheduled-time').value = `${hours}:${minutes}`;
+          }
+
+          // Update button text and show delete
+          document.getElementById('btn-save-message').textContent = 'Save Changes';
+          document.getElementById('btn-delete-message').style.display = 'block';
+
+          // Disable type cards (can't change type when editing)
+          document.querySelectorAll('.type-card').forEach(card => {
+            if (card.id !== 'type-' + message.message_type) {
+              card.classList.add('disabled');
+            }
+          });
+
+          // Select the correct type and show form
+          selectType(message.message_type);
+
+          // Pre-fill form based on message type
+          if (message.message_type === 'email') {
+            document.querySelector('[name="email_subject"]').value = message.custom_subject || '';
+            document.querySelector('[name="email_send_mode"]').value = message.send_mode || 'auto';
+
+            // Initialize Quill and set content
+            if (quillEditor && message.custom_content) {
+              quillEditor.root.innerHTML = message.custom_content;
+              document.getElementById('email_body').value = message.custom_content;
+            }
+          } else if (message.message_type === 'sms') {
+            document.querySelector('[name="sms_message"]').value = message.custom_content || '';
+            document.querySelector('[name="sms_send_mode"]').value = message.send_mode || 'auto';
+          } else if (message.message_type === 'instagram') {
+            document.querySelector('[name="instagram_caption"]').value = message.custom_subject || '';
+            document.querySelector('[name="instagram_media"]').value = message.media_urls || '';
+            document.querySelector('[name="instagram_notes"]').value = message.notes || '';
+          } else if (message.message_type === 'tiktok') {
+            document.querySelector('[name="tiktok_caption"]').value = message.custom_subject || '';
+            document.querySelector('[name="tiktok_media"]').value = message.media_urls || '';
+            document.querySelector('[name="tiktok_notes"]').value = message.notes || '';
+          } else if (message.message_type === 'snapchat') {
+            document.querySelector('[name="snapchat_caption"]').value = message.custom_subject || '';
+            document.querySelector('[name="snapchat_media"]').value = message.media_urls || '';
+            document.querySelector('[name="snapchat_notes"]').value = message.notes || '';
+          }
+        } else {
+          alert('Error loading message: ' + (data.error || 'Unknown error'));
+        }
+      })
+      .catch(error => {
+        console.error('Error:', error);
+        alert('Error loading message');
+      });
+    }
+
+    function deleteMessage() {
+      if (!confirm('Are you sure you want to delete this message?')) {
+        return;
+      }
+
+      const messageId = document.getElementById('form-message-id').value;
+      const campaignId = document.getElementById('form-campaign-id').value;
+
+      const formData = new FormData();
+      formData.append('action', 'delete_message');
+      formData.append('message_id', messageId);
+      formData.append('campaign_id', campaignId);
+
+      const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+
+      fetch(window.location.href, {
+        method: 'POST',
+        body: formData,
+        headers: {
+          'X-CSRFToken': csrfToken,
+          'X-Requested-With': 'XMLHttpRequest'
+        }
+      })
+      .then(response => response.json())
+      .then(data => {
+        if (data.success) {
+          closeMessagePopup();
+          window.location.reload();
+        } else {
+          alert('Error deleting message: ' + (data.error || 'Unknown error'));
+        }
+      })
+      .catch(error => {
+        console.error('Error:', error);
+        alert('Error deleting message');
+      });
+    }
+
+    let quillEditor = null;
+
+    function selectType(type) {
+      console.log('selectType called with:', type);
+
+      const formMessageType = document.getElementById('form-message-type');
+      const typeEmail = document.getElementById('type-email');
+      const typeSms = document.getElementById('type-sms');
+      const typeInstagram = document.getElementById('type-instagram');
+      const typeTiktok = document.getElementById('type-tiktok');
+      const typeSnapchat = document.getElementById('type-snapchat');
+      const typeYoutube = document.getElementById('type-youtube');
+      const typePromotion = document.getElementById('type-promotion');
+      const typeProduct = document.getElementById('type-product');
+      const emailForm = document.getElementById('email-form');
+      const smsForm = document.getElementById('sms-form');
+      const instagramForm = document.getElementById('instagram-form');
+      const tiktokForm = document.getElementById('tiktok-form');
+      const snapchatForm = document.getElementById('snapchat-form');
+      const youtubeForm = document.getElementById('youtube-form');
+      const promotionForm = document.getElementById('promotion-form');
+      const productForm = document.getElementById('product-form');
+
+      if (!formMessageType) {
+        console.error('Missing form-message-type element!');
+        return;
+      }
+
+      formMessageType.value = type;
+
+      // Remove all selections
+      typeEmail.classList.remove('selected');
+      typeSms.classList.remove('selected');
+      typeInstagram.classList.remove('selected');
+      typeTiktok.classList.remove('selected');
+      typeSnapchat.classList.remove('selected');
+      typeYoutube.classList.remove('selected');
+      typePromotion.classList.remove('selected');
+      typeProduct.classList.remove('selected');
+      emailForm.classList.remove('active');
+      smsForm.classList.remove('active');
+      instagramForm.classList.remove('active');
+      tiktokForm.classList.remove('active');
+      snapchatForm.classList.remove('active');
+      youtubeForm.classList.remove('active');
+      promotionForm.classList.remove('active');
+      productForm.classList.remove('active');
+
+      if (type === 'email') {
+        typeEmail.classList.add('selected');
+        emailForm.classList.add('active');
+        console.log('Email form activated');
+
+        // Initialize Quill editor for email body
+        if (!quillEditor && typeof Quill !== 'undefined') {
+          quillEditor = new Quill('#email_body_editor', {
+            theme: 'snow',
+            modules: {
+              toolbar: [
+                [{ 'header': [1, 2, 3, false] }],
+                ['bold', 'italic', 'underline'],
+                [{ 'list': 'ordered'}, { 'list': 'bullet' }],
+                [{ 'align': [] }],
+                ['link', 'image'],
+                ['clean']
+              ]
+            },
+            placeholder: 'Enter your email message here...'
+          });
+
+          // Set the editor height
+          document.querySelector('#email_body_editor .ql-editor').style.minHeight = '250px';
+
+          // Update hidden textarea when content changes
+          quillEditor.on('text-change', function() {
+            document.getElementById('email_body').value = quillEditor.root.innerHTML;
+          });
+
+          console.log('Quill editor initialized');
+        }
+      } else if (type === 'sms') {
+        typeSms.classList.add('selected');
+        smsForm.classList.add('active');
+        console.log('SMS form activated');
+      } else if (type === 'instagram') {
+        typeInstagram.classList.add('selected');
+        instagramForm.classList.add('active');
+        console.log('Instagram form activated');
+      } else if (type === 'tiktok') {
+        typeTiktok.classList.add('selected');
+        tiktokForm.classList.add('active');
+        console.log('TikTok form activated');
+      } else if (type === 'snapchat') {
+        typeSnapchat.classList.add('selected');
+        snapchatForm.classList.add('active');
+        console.log('Snapchat form activated');
+      } else if (type === 'youtube') {
+        typeYoutube.classList.add('selected');
+        youtubeForm.classList.add('active');
+        console.log('YouTube form activated');
+      } else if (type === 'promotion') {
+        typePromotion.classList.add('selected');
+        promotionForm.classList.add('active');
+        console.log('Promotion form activated');
+      } else if (type === 'product') {
+        typeProduct.classList.add('selected');
+        productForm.classList.add('active');
+        console.log('Product form activated');
+      }
+    }
+
+    // Close popup when clicking on overlay (background), but not on the popup itself
+    document.getElementById('popup-overlay').addEventListener('click', function(e) {
+      // Only close if the click is directly on the overlay, not on child elements
+      if (e.target === this) {
+        console.log('Overlay background clicked, closing popup');
+        closeMessagePopup();
+      }
+    });
+
+    // Prevent clicks inside the popup from closing it (but allow form submissions)
+    document.getElementById('message-popup').addEventListener('click', function(e) {
+      // Don't stop propagation for submit buttons
+      if (e.target.type === 'submit') {
+        return; // Allow submit button clicks to propagate
+      }
+
+      e.stopPropagation();
+    });
+
+    // Status dropdown functions
+    function toggleStatusDropdown(messageId) {
+      event.stopPropagation();
+      const dropdown = document.getElementById('status-dropdown-' + messageId);
+
+      // Close all other dropdowns
+      document.querySelectorAll('.status-dropdown').forEach(d => {
+        if (d.id !== 'status-dropdown-' + messageId) {
+          d.classList.remove('active');
+        }
+      });
+
+      // Toggle this dropdown
+      dropdown.classList.toggle('active');
+    }
+
+    function changeMessageStatus(messageId, newStatus) {
+      event.stopPropagation();
+
+      // Close dropdown
+      const dropdown = document.getElementById('status-dropdown-' + messageId);
+      dropdown.classList.remove('active');
+
+      // Send AJAX request to update status
+      fetch(window.location.pathname, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded',
+          'X-Requested-With': 'XMLHttpRequest',
+        },
+        body: new URLSearchParams({
+          'csrfmiddlewaretoken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+          'action': 'change_message_status',
+          'message_id': messageId,
+          'status': newStatus
+        })
+      })
+      .then(response => response.json())
+      .then(data => {
+        if (data.success) {
+          // Reload page to show updated status
+          location.reload();
+        } else {
+          alert('Error updating status: ' + (data.error || 'Unknown error'));
+        }
+      })
+      .catch(error => {
+        console.error('Error:', error);
+        alert('Error updating status');
+      });
+    }
+
+    // Close dropdowns when clicking outside
+    document.addEventListener('click', function(e) {
+      if (!e.target.closest('.status-badge-container')) {
+        document.querySelectorAll('.status-dropdown').forEach(d => {
+          d.classList.remove('active');
+        });
+      }
+    });
+
+    // Campaign status dropdown functions
+    function toggleCampaignStatusDropdown(campaignId) {
+      event.stopPropagation();
+      const dropdown = document.getElementById('campaign-status-dropdown-' + campaignId);
+
+      // Close all other dropdowns
+      document.querySelectorAll('.status-dropdown').forEach(d => {
+        if (d.id !== 'campaign-status-dropdown-' + campaignId) {
+          d.classList.remove('active');
+        }
+      });
+
+      // Toggle this dropdown
+      dropdown.classList.toggle('active');
+    }
+
+    function changeCampaignStatus(campaignId, newStatus) {
+      event.stopPropagation();
+
+      // Close dropdown
+      const dropdown = document.getElementById('campaign-status-dropdown-' + campaignId);
+      dropdown.classList.remove('active');
+
+      // Send AJAX request to update status
+      fetch(window.location.pathname, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded',
+          'X-Requested-With': 'XMLHttpRequest',
+        },
+        body: new URLSearchParams({
+          'csrfmiddlewaretoken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+          'action': 'change_campaign_status',
+          'campaign_id': campaignId,
+          'status': newStatus
+        })
+      })
+      .then(response => response.json())
+      .then(data => {
+        if (data.success) {
+          // Reload page to show updated status
+          location.reload();
+        } else {
+          alert('Error updating campaign status: ' + (data.error || 'Unknown error'));
+        }
+      })
+      .catch(error => {
+        console.error('Error:', error);
+        alert('Error updating campaign status');
+      });
+    }
+
+    // Toggle all products in promotion form
+    function toggleAllProducts() {
+      const selectAll = document.getElementById('select-all-products');
+      const checkboxes = document.querySelectorAll('.product-checkbox');
+      checkboxes.forEach(checkbox => {
+        checkbox.checked = selectAll.checked;
+      });
+    }
+
+    // Update promotion type (show/hide discount code field)
+    function updatePromotionType() {
+      const promotionType = document.querySelector('input[name="promotion_type"]:checked').value;
+      const codeSection = document.getElementById('promotion-code-section');
+
+      if (promotionType === 'private') {
+        codeSection.style.display = 'block';
+      } else {
+        codeSection.style.display = 'none';
+      }
+    }
+
+    // Toggle discount amount field based on discount type
+    function toggleDiscountAmount() {
+      const discountType = document.getElementById('promotion_discount_type').value;
+      const amountSection = document.getElementById('promotion-discount-amount-section');
+      const discountUnit = document.getElementById('discount-unit');
+      const amountInput = document.getElementById('promotion_discount_value');
+
+      if (discountType === 'bogo' || discountType === 'free_shipping') {
+        // BOGO and Free Shipping don't need an amount
+        amountSection.style.display = 'none';
+        amountInput.value = discountType === 'bogo' ? '50' : '0'; // Set appropriate value for backend
+      } else {
+        amountSection.style.display = 'block';
+        // Update the unit symbol
+        if (discountType === 'percentage') {
+          discountUnit.textContent = '%';
+          amountInput.placeholder = '20';
+          amountInput.max = '100';
+        } else if (discountType === 'fixed') {
+          discountUnit.textContent = '$';
+          amountInput.placeholder = '10';
+          amountInput.max = '';
+        }
+        amountInput.value = ''; // Clear previous value
+      }
+    }
+
+    // Generate random discount code
+    function generateDiscountCode() {
+      const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+      let code = '';
+      for (let i = 0; i < 8; i++) {
+        code += chars.charAt(Math.floor(Math.random() * chars.length));
+      }
+      document.getElementById('promotion_code').value = code;
+    }
+  </script>
+
+  <!-- Drag date preview tooltip -->
+  <div id="drag-date-preview" class="drag-date-preview" style="display: none;"></div>
+</body>
+</html>

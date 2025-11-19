@@ -1,0 +1,486 @@
+{% load static tz %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin Dashboard - Blueprint Apparel</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background: #f1f5f9;
+      min-height: 100vh;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
+
+    .top-bar {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      padding: 2rem 0;
+      box-shadow: 0 4px 20px rgba(102, 126, 234, 0.15);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .top-bar::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background:
+        radial-gradient(circle at 20% 50%, rgba(255,255,255,0.1) 0%, transparent 50%),
+        radial-gradient(circle at 80% 80%, rgba(255,255,255,0.08) 0%, transparent 50%);
+      pointer-events: none;
+    }
+
+    .container {
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 0 2rem;
+      position: relative;
+      z-index: 1;
+    }
+
+    .header h1 {
+      color: white;
+      font-size: 3rem;
+      font-weight: 800;
+      margin-bottom: 0.5rem;
+      letter-spacing: -0.03em;
+      text-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    }
+
+    .header p {
+      color: rgba(255, 255, 255, 0.95);
+      font-size: 1.125rem;
+      font-weight: 400;
+      letter-spacing: -0.01em;
+    }
+
+    .main-content {
+      padding: 2rem;
+      max-width: 1400px;
+      margin: 0 auto;
+    }
+
+    .quick-stats {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 1.5rem;
+      margin-bottom: 3rem;
+      margin-top: -4rem;
+      position: relative;
+      z-index: 10;
+    }
+
+    .stat-box {
+      background: white;
+      border-radius: 16px;
+      padding: 2rem;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+      text-align: center;
+      border: 1px solid rgba(226, 232, 240, 0.8);
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .stat-box::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 4px;
+      background: linear-gradient(90deg, #667eea, #764ba2);
+      opacity: 0;
+      transition: opacity 0.3s;
+    }
+
+    .stat-box:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 12px 28px rgba(0, 0, 0, 0.12);
+    }
+
+    .stat-box:hover::before {
+      opacity: 1;
+    }
+
+    .stat-box h4 {
+      color: #64748b;
+      font-size: 0.8125rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      margin-bottom: 0.75rem;
+    }
+
+    .stat-box .number {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      font-size: 2.75rem;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+    }
+
+    .section-header {
+      margin: 3rem 0 2rem 0;
+      position: relative;
+      padding-left: 1rem;
+    }
+
+    .section-header::before {
+      content: '';
+      position: absolute;
+      left: 0;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 4px;
+      height: 28px;
+      background: linear-gradient(180deg, #667eea, #764ba2);
+      border-radius: 2px;
+    }
+
+    .section-header h2 {
+      color: #1e293b;
+      font-size: 1.75rem;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+    }
+
+    .admin-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+      gap: 2rem;
+      margin-bottom: 3rem;
+    }
+
+    .admin-card {
+      background: white;
+      border-radius: 16px;
+      padding: 2.25rem;
+      box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      text-decoration: none;
+      color: inherit;
+      display: block;
+      border: 1px solid #e2e8f0;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .admin-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 4px;
+      background: linear-gradient(90deg, #667eea, #764ba2);
+      transform: scaleX(0);
+      transform-origin: left;
+      transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .admin-card:hover {
+      transform: translateY(-6px);
+      box-shadow: 0 12px 32px rgba(102, 126, 234, 0.15);
+      border-color: rgba(102, 126, 234, 0.2);
+    }
+
+    .admin-card:hover::before {
+      transform: scaleX(1);
+    }
+
+    .admin-card .icon {
+      font-size: 3rem;
+      margin-bottom: 1.25rem;
+      display: block;
+      filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.1));
+    }
+
+    .admin-card h3 {
+      color: #0f172a;
+      font-size: 1.375rem;
+      font-weight: 700;
+      margin-bottom: 0.75rem;
+      letter-spacing: -0.01em;
+    }
+
+    .admin-card p {
+      color: #64748b;
+      font-size: 0.9375rem;
+      line-height: 1.6;
+      font-weight: 400;
+    }
+
+    .alert {
+      padding: 1.25rem 1.5rem;
+      border-radius: 12px;
+      margin-bottom: 2rem;
+      border: 1px solid;
+      animation: slideIn 0.3s ease-out;
+    }
+
+    @keyframes slideIn {
+      from {
+        opacity: 0;
+        transform: translateY(-10px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .alert-success {
+      background: linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%);
+      color: #065f46;
+      border-color: #10b981;
+      box-shadow: 0 4px 12px rgba(16, 185, 129, 0.1);
+    }
+
+    .view-site-btn {
+      background: rgba(255, 255, 255, 0.2);
+      backdrop-filter: blur(10px);
+      color: white;
+      padding: 0.625rem 1.25rem;
+      border-radius: 10px;
+      text-decoration: none;
+      font-size: 0.9375rem;
+      font-weight: 600;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    }
+
+    .view-site-btn:hover {
+      background: rgba(255, 255, 255, 0.3);
+      transform: translateY(-2px);
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+    }
+
+    @media (max-width: 768px) {
+      .header h1 {
+        font-size: 2rem;
+      }
+      .quick-stats {
+        grid-template-columns: 1fr;
+        margin-top: -3rem;
+      }
+      .admin-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="top-bar">
+    <div class="container">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+        <div></div>
+        <a href="/" class="view-site-btn">
+          <span>🏠</span>
+          <span>View Site</span>
+        </a>
+      </div>
+      <div class="header" style="display: flex; justify-content: space-between; align-items: center;">
+        <div>
+          <div style="color: rgba(255,255,255,0.85); font-size: 0.875rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 0.5rem;">Admin</div>
+          <h1 style="margin: 0;">Blueprint Apparel</h1>
+        </div>
+        <div style="text-align: right;">
+          <div style="color: rgba(255,255,255,0.95); font-size: 1.125rem; font-weight: 600; margin-bottom: 0.25rem;">{% timezone "America/Chicago" %}{{ cst_time|date:"g:i A" }}{% endtimezone %}</div>
+          <div style="color: rgba(255,255,255,0.75); font-size: 0.9375rem; font-weight: 500;">{% timezone "America/Chicago" %}{{ cst_time|date:"l, M j, Y" }}{% endtimezone %}</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="main-content">
+    {% if messages %}
+      {% for message in messages %}
+        <div class="alert alert-{{ message.tags }}">{{ message }}</div>
+      {% endfor %}
+    {% endif %}
+
+    <!-- Quick Stats -->
+    <div class="quick-stats">
+      <div class="stat-box">
+        <h4>Total Users</h4>
+        <div class="number">{{ stats.total_users }}</div>
+      </div>
+      <div class="stat-box">
+        <h4>Email Subscribers</h4>
+        <div class="number">{{ stats.total_email_subs }}</div>
+      </div>
+      <div class="stat-box">
+        <h4>SMS Subscribers</h4>
+        <div class="number">{{ stats.total_sms_subs }}</div>
+      </div>
+      <div class="stat-box">
+        <h4>Products</h4>
+        <div class="number">{{ stats.total_products }}</div>
+      </div>
+      <div class="stat-box">
+        <h4>Page Views</h4>
+        <div class="number">{{ stats.total_page_views }}</div>
+        <div style="color: #64748b; font-size: 0.75rem; margin-top: 0.5rem; font-weight: 500;">
+          {{ stats.page_views_24h }} in last 24h
+        </div>
+      </div>
+    </div>
+
+    <!-- Products Section -->
+    <div class="section-header">
+      <h2>🛍️ Products</h2>
+    </div>
+
+    <div class="admin-grid">
+      <a href="{% url 'admin_products' %}" class="admin-card">
+        <div class="icon">📦</div>
+        <h3>Manage Products</h3>
+        <p>Add, edit, and organize your product catalog. {{ stats.total_products }} product{{ stats.total_products|pluralize }} total.</p>
+      </a>
+
+      <a href="{% url 'admin_categories' %}" class="admin-card">
+        <div class="icon">📁</div>
+        <h3>Categories</h3>
+        <p>Manage product categories and configure variant attributes for each type.</p>
+      </a>
+
+      <a href="{% url 'admin_promotions' %}" class="admin-card">
+        <div class="icon">🏷️</div>
+        <h3>Promotions</h3>
+        <p>Create and manage discount codes, percentage offs, and promotional deals.</p>
+      </a>
+
+      <a href="{% url 'admin_shipments' %}" class="admin-card">
+        <div class="icon">🚚</div>
+        <h3>Shipments</h3>
+        <p>Track incoming shipments for inventory restocking and manage delivery status.</p>
+      </a>
+    </div>
+
+    <!-- Marketing Section -->
+    <div class="section-header">
+      <h2>📨 Marketing</h2>
+    </div>
+
+    <div class="admin-grid">
+      <a href="{% url 'admin_campaigns_list' %}" class="admin-card">
+        <div class="icon">🎯</div>
+        <h3>Campaigns</h3>
+        <p>Create and manage campaigns with scheduled email and SMS messages.</p>
+      </a>
+
+      <a href="/admin/subscribers/" class="admin-card">
+        <div class="icon">👥</div>
+        <h3>Subscribers</h3>
+        <p>Manage email and SMS subscribers. {{ stats.total_email_subs }} email, {{ stats.total_sms_subs }} SMS. {{ stats.new_email_subs_24h }} new email and {{ stats.new_sms_subs_24h }} new SMS in last 24h.</p>
+      </a>
+
+      <a href="/admin/email/templates/" class="admin-card">
+        <div class="icon">📝</div>
+        <h3>Templates</h3>
+        <p>Manage email and SMS templates for your marketing campaigns.</p>
+      </a>
+    </div>
+
+    <!-- Orders & Fulfillment Section -->
+    <div class="section-header">
+      <h2>📦 Orders & Fulfillment</h2>
+    </div>
+
+    <div class="admin-grid">
+      <a href="{% url 'admin_orders' %}" class="admin-card">
+        <div class="icon">📦</div>
+        <h3>Orders</h3>
+        <p>View and manage customer orders, process fulfillment, and track order status.</p>
+      </a>
+
+      <a href="{% url 'admin_returns' %}" class="admin-card">
+        <div class="icon">↩️</div>
+        <h3>Returns & Exchanges</h3>
+        <p>Process return requests, manage refunds, and handle product exchanges.</p>
+      </a>
+
+      <a href="#" onclick="alert('Feature coming soon!'); return false;" class="admin-card">
+        <div class="icon">📊</div>
+        <h3>Order Analytics</h3>
+        <p>View order trends, revenue reports, and fulfillment performance metrics.</p>
+      </a>
+    </div>
+
+    <!-- Dashboards Section -->
+    <div class="section-header">
+      <h2>📊 Dashboards</h2>
+    </div>
+
+    <div class="admin-grid">
+      <a href="/admin/email/" class="admin-card">
+        <div class="icon">📊</div>
+        <h3>Email Dashboard</h3>
+        <p>View email stats, recent sends, and performance metrics.</p>
+      </a>
+
+      <a href="/admin/sms/" class="admin-card">
+        <div class="icon">📈</div>
+        <h3>SMS Dashboard</h3>
+        <p>View SMS stats, recent sends, and delivery reports.</p>
+      </a>
+    </div>
+
+    <!-- Analytics & Settings Section -->
+    <div class="section-header">
+      <h2>⚙️ Analytics & Settings</h2>
+    </div>
+
+    <div class="admin-grid">
+      <a href="/admin/visitors/" class="admin-card">
+        <div class="icon">📊</div>
+        <h3>Visitor Analytics</h3>
+        <p>Track site visitors, page views, traffic sources, and locations.</p>
+      </a>
+
+      <a href="/admin/security/" class="admin-card">
+        <div class="icon">🔒</div>
+        <h3>Security Dashboard</h3>
+        <p>Monitor system health, security settings, and user activity.</p>
+      </a>
+
+      <a href="{% url 'two_factor_setup' %}" class="admin-card">
+        <div class="icon">🔐</div>
+        <h3>Two-Factor Authentication</h3>
+        <p>Secure your account with two-factor authentication (2FA).</p>
+      </a>
+
+      <a href="/admin/homepage/" class="admin-card">
+        <div class="icon">🏠</div>
+        <h3>Homepage Settings</h3>
+        <p>Customize hero image, title, and subtitle for your homepage.</p>
+      </a>
+
+      <a href="/django-admin/" class="admin-card">
+        <div class="icon">⚡</div>
+        <h3>Django Admin</h3>
+        <p>Advanced site administration and database management.</p>
+      </a>
+    </div>
+  </div>
+</body>
+</html>

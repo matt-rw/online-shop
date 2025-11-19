@@ -1,0 +1,651 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Product Categories - Blueprint Apparel</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background: #f1f5f9;
+      min-height: 100vh;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
+
+    .nav-links {
+      background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+      padding: 1rem 2rem;
+      display: flex;
+      gap: 0.75rem;
+      align-items: center;
+    }
+
+    .nav-link {
+      background: rgba(255, 255, 255, 0.15);
+      backdrop-filter: blur(10px);
+      color: white;
+      padding: 0.5rem 1rem;
+      border-radius: 8px;
+      text-decoration: none;
+      font-size: 0.875rem;
+      font-weight: 500;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .nav-link:hover {
+      background: rgba(255, 255, 255, 0.25);
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    }
+
+    .top-bar {
+      background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+      padding: 2rem 0;
+      box-shadow: 0 4px 20px rgba(245, 158, 11, 0.15);
+      margin-bottom: 2rem;
+    }
+
+    .container {
+      max-width: 1600px;
+      margin: 0 auto;
+      padding: 0 2rem;
+    }
+
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1rem;
+    }
+
+    .header h1 {
+      color: white;
+      font-size: 2.5rem;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+    }
+
+    .btn-primary {
+      background: white;
+      color: #f59e0b;
+      padding: 0.875rem 1.75rem;
+      border-radius: 12px;
+      text-decoration: none;
+      font-weight: 700;
+      font-size: 1rem;
+      transition: all 0.3s;
+      border: none;
+      cursor: pointer;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .btn-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+    }
+
+    .main-content {
+      padding: 0 2rem 2rem 2rem;
+      max-width: 1600px;
+      margin: 0 auto;
+    }
+
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 1.5rem;
+      margin-bottom: 3rem;
+      margin-top: -4rem;
+      position: relative;
+      z-index: 10;
+    }
+
+    .stat-card {
+      background: white;
+      border-radius: 16px;
+      padding: 1.75rem;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+      text-align: center;
+      border: 1px solid rgba(226, 232, 240, 0.8);
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .stat-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 4px;
+      background: linear-gradient(90deg, #f59e0b, #d97706);
+      opacity: 0;
+      transition: opacity 0.3s;
+    }
+
+    .stat-card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 12px 28px rgba(0, 0, 0, 0.12);
+    }
+
+    .stat-card:hover::before {
+      opacity: 1;
+    }
+
+    .stat-card h3 {
+      color: #64748b;
+      font-size: 0.75rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      margin-bottom: 0.75rem;
+    }
+
+    .stat-card .number {
+      background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      font-size: 2.25rem;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+    }
+
+    .stat-card .icon {
+      font-size: 1.75rem;
+      margin-bottom: 0.75rem;
+      color: #f59e0b;
+    }
+
+    .main-content {
+      padding: 0 2rem 2rem 2rem;
+      max-width: 1600px;
+      margin: 0 auto;
+    }
+    .btn {
+      padding: 0.5rem 1rem;
+      border-radius: 8px;
+      font-size: 0.875rem;
+      font-weight: 600;
+      border: none;
+      cursor: pointer;
+      transition: all 0.2s;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.5);
+      z-index: 1000;
+      align-items: center;
+      justify-content: center;
+    }
+    .modal-overlay.active {
+      display: flex;
+    }
+    .modal-content {
+      background: white;
+      border-radius: 16px;
+      padding: 2rem;
+      max-width: 800px;
+      width: 90%;
+      max-height: 90vh;
+      overflow-y: auto;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+    }
+    .form-group {
+      margin-bottom: 1.5rem;
+    }
+    .form-group label {
+      display: block;
+      font-weight: 600;
+      margin-bottom: 0.5rem;
+      color: #0f172a;
+      font-size: 0.875rem;
+    }
+    .form-group input[type="text"],
+    .form-group textarea {
+      width: 100%;
+      padding: 0.625rem 0.875rem;
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+      font-size: 0.875rem;
+      font-family: 'Inter', sans-serif;
+    }
+    .form-group textarea {
+      resize: vertical;
+      min-height: 80px;
+    }
+    .checkbox-group {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      margin-bottom: 1rem;
+    }
+    .checkbox-group input[type="checkbox"] {
+      width: 18px;
+      height: 18px;
+      cursor: pointer;
+    }
+    .checkbox-group label {
+      margin: 0;
+      font-weight: 500;
+      cursor: pointer;
+    }
+    .attribute-item {
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+      padding: 1rem;
+      margin-bottom: 0.75rem;
+    }
+    .attribute-item input,
+    .attribute-item select {
+      margin-bottom: 0.5rem;
+    }
+    .btn-secondary {
+      background: #f1f5f9;
+      color: #64748b;
+      border: 1px solid #e2e8f0;
+    }
+    .btn-secondary:hover {
+      background: #e2e8f0;
+    }
+    .btn-danger {
+      background: #fee2e2;
+      color: #991b1b;
+      border: 1px solid #fecaca;
+    }
+    .btn-danger:hover {
+      background: #fecaca;
+    }
+    .btn-sm {
+      padding: 0.375rem 0.75rem;
+      font-size: 0.8125rem;
+    }
+  </style>
+</head>
+<body>
+  <div class="nav-links">
+    <a href="{% url 'admin_home' %}" class="nav-link">← Back</a>
+  </div>
+
+  <div class="top-bar">
+    <div class="container">
+      <div class="header">
+        <h1>Categories</h1>
+        <button class="btn-primary" onclick="openCreateCategoryModal()">+ Add Category</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="main-content">
+
+    <div style="background: white; border-radius: 16px; padding: 2rem; box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);">
+      <h2 style="font-size: 1.5rem; font-weight: 700; margin-bottom: 1.5rem;">All Categories ({{ total_categories }})</h2>
+
+      {% if categories %}
+        <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 1.5rem;">
+        {% for category in categories %}
+        <div style="border: 1px solid #e2e8f0; border-radius: 12px; padding: 1.5rem; background: #fafbfc; transition: all 0.3s; cursor: pointer; position: relative; overflow: hidden;" onmouseover="this.style.transform='translateY(-4px)'; this.style.boxShadow='0 8px 16px rgba(0,0,0,0.1)'" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='none'">
+          <div style="position: absolute; top: 0; left: 0; right: 0; height: 4px; background: linear-gradient(90deg, #f59e0b, #d97706);"></div>
+
+          <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 1.5rem;">
+            <h3 style="font-size: 1.25rem; font-weight: 700; color: #0f172a;">{{ category.name }}</h3>
+            <button class="btn btn-secondary btn-sm" style="background: white; color: #64748b; border: 1px solid #e2e8f0; padding: 0.375rem 0.75rem; font-size: 0.8125rem; flex-shrink: 0;" onclick="event.stopPropagation(); openEditCategoryModal({{ category.id }})">
+              <i class="fa-solid fa-edit"></i>
+            </button>
+          </div>
+
+          <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 1.25rem;">
+            <div style="flex: 1;">
+              <div style="font-size: 0.6875rem; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.08em; font-weight: 600; margin-bottom: 0.25rem;">Products</div>
+              <div style="font-size: 2rem; font-weight: 700; color: #0f172a; line-height: 1;">{{ category.product_count }}</div>
+            </div>
+          </div>
+
+          {% if category.uses_size or category.uses_color or category.uses_material or category.custom_attributes %}
+          <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+            {% if category.uses_size %}
+            <div style="background: #f1f5f9; color: #475569; padding: 0.375rem 0.75rem; border-radius: 6px; font-size: 0.6875rem; font-weight: 600; border: 1px solid #e2e8f0;">
+              Size
+            </div>
+            {% endif %}
+            {% if category.uses_color %}
+            <div style="background: #f1f5f9; color: #475569; padding: 0.375rem 0.75rem; border-radius: 6px; font-size: 0.6875rem; font-weight: 600; border: 1px solid #e2e8f0;">
+              Color
+            </div>
+            {% endif %}
+            {% if category.uses_material %}
+            <div style="background: #f1f5f9; color: #475569; padding: 0.375rem 0.75rem; border-radius: 6px; font-size: 0.6875rem; font-weight: 600; border: 1px solid #e2e8f0;">
+              Material
+            </div>
+            {% endif %}
+            {% if category.custom_attributes %}
+              {% for attr in category.custom_attributes %}
+              <div style="background: #f1f5f9; color: #475569; padding: 0.375rem 0.75rem; border-radius: 6px; font-size: 0.6875rem; font-weight: 600; border: 1px solid #e2e8f0;">
+                {{ attr.name }}
+              </div>
+              {% endfor %}
+            {% endif %}
+          </div>
+          {% endif %}
+        </div>
+        {% endfor %}
+        </div>
+      {% else %}
+        <div style="text-align: center; padding: 4rem 2rem; color: #64748b;">
+          <i class="fa-solid fa-folder-open" style="font-size: 4rem; opacity: 0.3; margin-bottom: 1rem;"></i>
+          <p>No categories yet. Create your first category to get started.</p>
+        </div>
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- Category Modal -->
+  <div class="modal-overlay" id="categoryModal">
+    <div class="modal-content">
+      <h2 id="modalTitle" style="font-size: 1.75rem; font-weight: 700; margin-bottom: 1.5rem;">Create Category</h2>
+
+      <form id="categoryForm">
+        <input type="hidden" id="categoryId">
+
+        <div class="form-group">
+          <label for="categoryName">Category Name *</label>
+          <input type="text" id="categoryName" required>
+        </div>
+
+        <div class="form-group">
+          <label for="categorySlug">Slug *</label>
+          <input type="text" id="categorySlug" required>
+          <small style="color: #64748b; font-size: 0.75rem;">URL-friendly name (e.g., t-shirts, running-shoes)</small>
+        </div>
+
+        <div class="form-group">
+          <label for="categoryDescription">Description</label>
+          <textarea id="categoryDescription"></textarea>
+        </div>
+
+        <div class="form-group">
+          <label style="margin-bottom: 0.75rem;">Standard Attributes</label>
+          <div class="checkbox-group">
+            <input type="checkbox" id="usesSize">
+            <label for="usesSize">Size</label>
+          </div>
+          <div class="checkbox-group">
+            <input type="checkbox" id="usesColor">
+            <label for="usesColor">Color</label>
+          </div>
+          <div class="checkbox-group">
+            <input type="checkbox" id="usesMaterial">
+            <label for="usesMaterial">Material</label>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label>Additional Variant Options</label>
+          <small style="color: #64748b; font-size: 0.75rem; display: block; margin-bottom: 0.75rem;">
+            <strong>What creates different SKUs/inventory items?</strong><br>
+            Example for Pants: "Waist Size (28, 30, 32...)" and "Inseam (28, 30, 32...)" - each combination is a separate item to sell
+          </small>
+          <div id="customAttributesContainer"></div>
+          <button type="button" class="btn btn-secondary btn-sm" onclick="addCustomAttribute()">
+            <i class="fa-solid fa-plus"></i> Add Variant Option
+          </button>
+        </div>
+
+        <div class="form-group">
+          <label>Product Information Fields</label>
+          <small style="color: #64748b; font-size: 0.75rem; display: block; margin-bottom: 0.75rem;">
+            <strong>What describes the product but doesn't create variants?</strong><br>
+            Example for Pants: "Fit (Slim/Regular)", "Rise (High/Mid/Low)", "Care Instructions" - same for all variants
+          </small>
+          <div id="commonFieldsContainer"></div>
+          <button type="button" class="btn btn-secondary btn-sm" onclick="addCommonField()">
+            <i class="fa-solid fa-plus"></i> Add Info Field
+          </button>
+        </div>
+
+        <div style="display: flex; gap: 1rem; margin-top: 2rem;">
+          <button type="submit" class="btn btn-primary">
+            <i class="fa-solid fa-save"></i> Save Category
+          </button>
+          <button type="button" class="btn btn-secondary" onclick="closeCategoryModal()">
+            Cancel
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script>
+    let customAttrCount = 0;
+    let commonFieldCount = 0;
+    let categoriesData = {{ categories_json|safe }};
+
+    function openCreateCategoryModal() {
+      document.getElementById('modalTitle').textContent = 'Create Category';
+      document.getElementById('categoryForm').reset();
+      document.getElementById('categoryId').value = '';
+      document.getElementById('customAttributesContainer').innerHTML = '';
+      document.getElementById('commonFieldsContainer').innerHTML = '';
+      customAttrCount = 0;
+      commonFieldCount = 0;
+      document.getElementById('categoryModal').classList.add('active');
+    }
+
+    function openEditCategoryModal(categoryId) {
+      const category = categoriesData.find(c => c.id === categoryId);
+      if (!category) return;
+
+      document.getElementById('modalTitle').textContent = 'Edit Category';
+      document.getElementById('categoryId').value = category.id;
+      document.getElementById('categoryName').value = category.name;
+      document.getElementById('categorySlug').value = category.slug;
+      document.getElementById('categoryDescription').value = category.description || '';
+      document.getElementById('usesSize').checked = category.uses_size;
+      document.getElementById('usesColor').checked = category.uses_color;
+      document.getElementById('usesMaterial').checked = category.uses_material;
+
+      // Load custom attributes
+      document.getElementById('customAttributesContainer').innerHTML = '';
+      customAttrCount = 0;
+      if (category.custom_attributes && category.custom_attributes.length > 0) {
+        category.custom_attributes.forEach(attr => {
+          addCustomAttribute(attr);
+        });
+      }
+
+      // Load common fields
+      document.getElementById('commonFieldsContainer').innerHTML = '';
+      commonFieldCount = 0;
+      if (category.common_fields && category.common_fields.length > 0) {
+        category.common_fields.forEach(field => {
+          addCommonField(field);
+        });
+      }
+
+      document.getElementById('categoryModal').classList.add('active');
+    }
+
+    function closeCategoryModal() {
+      document.getElementById('categoryModal').classList.remove('active');
+    }
+
+    function addCustomAttribute(data = null) {
+      const container = document.getElementById('customAttributesContainer');
+      const id = customAttrCount++;
+
+      const div = document.createElement('div');
+      div.className = 'attribute-item';
+      div.id = `customAttr_${id}`;
+      div.innerHTML = `
+        <div style="display: flex; gap: 0.5rem; margin-bottom: 0.5rem;">
+          <input type="text" placeholder="Attribute Name (e.g., Waist Size)"
+                 id="customAttrName_${id}" value="${data?.name || ''}"
+                 style="flex: 1; padding: 0.5rem; border: 1px solid #e2e8f0; border-radius: 6px; font-size: 0.875rem;">
+          <select id="customAttrType_${id}"
+                  style="padding: 0.5rem; border: 1px solid #e2e8f0; border-radius: 6px; font-size: 0.875rem;">
+            <option value="text" ${data?.type === 'text' ? 'selected' : ''}>Text</option>
+            <option value="select" ${data?.type === 'select' ? 'selected' : ''}>Select</option>
+            <option value="number" ${data?.type === 'number' ? 'selected' : ''}>Number</option>
+          </select>
+          <button type="button" class="btn btn-danger btn-sm" onclick="removeElement('customAttr_${id}')">
+            <i class="fa-solid fa-trash"></i>
+          </button>
+        </div>
+        <div id="customAttrOptions_${id}" style="display: ${data?.type === 'select' ? 'block' : 'none'};">
+          <input type="text" placeholder="Options (comma-separated)"
+                 id="customAttrOptionsList_${id}"
+                 value="${data?.options ? data.options.join(', ') : ''}"
+                 style="width: 100%; padding: 0.5rem; border: 1px solid #e2e8f0; border-radius: 6px; font-size: 0.875rem;">
+        </div>
+      `;
+
+      container.appendChild(div);
+
+      // Add event listener for type change
+      document.getElementById(`customAttrType_${id}`).addEventListener('change', function() {
+        document.getElementById(`customAttrOptions_${id}`).style.display =
+          this.value === 'select' ? 'block' : 'none';
+      });
+    }
+
+    function addCommonField(data = null) {
+      const container = document.getElementById('commonFieldsContainer');
+      const id = commonFieldCount++;
+
+      const div = document.createElement('div');
+      div.className = 'attribute-item';
+      div.id = `commonField_${id}`;
+      div.innerHTML = `
+        <div style="display: flex; gap: 0.5rem;">
+          <input type="text" placeholder="Field Name (e.g., Fit)"
+                 id="commonFieldName_${id}" value="${data?.name || ''}"
+                 style="flex: 1; padding: 0.5rem; border: 1px solid #e2e8f0; border-radius: 6px; font-size: 0.875rem;">
+          <select id="commonFieldType_${id}"
+                  style="padding: 0.5rem; border: 1px solid #e2e8f0; border-radius: 6px; font-size: 0.875rem;">
+            <option value="text" ${data?.type === 'text' ? 'selected' : ''}>Text</option>
+            <option value="textarea" ${data?.type === 'textarea' ? 'selected' : ''}>Textarea</option>
+            <option value="number" ${data?.type === 'number' ? 'selected' : ''}>Number</option>
+          </select>
+          <button type="button" class="btn btn-danger btn-sm" onclick="removeElement('commonField_${id}')">
+            <i class="fa-solid fa-trash"></i>
+          </button>
+        </div>
+      `;
+
+      container.appendChild(div);
+    }
+
+    function removeElement(elementId) {
+      document.getElementById(elementId).remove();
+    }
+
+    document.getElementById('categoryForm').addEventListener('submit', async function(e) {
+      e.preventDefault();
+
+      const categoryId = document.getElementById('categoryId').value;
+      const formData = new FormData();
+
+      formData.append('action', categoryId ? 'update_category' : 'create_category');
+      if (categoryId) formData.append('category_id', categoryId);
+      formData.append('name', document.getElementById('categoryName').value);
+      formData.append('slug', document.getElementById('categorySlug').value);
+      formData.append('description', document.getElementById('categoryDescription').value);
+      formData.append('uses_size', document.getElementById('usesSize').checked);
+      formData.append('uses_color', document.getElementById('usesColor').checked);
+      formData.append('uses_material', document.getElementById('usesMaterial').checked);
+
+      // Collect custom attributes
+      const customAttributes = [];
+      const customAttrElements = document.querySelectorAll('[id^="customAttr_"]');
+      customAttrElements.forEach(elem => {
+        const id = elem.id.split('_')[1];
+        const name = document.getElementById(`customAttrName_${id}`)?.value;
+        const type = document.getElementById(`customAttrType_${id}`)?.value;
+
+        if (name) {
+          const attr = { name, type };
+          if (type === 'select') {
+            const optionsStr = document.getElementById(`customAttrOptionsList_${id}`)?.value || '';
+            attr.options = optionsStr.split(',').map(s => s.trim()).filter(s => s);
+          }
+          customAttributes.push(attr);
+        }
+      });
+      formData.append('custom_attributes', JSON.stringify(customAttributes));
+
+      // Collect common fields
+      const commonFields = [];
+      const commonFieldElements = document.querySelectorAll('[id^="commonField_"]');
+      commonFieldElements.forEach(elem => {
+        const id = elem.id.split('_')[1];
+        const name = document.getElementById(`commonFieldName_${id}`)?.value;
+        const type = document.getElementById(`commonFieldType_${id}`)?.value;
+
+        if (name) {
+          commonFields.push({ name, type });
+        }
+      });
+      formData.append('common_fields', JSON.stringify(commonFields));
+
+      formData.append('csrfmiddlewaretoken', '{{ csrf_token }}');
+
+      try {
+        const response = await fetch('{% url "admin_categories" %}', {
+          method: 'POST',
+          body: formData
+        });
+
+        if (response.ok) {
+          location.reload();
+        } else {
+          alert('Error saving category');
+        }
+      } catch (error) {
+        console.error('Error:', error);
+        alert('Error saving category');
+      }
+    });
+
+    // Auto-generate slug from name
+    document.getElementById('categoryName').addEventListener('input', function() {
+      if (!document.getElementById('categoryId').value) {
+        const slug = this.value.toLowerCase()
+          .replace(/[^a-z0-9]+/g, '-')
+          .replace(/^-+|-+$/g, '');
+        document.getElementById('categorySlug').value = slug;
+      }
+    });
+
+    // Close modal on overlay click
+    document.getElementById('categoryModal').addEventListener('click', function(e) {
+      if (e.target === this) {
+        closeCategoryModal();
+      }
+    });
+  </script>
+</body>
+</html>

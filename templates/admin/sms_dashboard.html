@@ -1,0 +1,496 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SMS Marketing - Blueprint Apparel</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    body {
+      font-family: 'Inter', sans-serif;
+      background:
+        linear-gradient(135deg, rgba(102, 126, 234, 0.9) 0%, rgba(118, 75, 162, 0.9) 100%),
+        repeating-linear-gradient(0deg, transparent, transparent 35px, rgba(255,255,255,.03) 35px, rgba(255,255,255,.03) 36px),
+        repeating-linear-gradient(90deg, transparent, transparent 35px, rgba(255,255,255,.03) 35px, rgba(255,255,255,.03) 36px),
+        radial-gradient(circle at 20% 30%, rgba(255,255,255,0.1) 0%, transparent 50%),
+        radial-gradient(circle at 80% 70%, rgba(255,255,255,0.08) 0%, transparent 50%),
+        radial-gradient(circle at 50% 50%, rgba(118, 75, 162, 0.3) 0%, transparent 100%);
+      background-attachment: fixed;
+      min-height: 100vh;
+      padding: 2rem;
+      position: relative;
+    }
+    body::before {
+      content: '';
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background-image:
+        radial-gradient(circle at 15% 15%, rgba(255,255,255,0.15) 2px, transparent 2px),
+        radial-gradient(circle at 85% 45%, rgba(255,255,255,0.15) 3px, transparent 3px),
+        radial-gradient(circle at 45% 75%, rgba(255,255,255,0.12) 2px, transparent 2px),
+        radial-gradient(circle at 65% 25%, rgba(255,255,255,0.1) 2px, transparent 2px);
+      background-size: 100% 100%;
+      pointer-events: none;
+      z-index: 0;
+    }
+    .container {
+      max-width: 1400px;
+      margin: 0 auto;
+      position: relative;
+      z-index: 1;
+    }
+    .header {
+      background: white;
+      border-radius: 12px;
+      padding: 2rem;
+      margin-bottom: 2rem;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+    .header h1 {
+      color: #1a202c;
+      font-size: 2rem;
+      font-weight: 700;
+      margin-bottom: 0.75rem;
+    }
+    .header p {
+      color: #667eea;
+      font-size: 1.125rem;
+      font-weight: 500;
+    }
+    .nav-links {
+      display: flex;
+      gap: 1rem;
+      margin-top: 1rem;
+    }
+    .nav-links a {
+      color: #667eea;
+      text-decoration: none;
+      padding: 0.5rem 1rem;
+      border-radius: 6px;
+      transition: background 0.2s;
+    }
+    .nav-links a:hover {
+      background: #f7fafc;
+    }
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 1rem;
+      margin-bottom: 2rem;
+    }
+    .stat-card {
+      background: white;
+      border-radius: 12px;
+      padding: 1.5rem;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+    .stat-card h3 {
+      color: #718096;
+      font-size: 0.875rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-bottom: 0.5rem;
+    }
+    .stat-card .number {
+      color: #667eea;
+      font-size: 2.5rem;
+      font-weight: 700;
+    }
+    .stat-card .sublabel {
+      color: #a0aec0;
+      font-size: 0.875rem;
+      margin-top: 0.25rem;
+    }
+    .section {
+      background: white;
+      border-radius: 12px;
+      padding: 2rem;
+      margin-bottom: 2rem;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+    .section h2 {
+      color: #1a202c;
+      font-size: 1.5rem;
+      font-weight: 700;
+      margin-bottom: 1.5rem;
+      padding-bottom: 0.75rem;
+      border-bottom: 2px solid #e2e8f0;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+    th {
+      text-align: left;
+      padding: 0.75rem;
+      background: #f7fafc;
+      color: #4a5568;
+      font-weight: 600;
+      font-size: 0.875rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+    td {
+      padding: 0.75rem;
+      border-top: 1px solid #e2e8f0;
+      color: #2d3748;
+    }
+    .badge {
+      display: inline-block;
+      padding: 0.25rem 0.75rem;
+      border-radius: 9999px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      text-transform: uppercase;
+    }
+    .badge-success { background: #c6f6d5; color: #22543d; }
+    .badge-warning { background: #feebc8; color: #744210; }
+    .badge-danger { background: #fed7d7; color: #742a2a; }
+    .badge-info { background: #bee3f8; color: #2c5282; }
+    .badge-secondary { background: #e2e8f0; color: #4a5568; }
+    .btn {
+      padding: 0.5rem 1rem;
+      border-radius: 6px;
+      border: none;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+      text-decoration: none;
+      display: inline-block;
+    }
+    .btn-primary {
+      background: #667eea;
+      color: white;
+    }
+    .btn-primary:hover {
+      background: #5a67d8;
+    }
+    .btn-sm {
+      padding: 0.375rem 0.75rem;
+      font-size: 0.875rem;
+    }
+    .alert {
+      padding: 1rem;
+      border-radius: 8px;
+      margin-bottom: 1rem;
+    }
+    .alert-success { background: #c6f6d5; color: #22543d; border-left: 4px solid #38a169; }
+    .alert-error { background: #fed7d7; color: #742a2a; border-left: 4px solid #e53e3e; }
+    .grid-2 {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 2rem;
+    }
+    @media (max-width: 768px) {
+      .grid-2 {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>📱 SMS Marketing Dashboard</h1>
+      <p>Manage subscribers, templates, and campaigns • {{ cst_time|date:"F j, Y g:i A" }} CST</p>
+      <div class="nav-links">
+        <a href="/admin/">← Admin Home</a>
+        <a href="/admin/subscribers/">Subscribers</a>
+        <a href="/admin/sms/campaigns/" style="background: #667eea; color: white;">📋 Campaigns</a>
+        <a href="/admin/sms/templates/">Templates</a>
+      </div>
+    </div>
+
+    {% if messages %}
+      {% for message in messages %}
+        <div class="alert alert-{{ message.tags }}">{{ message }}</div>
+      {% endfor %}
+    {% endif %}
+
+    <!-- SMS Metrics -->
+    <div class="stats">
+      <div class="stat-card">
+        <h3>Total Subscribers</h3>
+        <div class="number">{{ sms_metrics.total }}</div>
+        <div class="sublabel">{{ sms_metrics.active_rate }}% active</div>
+      </div>
+      <div class="stat-card">
+        <h3>Active</h3>
+        <div class="number">{{ sms_metrics.active }}</div>
+        <div class="sublabel">Can receive SMS</div>
+      </div>
+      <div class="stat-card">
+        <h3>Last 24h</h3>
+        <div class="number">{{ sms_metrics.recent_24h }}</div>
+        <div class="sublabel">New signups</div>
+      </div>
+      <div class="stat-card">
+        <h3>Messages Sent</h3>
+        <div class="number">{{ sms_log_stats.total }}</div>
+        <div class="sublabel">{{ sms_log_stats.delivery_rate }}% delivered</div>
+      </div>
+    </div>
+
+    <div class="grid-2">
+      <!-- Subscriber Growth Chart -->
+      <div class="section">
+        <h2>Subscriber Growth (30 Days)</h2>
+        <canvas id="growthChart"></canvas>
+      </div>
+
+      <!-- Campaign Stats -->
+      <div class="section">
+        <h2>Campaign Overview</h2>
+        <div style="margin-top: 1rem;">
+          <div style="display: flex; justify-content: space-between; margin-bottom: 1rem;">
+            <span style="color: #718096;">Total Campaigns:</span>
+            <strong>{{ campaign_stats.total }}</strong>
+          </div>
+          <div style="display: flex; justify-content: space-between; margin-bottom: 1rem;">
+            <span style="color: #718096;">Draft:</span>
+            <strong>{{ campaign_stats.draft }}</strong>
+          </div>
+          <div style="display: flex; justify-content: space-between; margin-bottom: 1rem;">
+            <span style="color: #718096;">Scheduled:</span>
+            <strong>{{ campaign_stats.scheduled }}</strong>
+          </div>
+          <div style="display: flex; justify-content: space-between;">
+            <span style="color: #718096;">Sent:</span>
+            <strong>{{ campaign_stats.sent }}</strong>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Templates -->
+    <div class="section">
+      <h2>SMS Templates ({{ total_templates }} total, {{ active_templates }} active)</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Auto Trigger</th>
+            <th>Times Used</th>
+            <th>Status</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for template in templates %}
+            <tr>
+              <td><strong>{{ template.name }}</strong></td>
+              <td>{{ template.get_template_type_display }}</td>
+              <td>{{ template.get_auto_trigger_display }}</td>
+              <td>{{ template.times_used }}</td>
+              <td>
+                {% if template.is_active %}
+                  <span class="badge badge-success">Active</span>
+                {% else %}
+                  <span class="badge badge-secondary">Inactive</span>
+                {% endif %}
+              </td>
+            </tr>
+          {% empty %}
+            <tr>
+              <td colspan="5" style="text-align: center; color: #a0aec0;">No templates yet. <a href="/admin/sms/templates/">Create one</a></td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Recent Campaigns -->
+    <div class="section">
+      <h2>Recent Campaigns</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>Name</th>
+            <th>Template</th>
+            <th>Status</th>
+            <th>Progress</th>
+            <th>Scheduled</th>
+            <th>Action</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for campaign in campaigns %}
+            <tr>
+              <td><strong>{{ campaign.name }}</strong></td>
+              <td>{{ campaign.template.name }}</td>
+              <td>
+                {% if campaign.status == 'draft' %}
+                  <span class="badge badge-secondary">{{ campaign.get_status_display }}</span>
+                {% elif campaign.status == 'scheduled' %}
+                  <span class="badge badge-warning">{{ campaign.get_status_display }}</span>
+                {% elif campaign.status == 'sending' %}
+                  <span class="badge badge-info">{{ campaign.get_status_display }}</span>
+                {% elif campaign.status == 'sent' %}
+                  <span class="badge badge-success">{{ campaign.get_status_display }}</span>
+                {% else %}
+                  <span class="badge badge-danger">{{ campaign.get_status_display }}</span>
+                {% endif %}
+              </td>
+              <td>{{ campaign.sent_count }}/{{ campaign.total_recipients }}</td>
+              <td>{{ campaign.scheduled_at|date:"M d, Y g:i A"|default:"Not set" }}</td>
+              <td>
+                {% if campaign.status == 'draft' or campaign.status == 'scheduled' %}
+                  <form method="POST" style="display: inline;">
+                    {% csrf_token %}
+                    <input type="hidden" name="action" value="send_campaign">
+                    <input type="hidden" name="campaign_id" value="{{ campaign.id }}">
+                    <button type="submit" class="btn btn-primary btn-sm" onclick="return confirm('Send this campaign now?')">Send Now</button>
+                  </form>
+                {% endif %}
+              </td>
+            </tr>
+          {% empty %}
+            <tr>
+              <td colspan="6" style="text-align: center; color: #a0aec0;">No campaigns yet. <a href="/admin/sms/campaigns/">Create one</a></td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Recent Subscribers -->
+    <div class="section">
+      <h2>Recent Subscribers</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>Phone Number</th>
+            <th>Status</th>
+            <th>Active</th>
+            <th>Subscribed</th>
+            <th>Source</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for sub in recent_subscribers %}
+            <tr>
+              <td><strong>{{ sub.phone_number }}</strong></td>
+              <td>
+                {% if sub.is_confirmed %}
+                  <span class="badge badge-success">Confirmed</span>
+                {% else %}
+                  <span class="badge badge-warning">Pending</span>
+                {% endif %}
+              </td>
+              <td>
+                {% if sub.is_active %}
+                  <span class="badge badge-success">Active</span>
+                {% else %}
+                  <span class="badge badge-danger">Inactive</span>
+                {% endif %}
+              </td>
+              <td>{{ sub.subscribed_at|date:"M d, Y g:i A" }}</td>
+              <td>{{ sub.source }}</td>
+            </tr>
+          {% empty %}
+            <tr>
+              <td colspan="5" style="text-align: center; color: #a0aec0;">No subscribers yet</td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Recent SMS Logs -->
+    <div class="section">
+      <h2>Recent SMS Logs</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>Phone</th>
+            <th>Status</th>
+            <th>Campaign</th>
+            <th>Template</th>
+            <th>Sent At</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for log in recent_logs %}
+            <tr>
+              <td>{{ log.phone_number }}</td>
+              <td>
+                {% if log.status == 'delivered' %}
+                  <span class="badge badge-success">{{ log.get_status_display }}</span>
+                {% elif log.status == 'sent' %}
+                  <span class="badge badge-info">{{ log.get_status_display }}</span>
+                {% elif log.status == 'failed' %}
+                  <span class="badge badge-danger">{{ log.get_status_display }}</span>
+                {% else %}
+                  <span class="badge badge-secondary">{{ log.get_status_display }}</span>
+                {% endif %}
+              </td>
+              <td>{{ log.campaign.name|default:"—" }}</td>
+              <td>{{ log.template.name|default:"—" }}</td>
+              <td>{{ log.sent_at|date:"M d, Y g:i A" }}</td>
+            </tr>
+          {% empty %}
+            <tr>
+              <td colspan="5" style="text-align: center; color: #a0aec0;">No SMS sent yet</td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <script>
+    // Subscriber Growth Chart
+    const ctx = document.getElementById('growthChart').getContext('2d');
+
+    const growthData = [
+      {% for item in subscriber_growth %}
+        { date: '{{ item.date }}', count: {{ item.count }} }{% if not forloop.last %},{% endif %}
+      {% endfor %}
+    ];
+
+    new Chart(ctx, {
+      type: 'line',
+      data: {
+        labels: growthData.map(d => d.date),
+        datasets: [{
+          label: 'New Subscribers',
+          data: growthData.map(d => d.count),
+          borderColor: '#667eea',
+          backgroundColor: 'rgba(102, 126, 234, 0.1)',
+          borderWidth: 2,
+          fill: true,
+          tension: 0.4
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: true,
+        plugins: {
+          legend: {
+            display: false
+          }
+        },
+        scales: {
+          y: {
+            beginAtZero: true,
+            ticks: {
+              precision: 0
+            }
+          }
+        }
+      }
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,167 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Two-Factor Authentication Required</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 2rem;
+    }
+
+    .container {
+      background: white;
+      border-radius: 24px;
+      padding: 3rem;
+      max-width: 450px;
+      width: 100%;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+      text-align: center;
+    }
+
+    .icon {
+      font-size: 4rem;
+      margin-bottom: 1.5rem;
+    }
+
+    h1 {
+      color: #1e293b;
+      font-size: 1.875rem;
+      font-weight: 800;
+      margin-bottom: 0.75rem;
+    }
+
+    .subtitle {
+      color: #64748b;
+      margin-bottom: 2rem;
+      font-size: 1rem;
+      line-height: 1.6;
+    }
+
+    .form-group {
+      margin: 1.5rem 0;
+    }
+
+    label {
+      display: block;
+      color: #334155;
+      font-weight: 600;
+      margin-bottom: 0.75rem;
+      font-size: 0.9375rem;
+    }
+
+    input[type="text"] {
+      width: 100%;
+      padding: 1rem 1.25rem;
+      border: 2px solid #e2e8f0;
+      border-radius: 12px;
+      font-size: 1.5rem;
+      font-family: 'Courier New', monospace;
+      text-align: center;
+      letter-spacing: 0.35em;
+      transition: all 0.2s;
+      background: #f8fafc;
+      font-weight: 600;
+    }
+
+    input[type="text"]:focus {
+      outline: none;
+      border-color: #667eea;
+      box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.1);
+      background: white;
+    }
+
+    .btn {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      padding: 1.125rem 2rem;
+      border: none;
+      border-radius: 12px;
+      font-size: 1.0625rem;
+      font-weight: 600;
+      cursor: pointer;
+      width: 100%;
+      transition: all 0.3s;
+      box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+      margin-top: 1rem;
+    }
+
+    .btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 20px rgba(102, 126, 234, 0.4);
+    }
+
+    .help-text {
+      color: #64748b;
+      font-size: 0.875rem;
+      margin-top: 1.5rem;
+      line-height: 1.6;
+    }
+
+    .messages {
+      margin-bottom: 1.5rem;
+    }
+
+    .message {
+      padding: 1rem;
+      border-radius: 10px;
+      margin-bottom: 0.75rem;
+      font-weight: 500;
+    }
+
+    .message.error {
+      background: #fee2e2;
+      color: #991b1b;
+      border-left: 4px solid #dc2626;
+    }
+
+    .message.success {
+      background: #d1fae5;
+      color: #065f46;
+      border-left: 4px solid #10b981;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="icon">🔐</div>
+    <h1>Authentication Required</h1>
+    <p class="subtitle">Enter the 6-digit code from your authenticator app to continue.</p>
+
+    {% if messages %}
+    <div class="messages">
+      {% for message in messages %}
+      <div class="message {{ message.tags }}">{{ message }}</div>
+      {% endfor %}
+    </div>
+    {% endif %}
+
+    <form method="POST">
+      {% csrf_token %}
+      <div class="form-group">
+        <label for="token">Verification Code</label>
+        <input type="text" id="token" name="token" maxlength="6" pattern="[0-9]{6}" placeholder="000000" required autofocus>
+      </div>
+      <button type="submit" class="btn">Verify & Continue</button>
+    </form>
+
+    <p class="help-text">
+      Open your authenticator app (Google Authenticator, Authy, etc.) to get your current code.
+    </p>
+  </div>
+</body>
+</html>
