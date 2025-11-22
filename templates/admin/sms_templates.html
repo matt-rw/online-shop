@@ -1,361 +1,1083 @@
 {% load static %}
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="light">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>SMS Templates - Blueprint Apparel</title>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+  <title>SMS Templates - Blueprint Apparel Admin</title>
+  <link rel="icon" type="image/svg+xml" href="{% static 'admin-favicon.svg' %}">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
   <style>
-    * { margin: 0; padding: 0; box-sizing: border-box; }
+    {% include "admin/partials/dark_mode_styles.html" %}
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
     body {
       font-family: 'Inter', sans-serif;
-      background: linear-gradient(135deg, rgba(102, 126, 234, 0.9) 0%, rgba(118, 75, 162, 0.9) 100%);
-      background-attachment: fixed;
+      background: #f1f5f9;
       min-height: 100vh;
-      padding: 2rem;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
     }
-    .container { max-width: 1400px; margin: 0 auto; }
-    .header {
-      background: white;
-      border-radius: 12px;
-      padding: 2rem;
+
+    .top-bar {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      padding: 2rem 0;
+      box-shadow: 0 4px 20px rgba(102, 126, 234, 0.15);
       margin-bottom: 2rem;
-      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
     }
-    .header h1 { color: #1a202c; font-size: 2rem; font-weight: 700; margin-bottom: 0.5rem; }
-    .header p { color: #667eea; font-size: 1.125rem; }
-    .nav-links { display: flex; gap: 1rem; margin-top: 1rem; flex-wrap: wrap; }
-    .nav-links a {
-      color: #667eea;
-      text-decoration: none;
+
+    .container {
+      max-width: 1600px;
+      margin: 0 auto;
+      padding: 0 2rem;
+    }
+
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1rem;
+    }
+
+    .header h1 {
+      color: white;
+      font-size: 2.5rem;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+    }
+
+    .nav-links {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      padding: 1rem 2rem;
+      display: flex;
+      gap: 0.75rem;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    .nav-link {
+      background: rgba(255, 255, 255, 0.15);
+      backdrop-filter: blur(10px);
+      color: white;
       padding: 0.5rem 1rem;
-      border-radius: 6px;
-      transition: background 0.2s;
+      border-radius: 8px;
+      text-decoration: none;
+      font-size: 0.875rem;
+      font-weight: 500;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      border: 1px solid rgba(255, 255, 255, 0.1);
     }
-    .nav-links a:hover { background: #f7fafc; }
-    .two-column {
+
+    .nav-link:hover {
+      background: rgba(255, 255, 255, 0.25);
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    }
+
+    .main-content {
+      padding: 0 2rem 2rem 2rem;
+      max-width: 1600px;
+      margin: 0 auto;
+    }
+
+    .stats-grid {
       display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 2rem;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 1.5rem;
+      margin-bottom: 3rem;
+      margin-top: -4rem;
+      position: relative;
+      z-index: 10;
     }
-    @media (max-width: 1024px) {
-      .two-column { grid-template-columns: 1fr; }
+
+    .stat-card {
+      background: white;
+      padding: 1.75rem;
+      border-radius: 16px;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+      border: 1px solid rgba(226, 232, 240, 0.8);
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      position: relative;
+      overflow: hidden;
     }
+
+    .stat-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 4px;
+      background: linear-gradient(90deg, #667eea, #764ba2);
+      opacity: 0;
+      transition: opacity 0.3s;
+    }
+
+    .stat-card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 12px 28px rgba(0, 0, 0, 0.12);
+    }
+
+    .stat-card:hover::before {
+      opacity: 1;
+    }
+
+    .stat-label {
+      font-size: 0.75rem;
+      color: #64748b;
+      font-weight: 600;
+      text-transform: uppercase;
+      margin-bottom: 0.5rem;
+      letter-spacing: 0.05em;
+    }
+
+    .stat-value {
+      font-size: 2rem;
+      font-weight: 800;
+      color: #0f172a;
+      line-height: 1;
+    }
+
+    .stat-icon {
+      font-size: 1.5rem;
+      margin-bottom: 0.5rem;
+    }
+
     .section {
       background: white;
-      border-radius: 12px;
+      border-radius: 16px;
       padding: 2rem;
       margin-bottom: 2rem;
-      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+      border: 1px solid #e2e8f0;
     }
-    .section h2 {
-      color: #1a202c;
+
+    .section-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1.5rem;
+      padding-bottom: 1rem;
+      border-bottom: 2px solid #f1f5f9;
+    }
+
+    .section-title {
       font-size: 1.5rem;
       font-weight: 700;
-      margin-bottom: 1.5rem;
-      padding-bottom: 0.75rem;
-      border-bottom: 2px solid #e2e8f0;
+      color: #0f172a;
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
     }
-    .form-group { margin-bottom: 1.5rem; }
-    .form-group label {
-      display: block;
-      color: #4a5568;
+
+    .filters-row {
+      display: grid;
+      grid-template-columns: 2fr 1fr 1fr 1fr 1.5fr auto;
+      gap: 1rem;
+      margin-bottom: 1.5rem;
+      align-items: end;
+    }
+
+    .filter-group {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+
+    .filter-label {
+      font-size: 0.75rem;
       font-weight: 600;
-      margin-bottom: 0.5rem;
+      color: #64748b;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .filter-input, .filter-select {
+      width: 100%;
+      padding: 0.625rem 0.875rem;
+      border: 2px solid #e2e8f0;
+      border-radius: 8px;
+      font-size: 0.875rem;
+      transition: all 0.2s;
+    }
+
+    .filter-input:focus, .filter-select:focus {
+      outline: none;
+      border-color: #667eea;
+      box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    th {
+      text-align: left;
+      font-size: 0.75rem;
+      font-weight: 700;
+      color: #64748b;
+      text-transform: uppercase;
+      padding: 0.75rem 1rem;
+      border-bottom: 2px solid #e2e8f0;
+      letter-spacing: 0.05em;
+      background: #f8fafc;
+    }
+
+    td {
+      padding: 1rem;
+      border-bottom: 1px solid #f1f5f9;
+      color: #0f172a;
       font-size: 0.875rem;
     }
-    .form-group input, .form-group select, .form-group textarea {
+
+    tr:hover {
+      background: #f8fafc;
+    }
+
+    .badge {
+      display: inline-block;
+      padding: 0.25rem 0.75rem;
+      border-radius: 6px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      letter-spacing: 0.025em;
+    }
+
+    .badge-welcome {
+      background: #d1fae5;
+      color: #065f46;
+    }
+
+    .badge-promo {
+      background: #dbeafe;
+      color: #1e40af;
+    }
+
+    .badge-notification {
+      background: #e0e7ff;
+      color: #3730a3;
+    }
+
+    .badge-reminder {
+      background: #fef3c7;
+      color: #92400e;
+    }
+
+    .badge-trigger {
+      background: #f1f5f9;
+      color: #475569;
+    }
+
+    .badge-active {
+      background: #d1fae5;
+      color: #065f46;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .badge-active:hover {
+      background: #a7f3d0;
+    }
+
+    .badge-inactive {
+      background: #fee2e2;
+      color: #991b1b;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .badge-inactive:hover {
+      background: #fecaca;
+    }
+
+    .btn {
+      padding: 0.5rem 1rem;
+      border-radius: 8px;
+      font-size: 0.875rem;
+      font-weight: 600;
+      border: none;
+      cursor: pointer;
+      transition: all 0.2s;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      text-decoration: none;
+    }
+
+    .btn-create {
+      background: white;
+      color: #667eea;
+      padding: 0.875rem 1.75rem;
+      border-radius: 12px;
+      font-weight: 700;
+      font-size: 1rem;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+      border: none;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .btn-create:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+    }
+
+    .btn-sm {
+      padding: 0.375rem 0.75rem;
+      font-size: 0.8125rem;
+    }
+
+    .btn-secondary {
+      background: #f1f5f9;
+      color: #64748b;
+      border: 1px solid #e2e8f0;
+    }
+
+    .btn-secondary:hover {
+      background: #e2e8f0;
+      color: #475569;
+    }
+
+    .btn-danger {
+      background: #fee2e2;
+      color: #991b1b;
+      border: 1px solid #fecaca;
+    }
+
+    .btn-danger:hover {
+      background: #fecaca;
+    }
+
+    .btn-clear {
+      background: transparent;
+      color: #64748b;
+      border: 2px dashed #e2e8f0;
+      margin-top: 1.75rem;
+    }
+
+    .btn-clear:hover {
+      border-color: #cbd5e1;
+      color: #475569;
+    }
+
+    .modal {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.5);
+      backdrop-filter: blur(4px);
+      z-index: 10000;
+      align-items: center;
+      justify-content: center;
+      padding: 2rem;
+      animation: fadeIn 0.2s ease-out;
+    }
+
+    .modal.active {
+      display: flex;
+    }
+
+    .modal-content {
+      background: white;
+      border-radius: 20px;
+      max-width: 700px;
+      width: 100%;
+      max-height: 90vh;
+      overflow-y: auto;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+      animation: slideInDown 0.3s ease-out;
+    }
+
+    .modal-header {
+      padding: 2rem;
+      border-bottom: 2px solid #f1f5f9;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .modal-title {
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: #0f172a;
+    }
+
+    .modal-close {
+      background: none;
+      border: none;
+      font-size: 1.5rem;
+      color: #64748b;
+      cursor: pointer;
+      padding: 0.5rem;
+      transition: all 0.2s;
+    }
+
+    .modal-close:hover {
+      color: #0f172a;
+      transform: rotate(90deg);
+    }
+
+    .modal-body {
+      padding: 2rem;
+    }
+
+    .form-group {
+      margin-bottom: 1.5rem;
+    }
+
+    .form-label {
+      display: block;
+      font-size: 0.875rem;
+      font-weight: 600;
+      color: #0f172a;
+      margin-bottom: 0.5rem;
+    }
+
+    .form-help {
+      font-size: 0.75rem;
+      color: #64748b;
+      margin-top: 0.25rem;
+    }
+
+    .form-input, .form-select, .form-textarea {
       width: 100%;
       padding: 0.75rem;
       border: 2px solid #e2e8f0;
-      border-radius: 6px;
-      font-family: inherit;
-      font-size: 1rem;
-      transition: border-color 0.2s;
+      border-radius: 8px;
+      font-size: 0.875rem;
+      transition: all 0.2s;
     }
-    .form-group input:focus, .form-group select:focus, .form-group textarea:focus {
+
+    .form-input:focus, .form-select:focus, .form-textarea:focus {
       outline: none;
       border-color: #667eea;
+      box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
     }
-    .form-group textarea {
-      min-height: 150px;
+
+    .form-textarea {
       resize: vertical;
+      min-height: 120px;
       font-family: 'Courier New', monospace;
     }
-    .form-group small {
-      display: block;
-      color: #718096;
-      margin-top: 0.25rem;
-      font-size: 0.875rem;
-    }
-    .char-counter {
-      text-align: right;
-      color: #718096;
-      font-size: 0.875rem;
-      margin-top: 0.5rem;
-    }
-    .char-counter.warning { color: #ed8936; }
-    .char-counter.error { color: #f56565; }
+
     .variable-buttons {
       display: flex;
       gap: 0.5rem;
       flex-wrap: wrap;
-      margin-bottom: 1rem;
+      margin-bottom: 0.75rem;
     }
+
     .var-btn {
       padding: 0.375rem 0.75rem;
-      background: #e2e8f0;
-      border: none;
-      border-radius: 4px;
-      cursor: pointer;
-      font-size: 0.875rem;
-      color: #4a5568;
-      transition: all 0.2s;
-    }
-    .var-btn:hover {
-      background: #cbd5e0;
-    }
-    .btn {
-      padding: 0.75rem 1.5rem;
-      border-radius: 6px;
-      border: none;
-      font-weight: 600;
-      cursor: pointer;
-      transition: all 0.2s;
-      font-size: 1rem;
-    }
-    .btn-primary { background: #667eea; color: white; }
-    .btn-primary:hover { background: #5a67d8; }
-    .btn-secondary { background: #e2e8f0; color: #4a5568; }
-    .btn-secondary:hover { background: #cbd5e0; }
-    .btn-danger {
-      background: #f56565;
-      color: white;
-      padding: 0.5rem 1rem;
-      font-size: 0.875rem;
-    }
-    .btn-danger:hover { background: #e53e3e; }
-    .alert {
-      padding: 1rem;
-      border-radius: 8px;
-      margin-bottom: 1rem;
-    }
-    .alert-success { background: #c6f6d5; color: #22543d; border-left: 4px solid #38a169; }
-    .alert-error { background: #fed7d7; color: #742a2a; border-left: 4px solid #e53e3e; }
-    .template-card {
-      background: #f7fafc;
-      border: 2px solid #e2e8f0;
-      border-radius: 8px;
-      padding: 1.5rem;
-      margin-bottom: 1rem;
-      transition: all 0.2s;
-    }
-    .template-card:hover {
-      border-color: #667eea;
-      box-shadow: 0 2px 8px rgba(102, 126, 234, 0.1);
-    }
-    .template-card h3 {
-      color: #1a202c;
-      font-size: 1.125rem;
-      margin-bottom: 0.5rem;
-    }
-    .template-card .meta {
-      color: #718096;
-      font-size: 0.875rem;
-      margin-bottom: 1rem;
-    }
-    .template-card .message-preview {
-      background: white;
+      background: #f1f5f9;
       border: 1px solid #e2e8f0;
-      border-radius: 4px;
-      padding: 1rem;
-      margin-bottom: 1rem;
-      font-family: 'Courier New', monospace;
-      font-size: 0.875rem;
-      color: #2d3748;
-    }
-    .template-card .actions {
-      display: flex;
-      gap: 0.5rem;
-    }
-    .badge {
-      display: inline-block;
-      padding: 0.25rem 0.75rem;
-      border-radius: 9999px;
+      border-radius: 6px;
+      cursor: pointer;
       font-size: 0.75rem;
+      color: #475569;
       font-weight: 600;
-      text-transform: uppercase;
-      margin-right: 0.5rem;
+      transition: all 0.2s;
     }
-    .badge-active { background: #c6f6d5; color: #22543d; }
-    .badge-inactive { background: #e2e8f0; color: #4a5568; }
-    .info-box {
-      background: #ebf8ff;
-      border-left: 4px solid #4299e1;
-      padding: 1rem;
-      border-radius: 4px;
-      margin-bottom: 1.5rem;
+
+    .var-btn:hover {
+      background: #667eea;
+      color: white;
+      border-color: #667eea;
+      transform: translateY(-1px);
     }
-    .info-box h4 {
-      color: #2c5282;
-      font-size: 0.875rem;
+
+    .char-counter {
+      text-align: right;
+      color: #64748b;
+      font-size: 0.75rem;
+      margin-top: 0.5rem;
       font-weight: 600;
+    }
+
+    .char-counter.warning { color: #f59e0b; }
+    .char-counter.error { color: #ef4444; }
+
+    .modal-footer {
+      padding: 1.5rem 2rem;
+      border-top: 2px solid #f1f5f9;
+      display: flex;
+      gap: 1rem;
+      justify-content: flex-end;
+    }
+
+    .empty-state {
+      text-align: center;
+      padding: 4rem 2rem;
+      color: #64748b;
+    }
+
+    .empty-state i {
+      font-size: 4rem;
+      color: #cbd5e1;
+      margin-bottom: 1rem;
+    }
+
+    .empty-state h3 {
+      font-size: 1.25rem;
+      color: #475569;
       margin-bottom: 0.5rem;
     }
-    .info-box p {
-      color: #2c5282;
+
+    .empty-state p {
       font-size: 0.875rem;
-      line-height: 1.5;
     }
+
+    .preview-modal {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.5);
+      backdrop-filter: blur(4px);
+      z-index: 10001;
+      align-items: center;
+      justify-content: center;
+      padding: 2rem;
+    }
+
+    .preview-modal.active {
+      display: flex;
+    }
+
+    .preview-content {
+      background: white;
+      border-radius: 20px;
+      max-width: 400px;
+      width: 100%;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+    }
+
+    .iphone-mockup {
+      background: #000;
+      border-radius: 40px;
+      padding: 12px;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+    }
+
+    .iphone-screen {
+      background: white;
+      border-radius: 30px;
+      padding: 1.5rem;
+      min-height: 500px;
+      position: relative;
+    }
+
+    .iphone-notch {
+      position: absolute;
+      top: 0;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 120px;
+      height: 25px;
+      background: #000;
+      border-radius: 0 0 20px 20px;
+    }
+
+    .sms-bubble {
+      background: #667eea;
+      color: white;
+      padding: 1rem;
+      border-radius: 18px;
+      border-bottom-right-radius: 4px;
+      margin-top: 3rem;
+      font-size: 0.9375rem;
+      line-height: 1.5;
+      box-shadow: 0 2px 8px rgba(102, 126, 234, 0.2);
+    }
+
     .checkbox-group {
       display: flex;
       align-items: center;
       gap: 0.5rem;
     }
+
     .checkbox-group input[type="checkbox"] {
-      width: auto;
+      width: 20px;
+      height: 20px;
+      cursor: pointer;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+
+    @keyframes slideInDown {
+      from {
+        opacity: 0;
+        transform: translateY(-20px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    @media (max-width: 768px) {
+      .filters-row {
+        grid-template-columns: 1fr;
+      }
+      .stats-grid {
+        grid-template-columns: 1fr 1fr;
+        margin-top: -3rem;
+      }
+      table {
+        font-size: 0.8125rem;
+      }
+    }
+
+    /* TOAST NOTIFICATION */
+    .toast {
+      position: fixed;
+      top: 2rem;
+      right: 2rem;
+      background: white;
+      padding: 1rem 1.5rem;
+      border-radius: 12px;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+      display: none;
+      align-items: center;
+      gap: 0.75rem;
+      z-index: 10002;
+      animation: slideInRight 0.3s ease-out;
+      border-left: 4px solid #10b981;
+    }
+
+    .toast.active {
+      display: flex;
+    }
+
+    @keyframes slideInRight {
+      from {
+        opacity: 0;
+        transform: translateX(100px);
+      }
+      to {
+        opacity: 1;
+        transform: translateX(0);
+      }
+    }
+
+    @media (max-width: 480px) {
+      .stats-grid {
+        grid-template-columns: 1fr;
+      }
     }
   </style>
+  {% include "admin/partials/dark_mode_apply.html" %}
 </head>
 <body>
-  <div class="container">
-    <div class="header">
-      <h1>📱 SMS Templates</h1>
-      <p>Create and manage reusable SMS message templates</p>
-      <div class="nav-links">
-        <a href="/admin/">← Admin Home</a>
-        <a href="/admin/sms/">SMS Dashboard</a>
-        <a href="/admin/sms/campaigns/">Campaigns</a>
-      </div>
-    </div>
+  <div class="nav-links">
+    <a href="{% url 'admin_home' %}" class="nav-link"><i class="fa-solid fa-arrow-left"></i> Back</a>
+  </div>
 
-    {% if messages %}
-      {% for message in messages %}
-        <div class="alert alert-{{ message.tags }}">{{ message }}</div>
-      {% endfor %}
-    {% endif %}
-
-    <div class="two-column">
-      <!-- Create/Edit Template Form -->
-      <div class="section">
-        <h2>{% if edit_template %}Edit{% else %}Create{% endif %} Template</h2>
-
-        <div class="info-box">
-          <h4>💡 Variables</h4>
-          <p>Use variables like {first_name}, {code}, {link} to personalize messages. Click the buttons below to insert them.</p>
-        </div>
-
-        <form method="POST" id="templateForm">
-          {% csrf_token %}
-          <input type="hidden" name="action" value="{% if edit_template %}update{% else %}create{% endif %}">
-          {% if edit_template %}
-            <input type="hidden" name="template_id" value="{{ edit_template.id }}">
-          {% endif %}
-
-          <div class="form-group">
-            <label for="name">Template Name *</label>
-            <input type="text" name="name" id="name" required
-                   value="{% if edit_template %}{{ edit_template.name }}{% endif %}"
-                   placeholder="e.g., Welcome SMS">
-          </div>
-
-          <div class="form-group">
-            <label for="template_type">Template Type *</label>
-            <select name="template_type" id="template_type" required>
-              {% for value, label in template_types %}
-                <option value="{{ value }}" {% if edit_template and edit_template.template_type == value %}selected{% endif %}>{{ label }}</option>
-              {% endfor %}
-            </select>
-          </div>
-
-          <div class="form-group">
-            <label for="auto_trigger">Auto Trigger *</label>
-            <select name="auto_trigger" id="auto_trigger" required>
-              {% for value, label in trigger_types %}
-                <option value="{{ value }}" {% if edit_template and edit_template.auto_trigger == value %}selected{% endif %}>{{ label }}</option>
-              {% endfor %}
-            </select>
-            <small>When should this template be automatically sent?</small>
-          </div>
-
-          <div class="form-group">
-            <label for="message_body">Message Content *</label>
-            <div class="variable-buttons">
-              <button type="button" class="var-btn" onclick="insertVariable('first_name')">+{first_name}</button>
-              <button type="button" class="var-btn" onclick="insertVariable('last_name')">+{last_name}</button>
-              <button type="button" class="var-btn" onclick="insertVariable('code')">+{code}</button>
-              <button type="button" class="var-btn" onclick="insertVariable('link')">+{link}</button>
-            </div>
-            <textarea name="message_body" id="message_body" required
-                      placeholder="Welcome to Blueprint, {first_name}! Reply STOP to unsubscribe.">{% if edit_template %}{{ edit_template.message_body }}{% endif %}</textarea>
-            <div class="char-counter" id="charCounter">0 / 160 characters</div>
-            <small>SMS messages over 160 characters will be sent as multiple messages.</small>
-          </div>
-
-          {% if edit_template %}
-            <div class="form-group">
-              <div class="checkbox-group">
-                <input type="checkbox" name="is_active" id="is_active" {% if edit_template.is_active %}checked{% endif %}>
-                <label for="is_active" style="margin: 0;">Template is Active</label>
-              </div>
-            </div>
-          {% endif %}
-
-          <div style="display: flex; gap: 1rem;">
-            <button type="submit" class="btn btn-primary">
-              {% if edit_template %}Update Template{% else %}Create Template{% endif %}
-            </button>
-            {% if edit_template %}
-              <a href="/admin/sms/templates/" class="btn btn-secondary" style="text-decoration: none; display: inline-block; line-height: 1.5;">Cancel</a>
-            {% endif %}
-          </div>
-        </form>
-      </div>
-
-      <!-- Templates List -->
-      <div class="section">
-        <h2>All Templates ({{ templates|length }})</h2>
-
-        {% if templates %}
-          {% for template in templates %}
-            <div class="template-card">
-              <h3>{{ template.name }}</h3>
-              <div class="meta">
-                <span class="badge {% if template.is_active %}badge-active{% else %}badge-inactive{% endif %}">
-                  {% if template.is_active %}Active{% else %}Inactive{% endif %}
-                </span>
-                {{ template.get_template_type_display }} • {{ template.get_auto_trigger_display }}
-                <br>
-                Used {{ template.times_used }} times • Updated {{ template.updated_at|date:"M d, Y" }}
-              </div>
-              <div class="message-preview">{{ template.message_body|truncatewords:30 }}</div>
-              <div class="actions">
-                <a href="/admin/sms/templates/?edit={{ template.id }}" class="btn btn-secondary" style="text-decoration: none;">Edit</a>
-                <form method="POST" style="display: inline;">
-                  {% csrf_token %}
-                  <input type="hidden" name="action" value="delete">
-                  <input type="hidden" name="template_id" value="{{ template.id }}">
-                  <button type="submit" class="btn btn-danger" onclick="return confirm('Delete this template?')">Delete</button>
-                </form>
-              </div>
-            </div>
-          {% endfor %}
-        {% else %}
-          <p style="text-align: center; color: #a0aec0; padding: 2rem;">
-            No templates yet. Create your first template!
-          </p>
-        {% endif %}
+  <div class="top-bar">
+    <div class="container">
+      <div class="header">
+        <h1><i class="fa-solid fa-message"></i> SMS Templates</h1>
+        <button type="button" class="btn-create" onclick="openCreateModal()">
+          <i class="fa-solid fa-plus"></i>
+          Create Template
+        </button>
       </div>
     </div>
   </div>
 
-  <script>
-    // Character counter
-    const textarea = document.getElementById('message_body');
-    const counter = document.getElementById('charCounter');
+  <div class="main-content">
+    <!-- Stats Cards -->
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-icon">
+          <i class="fa-solid fa-file-lines" style="color: #667eea;"></i>
+        </div>
+        <div class="stat-label">Total Templates</div>
+        <div class="stat-value">{{ total_count }}</div>
+      </div>
 
+      <div class="stat-card">
+        <div class="stat-icon">
+          <i class="fa-solid fa-circle-check" style="color: #10b981;"></i>
+        </div>
+        <div class="stat-label">Active Templates</div>
+        <div class="stat-value">{{ active_count }}</div>
+      </div>
+
+      <div class="stat-card">
+        <div class="stat-icon">
+          <i class="fa-solid fa-circle-xmark" style="color: #ef4444;"></i>
+        </div>
+        <div class="stat-label">Inactive Templates</div>
+        <div class="stat-value">{{ inactive_count }}</div>
+      </div>
+
+      <div class="stat-card">
+        <div class="stat-icon">
+          <i class="fa-solid fa-paper-plane" style="color: #3b82f6;"></i>
+        </div>
+        <div class="stat-label">Total Sends</div>
+        <div class="stat-value">{{ total_usage }}</div>
+      </div>
+    </div>
+
+    <!-- Templates Table -->
+    <div class="section">
+      <div class="section-header">
+        <div class="section-title">
+          <i class="fa-solid fa-table"></i>
+          All Templates
+        </div>
+      </div>
+
+      <!-- Filters -->
+      <div class="filters-row">
+        <div class="filter-group">
+          <label class="filter-label">Search</label>
+          <input type="text" id="searchInput" class="filter-input" placeholder="Search by name...">
+        </div>
+
+        <div class="filter-group">
+          <label class="filter-label">Type</label>
+          <select id="typeFilter" class="filter-select">
+            <option value="">All Types</option>
+            {% for value, label in template_types %}
+              <option value="{{ value }}">{{ label }}</option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <div class="filter-group">
+          <label class="filter-label">Trigger</label>
+          <select id="triggerFilter" class="filter-select">
+            <option value="">All Triggers</option>
+            {% for value, label in trigger_types %}
+              <option value="{{ value }}">{{ label }}</option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <div class="filter-group">
+          <label class="filter-label">Status</label>
+          <select id="statusFilter" class="filter-select">
+            <option value="">All</option>
+            <option value="active">Active</option>
+            <option value="inactive">Inactive</option>
+          </select>
+        </div>
+
+        <div class="filter-group">
+          <label class="filter-label">Sort By</label>
+          <select id="sortFilter" class="filter-select" onchange="sortTable()">
+            <option value="name-asc">Name (A-Z)</option>
+            <option value="name-desc">Name (Z-A)</option>
+            <option value="most-used">Most Used</option>
+            <option value="least-used">Least Used</option>
+            <option value="recently-created">Recently Created</option>
+            <option value="oldest-created">Oldest Created</option>
+            <option value="recently-used">Recently Used</option>
+          </select>
+        </div>
+
+        <button class="btn btn-clear btn-sm" onclick="clearFilters()">
+          <i class="fa-solid fa-filter-circle-xmark"></i>
+          Clear
+        </button>
+      </div>
+
+      <!-- Bulk Actions Bar -->
+      <div id="bulkActionsBar" style="display: none; margin-bottom: 1rem; padding: 1rem; background: #f8fafc; border-radius: 8px; border: 2px solid #e2e8f0;">
+        <div style="display: flex; align-items: center; gap: 1rem; flex-wrap: wrap;">
+          <span style="font-weight: 600; color: #475569;">
+            <span id="selectedCount">0</span> selected
+          </span>
+          <button class="btn btn-secondary btn-sm" onclick="bulkActivate()">
+            <i class="fa-solid fa-circle-check"></i>
+            Activate
+          </button>
+          <button class="btn btn-secondary btn-sm" onclick="bulkDeactivate()">
+            <i class="fa-solid fa-circle-xmark"></i>
+            Deactivate
+          </button>
+          <button class="btn btn-danger btn-sm" onclick="bulkDelete()">
+            <i class="fa-solid fa-trash"></i>
+            Delete
+          </button>
+          <button class="btn btn-secondary btn-sm" onclick="clearSelection()">
+            <i class="fa-solid fa-xmark"></i>
+            Clear Selection
+          </button>
+        </div>
+      </div>
+
+      {% if templates %}
+        <table id="templatesTable">
+          <thead>
+            <tr>
+              <th style="width: 40px;">
+                <input type="checkbox" id="selectAll" onchange="toggleSelectAll(this)">
+              </th>
+              <th>Name</th>
+              <th>Type</th>
+              <th>Trigger</th>
+              <th>Status</th>
+              <th>Usage</th>
+              <th>Last Used</th>
+              <th>Updated</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for template in templates %}
+              <tr data-name="{{ template.name|lower }}"
+                  data-type="{{ template.template_type }}"
+                  data-trigger="{{ template.auto_trigger }}"
+                  data-status="{% if template.is_active %}active{% else %}inactive{% endif %}">
+                <td>
+                  <input type="checkbox" class="template-checkbox" value="{{ template.id }}">
+                </td>
+                <td>
+                  <div style="font-weight: 600;">{{ template.name }}</div>
+                  <div style="font-size: 0.75rem; color: #64748b; margin-top: 0.25rem;">
+                    {{ template.message_body|truncatewords:8 }}
+                  </div>
+                </td>
+                <td>
+                  <span class="badge badge-{{ template.template_type }}">
+                    {{ template.get_template_type_display }}
+                  </span>
+                </td>
+                <td>
+                  <span class="badge badge-trigger">
+                    {{ template.get_auto_trigger_display }}
+                  </span>
+                </td>
+                <td>
+                  <span class="badge {% if template.is_active %}badge-active{% else %}badge-inactive{% endif %}"
+                        onclick="toggleStatus({{ template.id }}, {% if template.is_active %}false{% else %}true{% endif %})">
+                    {% if template.is_active %}
+                      <i class="fa-solid fa-circle-check"></i> Active
+                    {% else %}
+                      <i class="fa-solid fa-circle-xmark"></i> Inactive
+                    {% endif %}
+                  </span>
+                </td>
+                <td style="font-weight: 600;">{{ template.times_used }}</td>
+                <td style="color: #64748b;">
+                  {% if template.last_used %}
+                    {{ template.last_used|date:"M d, Y" }}
+                  {% else %}
+                    <span style="opacity: 0.5;">Never</span>
+                  {% endif %}
+                </td>
+                <td style="color: #64748b;">{{ template.updated_at|date:"M d, Y" }}</td>
+                <td>
+                  <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+                    <button class="btn btn-secondary btn-sm" onclick="openPreview('{{ template.message_body|escapejs }}')" title="Preview">
+                      <i class="fa-solid fa-eye"></i>
+                    </button>
+                    <button class="btn btn-secondary btn-sm" onclick="copyToClipboard('{{ template.message_body|escapejs }}')" title="Copy content">
+                      <i class="fa-solid fa-clipboard"></i>
+                    </button>
+                    <button class="btn btn-secondary btn-sm" onclick="openEditModal({{ template.id }})" title="Edit">
+                      <i class="fa-solid fa-edit"></i>
+                    </button>
+                    <button class="btn btn-secondary btn-sm" onclick="duplicateTemplate({{ template.id }})" title="Duplicate">
+                      <i class="fa-solid fa-copy"></i>
+                    </button>
+                    <form method="POST" style="display: inline;" onsubmit="return confirm('Delete this template?')">
+                      {% csrf_token %}
+                      <input type="hidden" name="action" value="delete">
+                      <input type="hidden" name="template_id" value="{{ template.id }}">
+                      <button type="submit" class="btn btn-danger btn-sm" title="Delete">
+                        <i class="fa-solid fa-trash"></i>
+                      </button>
+                    </form>
+                  </div>
+                </td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      {% else %}
+        <div class="empty-state">
+          <i class="fa-solid fa-message"></i>
+          <h3>No Templates Yet</h3>
+          <p>Create your first SMS template to get started.</p>
+        </div>
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- Create/Edit Modal -->
+  <div class="modal" id="templateModal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2 class="modal-title" id="modalTitle">Create Template</h2>
+        <button class="modal-close" onclick="closeModal()">&times;</button>
+      </div>
+      <form method="POST" id="templateForm">
+        {% csrf_token %}
+        <input type="hidden" name="action" id="formAction" value="create">
+        <input type="hidden" name="template_id" id="templateId">
+
+        <div class="modal-body">
+          <div class="form-group">
+            <label class="form-label" for="name">Template Name *</label>
+            <input type="text" class="form-input" name="name" id="name" required placeholder="e.g., Welcome SMS">
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="template_type">Template Type *</label>
+            <select class="form-select" name="template_type" id="template_type" required>
+              {% for value, label in template_types %}
+                <option value="{{ value }}">{{ label }}</option>
+              {% endfor %}
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="auto_trigger">Auto Trigger *</label>
+            <select class="form-select" name="auto_trigger" id="auto_trigger" required>
+              {% for value, label in trigger_types %}
+                <option value="{{ value }}">{{ label }}</option>
+              {% endfor %}
+            </select>
+            <div class="form-help">When should this template be automatically sent?</div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="message_body">Message Content *</label>
+            <div class="variable-buttons">
+              <button type="button" class="var-btn" onclick="insertVariable('first_name')">
+                <i class="fa-solid fa-plus"></i> {first_name}
+              </button>
+              <button type="button" class="var-btn" onclick="insertVariable('last_name')">
+                <i class="fa-solid fa-plus"></i> {last_name}
+              </button>
+              <button type="button" class="var-btn" onclick="insertVariable('code')">
+                <i class="fa-solid fa-plus"></i> {code}
+              </button>
+              <button type="button" class="var-btn" onclick="insertVariable('link')">
+                <i class="fa-solid fa-plus"></i> {link}
+              </button>
+            </div>
+            <textarea class="form-textarea" name="message_body" id="message_body" required
+                      placeholder="Welcome to Blueprint, {first_name}! Reply STOP to unsubscribe."></textarea>
+            <div class="char-counter" id="charCounter">0 / 160 characters</div>
+            <div class="form-help">SMS messages over 160 characters will be sent as multiple messages.</div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="tags">Tags (optional)</label>
+            <input type="text" class="form-input" name="tags" id="tags" placeholder="e.g., welcome, onboarding, confirmation">
+            <div class="form-help">Comma-separated tags for organization and filtering.</div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="notes">Internal Notes (optional)</label>
+            <textarea class="form-textarea" name="notes" id="notes" style="min-height: 80px;"
+                      placeholder="Internal notes about this template for team collaboration..."></textarea>
+            <div class="form-help">These notes are only visible to admins.</div>
+          </div>
+
+          <div class="form-group" id="activeGroup" style="display: none;">
+            <div class="checkbox-group">
+              <input type="checkbox" name="is_active" id="is_active">
+              <label for="is_active" style="margin: 0;">Template is Active</label>
+            </div>
+          </div>
+        </div>
+
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" onclick="closeModal()">Cancel</button>
+          <button type="submit" class="btn btn-create">
+            <i class="fa-solid fa-check"></i>
+            <span id="submitText">Create Template</span>
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Preview Modal -->
+  <div class="preview-modal" id="previewModal">
+    <div class="preview-content">
+      <div class="modal-header">
+        <h2 class="modal-title">SMS Preview</h2>
+        <button class="modal-close" onclick="closePreview()">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="iphone-mockup">
+          <div class="iphone-screen">
+            <div class="iphone-notch"></div>
+            <div class="sms-bubble" id="previewText"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast Notification -->
+  <div class="toast" id="toast">
+    <i class="fa-solid fa-check-circle" style="color: #10b981; font-size: 1.5rem;"></i>
+    <span id="toastMessage">Action completed!</span>
+  </div>
+
+  <script>
+    // Debug: Check if script is loading
+    console.log('Script loading started');
+
+    let templates = [];
+    try {
+      templates = {{ templates_json|safe }};
+      console.log('Templates loaded:', templates);
+    } catch (e) {
+      console.error('Error loading templates:', e);
+      templates = [];
+    }
+
+    // Toast notification
+    function showToast(message) {
+      const toast = document.getElementById('toast');
+      document.getElementById('toastMessage').textContent = message;
+      toast.classList.add('active');
+      setTimeout(() => {
+        toast.classList.remove('active');
+      }, 3000);
+    }
+
+    // Copy to clipboard
+    function copyToClipboard(text) {
+      navigator.clipboard.writeText(text).then(() => {
+        showToast('Copied to clipboard!');
+      }).catch(err => {
+        showToast('Failed to copy');
+      });
+    }
+
+    // Character counter
     function updateCounter() {
+      const textarea = document.getElementById('message_body');
+      const counter = document.getElementById('charCounter');
+      if (!textarea || !counter) return;
+
       const length = textarea.value.length;
       counter.textContent = `${length} / 160 characters`;
 
@@ -370,11 +1092,17 @@
       }
     }
 
-    textarea.addEventListener('input', updateCounter);
-    updateCounter();
+    // Attach counter listener if textarea exists
+    const messageBodyTextarea = document.getElementById('message_body');
+    if (messageBodyTextarea) {
+      messageBodyTextarea.addEventListener('input', updateCounter);
+    }
 
-    // Insert variable at cursor position
+    // Insert variable
     function insertVariable(varName) {
+      const textarea = document.getElementById('message_body');
+      if (!textarea) return;
+
       const cursorPos = textarea.selectionStart;
       const textBefore = textarea.value.substring(0, cursorPos);
       const textAfter = textarea.value.substring(cursorPos);
@@ -383,9 +1111,319 @@
       textarea.value = textBefore + variable + textAfter;
       textarea.focus();
       textarea.selectionStart = textarea.selectionEnd = cursorPos + variable.length;
-
       updateCounter();
     }
+
+    // Modal functions
+    function openCreateModal() {
+      console.log('openCreateModal called');
+      const modal = document.getElementById('templateModal');
+      if (!modal) {
+        console.error('Modal element not found');
+        return;
+      }
+
+      document.getElementById('modalTitle').textContent = 'Create Template';
+      document.getElementById('formAction').value = 'create';
+      document.getElementById('submitText').textContent = 'Create Template';
+      document.getElementById('templateForm').reset();
+      document.getElementById('activeGroup').style.display = 'none';
+      modal.classList.add('active');
+      updateCounter();
+      console.log('Modal opened, active class added');
+    }
+
+    // Make function globally accessible
+    window.openCreateModal = openCreateModal;
+
+    function openEditModal(templateId) {
+      // This would need template data passed from server
+      // For now, redirect to edit URL
+      window.location.href = `/admin/sms/templates/?edit=${templateId}`;
+    }
+
+    function closeModal() {
+      const modal = document.getElementById('templateModal');
+      if (modal) {
+        modal.classList.remove('active');
+      }
+    }
+
+    // Make function globally accessible
+    window.closeModal = closeModal;
+
+    // Preview
+    function openPreview(message) {
+      document.getElementById('previewText').textContent = message;
+      document.getElementById('previewModal').classList.add('active');
+    }
+
+    function closePreview() {
+      document.getElementById('previewModal').classList.remove('active');
+    }
+
+    // Duplicate template
+    function duplicateTemplate(templateId) {
+      if (confirm('Create a duplicate of this template?')) {
+        const form = document.createElement('form');
+        form.method = 'POST';
+        form.innerHTML = `
+          {% csrf_token %}
+          <input type="hidden" name="action" value="duplicate">
+          <input type="hidden" name="template_id" value="${templateId}">
+        `;
+        document.body.appendChild(form);
+        form.submit();
+      }
+    }
+
+    // Toggle status
+    function toggleStatus(templateId, newStatus) {
+      if (confirm(`${newStatus ? 'Activate' : 'Deactivate'} this template?`)) {
+        // Create form and submit
+        const form = document.createElement('form');
+        form.method = 'POST';
+        form.innerHTML = `
+          {% csrf_token %}
+          <input type="hidden" name="action" value="update">
+          <input type="hidden" name="template_id" value="${templateId}">
+          <input type="hidden" name="is_active" value="${newStatus ? 'on' : ''}">
+        `;
+        document.body.appendChild(form);
+        form.submit();
+      }
+    }
+
+    // Filtering
+    function filterTable() {
+      const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+      const typeFilter = document.getElementById('typeFilter').value;
+      const triggerFilter = document.getElementById('triggerFilter').value;
+      const statusFilter = document.getElementById('statusFilter').value;
+
+      const rows = document.querySelectorAll('#templatesTable tbody tr');
+
+      rows.forEach(row => {
+        const name = row.dataset.name;
+        const type = row.dataset.type;
+        const trigger = row.dataset.trigger;
+        const status = row.dataset.status;
+
+        const matchesSearch = name.includes(searchTerm);
+        const matchesType = !typeFilter || type === typeFilter;
+        const matchesTrigger = !triggerFilter || trigger === triggerFilter;
+        const matchesStatus = !statusFilter || status === statusFilter;
+
+        if (matchesSearch && matchesType && matchesTrigger && matchesStatus) {
+          row.style.display = '';
+        } else {
+          row.style.display = 'none';
+        }
+      });
+    }
+
+    function clearFilters() {
+      document.getElementById('searchInput').value = '';
+      document.getElementById('typeFilter').value = '';
+      document.getElementById('triggerFilter').value = '';
+      document.getElementById('statusFilter').value = '';
+      filterTable();
+    }
+
+    // Attach filter listeners
+    document.getElementById('searchInput').addEventListener('input', filterTable);
+    document.getElementById('typeFilter').addEventListener('change', filterTable);
+    document.getElementById('triggerFilter').addEventListener('change', filterTable);
+    document.getElementById('statusFilter').addEventListener('change', filterTable);
+
+    // Bulk selection functions
+    function toggleSelectAll(checkbox) {
+      const checkboxes = document.querySelectorAll('.template-checkbox');
+      checkboxes.forEach(cb => cb.checked = checkbox.checked);
+      updateBulkActionsBar();
+    }
+
+    function updateBulkActionsBar() {
+      const checkboxes = document.querySelectorAll('.template-checkbox:checked');
+      const count = checkboxes.length;
+      const bulkBar = document.getElementById('bulkActionsBar');
+      const countSpan = document.getElementById('selectedCount');
+
+      if (count > 0) {
+        bulkBar.style.display = 'block';
+        countSpan.textContent = count;
+      } else {
+        bulkBar.style.display = 'none';
+        document.getElementById('selectAll').checked = false;
+      }
+    }
+
+    function getSelectedIds() {
+      const checkboxes = document.querySelectorAll('.template-checkbox:checked');
+      return Array.from(checkboxes).map(cb => cb.value);
+    }
+
+    function bulkActivate() {
+      const ids = getSelectedIds();
+      if (ids.length === 0) return;
+
+      if (confirm(`Activate ${ids.length} template(s)?`)) {
+        const form = document.createElement('form');
+        form.method = 'POST';
+        form.innerHTML = `
+          {% csrf_token %}
+          <input type="hidden" name="action" value="bulk_activate">
+          ${ids.map(id => `<input type="hidden" name="template_ids" value="${id}">`).join('')}
+        `;
+        document.body.appendChild(form);
+        form.submit();
+      }
+    }
+
+    function bulkDeactivate() {
+      const ids = getSelectedIds();
+      if (ids.length === 0) return;
+
+      if (confirm(`Deactivate ${ids.length} template(s)?`)) {
+        const form = document.createElement('form');
+        form.method = 'POST';
+        form.innerHTML = `
+          {% csrf_token %}
+          <input type="hidden" name="action" value="bulk_deactivate">
+          ${ids.map(id => `<input type="hidden" name="template_ids" value="${id}">`).join('')}
+        `;
+        document.body.appendChild(form);
+        form.submit();
+      }
+    }
+
+    function bulkDelete() {
+      const ids = getSelectedIds();
+      if (ids.length === 0) return;
+
+      if (confirm(`Delete ${ids.length} template(s)? This cannot be undone!`)) {
+        const form = document.createElement('form');
+        form.method = 'POST';
+        form.innerHTML = `
+          {% csrf_token %}
+          <input type="hidden" name="action" value="bulk_delete">
+          ${ids.map(id => `<input type="hidden" name="template_ids" value="${id}">`).join('')}
+        `;
+        document.body.appendChild(form);
+        form.submit();
+      }
+    }
+
+    function clearSelection() {
+      document.querySelectorAll('.template-checkbox').forEach(cb => cb.checked = false);
+      document.getElementById('selectAll').checked = false;
+      updateBulkActionsBar();
+    }
+
+    // Sort table
+    function sortTable() {
+      const sortValue = document.getElementById('sortFilter').value;
+      const tbody = document.querySelector('#templatesTable tbody');
+      const rows = Array.from(tbody.querySelectorAll('tr'));
+
+      rows.sort((a, b) => {
+        switch(sortValue) {
+          case 'name-asc':
+            return a.dataset.name.localeCompare(b.dataset.name);
+          case 'name-desc':
+            return b.dataset.name.localeCompare(a.dataset.name);
+          case 'most-used':
+            const aUsed = parseInt(a.querySelector('td:nth-child(6)').textContent);
+            const bUsed = parseInt(b.querySelector('td:nth-child(6)').textContent);
+            return bUsed - aUsed;
+          case 'least-used':
+            const aUsed2 = parseInt(a.querySelector('td:nth-child(6)').textContent);
+            const bUsed2 = parseInt(b.querySelector('td:nth-child(6)').textContent);
+            return aUsed2 - bUsed2;
+          case 'recently-created':
+            const aCreated = a.querySelector('td:nth-child(8)').textContent;
+            const bCreated = b.querySelector('td:nth-child(8)').textContent;
+            return new Date(bCreated) - new Date(aCreated);
+          case 'oldest-created':
+            const aCreated2 = a.querySelector('td:nth-child(8)').textContent;
+            const bCreated2 = b.querySelector('td:nth-child(8)').textContent;
+            return new Date(aCreated2) - new Date(bCreated2);
+          case 'recently-used':
+            const aUsedDate = a.querySelector('td:nth-child(7)').textContent;
+            const bUsedDate = b.querySelector('td:nth-child(7)').textContent;
+            if (aUsedDate === 'Never') return 1;
+            if (bUsedDate === 'Never') return -1;
+            return new Date(bUsedDate) - new Date(aUsedDate);
+          default:
+            return 0;
+        }
+      });
+
+      rows.forEach(row => tbody.appendChild(row));
+    }
+
+    // Attach checkbox listeners
+    document.querySelectorAll('.template-checkbox').forEach(checkbox => {
+      checkbox.addEventListener('change', updateBulkActionsBar);
+    });
+
+    // Make all functions globally accessible for inline onclick handlers
+    window.openPreview = openPreview;
+    window.closePreview = closePreview;
+    window.copyToClipboard = copyToClipboard;
+    window.insertVariable = insertVariable;
+    window.openEditModal = openEditModal;
+    window.duplicateTemplate = duplicateTemplate;
+    window.toggleStatus = toggleStatus;
+    window.filterTable = filterTable;
+    window.clearFilters = clearFilters;
+    window.toggleSelectAll = toggleSelectAll;
+    window.updateBulkActionsBar = updateBulkActionsBar;
+    window.bulkActivate = bulkActivate;
+    window.bulkDeactivate = bulkDeactivate;
+    window.bulkDelete = bulkDelete;
+    window.clearSelection = clearSelection;
+    window.sortTable = sortTable;
+
+    // Close modal on outside click
+    document.getElementById('templateModal').addEventListener('click', function(e) {
+      if (e.target === this) closeModal();
+    });
+
+    document.getElementById('previewModal').addEventListener('click', function(e) {
+      if (e.target === this) closePreview();
+    });
+
+    // Handle edit template if present
+    {% if edit_template %}
+      document.getElementById('modalTitle').textContent = 'Edit Template';
+      document.getElementById('formAction').value = 'update';
+      document.getElementById('submitText').textContent = 'Update Template';
+      document.getElementById('templateId').value = '{{ edit_template.id }}';
+      document.getElementById('name').value = '{{ edit_template.name }}';
+      document.getElementById('template_type').value = '{{ edit_template.template_type }}';
+      document.getElementById('auto_trigger').value = '{{ edit_template.auto_trigger }}';
+      document.getElementById('message_body').value = '{{ edit_template.message_body|escapejs }}';
+      document.getElementById('tags').value = '{{ edit_template.tags|escapejs }}';
+      document.getElementById('notes').value = '{{ edit_template.notes|escapejs }}';
+      document.getElementById('is_active').checked = {{ edit_template.is_active|yesno:"true,false" }};
+      document.getElementById('activeGroup').style.display = 'block';
+      document.getElementById('templateModal').classList.add('active');
+      updateCounter();
+    {% endif %}
+
+    // Check for ?create=true parameter from email templates redirect
+    (function() {
+      const urlParams = new URLSearchParams(window.location.search);
+      if (urlParams.has('create') && urlParams.get('create') === 'true') {
+        // Open create modal
+        openCreateModal();
+
+        // Remove the parameter from URL without reloading
+        const newUrl = window.location.pathname;
+        window.history.replaceState({}, document.title, newUrl);
+      }
+    })();
   </script>
 </body>
 </html>

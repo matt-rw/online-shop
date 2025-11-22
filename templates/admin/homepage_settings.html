@@ -1,218 +1,322 @@
 {% load static %}
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="light">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Homepage Settings - Blueprint Apparel</title>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+  <link rel="icon" type="image/svg+xml" href="{% static 'admin-favicon.svg' %}">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
   <style>
-    * { margin: 0; padding: 0; box-sizing: border-box; }
+    {% include "admin/partials/dark_mode_styles.html" %}
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
     body {
       font-family: 'Inter', sans-serif;
-      background: linear-gradient(135deg, rgba(102, 126, 234, 0.9) 0%, rgba(118, 75, 162, 0.9) 100%);
-      background-attachment: fixed;
+      background: #f1f5f9;
       min-height: 100vh;
-      padding: 2rem;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
     }
-    .container { max-width: 1200px; margin: 0 auto; }
-    .header {
-      background: white;
-      border-radius: 12px;
-      padding: 2rem;
-      margin-bottom: 2rem;
-      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-    }
-    .header h1 { color: #1a202c; font-size: 2rem; font-weight: 700; margin-bottom: 0.5rem; }
-    .header p { color: #667eea; font-size: 1.125rem; }
+
     .nav-links {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      padding: 1rem 2rem;
       display: flex;
-      gap: 1rem;
-      margin-top: 1rem;
-      flex-wrap: wrap;
+      gap: 0.75rem;
+      align-items: center;
     }
-    .nav-links a {
-      color: #667eea;
-      text-decoration: none;
+
+    .nav-link {
+      background: rgba(255, 255, 255, 0.15);
+      backdrop-filter: blur(10px);
+      color: white;
       padding: 0.5rem 1rem;
-      border-radius: 6px;
-      transition: background 0.2s;
+      border-radius: 8px;
+      text-decoration: none;
+      font-size: 0.875rem;
+      font-weight: 500;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      border: 1px solid rgba(255, 255, 255, 0.1);
     }
-    .nav-links a:hover { background: #f7fafc; }
-    .section {
+
+    .nav-link:hover {
+      background: rgba(255, 255, 255, 0.25);
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    }
+
+    .top-bar {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      padding: 2rem 0;
+      box-shadow: 0 4px 20px rgba(102, 126, 234, 0.15);
+      margin-bottom: 2rem;
+    }
+
+    .container {
+      max-width: 1600px;
+      margin: 0 auto;
+      padding: 0 2rem;
+    }
+
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .header h1 {
+      color: white;
+      font-size: 2.5rem;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+    }
+
+    .main-content {
+      padding: 0 2rem 2rem 2rem;
+      max-width: 1600px;
+      margin: 0 auto;
+    }
+
+    .section-card {
       background: white;
-      border-radius: 12px;
+      border-radius: 16px;
       padding: 2rem;
       margin-bottom: 2rem;
-      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+      box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
     }
-    .section h2 {
-      color: #1a202c;
+
+    .section-title {
       font-size: 1.5rem;
       font-weight: 700;
+      color: #0f172a;
       margin-bottom: 1.5rem;
       padding-bottom: 0.75rem;
       border-bottom: 2px solid #e2e8f0;
     }
+
     .form-group {
       margin-bottom: 1.5rem;
     }
+
     .form-group label {
       display: block;
-      color: #4a5568;
+      color: #475569;
       font-weight: 600;
       margin-bottom: 0.5rem;
       font-size: 0.875rem;
     }
+
     .form-group input[type="text"],
     .form-group input[type="file"],
     .form-group textarea {
       width: 100%;
-      padding: 0.75rem;
+      padding: 0.75rem 1rem;
       border: 2px solid #e2e8f0;
-      border-radius: 6px;
+      border-radius: 8px;
       font-family: inherit;
       font-size: 1rem;
       transition: border-color 0.2s;
     }
+
     .form-group input:focus,
     .form-group textarea:focus {
       outline: none;
       border-color: #667eea;
+      box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
     }
+
     .form-group textarea {
       min-height: 100px;
       resize: vertical;
     }
+
+    .form-group small {
+      display: block;
+      color: #64748b;
+      font-size: 0.8125rem;
+      margin-top: 0.375rem;
+    }
+
     .current-image {
       max-width: 100%;
-      border-radius: 8px;
+      border-radius: 12px;
       margin: 1rem 0;
-      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
     }
+
     .image-preview {
-      background: #f7fafc;
-      border: 2px dashed #e2e8f0;
-      border-radius: 8px;
+      background: #f8fafc;
+      border: 2px dashed #cbd5e1;
+      border-radius: 12px;
       padding: 2rem;
       text-align: center;
       margin-bottom: 1rem;
+      transition: all 0.2s;
     }
+
+    .image-preview:hover {
+      border-color: #667eea;
+      background: #f1f5f9;
+    }
+
+    .info-box {
+      background: linear-gradient(135deg, #eff6ff 0%, #f0f9ff 100%);
+      border-left: 4px solid #3b82f6;
+      padding: 1rem 1.25rem;
+      border-radius: 8px;
+      margin-bottom: 1.5rem;
+    }
+
+    .info-box p {
+      color: #1e40af;
+      font-size: 0.875rem;
+      line-height: 1.6;
+      margin: 0;
+    }
+
     .btn {
-      padding: 0.75rem 1.5rem;
-      border-radius: 6px;
+      padding: 0.875rem 1.5rem;
+      border-radius: 8px;
       border: none;
       font-weight: 600;
       cursor: pointer;
-      transition: all 0.2s;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
       text-decoration: none;
-      display: inline-block;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
       font-size: 1rem;
     }
+
     .btn-primary {
-      background: #667eea;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
       color: white;
+      box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
     }
+
     .btn-primary:hover {
-      background: #5a67d8;
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
     }
+
     .btn-danger {
-      background: #f56565;
+      background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
       color: white;
       margin-left: 1rem;
+      box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
     }
+
     .btn-danger:hover {
-      background: #e53e3e;
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(239, 68, 68, 0.4);
     }
+
     .alert {
-      padding: 1rem;
+      padding: 1rem 1.25rem;
       border-radius: 8px;
-      margin-bottom: 1rem;
-    }
-    .alert-success {
-      background: #c6f6d5;
-      color: #22543d;
-      border-left: 4px solid #38a169;
-    }
-    .alert-error {
-      background: #fed7d7;
-      color: #742a2a;
-      border-left: 4px solid #e53e3e;
-    }
-    .info-box {
-      background: #ebf8ff;
-      border-left: 4px solid #4299e1;
-      padding: 1rem;
-      border-radius: 4px;
       margin-bottom: 1.5rem;
+      font-weight: 500;
     }
-    .info-box p {
-      color: #2c5282;
-      font-size: 0.875rem;
-      line-height: 1.5;
+
+    .alert-success {
+      background: #d1fae5;
+      color: #065f46;
+      border-left: 4px solid #10b981;
+    }
+
+    .alert-error {
+      background: #fee2e2;
+      color: #991b1b;
+      border-left: 4px solid #ef4444;
+    }
+
+    .button-group {
+      display: flex;
+      gap: 1rem;
+      flex-wrap: wrap;
     }
   </style>
+  {% include "admin/partials/dark_mode_apply.html" %}
 </head>
 <body>
-  <div class="container">
-    <div class="header">
-      <h1>🏠 Homepage Settings</h1>
-      <p>Manage your homepage hero image, title, and featured content</p>
-      <div class="nav-links">
-        <a href="/admin/">← Admin Home</a>
+  <div class="nav-links">
+    <a href="{% url 'admin_home' %}" class="nav-link">← Back</a>
+  </div>
+
+  <div class="top-bar">
+    <div class="container">
+      <div class="header">
+        <h1>🏠 Homepage Settings</h1>
       </div>
     </div>
+  </div>
 
+  <div class="main-content">
     {% if messages %}
       {% for message in messages %}
-        <div class="alert alert-{{ message.tags }}">{{ message }}</div>
+        <div class="alert alert-{{ message.tags }}">
+          <i class="fas fa-check-circle"></i> {{ message }}
+        </div>
       {% endfor %}
     {% endif %}
 
-    <!-- Hero Image & Content -->
-    <div class="section">
-      <h2>Hero Section</h2>
+    <!-- Hero Section Settings -->
+    <div class="section-card">
+      <h2 class="section-title">Hero Section</h2>
 
       <div class="info-box">
-        <p>The hero section is the first thing visitors see on your homepage. Choose a high-quality image (recommended: 1920x1080px or larger) and compelling text to make a strong first impression.</p>
+        <p><i class="fas fa-info-circle"></i> The hero section is the first thing visitors see on your homepage. Choose a high-quality image (recommended: 1920x1080px or larger) and compelling text to make a strong first impression.</p>
       </div>
 
       <form method="POST" enctype="multipart/form-data">
         {% csrf_token %}
 
         <div class="form-group">
-          <label>Current Hero Image</label>
+          <label><i class="fas fa-image"></i> Current Hero Image</label>
           {% if site_settings.hero_image %}
             <div class="image-preview">
               <img src="{{ site_settings.hero_image.url }}" alt="Current hero image" class="current-image">
             </div>
           {% else %}
             <div class="image-preview">
-              <p style="color: #a0aec0;">No hero image set</p>
+              <i class="fas fa-image" style="font-size: 3rem; color: #cbd5e1; margin-bottom: 0.5rem;"></i>
+              <p style="color: #94a3b8;">No hero image set</p>
             </div>
           {% endif %}
         </div>
 
         <div class="form-group">
-          <label for="hero_image">Upload New Hero Image</label>
+          <label for="hero_image"><i class="fas fa-upload"></i> Upload New Hero Image</label>
           <input type="file" name="hero_image" id="hero_image" accept="image/*">
-          <small style="display: block; color: #718096; margin-top: 0.25rem;">Recommended size: 1920x1080px. Supports JPG, PNG, WebP.</small>
+          <small>Recommended size: 1920x1080px. Supports JPG, PNG, WebP.</small>
         </div>
 
         <div class="form-group">
-          <label for="hero_title">Hero Title</label>
+          <label for="hero_title"><i class="fas fa-heading"></i> Hero Title</label>
           <input type="text" name="hero_title" id="hero_title" value="{{ site_settings.hero_title }}" placeholder="Welcome to Blueprint Apparel">
+          <small>Main headline displayed on the hero section</small>
         </div>
 
         <div class="form-group">
-          <label for="hero_subtitle">Hero Subtitle</label>
+          <label for="hero_subtitle"><i class="fas fa-align-left"></i> Hero Subtitle</label>
           <textarea name="hero_subtitle" id="hero_subtitle" placeholder="Discover our latest collection of premium apparel">{{ site_settings.hero_subtitle }}</textarea>
+          <small>Supporting text displayed below the title</small>
         </div>
 
-        <div style="display: flex; gap: 1rem;">
-          <button type="submit" class="btn btn-primary">Save Changes</button>
+        <div class="button-group">
+          <button type="submit" class="btn btn-primary">
+            <i class="fas fa-save"></i> Save Changes
+          </button>
           {% if site_settings.hero_image %}
-            <button type="submit" name="remove_image" value="true" class="btn btn-danger" onclick="return confirm('Remove the current hero image?')">Remove Image</button>
+            <button type="submit" name="remove_image" value="true" class="btn btn-danger" onclick="return confirm('Remove the current hero image?')">
+              <i class="fas fa-trash"></i> Remove Image
+            </button>
           {% endif %}
         </div>
       </form>

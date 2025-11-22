@@ -1,0 +1,697 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Orders - Blueprint Apparel</title>
+  <link rel="icon" type="image/svg+xml" href="{% static 'admin-favicon.svg' %}">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <style>
+    {% include "admin/partials/dark_mode_styles.html" %}
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background: #f1f5f9;
+      min-height: 100vh;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
+
+    .nav-links {
+      background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+      padding: 1rem 2rem;
+      display: flex;
+      gap: 0.75rem;
+      align-items: center;
+    }
+
+    .nav-link {
+      background: rgba(255, 255, 255, 0.15);
+      backdrop-filter: blur(10px);
+      color: white;
+      padding: 0.5rem 1rem;
+      border-radius: 8px;
+      text-decoration: none;
+      font-size: 0.875rem;
+      font-weight: 500;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .nav-link:hover {
+      background: rgba(255, 255, 255, 0.25);
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    }
+
+    .top-bar {
+      background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+      padding: 2rem 0;
+      box-shadow: 0 4px 20px rgba(16, 185, 129, 0.15);
+      margin-bottom: 2rem;
+    }
+
+    .container {
+      max-width: 1600px;
+      margin: 0 auto;
+      padding: 0 2rem;
+    }
+
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1rem;
+    }
+
+    .header h1 {
+      color: white;
+      font-size: 2.5rem;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+    }
+
+    .main-content {
+      padding: 0 2rem 2rem 2rem;
+      max-width: 1600px;
+      margin: 0 auto;
+    }
+
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 1.5rem;
+      margin-bottom: 3rem;
+      margin-top: -4rem;
+      position: relative;
+      z-index: 10;
+    }
+
+    .stat-card {
+      background: white;
+      border-radius: 16px;
+      padding: 1.75rem;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+      text-align: center;
+      border: 1px solid rgba(226, 232, 240, 0.8);
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .stat-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 4px;
+      background: linear-gradient(90deg, #10b981, #059669);
+      opacity: 0;
+      transition: opacity 0.3s;
+    }
+
+    .stat-card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 12px 28px rgba(0, 0, 0, 0.12);
+    }
+
+    .stat-card:hover::before {
+      opacity: 1;
+    }
+
+    .stat-card h3 {
+      color: #64748b;
+      font-size: 0.75rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      margin-bottom: 0.75rem;
+    }
+
+    .stat-card .number {
+      background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      font-size: 2.25rem;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+    }
+
+    .stat-card .icon {
+      font-size: 1.75rem;
+      margin-bottom: 0.75rem;
+      color: #10b981;
+    }
+
+    .btn {
+      padding: 0.5rem 1rem;
+      border-radius: 8px;
+      font-size: 0.875rem;
+      font-weight: 500;
+      border: none;
+      cursor: pointer;
+      transition: all 0.2s;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .btn-sm {
+      padding: 0.375rem 0.75rem;
+      font-size: 0.8125rem;
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+      color: white;
+    }
+
+    .btn-primary:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+    }
+
+    .btn-secondary {
+      background: #f1f5f9;
+      color: #64748b;
+      border: 1px solid #e2e8f0;
+    }
+
+    .btn-secondary:hover {
+      background: #e2e8f0;
+    }
+
+    .btn-warning {
+      background: #fef3c7;
+      color: #92400e;
+      border: 1px solid #fcd34d;
+    }
+
+    .btn-warning:hover {
+      background: #fde68a;
+    }
+
+    .order-card {
+      background: white;
+      border-radius: 12px;
+      padding: 1.5rem;
+      margin-bottom: 1rem;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+      border-left: 4px solid #10b981;
+    }
+
+    .status-badge {
+      display: inline-block;
+      padding: 0.25rem 0.75rem;
+      border-radius: 12px;
+      font-size: 0.75rem;
+      font-weight: 500;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .status-badge.created {
+      background: #fef3c7;
+      color: #92400e;
+    }
+
+    .status-badge.awaiting-payment {
+      background: #dbeafe;
+      color: #1e40af;
+    }
+
+    .status-badge.paid {
+      background: #d1fae5;
+      color: #065f46;
+    }
+
+    .status-badge.shipped {
+      background: #dbeafe;
+      color: #1e3a8a;
+    }
+
+    .status-badge.fulfilled {
+      background: #d1fae5;
+      color: #065f46;
+    }
+
+    .tracking-info {
+      background: #f0fdf4;
+      border: 1px solid #bbf7d0;
+      border-radius: 8px;
+      padding: 1rem;
+      margin-top: 1rem;
+    }
+
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.5);
+      z-index: 1000;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .modal-overlay.active {
+      display: flex;
+    }
+
+    .modal-content {
+      background: white;
+      border-radius: 16px;
+      padding: 2rem;
+      max-width: 500px;
+      width: 90%;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+    }
+
+    .form-group {
+      margin-bottom: 1.5rem;
+    }
+
+    .form-group label {
+      display: block;
+      font-weight: 500;
+      margin-bottom: 0.5rem;
+      color: #0f172a;
+      font-size: 0.875rem;
+    }
+
+    .form-group input,
+    .form-group select {
+      width: 100%;
+      padding: 0.625rem 0.875rem;
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+      font-size: 0.875rem;
+      font-family: 'Inter', sans-serif;
+    }
+
+    .shipping-buttons {
+      display: flex;
+      gap: 0.75rem;
+      margin-top: 1rem;
+    }
+
+    .success-message {
+      background: #d1fae5;
+      color: #065f46;
+      padding: 0.75rem 1rem;
+      border-radius: 8px;
+      margin-bottom: 1rem;
+      font-size: 0.875rem;
+    }
+
+    .error-message {
+      background: #fee2e2;
+      color: #991b1b;
+      padding: 0.75rem 1rem;
+      border-radius: 8px;
+      margin-bottom: 1rem;
+      font-size: 0.875rem;
+    }
+  </style>
+  {% include "admin/partials/dark_mode_apply.html" %}
+</head>
+<body>
+  <div class="nav-links">
+    <a href="{% url 'admin_home' %}" class="nav-link">← Back</a>
+  </div>
+
+  <div class="top-bar">
+    <div class="container">
+      <div class="header">
+        <h1>Orders</h1>
+        <button onclick="openManualOrderModal()" class="btn-primary">+ Add Manual Order</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="main-content">
+    <!-- Stats Grid -->
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="icon"><i class="fa-solid fa-shopping-cart"></i></div>
+        <h3>Total Orders</h3>
+        <div class="number">{{ stats.total }}</div>
+      </div>
+      <div class="stat-card">
+        <div class="icon"><i class="fa-solid fa-clock"></i></div>
+        <h3>Pending</h3>
+        <div class="number">{{ stats.pending }}</div>
+      </div>
+      <div class="stat-card">
+        <div class="icon"><i class="fa-solid fa-truck"></i></div>
+        <h3>Shipped</h3>
+        <div class="number">{{ stats.shipped }}</div>
+      </div>
+      <div class="stat-card">
+        <div class="icon"><i class="fa-solid fa-dollar-sign"></i></div>
+        <h3>Revenue</h3>
+        <div class="number">${{ stats.total_revenue|floatformat:0 }}</div>
+      </div>
+    </div>
+
+    <!-- Orders List -->
+    <div style="background: white; border-radius: 16px; padding: 2rem; box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);">
+      <h2 style="font-size: 1.5rem; font-weight: 700; margin-bottom: 1.5rem;">All Orders ({{ orders|length }})</h2>
+
+      {% if orders %}
+        {% for order in orders %}
+        <div class="order-card">
+          <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 1rem;">
+            <div>
+              <h3 style="font-size: 1.125rem; font-weight: 700; color: #0f172a; margin-bottom: 0.5rem;">
+                Order {{ order.order_number }}
+              </h3>
+              <span class="status-badge {{ order.status }}">{{ order.status|title }}</span>
+            </div>
+          </div>
+
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin-top: 1rem;">
+            <div>
+              <div style="font-size: 0.75rem; color: #64748b; font-weight: 600; text-transform: uppercase; margin-bottom: 0.25rem;">Customer</div>
+              <div style="color: #0f172a; font-weight: 500;">{{ order.customer_name }}</div>
+              <div style="font-size: 0.875rem; color: #64748b;">{{ order.customer_email }}</div>
+            </div>
+            <div>
+              <div style="font-size: 0.75rem; color: #64748b; font-weight: 600; text-transform: uppercase; margin-bottom: 0.25rem;">Total</div>
+              <div style="color: #0f172a; font-weight: 500;">${{ order.total|floatformat:2 }}</div>
+              <div style="font-size: 0.875rem; color: #64748b;">{{ order.item_count }} items</div>
+            </div>
+            <div>
+              <div style="font-size: 0.75rem; color: #64748b; font-weight: 600; text-transform: uppercase; margin-bottom: 0.25rem;">Date</div>
+              <div style="color: #0f172a; font-weight: 500;">{{ order.created_at|date:"M d, Y" }}</div>
+              <div style="font-size: 0.875rem; color: #64748b;">{{ order.created_at|date:"g:i A" }}</div>
+            </div>
+          </div>
+
+          {% if order.tracking_number %}
+          <div class="tracking-info">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+              <div>
+                <div style="font-size: 0.75rem; color: #15803d; font-weight: 600; text-transform: uppercase; margin-bottom: 0.25rem;">
+                  <i class="fa-solid fa-check-circle"></i> Tracking Info
+                </div>
+                <div style="color: #0f172a; font-weight: 600; font-size: 1rem;">{{ order.tracking_number }}</div>
+                <div style="font-size: 0.875rem; color: #64748b;">Carrier: {{ order.carrier }}</div>
+                {% if order.label_url %}
+                <a href="{{ order.label_url }}" target="_blank" style="font-size: 0.875rem; color: #10b981; text-decoration: none; font-weight: 500;">
+                  <i class="fa-solid fa-download"></i> Download Label
+                </a>
+                {% endif %}
+              </div>
+            </div>
+          </div>
+          {% else %}
+          <div class="shipping-buttons">
+            <button class="btn btn-primary btn-sm" onclick="generateLabel({{ order.id }})">
+              <i class="fa-solid fa-magic"></i> Auto Generate Label
+            </button>
+            <button class="btn btn-warning btn-sm" onclick="openManualTracking({{ order.id }})">
+              <i class="fa-solid fa-keyboard"></i> Manual Tracking
+            </button>
+          </div>
+          {% endif %}
+        </div>
+        {% endfor %}
+      {% else %}
+        <div style="text-align: center; padding: 4rem 2rem; color: #64748b;">
+          <i class="fa-solid fa-shopping-cart" style="font-size: 4rem; opacity: 0.3; margin-bottom: 1rem;"></i>
+          <p>No customer orders yet.</p>
+        </div>
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- Manual Tracking Modal -->
+  <div class="modal-overlay" id="manualTrackingModal">
+    <div class="modal-content">
+      <h2 style="font-size: 1.75rem; font-weight: 700; margin-bottom: 1.5rem;">Enter Tracking Information</h2>
+
+      <div id="modalMessage"></div>
+
+      <form id="manualTrackingForm">
+        <input type="hidden" id="orderId">
+
+        <div class="form-group">
+          <label for="trackingNumber">Tracking Number *</label>
+          <input type="text" id="trackingNumber" required placeholder="e.g., 1Z999AA10123456784">
+        </div>
+
+        <div class="form-group">
+          <label for="carrier">Carrier *</label>
+          <select id="carrier" required>
+            <option value="">Select carrier...</option>
+            <option value="USPS">USPS</option>
+            <option value="UPS">UPS</option>
+            <option value="FedEx">FedEx</option>
+            <option value="DHL">DHL</option>
+            <option value="Other">Other</option>
+          </select>
+        </div>
+
+        <div style="display: flex; gap: 1rem; margin-top: 2rem;">
+          <button type="submit" class="btn btn-primary">
+            <i class="fa-solid fa-save"></i> Save Tracking
+          </button>
+          <button type="button" class="btn btn-secondary" onclick="closeManualTrackingModal()">
+            Cancel
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Manual Order Entry Modal -->
+  <div class="modal-overlay" id="manualOrderModal">
+    <div class="modal-content" style="max-width: 600px;">
+      <h2 style="font-size: 1.75rem; font-weight: 700; margin-bottom: 1.5rem;">Add Manual Order</h2>
+      <p style="color: #64748b; margin-bottom: 1.5rem; font-size: 0.875rem;">
+        For historical orders made before this site was created
+      </p>
+
+      <form id="manualOrderForm" action="{% url 'add_manual_order' %}" onsubmit="submitManualOrder(event)">
+        {% csrf_token %}
+
+        <div class="form-group">
+          <label for="customerEmail">Customer Email *</label>
+          <input type="email" name="customer_email" id="customerEmail" required placeholder="customer@example.com">
+        </div>
+
+        <div class="form-group">
+          <label for="orderDate">Order Date *</label>
+          <input type="date" name="order_date" id="orderDate" required>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+          <div class="form-group">
+            <label for="subtotal">Subtotal ($) *</label>
+            <input type="number" name="subtotal" id="subtotal" step="0.01" min="0" required placeholder="0.00">
+          </div>
+
+          <div class="form-group">
+            <label for="tax">Tax ($)</label>
+            <input type="number" name="tax" id="tax" step="0.01" min="0" value="0" placeholder="0.00">
+          </div>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+          <div class="form-group">
+            <label for="shipping">Shipping ($)</label>
+            <input type="number" name="shipping" id="shipping" step="0.01" min="0" value="0" placeholder="0.00">
+          </div>
+
+          <div class="form-group">
+            <label for="total">Total ($) *</label>
+            <input type="number" name="total" id="total" step="0.01" min="0" required placeholder="0.00">
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="orderStatus">Status *</label>
+          <select name="status" id="orderStatus" required>
+            <option value="paid">Paid</option>
+            <option value="shipped">Shipped</option>
+            <option value="fulfilled">Fulfilled</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label for="notes">Notes (optional)</label>
+          <textarea name="notes" id="notes" rows="3" placeholder="Any additional notes about this order..."></textarea>
+        </div>
+
+        <div style="display: flex; gap: 1rem; margin-top: 2rem;">
+          <button type="submit" class="btn btn-primary">
+            <i class="fa-solid fa-plus"></i> Add Order
+          </button>
+          <button type="button" class="btn btn-secondary" onclick="closeManualOrderModal()">
+            Cancel
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script>
+    function getCookie(name) {
+      let cookieValue = null;
+      if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+          const cookie = cookies[i].trim();
+          if (cookie.substring(0, name.length + 1) === (name + '=')) {
+            cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+            break;
+          }
+        }
+      }
+      return cookieValue;
+    }
+
+    async function generateLabel(orderId) {
+      if (!confirm('Generate shipping label using EasyPost cheapest rate?')) {
+        return;
+      }
+
+      try {
+        const response = await fetch(`/admin/orders/${orderId}/generate-label/`, {
+          method: 'GET',
+          headers: {
+            'X-CSRFToken': getCookie('csrftoken')
+          }
+        });
+
+        const data = await response.json();
+
+        if (data.success) {
+          alert(`Label generated successfully!\n\nTracking: ${data.tracking_number}\nCarrier: ${data.carrier}\nCost: $${data.cost}`);
+          location.reload();
+        } else {
+          alert(`Error: ${data.error}`);
+        }
+      } catch (error) {
+        console.error('Error:', error);
+        alert('Error generating label. Please try again.');
+      }
+    }
+
+    function openManualTracking(orderId) {
+      document.getElementById('orderId').value = orderId;
+      document.getElementById('manualTrackingForm').reset();
+      document.getElementById('orderId').value = orderId; // Set again after reset
+      document.getElementById('modalMessage').innerHTML = '';
+      document.getElementById('manualTrackingModal').classList.add('active');
+    }
+
+    function closeManualTrackingModal() {
+      document.getElementById('manualTrackingModal').classList.remove('active');
+    }
+
+    document.getElementById('manualTrackingForm').addEventListener('submit', async function(e) {
+      e.preventDefault();
+
+      const orderId = document.getElementById('orderId').value;
+      const trackingNumber = document.getElementById('trackingNumber').value;
+      const carrier = document.getElementById('carrier').value;
+
+      try {
+        const formData = new FormData();
+        formData.append('tracking_number', trackingNumber);
+        formData.append('carrier', carrier);
+
+        const response = await fetch(`/admin/orders/${orderId}/manual-tracking/`, {
+          method: 'POST',
+          headers: {
+            'X-CSRFToken': getCookie('csrftoken')
+          },
+          body: formData
+        });
+
+        const data = await response.json();
+
+        if (data.success) {
+          document.getElementById('modalMessage').innerHTML =
+            `<div class="success-message">Tracking information saved successfully!</div>`;
+          setTimeout(() => {
+            location.reload();
+          }, 1500);
+        } else {
+          document.getElementById('modalMessage').innerHTML =
+            `<div class="error-message">Error: ${data.error}</div>`;
+        }
+      } catch (error) {
+        console.error('Error:', error);
+        document.getElementById('modalMessage').innerHTML =
+          `<div class="error-message">Error saving tracking information. Please try again.</div>`;
+      }
+    });
+
+    // Close modal on overlay click
+    document.getElementById('manualTrackingModal').addEventListener('click', function(e) {
+      if (e.target === this) {
+        closeManualTrackingModal();
+      }
+    });
+
+    // Manual Order Modal Functions
+    function openManualOrderModal() {
+      document.getElementById('manualOrderModal').style.display = 'flex';
+    }
+
+    function closeManualOrderModal() {
+      document.getElementById('manualOrderModal').style.display = 'none';
+      document.getElementById('manualOrderForm').reset();
+    }
+
+    async function submitManualOrder(event) {
+      event.preventDefault();
+      const form = event.target;
+      const formData = new FormData(form);
+
+      try {
+        const response = await fetch(form.action, {
+          method: 'POST',
+          body: formData,
+          headers: {
+            'X-CSRFToken': formData.get('csrfmiddlewaretoken')
+          }
+        });
+
+        const data = await response.json();
+
+        if (data.success) {
+          alert('Manual order added successfully!');
+          closeManualOrderModal();
+          location.reload();
+        } else {
+          alert('Error: ' + (data.error || 'Failed to add order'));
+        }
+      } catch (error) {
+        alert('Error submitting order: ' + error);
+      }
+    }
+
+    // Close manual order modal on overlay click
+    document.getElementById('manualOrderModal').addEventListener('click', function(e) {
+      if (e.target === this) {
+        closeManualOrderModal();
+      }
+    });
+  </script>
+</body>
+</html>

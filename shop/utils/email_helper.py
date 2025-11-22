@@ -1,4 +1,5 @@
 import logging
+
 from django.conf import settings
 from django.core.mail import EmailMultiAlternatives
 from django.utils import timezone
@@ -7,7 +8,15 @@ from django.utils.html import strip_tags
 logger = logging.getLogger(__name__)
 
 
-def send_email(email_address, subject, html_body, text_body=None, subscription=None, campaign=None, template=None):
+def send_email(
+    email_address,
+    subject,
+    html_body,
+    text_body=None,
+    subscription=None,
+    campaign=None,
+    template=None,
+):
     """
     Send an email and log the result.
 
@@ -38,7 +47,7 @@ def send_email(email_address, subject, html_body, text_body=None, subscription=N
         text_body=text_body,
         campaign=campaign,
         template=template,
-        status='queued'
+        status="queued",
     )
 
     try:
@@ -47,7 +56,7 @@ def send_email(email_address, subject, html_body, text_body=None, subscription=N
             subject=subject,
             body=text_body,
             from_email=settings.DEFAULT_FROM_EMAIL,
-            to=[email_address]
+            to=[email_address],
         )
         email.attach_alternative(html_body, "text/html")
 
@@ -55,7 +64,7 @@ def send_email(email_address, subject, html_body, text_body=None, subscription=N
         email.send(fail_silently=False)
 
         # Update log with success
-        log.status = 'sent'
+        log.status = "sent"
         log.save()
 
         logger.info(f"Email sent successfully to {email_address}")
@@ -69,7 +78,7 @@ def send_email(email_address, subject, html_body, text_body=None, subscription=N
 
     except Exception as e:
         logger.error(f"Failed to send email to {email_address}: {str(e)}")
-        log.status = 'failed'
+        log.status = "failed"
         log.error_message = str(e)
         log.save()
         return False, log
@@ -103,7 +112,7 @@ def send_from_template(email_address, template, context=None, subscription=None,
         text_body=text_body,
         subscription=subscription,
         campaign=campaign,
-        template=template
+        template=template,
     )
 
 
@@ -119,12 +128,12 @@ def send_campaign(campaign):
     """
     from shop.models import EmailSubscription
 
-    if campaign.status not in ['draft', 'scheduled']:
+    if campaign.status not in ["draft", "scheduled"]:
         logger.warning(f"Cannot send campaign {campaign.id} with status {campaign.status}")
-        return {'error': 'Invalid campaign status'}
+        return {"error": "Invalid campaign status"}
 
     # Update campaign status
-    campaign.status = 'sending'
+    campaign.status = "sending"
     campaign.started_at = timezone.now()
     campaign.save()
 
@@ -146,7 +155,7 @@ def send_campaign(campaign):
             email_address=subscription.email,
             template=campaign.template,
             subscription=subscription,
-            campaign=campaign
+            campaign=campaign,
         )
 
         if success:
@@ -160,17 +169,13 @@ def send_campaign(campaign):
         campaign.save()
 
     # Mark campaign as complete
-    campaign.status = 'sent'
+    campaign.status = "sent"
     campaign.completed_at = timezone.now()
     campaign.save()
 
     logger.info(f"Campaign {campaign.id} completed. Sent: {sent_count}, Failed: {failed_count}")
 
-    return {
-        'total': campaign.total_recipients,
-        'sent': sent_count,
-        'failed': failed_count
-    }
+    return {"total": campaign.total_recipients, "sent": sent_count, "failed": failed_count}
 
 
 def trigger_auto_send(trigger_type, subscription, context=None):
@@ -192,10 +197,7 @@ def trigger_auto_send(trigger_type, subscription, context=None):
 
     try:
         # Find active template with matching auto_trigger
-        template = EmailTemplate.objects.filter(
-            auto_trigger=trigger_type,
-            is_active=True
-        ).first()
+        template = EmailTemplate.objects.filter(auto_trigger=trigger_type, is_active=True).first()
 
         if not template:
             logger.info(f"No active template found for trigger: {trigger_type}")
@@ -206,7 +208,7 @@ def trigger_auto_send(trigger_type, subscription, context=None):
             email_address=subscription.email,
             template=template,
             context=context,
-            subscription=subscription
+            subscription=subscription,
         )
 
     except Exception as e:

@@ -1,10 +1,11 @@
 {% load static tz %}
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="light">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Admin Dashboard - Blueprint Apparel</title>
+  <link rel="icon" type="image/svg+xml" href="{% static 'admin-favicon.svg' %}">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
   <style>
     * {
@@ -225,22 +226,35 @@
       font-weight: 400;
     }
 
+    .messages-container {
+      position: fixed;
+      top: 1rem;
+      right: 1rem;
+      z-index: 9999;
+      max-width: 500px;
+      width: 100%;
+      pointer-events: none;
+    }
+
     .alert {
       padding: 1.25rem 1.5rem;
       border-radius: 12px;
-      margin-bottom: 2rem;
+      margin-bottom: 0.75rem;
       border: 1px solid;
-      animation: slideIn 0.3s ease-out;
+      animation: slideInRight 0.3s ease-out;
+      pointer-events: all;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+      backdrop-filter: blur(10px);
     }
 
-    @keyframes slideIn {
+    @keyframes slideInRight {
       from {
         opacity: 0;
-        transform: translateY(-10px);
+        transform: translateX(100px);
       }
       to {
         opacity: 1;
-        transform: translateY(0);
+        transform: translateX(0);
       }
     }
 
@@ -248,7 +262,32 @@
       background: linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%);
       color: #065f46;
       border-color: #10b981;
-      box-shadow: 0 4px 12px rgba(16, 185, 129, 0.1);
+      box-shadow: 0 8px 24px rgba(16, 185, 129, 0.2);
+      font-weight: 600;
+    }
+
+    .alert-error, .alert-danger {
+      background: linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%);
+      color: #991b1b;
+      border-color: #ef4444;
+      box-shadow: 0 8px 24px rgba(239, 68, 68, 0.2);
+      font-weight: 600;
+    }
+
+    .alert-warning {
+      background: linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%);
+      color: #92400e;
+      border-color: #f59e0b;
+      box-shadow: 0 8px 24px rgba(245, 158, 11, 0.2);
+      font-weight: 600;
+    }
+
+    .alert-info {
+      background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
+      color: #1e40af;
+      border-color: #3b82f6;
+      box-shadow: 0 8px 24px rgba(59, 130, 246, 0.2);
+      font-weight: 600;
     }
 
     .view-site-btn {
@@ -286,6 +325,48 @@
         grid-template-columns: 1fr;
       }
     }
+
+    /* Dark Mode Styles */
+    html {
+      transition: background-color 0.3s ease;
+    }
+
+    [data-theme='dark'] body {
+      background: #0f1419;
+      color: #e5e5e5;
+    }
+
+    [data-theme='dark'] .stat-box,
+    [data-theme='dark'] .admin-card {
+      background: #1a1f26;
+      border-color: #2d3748;
+    }
+
+    [data-theme='dark'] .stat-box h2,
+    [data-theme='dark'] .admin-card h3 {
+      color: #e5e5e5;
+    }
+
+    [data-theme='dark'] .stat-box p,
+    [data-theme='dark'] .admin-card p {
+      color: #a0aec0;
+    }
+
+    [data-theme='dark'] .stat-value {
+      color: #e5e5e5;
+    }
+
+    [data-theme='dark'] .stat-label {
+      color: #a0aec0;
+    }
+
+    [data-theme='dark'] .section-header h2 {
+      color: #e5e5e5;
+    }
+
+    [data-theme='dark'] .admin-grid {
+      color: #e5e5e5;
+    }
   </style>
 </head>
 <body>
@@ -293,10 +374,20 @@
     <div class="container">
       <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
         <div></div>
-        <a href="/" class="view-site-btn">
-          <span>🏠</span>
-          <span>View Site</span>
-        </a>
+        <div style="display: flex; gap: 0.75rem;">
+          <button id="darkModeToggle" class="view-site-btn" style="border: none; cursor: pointer;">
+            <span id="sunIcon">☀️</span>
+            <span id="moonIcon" style="display: none;">🌙</span>
+          </button>
+          <a href="/" class="view-site-btn">
+            <span>🏠</span>
+            <span>View Site</span>
+          </a>
+          <a href="/accounts/logout/" class="view-site-btn">
+            <span>🚪</span>
+            <span>Sign Out</span>
+          </a>
+        </div>
       </div>
       <div class="header" style="display: flex; justify-content: space-between; align-items: center;">
         <div>
@@ -311,13 +402,16 @@
     </div>
   </div>
 
-  <div class="main-content">
-    {% if messages %}
+  <!-- Messages Toast Notifications -->
+  {% if messages %}
+    <div class="messages-container">
       {% for message in messages %}
         <div class="alert alert-{{ message.tags }}">{{ message }}</div>
       {% endfor %}
-    {% endif %}
+    </div>
+  {% endif %}
 
+  <div class="main-content">
     <!-- Quick Stats -->
     <div class="quick-stats">
       <div class="stat-box">
@@ -363,7 +457,7 @@
         <p>Manage product categories and configure variant attributes for each type.</p>
       </a>
 
-      <a href="{% url 'admin_promotions' %}" class="admin-card">
+      <a href="{% url 'promotions_dashboard' %}" class="admin-card">
         <div class="icon">🏷️</div>
         <h3>Promotions</h3>
         <p>Create and manage discount codes, percentage offs, and promotional deals.</p>
@@ -388,6 +482,12 @@
         <p>Create and manage campaigns with scheduled email and SMS messages.</p>
       </a>
 
+      <a href="{% url 'admin_ab_testing' %}" class="admin-card">
+        <div class="icon">🧪</div>
+        <h3>A/B Testing</h3>
+        <p>Analyze variant performance, test tags, and optimize your marketing campaigns.</p>
+      </a>
+
       <a href="/admin/subscribers/" class="admin-card">
         <div class="icon">👥</div>
         <h3>Subscribers</h3>
@@ -398,6 +498,12 @@
         <div class="icon">📝</div>
         <h3>Templates</h3>
         <p>Manage email and SMS templates for your marketing campaigns.</p>
+      </a>
+
+      <a href="{% url 'admin_visitors' %}" class="admin-card">
+        <div class="icon">👁️</div>
+        <h3>Visitors</h3>
+        <p>Track site visitors, page views, traffic sources, and locations.</p>
       </a>
     </div>
 
@@ -410,7 +516,13 @@
       <a href="{% url 'admin_orders' %}" class="admin-card">
         <div class="icon">📦</div>
         <h3>Orders</h3>
-        <p>View and manage customer orders, process fulfillment, and track order status.</p>
+        <p>Manage customer orders, generate shipping labels, and track fulfillment.</p>
+      </a>
+
+      <a href="{% url 'admin_users' %}" class="admin-card">
+        <div class="icon">👥</div>
+        <h3>Customers</h3>
+        <p>View customer profiles, order history, saved addresses, and active carts.</p>
       </a>
 
       <a href="{% url 'admin_returns' %}" class="admin-card">
@@ -426,37 +538,38 @@
       </a>
     </div>
 
-    <!-- Dashboards Section -->
+    <!-- Finances Section -->
     <div class="section-header">
-      <h2>📊 Dashboards</h2>
+      <h2>📈 Finances</h2>
     </div>
 
     <div class="admin-grid">
-      <a href="/admin/email/" class="admin-card">
-        <div class="icon">📊</div>
-        <h3>Email Dashboard</h3>
-        <p>View email stats, recent sends, and performance metrics.</p>
-      </a>
-
-      <a href="/admin/sms/" class="admin-card">
-        <div class="icon">📈</div>
-        <h3>SMS Dashboard</h3>
-        <p>View SMS stats, recent sends, and delivery reports.</p>
+      <a href="{% url 'admin_finance' %}" class="admin-card">
+        <div class="icon">💰</div>
+        <h3>Finances</h3>
+        <p>Track revenue, expenses, tax collected, and view financial analytics.</p>
       </a>
     </div>
 
-    <!-- Analytics & Settings Section -->
+    <!-- Website Customization Section -->
     <div class="section-header">
-      <h2>⚙️ Analytics & Settings</h2>
+      <h2>🎨 Website Customization</h2>
     </div>
 
     <div class="admin-grid">
-      <a href="/admin/visitors/" class="admin-card">
-        <div class="icon">📊</div>
-        <h3>Visitor Analytics</h3>
-        <p>Track site visitors, page views, traffic sources, and locations.</p>
+      <a href="/admin/homepage/" class="admin-card">
+        <div class="icon">🏠</div>
+        <h3>Homepage Settings</h3>
+        <p>Customize hero image, title, and subtitle for your homepage.</p>
       </a>
+    </div>
 
+    <!-- Settings Section -->
+    <div class="section-header">
+      <h2>⚙️ Settings</h2>
+    </div>
+
+    <div class="admin-grid">
       <a href="/admin/security/" class="admin-card">
         <div class="icon">🔒</div>
         <h3>Security Dashboard</h3>
@@ -469,12 +582,6 @@
         <p>Secure your account with two-factor authentication (2FA).</p>
       </a>
 
-      <a href="/admin/homepage/" class="admin-card">
-        <div class="icon">🏠</div>
-        <h3>Homepage Settings</h3>
-        <p>Customize hero image, title, and subtitle for your homepage.</p>
-      </a>
-
       <a href="/django-admin/" class="admin-card">
         <div class="icon">⚡</div>
         <h3>Django Admin</h3>
@@ -482,5 +589,44 @@
       </a>
     </div>
   </div>
+
+  <script>
+    // Dark Mode Toggle
+    document.addEventListener('DOMContentLoaded', function() {
+      const savedTheme = localStorage.getItem('theme') || 'light';
+      const htmlElement = document.documentElement;
+      const darkModeToggle = document.getElementById('darkModeToggle');
+      const sunIcon = document.getElementById('sunIcon');
+      const moonIcon = document.getElementById('moonIcon');
+
+      // Apply saved theme
+      htmlElement.setAttribute('data-theme', savedTheme);
+      updateUI(savedTheme);
+
+      // Toggle dark mode on button click
+      if (darkModeToggle) {
+        darkModeToggle.addEventListener('click', function() {
+          const currentTheme = htmlElement.getAttribute('data-theme');
+          const newTheme = currentTheme === 'light' ? 'dark' : 'light';
+
+          htmlElement.setAttribute('data-theme', newTheme);
+          localStorage.setItem('theme', newTheme);
+          updateUI(newTheme);
+        });
+      }
+
+      function updateUI(theme) {
+        if (!sunIcon || !moonIcon) return;
+
+        if (theme === 'dark') {
+          sunIcon.style.display = 'none';
+          moonIcon.style.display = 'inline';
+        } else {
+          sunIcon.style.display = 'inline';
+          moonIcon.style.display = 'none';
+        }
+      }
+    });
+  </script>
 </body>
 </html>

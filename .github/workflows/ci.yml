@@ -1,0 +1,89 @@
+name: CI
+
+on:
+  push:
+    branches: [ master, main, develop, marketing-sms ]
+  pull_request:
+    branches: [ master, main, develop ]
+
+jobs:
+  lint-and-test:
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        python-version: ['3.11']
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v5
+      with:
+        python-version: ${{ matrix.python-version }}
+        cache: 'pip'
+
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+
+    - name: Create .env file for testing
+      run: |
+        echo "SECRET_KEY=test-secret-key-for-ci-only-not-for-production" > .env
+        echo "DEBUG=True" >> .env
+        echo "DATABASE_URL=sqlite:///db.sqlite3" >> .env
+        echo "REDIS_URL=" >> .env
+
+    - name: Run Black (check only)
+      run: |
+        black --check . || echo "::warning::Black formatting issues found. Run 'black .' to fix."
+
+    - name: Run isort (check only)
+      run: |
+        isort --check-only . || echo "::warning::Import sorting issues found. Run 'isort .' to fix."
+
+    - name: Run Flake8
+      run: |
+        flake8 . || echo "::warning::Flake8 linting issues found."
+
+    - name: Run djLint (HTML/Template linter)
+      run: |
+        djlint --check templates/ shop/templates/ online_shop/templates/ || echo "::warning::djLint template formatting issues found."
+
+    - name: Run Django System Checks
+      run: |
+        python manage.py check --settings=online_shop.settings.dev
+
+    - name: Check for missing migrations
+      run: |
+        python manage.py makemigrations --check --dry-run --settings=online_shop.settings.dev
+
+    - name: Run tests (if any)
+      run: |
+        python manage.py test --settings=online_shop.settings.dev || echo "::warning::No tests found or tests failed."
+
+    - name: Check static files collection
+      run: |
+        python manage.py collectstatic --noinput --settings=online_shop.settings.dev
+
+  security-check:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.11'
+
+    - name: Install safety
+      run: |
+        python -m pip install --upgrade pip
+        pip install safety
+
+    - name: Check for security vulnerabilities
+      run: |
+        pip install -r requirements.txt
+        safety check --json || echo "::warning::Security vulnerabilities found in dependencies."

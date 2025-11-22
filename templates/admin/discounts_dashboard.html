@@ -1,13 +1,15 @@
 {% load static %}
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="light">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Promotions - Blueprint Apparel</title>
+  <link rel="icon" type="image/svg+xml" href="{% static 'admin-favicon.svg' %}">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
   <style>
+    {% include "admin/partials/dark_mode_styles.html" %}
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body {
       font-family: 'Inter', sans-serif;
@@ -255,7 +257,150 @@
       margin-bottom: 1rem;
       opacity: 0.5;
     }
+
+    /* Modal Styles */
+    .modal {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.5);
+      backdrop-filter: blur(4px);
+      z-index: 10000;
+      align-items: center;
+      justify-content: center;
+      padding: 2rem;
+    }
+
+    .modal.active {
+      display: flex;
+    }
+
+    .modal-content {
+      background: white;
+      border-radius: 20px;
+      max-width: 800px;
+      width: 100%;
+      max-height: 90vh;
+      display: flex;
+      flex-direction: column;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+    }
+
+    .modal-header {
+      padding: 2rem;
+      border-bottom: 2px solid #f1f5f9;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .modal-title {
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: #0f172a;
+    }
+
+    .modal-close {
+      background: none;
+      border: none;
+      font-size: 1.5rem;
+      color: #64748b;
+      cursor: pointer;
+      padding: 0.5rem;
+      transition: all 0.2s;
+    }
+
+    .modal-close:hover {
+      color: #0f172a;
+      transform: rotate(90deg);
+    }
+
+    .modal-body {
+      padding: 2rem;
+      overflow-y: auto;
+      flex: 1;
+    }
+
+    .modal-footer {
+      padding: 1.5rem 2rem;
+      border-top: 2px solid #f1f5f9;
+      display: flex;
+      gap: 1rem;
+      justify-content: flex-end;
+    }
+
+    .form-group {
+      margin-bottom: 1.5rem;
+    }
+
+    .form-label {
+      display: block;
+      font-size: 0.875rem;
+      font-weight: 600;
+      color: #0f172a;
+      margin-bottom: 0.5rem;
+    }
+
+    .form-input, .form-select, .form-textarea {
+      width: 100%;
+      padding: 0.75rem;
+      border: 2px solid #e2e8f0;
+      border-radius: 8px;
+      font-size: 0.875rem;
+      transition: all 0.2s;
+    }
+
+    .form-input:focus, .form-select:focus, .form-textarea:focus {
+      outline: none;
+      border-color: #f59e0b;
+      box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.1);
+    }
+
+    .form-help {
+      font-size: 0.75rem;
+      color: #64748b;
+      margin-top: 0.25rem;
+    }
+
+    .form-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1rem;
+    }
+
+    .checkbox-group {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      margin-top: 0.5rem;
+    }
+
+    .checkbox-group input[type="checkbox"] {
+      width: 20px;
+      height: 20px;
+      cursor: pointer;
+    }
+
+    .btn-secondary {
+      background: #f1f5f9;
+      color: #64748b;
+      padding: 0.75rem 1.5rem;
+      border-radius: 8px;
+      border: 1px solid #e2e8f0;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .btn-secondary:hover {
+      background: #e2e8f0;
+      color: #475569;
+    }
   </style>
+  {% include "admin/partials/dark_mode_apply.html" %}
 </head>
 <body>
   <div class="nav-links">
@@ -266,7 +411,7 @@
     <div class="container">
       <div class="header">
         <h1>Promotions</h1>
-        <button onclick="alert('Create promotion feature coming soon!')" class="btn-primary">+ Create Promotion</button>
+        <button onclick="openCreateModal()" class="btn-primary"><i class="fa-solid fa-plus"></i> Create Promotion</button>
       </div>
     </div>
   </div>
@@ -374,5 +519,171 @@
       {% endif %}
     </div>
   </div>
+
+  <!-- Create Promotion Modal -->
+  <div class="modal" id="createModal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2 class="modal-title"><i class="fa-solid fa-tag"></i> Create Promotion</h2>
+        <button class="modal-close" onclick="closeModal()">&times;</button>
+      </div>
+      <form method="POST" action="{% url 'promotions_dashboard' %}">
+        {% csrf_token %}
+        <input type="hidden" name="action" value="create">
+
+        <div class="modal-body">
+          <!-- Name and Code -->
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label" for="name">Promotion Name *</label>
+              <input type="text" class="form-input" name="name" id="name" required placeholder="e.g., Summer Sale 2025">
+              <div class="form-help">Internal name for identification</div>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label" for="code">Promo Code</label>
+              <input type="text" class="form-input" name="code" id="code" placeholder="e.g., SUMMER20" style="text-transform: uppercase;">
+              <div class="form-help">Leave blank for auto-apply discount</div>
+            </div>
+          </div>
+
+          <!-- Discount Type and Value -->
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label" for="discount_type">Discount Type *</label>
+              <select class="form-select" name="discount_type" id="discount_type" required onchange="updateValuePlaceholder()">
+                <option value="percentage">Percentage Off</option>
+                <option value="fixed">Fixed Amount Off</option>
+                <option value="bogo">Buy One Get One</option>
+                <option value="free_shipping">Free Shipping</option>
+              </select>
+            </div>
+
+            <div class="form-group" id="valueGroup">
+              <label class="form-label" for="value">Value *</label>
+              <input type="number" class="form-input" name="value" id="value" step="0.01" required placeholder="e.g., 20">
+              <div class="form-help" id="valueHelp">Enter percentage (e.g., 20 for 20% off)</div>
+            </div>
+          </div>
+
+          <!-- Valid Period -->
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label" for="valid_from">Valid From *</label>
+              <input type="datetime-local" class="form-input" name="valid_from" id="valid_from" required>
+              <div class="form-help">When this promotion becomes active</div>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label" for="valid_until">Valid Until</label>
+              <input type="datetime-local" class="form-input" name="valid_until" id="valid_until">
+              <div class="form-help">Leave blank for no expiration</div>
+            </div>
+          </div>
+
+          <!-- Restrictions -->
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label" for="min_purchase_amount">Minimum Purchase</label>
+              <input type="number" class="form-input" name="min_purchase_amount" id="min_purchase_amount" step="0.01" placeholder="e.g., 50.00">
+              <div class="form-help">Minimum order amount to qualify</div>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label" for="max_uses">Maximum Uses</label>
+              <input type="number" class="form-input" name="max_uses" id="max_uses" placeholder="e.g., 100">
+              <div class="form-help">Total times this can be used (blank = unlimited)</div>
+            </div>
+          </div>
+
+          <!-- Product Targeting -->
+          <div class="form-group">
+            <div class="checkbox-group">
+              <input type="checkbox" name="applies_to_all" id="applies_to_all" checked>
+              <label for="applies_to_all">Apply to all products</label>
+            </div>
+            <div class="form-help">Uncheck to limit to specific products (configure after creation)</div>
+          </div>
+
+          <!-- Active Status -->
+          <div class="form-group">
+            <div class="checkbox-group">
+              <input type="checkbox" name="is_active" id="is_active" checked>
+              <label for="is_active">Promotion is active</label>
+            </div>
+          </div>
+        </div>
+
+        <div class="modal-footer">
+          <button type="button" class="btn-secondary" onclick="closeModal()">Cancel</button>
+          <button type="submit" class="btn-primary">
+            <i class="fa-solid fa-check"></i> Create Promotion
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script>
+    function openCreateModal() {
+      const modal = document.getElementById('createModal');
+      if (modal) {
+        modal.classList.add('active');
+        // Set default valid_from to current date/time
+        const now = new Date();
+        now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
+        document.getElementById('valid_from').value = now.toISOString().slice(0, 16);
+      }
+    }
+
+    function closeModal() {
+      const modal = document.getElementById('createModal');
+      if (modal) {
+        modal.classList.remove('active');
+      }
+    }
+
+    function updateValuePlaceholder() {
+      const discountType = document.getElementById('discount_type').value;
+      const valueGroup = document.getElementById('valueGroup');
+      const valueInput = document.getElementById('value');
+      const valueHelp = document.getElementById('valueHelp');
+
+      if (discountType === 'percentage') {
+        valueInput.placeholder = 'e.g., 20';
+        valueInput.required = true;
+        valueHelp.textContent = 'Enter percentage (e.g., 20 for 20% off)';
+        valueGroup.style.display = 'block';
+      } else if (discountType === 'fixed') {
+        valueInput.placeholder = 'e.g., 10.00';
+        valueInput.required = true;
+        valueHelp.textContent = 'Enter dollar amount (e.g., 10.00 for $10 off)';
+        valueGroup.style.display = 'block';
+      } else if (discountType === 'bogo') {
+        valueInput.required = false;
+        valueInput.value = '0';
+        valueGroup.style.display = 'none';
+      } else if (discountType === 'free_shipping') {
+        valueInput.required = false;
+        valueInput.value = '0';
+        valueGroup.style.display = 'none';
+      }
+    }
+
+    // Convert code input to uppercase
+    document.getElementById('code').addEventListener('input', function(e) {
+      e.target.value = e.target.value.toUpperCase();
+    });
+
+    // Close modal on outside click
+    document.getElementById('createModal').addEventListener('click', function(e) {
+      if (e.target === this) {
+        closeModal();
+      }
+    });
+
+    // Initialize value field visibility
+    updateValuePlaceholder();
+  </script>
 </body>
 </html>

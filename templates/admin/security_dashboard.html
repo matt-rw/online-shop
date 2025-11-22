@@ -1,101 +1,101 @@
 {% load static %}
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="light">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Security & System Dashboard - Blueprint Apparel</title>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+  <link rel="icon" type="image/svg+xml" href="{% static 'admin-favicon.svg' %}">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
   <style>
+    {% include "admin/partials/dark_mode_styles.html" %}
     * {
       margin: 0;
       padding: 0;
       box-sizing: border-box;
     }
+
     body {
       font-family: 'Inter', sans-serif;
-      background:
-        linear-gradient(135deg, rgba(102, 126, 234, 0.9) 0%, rgba(118, 75, 162, 0.9) 100%),
-        repeating-linear-gradient(0deg, transparent, transparent 35px, rgba(255,255,255,.03) 35px, rgba(255,255,255,.03) 36px),
-        repeating-linear-gradient(90deg, transparent, transparent 35px, rgba(255,255,255,.03) 35px, rgba(255,255,255,.03) 36px),
-        radial-gradient(circle at 20% 30%, rgba(255,255,255,0.1) 0%, transparent 50%),
-        radial-gradient(circle at 80% 70%, rgba(255,255,255,0.08) 0%, transparent 50%),
-        radial-gradient(circle at 50% 50%, rgba(118, 75, 162, 0.3) 0%, transparent 100%);
-      background-attachment: fixed;
+      background: #f1f5f9;
       min-height: 100vh;
-      padding: 2rem;
-      position: relative;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
     }
-    body::before {
-      content: '';
-      position: fixed;
-      top: 0;
-      left: 0;
-      right: 0;
-      bottom: 0;
-      background-image:
-        radial-gradient(circle at 15% 15%, rgba(255,255,255,0.15) 2px, transparent 2px),
-        radial-gradient(circle at 85% 45%, rgba(255,255,255,0.15) 3px, transparent 3px),
-        radial-gradient(circle at 45% 75%, rgba(255,255,255,0.12) 2px, transparent 2px),
-        radial-gradient(circle at 65% 25%, rgba(255,255,255,0.1) 2px, transparent 2px);
-      background-size: 100% 100%;
-      pointer-events: none;
-      z-index: 0;
+
+    .nav-links {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      padding: 1rem 2rem;
+      display: flex;
+      gap: 0.75rem;
+      align-items: center;
     }
-    .container {
-      max-width: 1400px;
-      margin: 0 auto;
-      position: relative;
-      z-index: 1;
+
+    .nav-link {
+      background: rgba(255, 255, 255, 0.15);
+      backdrop-filter: blur(10px);
+      color: white;
+      padding: 0.5rem 1rem;
+      border-radius: 8px;
+      text-decoration: none;
+      font-size: 0.875rem;
+      font-weight: 500;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      border: 1px solid rgba(255, 255, 255, 0.1);
     }
-    .header {
-      background: white;
-      border-radius: 12px;
-      padding: 2rem;
+
+    .nav-link:hover {
+      background: rgba(255, 255, 255, 0.25);
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    }
+
+    .top-bar {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      padding: 2rem 0;
+      box-shadow: 0 4px 20px rgba(102, 126, 234, 0.15);
       margin-bottom: 2rem;
-      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+
+    .container {
+      max-width: 1600px;
+      margin: 0 auto;
+      padding: 0 2rem;
+    }
+
+    .header {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      flex-wrap: wrap;
-      gap: 1rem;
     }
+
     .header h1 {
-      color: #1a202c;
-      font-size: 2rem;
-      font-weight: 700;
-    }
-    .header-links {
-      display: flex;
-      gap: 1rem;
-    }
-    .header-link {
-      padding: 0.5rem 1rem;
-      background: #f7fafc;
-      color: #667eea;
-      text-decoration: none;
-      border-radius: 6px;
-      font-weight: 600;
-      font-size: 0.875rem;
-      transition: all 0.2s;
-    }
-    .header-link:hover {
-      background: #667eea;
       color: white;
+      font-size: 2.5rem;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+    }
+
+    .main-content {
+      padding: 0 2rem 2rem 2rem;
+      max-width: 1600px;
+      margin: 0 auto;
     }
     .section {
       background: white;
-      border-radius: 12px;
-      padding: 1.5rem;
-      margin-bottom: 1.5rem;
-      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+      border-radius: 16px;
+      padding: 2rem;
+      margin-bottom: 2rem;
+      box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
     }
+
     .section h2 {
-      color: #1a202c;
-      font-size: 1.25rem;
+      color: #0f172a;
+      font-size: 1.5rem;
       font-weight: 700;
-      margin-bottom: 1rem;
+      margin-bottom: 1.5rem;
       padding-bottom: 0.75rem;
       border-bottom: 2px solid #e2e8f0;
     }
@@ -261,11 +261,17 @@
       background: #a0aec0;
     }
     @media (max-width: 1024px) {
-      body {
+      .main-content {
+        padding: 0 1rem 1rem 1rem;
+      }
+      .container {
+        padding: 0 1rem;
+      }
+      .nav-links {
         padding: 1rem;
       }
       .header h1 {
-        font-size: 1.5rem;
+        font-size: 1.75rem;
       }
       .stats-grid {
         grid-template-columns: 1fr;
@@ -275,19 +281,22 @@
       }
     }
   </style>
+  {% include "admin/partials/dark_mode_apply.html" %}
 </head>
 <body>
-  <div class="container">
-    <!-- Header -->
-    <div class="header">
-      <div>
-        <h1>Security & System Dashboard</h1>
-      </div>
-      <div class="header-links">
-        <a href="{% url 'admin_subscribers' %}" class="header-link">Subscribers</a>
+  <div class="nav-links">
+    <a href="{% url 'admin_home' %}" class="nav-link">← Back</a>
+  </div>
+
+  <div class="top-bar">
+    <div class="container">
+      <div class="header">
+        <h1><i class="fas fa-shield-alt"></i> Security & System Dashboard</h1>
       </div>
     </div>
+  </div>
 
+  <div class="main-content">
     <!-- System Logs -->
     <div class="section">
       <h2>System Logs & Activity</h2>
@@ -329,8 +338,8 @@
 
     <!-- Security Alerts (Compact) -->
     {% if warnings %}
-    <div style="background: white; border-radius: 8px; padding: 1rem; margin-bottom: 1.5rem; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);">
-      <h3 style="color: #1a202c; font-size: 1rem; margin-bottom: 0.75rem; font-weight: 700;">Security Alerts</h3>
+    <div style="background: white; border-radius: 16px; padding: 2rem; margin-bottom: 2rem; box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);">
+      <h3 style="color: #0f172a; font-size: 1.5rem; margin-bottom: 1rem; font-weight: 700;">Security Alerts</h3>
       <div style="display: grid; gap: 0.5rem;">
         {% for warning in warnings %}
         <div style="padding: 0.5rem 1rem; border-radius: 6px; font-size: 0.875rem; {% if warning.level == 'danger' %}background: #fff5f5; color: #c53030; border-left: 3px solid #e53e3e;{% elif warning.level == 'warning' %}background: #fef5e7; color: #975a16; border-left: 3px solid #dd6b20;{% else %}background: #bee3f8; color: #2c5282; border-left: 3px solid #3182ce;{% endif %}">

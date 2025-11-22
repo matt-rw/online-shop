@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+  <defs>
+    <linearGradient id="gradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#667eea;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#764ba2;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+
+  <!-- Background circle -->
+  <circle cx="50" cy="50" r="48" fill="url(#gradient)"/>
+
+  <!-- Blueprint grid pattern -->
+  <g opacity="0.15" stroke="white" stroke-width="0.5" fill="none">
+    <line x1="25" y1="20" x2="25" y2="80"/>
+    <line x1="50" y1="20" x2="50" y2="80"/>
+    <line x1="75" y1="20" x2="75" y2="80"/>
+    <line x1="20" y1="35" x2="80" y2="35"/>
+    <line x1="20" y1="50" x2="80" y2="50"/>
+    <line x1="20" y1="65" x2="80" y2="65"/>
+  </g>
+
+  <!-- Stylized "B" for Blueprint -->
+  <text x="50" y="70" font-family="'Inter', 'Arial', sans-serif" font-size="52" font-weight="800"
+        text-anchor="middle" fill="white" letter-spacing="-2">B</text>
+</svg>

@@ -1,0 +1,449 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Customers - Blueprint Apparel</title>
+  <link rel="icon" type="image/svg+xml" href="{% static 'admin-favicon.svg' %}">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <style>
+    {% include "admin/partials/dark_mode_styles.html" %}
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background: #f1f5f9;
+      min-height: 100vh;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
+
+    .nav-links {
+      background: linear-gradient(135deg, #8b5cf6 0%, #6366f1 100%);
+      padding: 1rem 2rem;
+      display: flex;
+      gap: 0.75rem;
+      align-items: center;
+    }
+
+    .nav-link {
+      background: rgba(255, 255, 255, 0.15);
+      backdrop-filter: blur(10px);
+      color: white;
+      padding: 0.5rem 1rem;
+      border-radius: 8px;
+      text-decoration: none;
+      font-size: 0.875rem;
+      font-weight: 500;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .nav-link:hover {
+      background: rgba(255, 255, 255, 0.25);
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    }
+
+    .top-bar {
+      background: linear-gradient(135deg, #8b5cf6 0%, #6366f1 100%);
+      padding: 2rem 0;
+      box-shadow: 0 4px 20px rgba(139, 92, 246, 0.15);
+      margin-bottom: 2rem;
+    }
+
+    .container {
+      max-width: 1600px;
+      margin: 0 auto;
+      padding: 0 2rem;
+    }
+
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .header h1 {
+      color: white;
+      font-size: 2.5rem;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+    }
+
+    .main-content {
+      padding: 0 2rem 2rem 2rem;
+      max-width: 1600px;
+      margin: 0 auto;
+    }
+
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 1.5rem;
+      margin-bottom: 3rem;
+      margin-top: -4rem;
+      position: relative;
+      z-index: 10;
+    }
+
+    .stat-card {
+      background: white;
+      border-radius: 16px;
+      padding: 1.75rem;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+      text-align: center;
+      border: 1px solid rgba(226, 232, 240, 0.8);
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .stat-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 4px;
+      background: linear-gradient(90deg, #8b5cf6, #6366f1);
+      opacity: 0;
+      transition: opacity 0.3s;
+    }
+
+    .stat-card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 12px 28px rgba(0, 0, 0, 0.12);
+    }
+
+    .stat-card:hover::before {
+      opacity: 1;
+    }
+
+    .stat-card h3 {
+      color: #64748b;
+      font-size: 0.75rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      margin-bottom: 0.75rem;
+    }
+
+    .stat-card .number {
+      background: linear-gradient(135deg, #8b5cf6 0%, #6366f1 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      font-size: 2.25rem;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+    }
+
+    .stat-card .icon {
+      font-size: 1.75rem;
+      margin-bottom: 0.75rem;
+      color: #8b5cf6;
+    }
+
+    .customer-card {
+      background: white;
+      border-radius: 12px;
+      padding: 1.5rem;
+      margin-bottom: 1rem;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+      border-left: 4px solid #8b5cf6;
+      transition: all 0.2s;
+    }
+
+    .customer-card:hover {
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+      transform: translateX(4px);
+    }
+
+    .customer-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: start;
+      margin-bottom: 1rem;
+    }
+
+    .customer-name {
+      font-size: 1.125rem;
+      font-weight: 700;
+      color: #0f172a;
+      margin-bottom: 0.25rem;
+    }
+
+    .customer-email {
+      font-size: 0.875rem;
+      color: #64748b;
+    }
+
+    .badge {
+      display: inline-block;
+      padding: 0.25rem 0.75rem;
+      border-radius: 12px;
+      font-size: 0.75rem;
+      font-weight: 500;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .badge-active {
+      background: #d1fae5;
+      color: #065f46;
+    }
+
+    .badge-inactive {
+      background: #fee2e2;
+      color: #991b1b;
+    }
+
+    .badge-vip {
+      background: #fef3c7;
+      color: #92400e;
+    }
+
+    .customer-info {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 1rem;
+      margin-top: 1rem;
+    }
+
+    .info-item {
+      font-size: 0.875rem;
+    }
+
+    .info-label {
+      color: #64748b;
+      font-weight: 600;
+      text-transform: uppercase;
+      font-size: 0.75rem;
+      margin-bottom: 0.25rem;
+    }
+
+    .info-value {
+      color: #0f172a;
+      font-weight: 500;
+    }
+
+    .cart-info {
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+      padding: 0.75rem;
+      margin-top: 1rem;
+    }
+
+    .addresses {
+      margin-top: 1rem;
+      padding-top: 1rem;
+      border-top: 1px solid #e2e8f0;
+    }
+
+    .address-item {
+      background: #f8fafc;
+      padding: 0.75rem;
+      border-radius: 6px;
+      margin-bottom: 0.5rem;
+      font-size: 0.8125rem;
+    }
+
+    .address-label {
+      font-weight: 600;
+      color: #8b5cf6;
+      margin-bottom: 0.25rem;
+    }
+
+    .section-card {
+      background: white;
+      border-radius: 16px;
+      padding: 2rem;
+      box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
+    }
+
+    .section-title {
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: #0f172a;
+      margin-bottom: 1.5rem;
+    }
+
+    .search-box {
+      margin-bottom: 1.5rem;
+    }
+
+    .search-box input {
+      width: 100%;
+      padding: 0.75rem 1rem;
+      border: 2px solid #e2e8f0;
+      border-radius: 8px;
+      font-size: 1rem;
+      transition: border-color 0.2s;
+    }
+
+    .search-box input:focus {
+      outline: none;
+      border-color: #8b5cf6;
+      box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.1);
+    }
+  </style>
+  {% include "admin/partials/dark_mode_apply.html" %}
+</head>
+<body>
+  <div class="nav-links">
+    <a href="{% url 'admin_home' %}" class="nav-link">← Back</a>
+  </div>
+
+  <div class="top-bar">
+    <div class="container">
+      <div class="header">
+        <h1><i class="fas fa-users"></i> Customers</h1>
+      </div>
+    </div>
+  </div>
+
+  <div class="main-content">
+    <!-- Stats Grid -->
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="icon"><i class="fa-solid fa-users"></i></div>
+        <h3>Total Customers</h3>
+        <div class="number">{{ stats.total_users }}</div>
+      </div>
+      <div class="stat-card">
+        <div class="icon"><i class="fa-solid fa-shopping-bag"></i></div>
+        <h3>With Orders</h3>
+        <div class="number">{{ stats.users_with_orders }}</div>
+      </div>
+      <div class="stat-card">
+        <div class="icon"><i class="fa-solid fa-shopping-cart"></i></div>
+        <h3>Active Carts</h3>
+        <div class="number">{{ stats.active_carts }}</div>
+      </div>
+      <div class="stat-card">
+        <div class="icon"><i class="fa-solid fa-eye"></i></div>
+        <h3>Page Views</h3>
+        <div class="number">{{ stats.total_page_views }}</div>
+      </div>
+    </div>
+
+    <!-- Customers List -->
+    <div class="section-card">
+      <h2 class="section-title">All Customers ({{ users|length }})</h2>
+
+      <div class="search-box">
+        <input type="text" id="searchInput" placeholder="🔍 Search by name, email, or username..." onkeyup="searchCustomers()">
+      </div>
+
+      <div id="customersList">
+        {% if users %}
+          {% for user in users %}
+          <div class="customer-card" data-search="{{ user.full_name|lower }} {{ user.email|lower }} {{ user.username|lower }}">
+            <div class="customer-header">
+              <div>
+                <div class="customer-name">{{ user.full_name }}</div>
+                <div class="customer-email">{{ user.email }}</div>
+              </div>
+              <div>
+                {% if user.is_active %}
+                  <span class="badge badge-active">Active</span>
+                {% else %}
+                  <span class="badge badge-inactive">Inactive</span>
+                {% endif %}
+                {% if user.total_spent > 500 %}
+                  <span class="badge badge-vip" style="margin-left: 0.5rem;">VIP</span>
+                {% endif %}
+              </div>
+            </div>
+
+            <div class="customer-info">
+              <div class="info-item">
+                <div class="info-label"><i class="fas fa-user"></i> Username</div>
+                <div class="info-value">{{ user.username }}</div>
+              </div>
+              <div class="info-item">
+                <div class="info-label"><i class="fas fa-phone"></i> Phone</div>
+                <div class="info-value">{{ user.phone|default:"Not provided" }}</div>
+              </div>
+              <div class="info-item">
+                <div class="info-label"><i class="fas fa-calendar"></i> Joined</div>
+                <div class="info-value">{{ user.date_joined|date:"M d, Y" }}</div>
+              </div>
+              <div class="info-item">
+                <div class="info-label"><i class="fas fa-clock"></i> Last Login</div>
+                <div class="info-value">
+                  {% if user.last_login %}
+                    {{ user.last_login|date:"M d, Y g:i A" }}
+                  {% else %}
+                    Never
+                  {% endif %}
+                </div>
+              </div>
+              <div class="info-item">
+                <div class="info-label"><i class="fas fa-shopping-bag"></i> Orders</div>
+                <div class="info-value">{{ user.order_count }} orders</div>
+              </div>
+              <div class="info-item">
+                <div class="info-label"><i class="fas fa-dollar-sign"></i> Total Spent</div>
+                <div class="info-value">${{ user.total_spent|floatformat:2 }}</div>
+              </div>
+            </div>
+
+            {% if user.current_cart %}
+            <div class="cart-info">
+              <strong><i class="fas fa-shopping-cart"></i> Active Cart:</strong>
+              {{ user.current_cart.item_count }} items - ${{ user.current_cart.total|floatformat:2 }}
+            </div>
+            {% endif %}
+
+            {% if user.saved_addresses %}
+            <div class="addresses">
+              <div style="font-size: 0.75rem; font-weight: 600; color: #64748b; text-transform: uppercase; margin-bottom: 0.5rem;">
+                <i class="fas fa-map-marker-alt"></i> Saved Addresses
+              </div>
+              {% for address in user.saved_addresses %}
+              <div class="address-item">
+                <div class="address-label">{{ address.label }}</div>
+                <div style="color: #64748b;">{{ address.address }}</div>
+              </div>
+              {% endfor %}
+            </div>
+            {% endif %}
+          </div>
+          {% endfor %}
+        {% else %}
+          <div style="text-align: center; padding: 4rem 2rem; color: #64748b;">
+            <i class="fa-solid fa-users" style="font-size: 4rem; opacity: 0.3; margin-bottom: 1rem;"></i>
+            <p>No customers yet.</p>
+          </div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+
+  <script>
+    function searchCustomers() {
+      const input = document.getElementById('searchInput');
+      const filter = input.value.toLowerCase();
+      const cards = document.querySelectorAll('.customer-card');
+
+      cards.forEach(card => {
+        const searchText = card.getAttribute('data-search');
+        if (searchText.indexOf(filter) > -1) {
+          card.style.display = '';
+        } else {
+          card.style.display = 'none';
+        }
+      });
+    }
+  </script>
+</body>
+</html>

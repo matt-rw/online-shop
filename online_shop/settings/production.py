@@ -1,11 +1,35 @@
-from .base import *
+import os
+
 import dj_database_url
+
+from .base import *
 
 DEBUG = False
 
-SECRET_KEY = get_env_variable('SECRET_KEY')
+# Sentry Error Monitoring
+# Get Sentry DSN from environment variable (set in Render dashboard)
+SENTRY_DSN = os.environ.get("SENTRY_DSN")
 
-ALLOWED_HOSTS = ['.onrender.com', 'blueprintapparel.store', 'www.blueprintapparel.store']
+if SENTRY_DSN:
+    import sentry_sdk
+    from sentry_sdk.integrations.django import DjangoIntegration
+
+    sentry_sdk.init(
+        dsn=SENTRY_DSN,
+        integrations=[DjangoIntegration()],
+        # Performance monitoring - captures 10% of transactions
+        traces_sample_rate=0.1,
+        # Capture errors
+        send_default_pii=False,  # Don't send user data for privacy
+        # Environment info
+        environment="production",
+        # Release tracking (helps identify which deploy broke things)
+        release=os.environ.get("RENDER_GIT_COMMIT", "unknown")[:7],
+    )
+
+SECRET_KEY = get_env_variable("SECRET_KEY")
+
+ALLOWED_HOSTS = [".onrender.com", "blueprintapparel.store", "www.blueprintapparel.store"]
 
 # Security settings
 SECURE_SSL_REDIRECT = True
@@ -19,27 +43,28 @@ SECURE_HSTS_PRELOAD = True
 
 # CSRF trusted origins for your domains
 CSRF_TRUSTED_ORIGINS = [
-    'https://*.onrender.com',
-    'https://blueprintapparel.store',
-    'https://www.blueprintapparel.store',
+    "https://*.onrender.com",
+    "https://blueprintapparel.store",
+    "https://www.blueprintapparel.store",
 ]
 
-# Wagtail admin base URL for production
-WAGTAILADMIN_BASE_URL = "https://blueprintapparel.store"
-
 # Static files - use WhiteNoise for efficient serving
-MIDDLEWARE.insert(1, 'whitenoise.middleware.WhiteNoiseMiddleware')
+MIDDLEWARE.insert(1, "whitenoise.middleware.WhiteNoiseMiddleware")
 
 # Use WhiteNoise's compressed static file storage
 STORAGES["staticfiles"]["BACKEND"] = "whitenoise.storage.CompressedManifestStaticFilesStorage"
 
+# Enable Brotli and Gzip compression for static files
+WHITENOISE_COMPRESS = True
+WHITENOISE_USE_FINDERS = False
+
 # Database - PostgreSQL for production
 # Render automatically provides DATABASE_URL environment variable
-DATABASE_URL = get_env_variable('DATABASE_URL', None)
+DATABASE_URL = get_env_variable("DATABASE_URL", None)
 
 if DATABASE_URL:
     DATABASES = {
-        'default': dj_database_url.config(
+        "default": dj_database_url.config(
             default=DATABASE_URL,
             conn_max_age=600,
             conn_health_checks=True,
@@ -51,34 +76,34 @@ else:
 
 # Logging configuration for production
 LOGGING = {
-    'version': 1,
-    'disable_existing_loggers': False,
-    'formatters': {
-        'verbose': {
-            'format': '{levelname} {asctime} {module} {message}',
-            'style': '{',
+    "version": 1,
+    "disable_existing_loggers": False,
+    "formatters": {
+        "verbose": {
+            "format": "{levelname} {asctime} {module} {message}",
+            "style": "{",
         },
     },
-    'handlers': {
-        'console': {
-            'class': 'logging.StreamHandler',
-            'formatter': 'verbose',
+    "handlers": {
+        "console": {
+            "class": "logging.StreamHandler",
+            "formatter": "verbose",
         },
     },
-    'root': {
-        'handlers': ['console'],
-        'level': 'INFO',
+    "root": {
+        "handlers": ["console"],
+        "level": "INFO",
     },
-    'loggers': {
-        'django': {
-            'handlers': ['console'],
-            'level': 'INFO',
-            'propagate': False,
+    "loggers": {
+        "django": {
+            "handlers": ["console"],
+            "level": "INFO",
+            "propagate": False,
         },
-        'django.request': {
-            'handlers': ['console'],
-            'level': 'ERROR',
-            'propagate': False,
+        "django.request": {
+            "handlers": ["console"],
+            "level": "ERROR",
+            "propagate": False,
         },
     },
 }

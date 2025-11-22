@@ -6,22 +6,15 @@ class SiteSettings(models.Model):
     Global site settings and configuration.
     Should only have one instance (singleton pattern).
     """
+
     # Hero/Homepage settings
     hero_image = models.ImageField(
-        upload_to='site/hero/',
-        blank=True,
-        null=True,
-        help_text="Main hero image for the homepage"
+        upload_to="site/hero/", blank=True, null=True, help_text="Main hero image for the homepage"
     )
     hero_title = models.CharField(
-        max_length=200,
-        default="Welcome to Blueprint",
-        help_text="Main headline on homepage"
+        max_length=200, default="Welcome to Blueprint", help_text="Main headline on homepage"
     )
-    hero_subtitle = models.TextField(
-        blank=True,
-        help_text="Subheadline or description on homepage"
-    )
+    hero_subtitle = models.TextField(blank=True, help_text="Subheadline or description on homepage")
 
     # Site metadata
     site_name = models.CharField(max_length=100, default="Blueprint Apparel")
@@ -39,8 +32,7 @@ class SiteSettings(models.Model):
 
     # Feature flags
     maintenance_mode = models.BooleanField(
-        default=False,
-        help_text="Enable to show maintenance page to non-staff users"
+        default=False, help_text="Enable to show maintenance page to non-staff users"
     )
 
     updated_at = models.DateTimeField(auto_now=True)

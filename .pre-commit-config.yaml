@@ -1,0 +1,76 @@
+repos:
+  # General file checks
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v5.0.0
+    hooks:
+      - id: trailing-whitespace
+        exclude: ^.*\.(md|rst)$
+      - id: end-of-file-fixer
+        exclude: ^.*\.(md|rst)$
+      - id: check-yaml
+      - id: check-added-large-files
+        args: ['--maxkb=5000']  # Max 5MB files
+      - id: check-merge-conflict
+      - id: check-json
+      - id: pretty-format-json
+        args: ['--autofix', '--no-sort-keys']
+      - id: check-toml
+      - id: detect-private-key
+
+  # Python formatting with black
+  - repo: https://github.com/psf/black
+    rev: 24.8.0
+    hooks:
+      - id: black
+        language_version: python3.11
+        exclude: ^.*migrations/.*\.py$
+
+  # Import sorting with isort
+  - repo: https://github.com/PyCQA/isort
+    rev: 5.13.2
+    hooks:
+      - id: isort
+        args: ["--profile", "black"]
+        exclude: ^.*migrations/.*\.py$
+
+  # Flake8 linting
+  - repo: https://github.com/PyCQA/flake8
+    rev: 7.1.1
+    hooks:
+      - id: flake8
+        args: ['--config=.flake8']
+        additional_dependencies: [flake8-django]
+        exclude: ^.*migrations/.*\.py$
+
+  # djLint for Django/Jinja templates
+  - repo: https://github.com/Riverside-Healthcare/djLint
+    rev: v1.35.2
+    hooks:
+      - id: djlint-reformat-django
+        name: djLint formatter (Django templates)
+        files: \.(html|jinja)$
+        exclude: ^(venv|\.venv|migrations|node_modules)/
+      - id: djlint-django
+        name: djLint linter (Django templates)
+        files: \.(html|jinja)$
+        exclude: ^(venv|\.venv|migrations|node_modules)/
+
+  # Django checks
+  - repo: local
+    hooks:
+      - id: django-check
+        name: Django System Check
+        entry: bash -c 'source venv/bin/activate && python manage.py check --settings=online_shop.settings.dev'
+        language: system
+        pass_filenames: false
+        always_run: true
+
+      - id: django-check-migrations
+        name: Django Check Missing Migrations
+        entry: bash -c 'source venv/bin/activate && python manage.py makemigrations --check --dry-run --settings=online_shop.settings.dev'
+        language: system
+        pass_filenames: false
+        always_run: true
+
+# Optional: Skip specific hooks with SKIP environment variable
+# Example: SKIP=flake8,mypy git commit -m "message"

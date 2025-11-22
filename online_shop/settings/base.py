@@ -15,13 +15,14 @@ import os
 from pathlib import Path
 
 from django.core.exceptions import ImproperlyConfigured
+
 from dotenv import load_dotenv
 
 PROJECT_DIR = Path(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 BASE_DIR = Path(os.path.dirname(PROJECT_DIR))
 
 
-load_dotenv(BASE_DIR / '.env')
+load_dotenv(BASE_DIR / ".env")
 
 
 def get_env_variable(name, default=None):
@@ -30,9 +31,8 @@ def get_env_variable(name, default=None):
     except KeyError:
         if default is not None:
             return default
-        raise ImproperlyConfigured(
-            f'Missing required environment variable {name}'
-        )
+        raise ImproperlyConfigured(f"Missing required environment variable {name}")
+
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
@@ -46,18 +46,6 @@ INSTALLED_APPS = [
     "shop",  # custom app
     "tailwind",  # for Tailwind CSS
     "theme",  # Tailwind theme app
-    "wagtail.contrib.forms",
-    "wagtail.contrib.redirects",
-    "wagtail.embeds",
-    "wagtail.sites",
-    "wagtail.users",
-    "wagtail.snippets",
-    "wagtail.documents",
-    "wagtail.images",
-    "wagtail.search",
-    "wagtail.admin",
-    "wagtail",
-    "modelcluster",
     "taggit",
     "django_filters",
     "django.contrib.admin",
@@ -82,6 +70,7 @@ INSTALLED_APPS = [
 ]
 
 MIDDLEWARE = [
+    "django.middleware.gzip.GZipMiddleware",  # Compress responses (must be first)
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
@@ -92,7 +81,7 @@ MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
     "allauth.account.middleware.AccountMiddleware",  # Required by allauth
     "shop.middleware.analytics.VisitorTrackingMiddleware",  # Track visitor analytics
-    "wagtail.contrib.redirects.middleware.RedirectMiddleware",
+    "shop.middleware.ConnectionLogMiddleware",  # Track connections for security dashboard
     # "django_browser_reload.middleware.BrowserReloadMiddleware",
 ]
 
@@ -199,91 +188,72 @@ STORAGES = {
 }
 
 # Django sets a maximum of 1000 fields per form by default, but particularly complex page models
-# can exceed this limit within Wagtail's page editor.
 DATA_UPLOAD_MAX_NUMBER_FIELDS = 10_000
-
-
-# Wagtail settings
-
-WAGTAIL_SITE_NAME = "online_shop"
-
-# Search
-# https://docs.wagtail.org/en/stable/topics/search/backends.html
-WAGTAILSEARCH_BACKENDS = {
-    "default": {
-        "BACKEND": "wagtail.search.backends.database",
-    }
-}
-
-# Base URL to use when referring to full URLs within the Wagtail admin backend -
-# e.g. in notification emails. Don't include '/admin' or a trailing slash
-WAGTAILADMIN_BASE_URL = get_env_variable('WAGTAILADMIN_BASE_URL', 'http://localhost:8000')
-
-# Allowed file extensions for documents in the document library.
-# This can be omitted to allow all files, but note that this may present a security risk
-# if untrusted users are allowed to upload files -
-# see https://docs.wagtail.org/en/stable/advanced_topics/deploying.html#user-uploaded-files
-WAGTAILDOCS_EXTENSIONS = ['csv', 'docx', 'key', 'odt', 'pdf', 'pptx', 'rtf', 'txt', 'xlsx', 'zip']
 
 
 # TAILWIND
 TAILWIND_APP_NAME = "theme"
 
 # STRIPE
-STRIPE_SECRET_KEY = get_env_variable('STRIPE_SECRET_KEY')
-STRIPE_PUBLISHABLE_KEY = get_env_variable('STRIPE_PUBLISHABLE_KEY')
-STRIPE_WEBHOOK_SECRET = get_env_variable('STRIPE_WEBHOOK_SECRET', None)
+STRIPE_SECRET_KEY = get_env_variable("STRIPE_SECRET_KEY")
+STRIPE_PUBLISHABLE_KEY = get_env_variable("STRIPE_PUBLISHABLE_KEY")
+STRIPE_WEBHOOK_SECRET = get_env_variable("STRIPE_WEBHOOK_SECRET", None)
 
 # EMAIL
 # These settings can be overridden in dev.py or production.py
-EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
-EMAIL_HOST = get_env_variable('EMAIL_HOST', 'smtp.gmail.com')
-EMAIL_PORT = int(get_env_variable('EMAIL_PORT', 587))
-EMAIL_USE_TLS = get_env_variable('EMAIL_USE_TLS', 'True') == 'True'
-EMAIL_HOST_USER = get_env_variable('EMAIL_HOST_USER', '')
-EMAIL_HOST_PASSWORD = get_env_variable('EMAIL_HOST_PASSWORD', '')
-DEFAULT_FROM_EMAIL = get_env_variable('DEFAULT_FROM_EMAIL', EMAIL_HOST_USER or 'noreply@example.com')
+EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
+EMAIL_HOST = get_env_variable("EMAIL_HOST", "smtp.gmail.com")
+EMAIL_PORT = int(get_env_variable("EMAIL_PORT", 587))
+EMAIL_USE_TLS = get_env_variable("EMAIL_USE_TLS", "True") == "True"
+EMAIL_HOST_USER = get_env_variable("EMAIL_HOST_USER", "")
+EMAIL_HOST_PASSWORD = get_env_variable("EMAIL_HOST_PASSWORD", "")
+DEFAULT_FROM_EMAIL = get_env_variable(
+    "DEFAULT_FROM_EMAIL", EMAIL_HOST_USER or "noreply@example.com"
+)
 
 # TWILIO SMS
-TWILIO_ACCOUNT_SID = get_env_variable('TWILIO_ACCOUNT_SID', '')
-TWILIO_AUTH_TOKEN = get_env_variable('TWILIO_AUTH_TOKEN', '')
-TWILIO_PHONE_NUMBER = get_env_variable('TWILIO_PHONE_NUMBER', '')
+TWILIO_ACCOUNT_SID = get_env_variable("TWILIO_ACCOUNT_SID", "")
+TWILIO_AUTH_TOKEN = get_env_variable("TWILIO_AUTH_TOKEN", "")
+TWILIO_PHONE_NUMBER = get_env_variable("TWILIO_PHONE_NUMBER", "")
 
 # DJANGO-ALLAUTH CONFIGURATION
 SITE_ID = 1  # Required by django.contrib.sites
 
 AUTHENTICATION_BACKENDS = [
     # Django default (needed for admin)
-    'django.contrib.auth.backends.ModelBackend',
+    "django.contrib.auth.backends.ModelBackend",
     # Allauth specific authentication methods
-    'allauth.account.auth_backends.AuthenticationBackend',
+    "allauth.account.auth_backends.AuthenticationBackend",
 ]
 
 # Allauth settings
-ACCOUNT_LOGIN_METHODS = {'email'}  # Use email instead of username
-ACCOUNT_SIGNUP_FIELDS = ['email*', 'password1*', 'password2*']  # Required signup fields
+ACCOUNT_LOGIN_METHODS = {"email", "username"}  # Allow login with username or email
+ACCOUNT_SIGNUP_FIELDS = ["username*", "email*", "password1*", "password2*"]  # Required signup fields
 ACCOUNT_UNIQUE_EMAIL = True
-ACCOUNT_EMAIL_VERIFICATION = 'mandatory'  # Require email verification
+ACCOUNT_EMAIL_VERIFICATION = "mandatory"  # Require email verification
 ACCOUNT_LOGIN_ON_EMAIL_CONFIRMATION = True
 ACCOUNT_CONFIRM_EMAIL_ON_GET = True
 ACCOUNT_EMAIL_CONFIRMATION_EXPIRE_DAYS = 3
 ACCOUNT_LOGIN_ON_PASSWORD_RESET = True
 
+# Custom adapter for redirects
+ACCOUNT_ADAPTER = "shop.adapters.CustomAccountAdapter"
+
 # Redirect URLs
-LOGIN_REDIRECT_URL = '/'
-ACCOUNT_LOGOUT_REDIRECT_URL = '/'
-ACCOUNT_SIGNUP_REDIRECT_URL = '/'
+LOGIN_REDIRECT_URL = "/"
+ACCOUNT_LOGOUT_REDIRECT_URL = "/"
+ACCOUNT_SIGNUP_REDIRECT_URL = "/"
 
 # Session settings
 ACCOUNT_SESSION_REMEMBER = True  # Remember me by default
 
 # GEOIP SETTINGS
 # Path to GeoLite2 database for visitor location tracking
-GEOIP_PATH = os.path.join(BASE_DIR, 'geoip')
+GEOIP_PATH = os.path.join(BASE_DIR, "geoip")
 
 # SECURITY HEADERS
 # Prevent clickjacking attacks by preventing your site from being embedded in iframes
-X_FRAME_OPTIONS = 'DENY'
+X_FRAME_OPTIONS = "DENY"
 
 # Enable the browser's XSS filtering
 SECURE_BROWSER_XSS_FILTER = True
@@ -296,11 +266,114 @@ CSRF_COOKIE_HTTPONLY = True
 
 # Session cookie security
 SESSION_COOKIE_HTTPONLY = True  # Prevent JavaScript access to session cookie
-SESSION_COOKIE_SAMESITE = 'Lax'  # CSRF protection
+SESSION_COOKIE_SAMESITE = "Lax"  # CSRF protection
 SESSION_COOKIE_AGE = 1209600  # 2 weeks in seconds
 
 # CSRF cookie security
-CSRF_COOKIE_SAMESITE = 'Lax'
+CSRF_COOKIE_SAMESITE = "Lax"
 
 # Referrer policy - control how much information is sent in the Referer header
-SECURE_REFERRER_POLICY = 'strict-origin-when-cross-origin'
+SECURE_REFERRER_POLICY = "strict-origin-when-cross-origin"
+
+# CACHING CONFIGURATION
+# Use Redis for caching if REDIS_URL is set, otherwise use local memory cache
+REDIS_URL = os.environ.get("REDIS_URL", "").strip()
+
+if REDIS_URL:
+    # Production: Use Redis for caching
+    from .cache import get_cache_config
+
+    CACHES = get_cache_config()
+    # Use Redis for session storage as well
+    SESSION_ENGINE = "django.contrib.sessions.backends.cache"
+    SESSION_CACHE_ALIAS = "sessions"
+else:
+    # Development: Use local memory cache (no Redis needed)
+    CACHES = {
+        "default": {
+            "BACKEND": "django.core.cache.backends.locmem.LocMemCache",
+            "LOCATION": "unique-snowflake",
+        }
+    }
+
+# LOGGING CONFIGURATION
+# Create logs directory if it doesn't exist
+LOGS_DIR = os.path.join(BASE_DIR, "logs")
+os.makedirs(LOGS_DIR, exist_ok=True)
+
+LOGGING = {
+    "version": 1,
+    "disable_existing_loggers": False,
+    "formatters": {
+        "verbose": {
+            "format": "[{levelname}] {asctime} {name} {module} {process:d} {thread:d} - {message}",
+            "style": "{",
+        },
+        "simple": {
+            "format": "[{levelname}] {asctime} - {message}",
+            "style": "{",
+        },
+    },
+    "filters": {
+        "require_debug_false": {
+            "()": "django.utils.log.RequireDebugFalse",
+        },
+        "require_debug_true": {
+            "()": "django.utils.log.RequireDebugTrue",
+        },
+    },
+    "handlers": {
+        "console": {
+            "level": "INFO",
+            "class": "logging.StreamHandler",
+            "formatter": "simple",
+        },
+        "file": {
+            "level": "INFO",
+            "class": "logging.handlers.RotatingFileHandler",
+            "filename": os.path.join(LOGS_DIR, "django.log"),
+            "maxBytes": 1024 * 1024 * 15,  # 15MB
+            "backupCount": 10,
+            "formatter": "verbose",
+        },
+        "error_file": {
+            "level": "ERROR",
+            "class": "logging.handlers.RotatingFileHandler",
+            "filename": os.path.join(LOGS_DIR, "django_errors.log"),
+            "maxBytes": 1024 * 1024 * 10,  # 10MB
+            "backupCount": 10,
+            "formatter": "verbose",
+        },
+    },
+    "loggers": {
+        "django": {
+            "handlers": ["console", "file", "error_file"],
+            "level": "INFO",
+            "propagate": False,
+        },
+        "django.request": {
+            "handlers": ["file", "error_file"],
+            "level": "ERROR",
+            "propagate": False,
+        },
+        "django.security": {
+            "handlers": ["file", "error_file"],
+            "level": "WARNING",
+            "propagate": False,
+        },
+        "shop": {
+            "handlers": ["console", "file", "error_file"],
+            "level": "INFO",
+            "propagate": False,
+        },
+        "home": {
+            "handlers": ["console", "file", "error_file"],
+            "level": "INFO",
+            "propagate": False,
+        },
+    },
+    "root": {
+        "handlers": ["console", "file"],
+        "level": "INFO",
+    },
+}

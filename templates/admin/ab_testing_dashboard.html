@@ -1,0 +1,1712 @@
+{% load static tz %}
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>A/B Testing - Blueprint Apparel Admin</title>
+  <link rel="icon" type="image/svg+xml" href="{% static 'admin-favicon.svg' %}">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <style>
+    {% include "admin/partials/dark_mode_styles.html" %}
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background: #f1f5f9;
+      min-height: 100vh;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
+
+    .top-bar {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      padding: 2rem 0;
+      box-shadow: 0 4px 20px rgba(102, 126, 234, 0.15);
+      margin-bottom: 2rem;
+    }
+
+    .container {
+      max-width: 1600px;
+      margin: 0 auto;
+      padding: 0 2rem;
+    }
+
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1rem;
+    }
+
+    .header h1 {
+      color: white;
+      font-size: 2.5rem;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+    }
+
+    .nav-links {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      padding: 1rem 2rem;
+      display: flex;
+      gap: 0.75rem;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    .nav-link {
+      background: rgba(255, 255, 255, 0.15);
+      backdrop-filter: blur(10px);
+      color: white;
+      padding: 0.5rem 1rem;
+      border-radius: 8px;
+      text-decoration: none;
+      font-size: 0.875rem;
+      font-weight: 500;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .nav-link:hover {
+      background: rgba(255, 255, 255, 0.25);
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    }
+
+    .main-content {
+      padding: 0 2rem 2rem 2rem;
+      max-width: 1600px;
+      margin: 0 auto;
+    }
+
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 1.5rem;
+      margin-bottom: 3rem;
+      margin-top: -4rem;
+      position: relative;
+      z-index: 10;
+    }
+
+    .stat-card {
+      background: white;
+      padding: 1.75rem;
+      border-radius: 16px;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+      border: 1px solid rgba(226, 232, 240, 0.8);
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .stat-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 4px;
+      background: linear-gradient(90deg, #667eea, #764ba2);
+      opacity: 0;
+      transition: opacity 0.3s;
+    }
+
+    .stat-card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 12px 28px rgba(0, 0, 0, 0.12);
+    }
+
+    .stat-card:hover::before {
+      opacity: 1;
+    }
+
+    .stat-label {
+      font-size: 0.75rem;
+      color: #64748b;
+      font-weight: 600;
+      text-transform: uppercase;
+      margin-bottom: 0.5rem;
+      letter-spacing: 0.05em;
+    }
+
+    .stat-value {
+      font-size: 2rem;
+      font-weight: 800;
+      color: #0f172a;
+      line-height: 1;
+    }
+
+    .stat-icon {
+      font-size: 1.5rem;
+      margin-bottom: 0.5rem;
+    }
+
+    .section {
+      background: white;
+      border-radius: 16px;
+      padding: 2rem;
+      margin-bottom: 2rem;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+      border: 1px solid #e2e8f0;
+    }
+
+    .section-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1.5rem;
+      padding-bottom: 1rem;
+      border-bottom: 2px solid #f1f5f9;
+    }
+
+    .section-title {
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: #0f172a;
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+
+    .section-subtitle {
+      font-size: 0.875rem;
+      color: #64748b;
+      font-weight: 500;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    th {
+      text-align: left;
+      font-size: 0.75rem;
+      font-weight: 700;
+      color: #64748b;
+      text-transform: uppercase;
+      padding: 0.75rem 1rem;
+      border-bottom: 2px solid #e2e8f0;
+      letter-spacing: 0.05em;
+    }
+
+    td {
+      padding: 1rem;
+      border-bottom: 1px solid #f1f5f9;
+      color: #0f172a;
+      font-size: 0.875rem;
+    }
+
+    tr:hover {
+      background: #f8fafc;
+    }
+
+    .badge {
+      display: inline-block;
+      padding: 0.25rem 0.75rem;
+      border-radius: 6px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      letter-spacing: 0.025em;
+    }
+
+    .badge-success {
+      background: #d1fae5;
+      color: #065f46;
+    }
+
+    .badge-warning {
+      background: #fef3c7;
+      color: #92400e;
+    }
+
+    .badge-info {
+      background: #dbeafe;
+      color: #1e40af;
+    }
+
+    .badge-secondary {
+      background: #f1f5f9;
+      color: #475569;
+    }
+
+    .metric-positive {
+      color: #10b981;
+      font-weight: 700;
+    }
+
+    .metric-negative {
+      color: #ef4444;
+      font-weight: 700;
+    }
+
+    .metric-neutral {
+      color: #64748b;
+      font-weight: 600;
+    }
+
+    .empty-state {
+      text-align: center;
+      padding: 4rem 2rem;
+      color: #64748b;
+    }
+
+    .empty-state i {
+      font-size: 4rem;
+      color: #cbd5e1;
+      margin-bottom: 1rem;
+    }
+
+    .empty-state h3 {
+      font-size: 1.25rem;
+      color: #475569;
+      margin-bottom: 0.5rem;
+    }
+
+    .empty-state p {
+      font-size: 0.875rem;
+    }
+
+    .tag-list {
+      display: flex;
+      gap: 0.375rem;
+      flex-wrap: wrap;
+    }
+
+    .tag {
+      background: #f1f5f9;
+      color: #475569;
+      padding: 0.25rem 0.625rem;
+      border-radius: 4px;
+      font-size: 0.75rem;
+      font-weight: 500;
+    }
+
+    .variant-name {
+      font-weight: 700;
+      color: #667eea;
+      font-size: 1rem;
+    }
+
+    .winner-badge {
+      background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+      color: white;
+      padding: 0.25rem 0.625rem;
+      border-radius: 4px;
+      font-size: 0.6875rem;
+      font-weight: 600;
+      margin-left: 0.5rem;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.25rem;
+    }
+
+    .winner-badge i {
+      font-size: 0.625rem;
+    }
+
+    .btn-create {
+      background: white;
+      color: #667eea;
+      padding: 0.875rem 1.75rem;
+      border-radius: 12px;
+      border: none;
+      font-weight: 700;
+      font-size: 1rem;
+      cursor: pointer;
+      transition: all 0.3s;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .btn-create:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+    }
+
+    .modal {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.5);
+      backdrop-filter: blur(4px);
+      z-index: 10000;
+      align-items: center;
+      justify-content: center;
+      padding: 2rem;
+      animation: fadeIn 0.2s ease-out;
+    }
+
+    .modal.active {
+      display: flex;
+    }
+
+    .modal-content {
+      background: white;
+      border-radius: 20px;
+      max-width: 700px;
+      width: 100%;
+      max-height: 90vh;
+      overflow-y: auto;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+      animation: slideInDown 0.3s ease-out;
+    }
+
+    .modal-header {
+      padding: 2rem;
+      border-bottom: 2px solid #f1f5f9;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .modal-title {
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: #0f172a;
+    }
+
+    .modal-close {
+      background: none;
+      border: none;
+      font-size: 1.5rem;
+      color: #64748b;
+      cursor: pointer;
+      padding: 0.5rem;
+      transition: all 0.2s;
+    }
+
+    .modal-close:hover {
+      color: #0f172a;
+      transform: rotate(90deg);
+    }
+
+    .modal-body {
+      padding: 2rem;
+    }
+
+    .form-group {
+      margin-bottom: 1.5rem;
+    }
+
+    .form-label {
+      display: block;
+      font-size: 0.875rem;
+      font-weight: 600;
+      color: #0f172a;
+      margin-bottom: 0.5rem;
+    }
+
+    .form-help {
+      font-size: 0.75rem;
+      color: #64748b;
+      margin-top: 0.25rem;
+    }
+
+    .form-input, .form-select, .form-textarea {
+      width: 100%;
+      padding: 0.75rem;
+      border: 2px solid #e2e8f0;
+      border-radius: 8px;
+      font-size: 0.875rem;
+      transition: all 0.2s;
+    }
+
+    .form-input:focus, .form-select:focus, .form-textarea:focus {
+      outline: none;
+      border-color: #667eea;
+      box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+    }
+
+    .form-textarea {
+      resize: vertical;
+      min-height: 80px;
+    }
+
+    .form-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1rem;
+    }
+
+    .modal-footer {
+      padding: 1.5rem 2rem;
+      border-top: 2px solid #f1f5f9;
+      display: flex;
+      gap: 1rem;
+      justify-content: flex-end;
+    }
+
+    .btn-secondary {
+      background: #f1f5f9;
+      color: #64748b;
+      padding: 0.75rem 1.5rem;
+      border-radius: 8px;
+      border: none;
+      font-weight: 600;
+      font-size: 0.875rem;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .btn-secondary:hover {
+      background: #e2e8f0;
+      color: #475569;
+    }
+
+    .btn-submit {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      padding: 0.75rem 1.5rem;
+      border-radius: 8px;
+      border: none;
+      font-weight: 600;
+      font-size: 0.875rem;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .btn-submit:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+    }
+
+    .tag-chip {
+      background: #f1f5f9;
+      color: #475569;
+      border: 1px solid #cbd5e1;
+      padding: 0.375rem 0.75rem;
+      border-radius: 6px;
+      font-size: 0.75rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .tag-chip:hover {
+      background: #667eea;
+      color: white;
+      border-color: #667eea;
+      transform: translateY(-1px);
+    }
+
+    .tag-chip:active {
+      transform: translateY(0);
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+
+    @keyframes slideInDown {
+      from {
+        opacity: 0;
+        transform: translateY(-20px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .help-button {
+      position: relative;
+      background: rgba(255, 255, 255, 0.25);
+      color: white;
+      border: 1px solid rgba(255, 255, 255, 0.4);
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.875rem;
+      cursor: pointer;
+      transition: all 0.3s;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+    }
+
+    .help-button:hover {
+      background: rgba(255, 255, 255, 0.35);
+      transform: scale(1.05);
+      box-shadow: 0 3px 8px rgba(0, 0, 0, 0.15);
+    }
+
+    .help-button::before {
+      content: '';
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 100%;
+      height: 100%;
+      border: 1px solid rgba(255, 255, 255, 0.3);
+      border-radius: 50%;
+      animation: radiate 4s ease-out infinite;
+    }
+
+    @keyframes radiate {
+      0% {
+        transform: translate(-50%, -50%) scale(1);
+        opacity: 0.4;
+      }
+      100% {
+        transform: translate(-50%, -50%) scale(1.4);
+        opacity: 0;
+      }
+    }
+  </style>
+  {% include "admin/partials/dark_mode_apply.html" %}
+</head>
+<body>
+  <div class="nav-links">
+    <a href="{% url 'admin_home' %}" class="nav-link">← Back</a>
+  </div>
+
+  <div class="top-bar">
+    <div class="container">
+      <div class="header">
+        <h1>A/B Testing</h1>
+        <div style="display: flex; align-items: center; gap: 1rem;">
+          <button class="help-button" onclick="toggleExamples()" title="Show Examples & Guide">
+            <i class="fa-solid fa-question"></i>
+          </button>
+          <button class="btn-create" onclick="openCreateModal()">
+            <i class="fa-solid fa-plus"></i>
+            Create New Test
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="main-content">
+    <!-- Overall Stats -->
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-icon">
+          <i class="fa-solid fa-vials" style="color: #667eea;"></i>
+        </div>
+        <div class="stat-label">Active Tests</div>
+        <div class="stat-value">{{ active_tests_count }}</div>
+      </div>
+
+      <div class="stat-card">
+        <div class="stat-icon">
+          <i class="fa-solid fa-users" style="color: #3b82f6;"></i>
+        </div>
+        <div class="stat-label">Total Recipients</div>
+        <div class="stat-value">{{ total_recipients|floatformat:0 }}</div>
+      </div>
+
+      <div class="stat-card">
+        <div class="stat-icon">
+          <i class="fa-solid fa-mouse-pointer" style="color: #10b981;"></i>
+        </div>
+        <div class="stat-label">Total Clicks</div>
+        <div class="stat-value">{{ total_clicks|floatformat:0 }}</div>
+        <div class="stat-subtitle" style="margin-top: 0.5rem; color: #10b981; font-weight: 600;">
+          {{ overall_ctr }}% CTR
+        </div>
+      </div>
+
+      <div class="stat-card">
+        <div class="stat-icon">
+          <i class="fa-solid fa-cart-shopping" style="color: #f59e0b;"></i>
+        </div>
+        <div class="stat-label">Total Conversions</div>
+        <div class="stat-value">{{ total_conversions|floatformat:0 }}</div>
+        <div class="stat-subtitle" style="margin-top: 0.5rem; color: #f59e0b; font-weight: 600;">
+          {{ overall_conv_rate }}% Conv. Rate
+        </div>
+      </div>
+
+      <div class="stat-card">
+        <div class="stat-icon">
+          <i class="fa-solid fa-dollar-sign" style="color: #10b981;"></i>
+        </div>
+        <div class="stat-label">Total Revenue</div>
+        <div class="stat-value">${{ total_revenue|floatformat:2 }}</div>
+      </div>
+    </div>
+
+    <!-- How to Use Section (Collapsible) -->
+    <div class="section" id="examplesSection" style="display: none; background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%); border-left: 4px solid #3b82f6; box-shadow: 0 4px 20px rgba(59, 130, 246, 0.1);">
+      <div style="display: flex; align-items: start; gap: 1.5rem;">
+        <div style="font-size: 3.5rem; line-height: 1; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.1));">💡</div>
+        <div style="flex: 1;">
+          <h3 style="font-size: 1.5rem; font-weight: 800; color: #1e40af; margin-bottom: 0.5rem;">How to Use A/B Testing</h3>
+          <p style="color: #3b82f6; font-size: 0.875rem; margin-bottom: 1.5rem; font-weight: 500;">Learn how to create, run, and analyze effective A/B tests for your marketing campaigns</p>
+
+          <div style="margin-bottom: 1.5rem;">
+            <h4 style="font-size: 1rem; font-weight: 600; color: #1e3a8a; margin-bottom: 0.5rem;">1. Setting Up Tests</h4>
+            <p style="color: #1e40af; font-size: 0.875rem; line-height: 1.6; margin-bottom: 0.5rem;">
+              When creating a campaign message or promo code, fill in these fields:
+            </p>
+            <ul style="color: #1e40af; font-size: 0.875rem; line-height: 1.8; margin-left: 1.5rem;">
+              <li><strong>Variant Name:</strong> "A", "B", "20%", "50%", etc. - identifies which version of the test</li>
+              <li><strong>Test Tags:</strong> Comma-separated attributes like "emoji,urgency,discount50"</li>
+              <li><strong>Landing URL:</strong> Where you want people to go (e.g., https://yoursite.com/sale)</li>
+              <li><strong>UTM Source:</strong> Platform name (instagram, tiktok, facebook, email)</li>
+              <li><strong>UTM Medium:</strong> Type (social, post, story, ad, email)</li>
+              <li><strong>UTM Campaign:</strong> Campaign name (spring_sale_2025)</li>
+            </ul>
+          </div>
+
+          <div style="margin-bottom: 1.5rem;">
+            <h4 style="font-size: 1rem; font-weight: 600; color: #1e3a8a; margin-bottom: 0.75rem;">2. Real-World Examples</h4>
+
+            <!-- Example 1: Instagram Posts -->
+            <div style="background: white; padding: 1.25rem; border-radius: 12px; border: 2px solid #bfdbfe; margin-bottom: 1rem; box-shadow: 0 2px 8px rgba(59, 130, 246, 0.08); transition: all 0.3s;" onmouseover="this.style.boxShadow='0 4px 16px rgba(59, 130, 246, 0.15)'" onmouseout="this.style.boxShadow='0 2px 8px rgba(59, 130, 246, 0.08)'">
+              <div style="font-weight: 700; color: #e1306c; margin-bottom: 0.75rem; display: flex; align-items: center; gap: 0.75rem; font-size: 1.05rem;">
+                <i class="fa-brands fa-instagram" style="font-size: 1.5rem;"></i>
+                <span>Example 1: Instagram Post A/B Test</span>
+              </div>
+              <p style="color: #64748b; font-size: 0.875rem; margin-bottom: 1rem; font-weight: 500;">
+                Testing emoji vs. plain text captions:
+              </p>
+              <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                <div style="background: #fef3c7; padding: 0.75rem; border-radius: 6px; border: 1px solid #fbbf24;">
+                  <div style="font-weight: 700; color: #92400e; margin-bottom: 0.5rem;">🔥 Variant A (Emoji)</div>
+                  <div style="font-size: 0.75rem; color: #475569;">
+                    <div><strong>Variant Name:</strong> emoji</div>
+                    <div><strong>Tags:</strong> emoji,casual,fun</div>
+                    <div><strong>Landing URL:</strong> https://yoursite.com/new-arrivals</div>
+                    <div><strong>UTM Source:</strong> instagram</div>
+                    <div><strong>UTM Medium:</strong> post</div>
+                  </div>
+                </div>
+                <div style="background: #dbeafe; padding: 0.75rem; border-radius: 6px; border: 1px solid #3b82f6;">
+                  <div style="font-weight: 700; color: #1e3a8a; margin-bottom: 0.5rem;">Variant B (Plain)</div>
+                  <div style="font-size: 0.75rem; color: #475569;">
+                    <div><strong>Variant Name:</strong> plain</div>
+                    <div><strong>Tags:</strong> professional,minimal</div>
+                    <div><strong>Landing URL:</strong> https://yoursite.com/new-arrivals</div>
+                    <div><strong>UTM Source:</strong> instagram</div>
+                    <div><strong>UTM Medium:</strong> post</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Example 2: TikTok Videos -->
+            <div style="background: white; padding: 1rem; border-radius: 8px; border: 1px solid #bfdbfe; margin-bottom: 1rem;">
+              <div style="font-weight: 700; color: #000000; margin-bottom: 0.75rem; display: flex; align-items: center; gap: 0.5rem;">
+                <i class="fa-brands fa-tiktok"></i>
+                Example 2: TikTok Video Test
+              </div>
+              <p style="color: #64748b; font-size: 0.875rem; margin-bottom: 0.75rem;">
+                Testing different call-to-actions:
+              </p>
+              <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                <div style="background: #dcfce7; padding: 0.75rem; border-radius: 6px; border: 1px solid #10b981;">
+                  <div style="font-weight: 700; color: #065f46; margin-bottom: 0.5rem;">Variant A (Direct)</div>
+                  <div style="font-size: 0.75rem; color: #475569;">
+                    <div><strong>Message:</strong> "Shop now - link in bio"</div>
+                    <div><strong>Tags:</strong> direct,urgency</div>
+                    <div><strong>UTM Source:</strong> tiktok</div>
+                    <div><strong>UTM Medium:</strong> video</div>
+                  </div>
+                </div>
+                <div style="background: #fce7f3; padding: 0.75rem; border-radius: 6px; border: 1px solid #ec4899;">
+                  <div style="font-weight: 700; color: #831843; margin-bottom: 0.5rem;">Variant B (Teaser)</div>
+                  <div style="font-size: 0.75rem; color: #475569;">
+                    <div><strong>Message:</strong> "Wait till you see this 🔗"</div>
+                    <div><strong>Tags:</strong> curiosity,emoji</div>
+                    <div><strong>UTM Source:</strong> tiktok</div>
+                    <div><strong>UTM Medium:</strong> video</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Example 3: Promo Codes -->
+            <div style="background: white; padding: 1rem; border-radius: 8px; border: 1px solid #bfdbfe; margin-bottom: 1rem;">
+              <div style="font-weight: 700; color: #7c3aed; margin-bottom: 0.75rem; display: flex; align-items: center; gap: 0.5rem;">
+                <i class="fa-solid fa-tag"></i>
+                Example 3: Discount Amount Test
+              </div>
+              <p style="color: #64748b; font-size: 0.875rem; margin-bottom: 0.75rem;">
+                Testing which discount percentage converts better:
+              </p>
+              <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                <div style="background: #fef3c7; padding: 0.75rem; border-radius: 6px; border: 1px solid #f59e0b;">
+                  <div style="font-weight: 700; color: #92400e; margin-bottom: 0.5rem;">SAVE20 (20% off)</div>
+                  <div style="font-size: 0.75rem; color: #475569;">
+                    <div><strong>Variant Name:</strong> 20percent</div>
+                    <div><strong>Tags:</strong> percentage,moderate</div>
+                    <div><strong>Value:</strong> 20</div>
+                    <div><strong>Type:</strong> Percentage</div>
+                  </div>
+                </div>
+                <div style="background: #fee2e2; padding: 0.75rem; border-radius: 6px; border: 1px solid #ef4444;">
+                  <div style="font-weight: 700; color: #991b1b; margin-bottom: 0.5rem;">MEGA50 (50% off)</div>
+                  <div style="font-size: 0.75rem; color: #475569;">
+                    <div><strong>Variant Name:</strong> 50percent</div>
+                    <div><strong>Tags:</strong> percentage,aggressive</div>
+                    <div><strong>Value:</strong> 50</div>
+                    <div><strong>Type:</strong> Percentage</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Example 4: Email Subject Lines -->
+            <div style="background: white; padding: 1rem; border-radius: 8px; border: 1px solid #bfdbfe;">
+              <div style="font-weight: 700; color: #0ea5e9; margin-bottom: 0.75rem; display: flex; align-items: center; gap: 0.5rem;">
+                <i class="fa-solid fa-envelope"></i>
+                Example 4: Email Subject Line Test
+              </div>
+              <p style="color: #64748b; font-size: 0.875rem; margin-bottom: 0.75rem;">
+                Testing urgency vs. value proposition:
+              </p>
+              <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                <div style="background: #ffedd5; padding: 0.75rem; border-radius: 6px; border: 1px solid #f97316;">
+                  <div style="font-weight: 700; color: #9a3412; margin-bottom: 0.5rem;">Variant A (Urgency)</div>
+                  <div style="font-size: 0.75rem; color: #475569;">
+                    <div><strong>Subject:</strong> "⏰ Last Chance! Sale ends tonight"</div>
+                    <div><strong>Tags:</strong> urgency,emoji,scarcity</div>
+                    <div><strong>UTM Medium:</strong> email</div>
+                  </div>
+                </div>
+                <div style="background: #e0e7ff; padding: 0.75rem; border-radius: 6px; border: 1px solid #6366f1;">
+                  <div style="font-weight: 700; color: #3730a3; margin-bottom: 0.5rem;">Variant B (Value)</div>
+                  <div style="font-size: 0.75rem; color: #475569;">
+                    <div><strong>Subject:</strong> "Save 40% on everything"</div>
+                    <div><strong>Tags:</strong> value,discount,simple</div>
+                    <div><strong>UTM Medium:</strong> email</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <p style="color: #3b82f6; font-size: 0.875rem; margin-top: 1rem; font-weight: 600; padding: 0.75rem; background: #eff6ff; border-radius: 6px;">
+              💡 Tip: Run each variant simultaneously and track for at least 100 clicks before deciding a winner
+            </p>
+          </div>
+
+          <div style="margin-bottom: 1.5rem;">
+            <h4 style="font-size: 1rem; font-weight: 600; color: #1e3a8a; margin-bottom: 0.5rem;">3. Getting Your Tracking URL</h4>
+            <p style="color: #1e40af; font-size: 0.875rem; line-height: 1.6; margin-bottom: 0.5rem;">
+              For each campaign message or discount, use the tracking URL in your posts:
+            </p>
+            <div style="background: #1e293b; color: #e2e8f0; padding: 0.75rem; border-radius: 6px; font-family: monospace; font-size: 0.75rem; overflow-x: auto;">
+              https://yoursite.com/sale?utm_source=instagram&utm_medium=post&utm_campaign=spring_sale_2025&variant=A&code=SPRING20
+            </div>
+            <p style="color: #64748b; font-size: 0.75rem; margin-top: 0.5rem; font-style: italic;">
+              The system automatically generates this URL with all your parameters. Use it in your Instagram bio link or stories!
+            </p>
+          </div>
+
+          <div style="margin-bottom: 1.5rem;">
+            <h4 style="font-size: 1rem; font-weight: 600; color: #1e3a8a; margin-bottom: 0.5rem;">4. How Performance Tracking Works</h4>
+            <div style="background: #fef3c7; padding: 1rem; border-radius: 8px; border-left: 4px solid #f59e0b; margin-bottom: 1rem;">
+              <div style="display: flex; align-items: start; gap: 0.75rem;">
+                <i class="fa-solid fa-chart-line" style="color: #f59e0b; font-size: 1.5rem; margin-top: 0.125rem;"></i>
+                <div>
+                  <p style="color: #92400e; font-size: 0.875rem; line-height: 1.6; margin-bottom: 0.5rem; font-weight: 600;">
+                    The system automatically tracks performance through your tracking URLs:
+                  </p>
+                  <ol style="color: #92400e; font-size: 0.875rem; line-height: 1.8; margin-left: 1.25rem;">
+                    <li><strong>When someone clicks your tracking URL:</strong> The UTM parameters tell us which post/variant they came from</li>
+                    <li><strong>When they visit your site:</strong> We count that as a "click" for that variant</li>
+                    <li><strong>When they make a purchase:</strong> We attribute the conversion and revenue to that variant</li>
+                    <li><strong>The dashboard updates:</strong> You see real-time CTR, conversion rates, and revenue for each variant</li>
+                  </ol>
+                  <p style="color: #92400e; font-size: 0.75rem; margin-top: 0.75rem; font-style: italic;">
+                    💡 Make sure to use the tracking URL from the dashboard in your social posts, emails, and ads!
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div style="margin-bottom: 1.5rem;">
+            <h4 style="font-size: 1rem; font-weight: 600; color: #1e3a8a; margin-bottom: 0.5rem;">5. Understanding Tags vs Performance</h4>
+            <div style="background: #ede9fe; padding: 1rem; border-radius: 8px; border-left: 4px solid #8b5cf6; margin-bottom: 1rem;">
+              <div style="display: flex; align-items: start; gap: 0.75rem;">
+                <i class="fa-solid fa-tags" style="color: #8b5cf6; font-size: 1.5rem; margin-top: 0.125rem;"></i>
+                <div>
+                  <p style="color: #5b21b6; font-size: 0.875rem; line-height: 1.6; font-weight: 600; margin-bottom: 0.5rem;">
+                    Tags are for organization, NOT for calculation
+                  </p>
+                  <p style="color: #6b21a8; font-size: 0.875rem; line-height: 1.6; margin-bottom: 0.5rem;">
+                    <strong>What tags do:</strong> Help you filter and group tests (e.g., find all "emoji" or "urgency" tests)<br>
+                    <strong>What tags DON'T do:</strong> They don't affect performance calculations at all
+                  </p>
+                  <p style="color: #6b21a8; font-size: 0.875rem; line-height: 1.6;">
+                    <strong>Performance is calculated from:</strong>
+                  </p>
+                  <ul style="color: #6b21a8; font-size: 0.875rem; line-height: 1.6; margin-left: 1.25rem;">
+                    <li><strong>Clicks:</strong> How many people clicked your tracking URL</li>
+                    <li><strong>Conversions:</strong> How many made a purchase</li>
+                    <li><strong>Revenue:</strong> Total sales generated</li>
+                  </ul>
+                  <p style="color: #6b21a8; font-size: 0.75rem; margin-top: 0.75rem; font-style: italic;">
+                    💡 Compare variants by looking at "A" vs "B" performance, not by tags!
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div>
+            <h4 style="font-size: 1rem; font-weight: 600; color: #1e3a8a; margin-bottom: 0.5rem;">6. Analyzing Results</h4>
+            <p style="color: #1e40af; font-size: 0.875rem; line-height: 1.6;">
+              This dashboard shows you which variants perform best. Look for:
+            </p>
+            <ul style="color: #1e40af; font-size: 0.875rem; line-height: 1.8; margin-left: 1.5rem;">
+              <li><strong>High CTR (Click-Through Rate):</strong> More people clicking your links</li>
+              <li><strong>High Conversion Rate:</strong> More clicks turning into purchases</li>
+              <li><strong>Best Tags:</strong> Which content attributes (emoji, urgency, discount amount) work best</li>
+              <li><strong>Winner Badge:</strong> Shows the highest-performing variant</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Variant Comparison -->
+    {% if variant_comparison %}
+    <div class="section">
+      <div class="section-header">
+        <div>
+          <div class="section-title">
+            <i class="fa-solid fa-code-branch"></i>
+            Variant Performance
+          </div>
+          <div class="section-subtitle">Compare performance across different test variants. Winner = Highest Total Revenue</div>
+        </div>
+      </div>
+
+      <table>
+        <thead>
+          <tr>
+            <th>Variant</th>
+            <th>Messages</th>
+            <th>Recipients</th>
+            <th>Clicks</th>
+            <th>CTR</th>
+            <th>Conversions</th>
+            <th>Conv. Rate</th>
+            <th>Revenue</th>
+            <th>$/Recipient</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for variant in variant_comparison %}
+          <tr>
+            <td>
+              <span class="variant-name">{{ variant.variant_name }}</span>
+              {% if forloop.first and variant.total_revenue > 0 %}
+                <span class="winner-badge">
+                  <i class="fa-solid fa-trophy"></i>
+                  Winner
+                </span>
+              {% endif %}
+            </td>
+            <td>{{ variant.message_count }}</td>
+            <td>{{ variant.total_recipients|floatformat:0 }}</td>
+            <td>{{ variant.total_clicks|floatformat:0 }}</td>
+            <td>
+              <span class="{% if variant.ctr >= 5 %}metric-positive{% elif variant.ctr >= 2 %}metric-neutral{% else %}metric-negative{% endif %}">
+                {{ variant.ctr }}%
+              </span>
+            </td>
+            <td>{{ variant.total_conversions|floatformat:0 }}</td>
+            <td>
+              <span class="{% if variant.conversion_rate >= 3 %}metric-positive{% elif variant.conversion_rate >= 1 %}metric-neutral{% else %}metric-negative{% endif %}">
+                {{ variant.conversion_rate }}%
+              </span>
+            </td>
+            <td class="metric-positive">${{ variant.total_revenue|floatformat:2 }}</td>
+            <td class="metric-neutral">${{ variant.avg_revenue_per_recipient|floatformat:2 }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% endif %}
+
+    <!-- Tag Analysis -->
+    {% if tag_analysis %}
+    <div class="section">
+      <div class="section-header">
+        <div>
+          <div class="section-title">
+            <i class="fa-solid fa-tags"></i>
+            Tag Performance
+          </div>
+          <div class="section-subtitle">Analyze which content tags and attributes perform best</div>
+        </div>
+      </div>
+
+      <table>
+        <thead>
+          <tr>
+            <th>Tag</th>
+            <th>Messages</th>
+            <th>Recipients</th>
+            <th>Clicks</th>
+            <th>CTR</th>
+            <th>Conversions</th>
+            <th>Conv. Rate</th>
+            <th>Revenue</th>
+            <th>$/Recipient</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for tag in tag_analysis %}
+          <tr>
+            <td>
+              <span class="badge badge-info">{{ tag.tag_name }}</span>
+            </td>
+            <td>{{ tag.message_count }}</td>
+            <td>{{ tag.total_recipients|floatformat:0 }}</td>
+            <td>{{ tag.total_clicks|floatformat:0 }}</td>
+            <td>
+              <span class="{% if tag.ctr >= 5 %}metric-positive{% elif tag.ctr >= 2 %}metric-neutral{% else %}metric-negative{% endif %}">
+                {{ tag.ctr }}%
+              </span>
+            </td>
+            <td>{{ tag.total_conversions|floatformat:0 }}</td>
+            <td>
+              <span class="{% if tag.conversion_rate >= 3 %}metric-positive{% elif tag.conversion_rate >= 1 %}metric-neutral{% else %}metric-negative{% endif %}">
+                {{ tag.conversion_rate }}%
+              </span>
+            </td>
+            <td class="metric-positive">${{ tag.total_revenue|floatformat:2 }}</td>
+            <td class="metric-neutral">${{ tag.avg_revenue_per_recipient|floatformat:2 }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% endif %}
+
+    <!-- Campaign Messages with A/B Tests -->
+    {% if campaign_messages %}
+    <div class="section">
+      <div class="section-header">
+        <div>
+          <div class="section-title">
+            <i class="fa-solid fa-envelope-open-text"></i>
+            Campaign Messages
+          </div>
+          <div class="section-subtitle">All campaign messages with A/B test data</div>
+        </div>
+      </div>
+
+      <table>
+        <thead>
+          <tr>
+            <th>Campaign</th>
+            <th>Message</th>
+            <th>Type</th>
+            <th>Variant</th>
+            <th>Tags</th>
+            <th>Tracking URL</th>
+            <th>Recipients</th>
+            <th>CTR</th>
+            <th>Conv. Rate</th>
+            <th>Revenue</th>
+            <th>Status</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for message in campaign_messages %}
+          <tr>
+            <td style="font-weight: 600;">{{ message.campaign }}</td>
+            <td>{{ message.name }}</td>
+            <td>
+              <span class="badge badge-secondary">{{ message.message_type }}</span>
+            </td>
+            <td>
+              {% if message.variant_name %}
+                <span class="variant-name" style="font-size: 0.875rem;">{{ message.variant_name }}</span>
+              {% else %}
+                <span style="color: #cbd5e1;">—</span>
+              {% endif %}
+            </td>
+            <td>
+              {% if message.test_tags %}
+                <div class="tag-list">
+                  <span class="tag">{{ message.test_tags }}</span>
+                </div>
+              {% else %}
+                <span style="color: #cbd5e1;">—</span>
+              {% endif %}
+            </td>
+            <td>
+              {% if message.tracking_url %}
+                <button onclick="copyToClipboard('{{ message.tracking_url|escapejs }}')"
+                        style="background: #667eea; color: white; border: none; padding: 0.375rem 0.75rem; border-radius: 6px; cursor: pointer; font-size: 0.75rem; font-weight: 600; display: inline-flex; align-items: center; gap: 0.375rem; transition: all 0.2s;">
+                  <i class="fa-solid fa-link"></i>
+                  Copy URL
+                </button>
+              {% else %}
+                <span style="color: #cbd5e1;">—</span>
+              {% endif %}
+            </td>
+            <td>{{ message.total_recipients|floatformat:0 }}</td>
+            <td>
+              <span class="{% if message.ctr >= 5 %}metric-positive{% elif message.ctr >= 2 %}metric-neutral{% else %}metric-negative{% endif %}">
+                {{ message.ctr }}%
+              </span>
+            </td>
+            <td>
+              <span class="{% if message.conversion_rate >= 3 %}metric-positive{% elif message.conversion_rate >= 1 %}metric-neutral{% else %}metric-negative{% endif %}">
+                {{ message.conversion_rate }}%
+              </span>
+            </td>
+            <td class="metric-positive">${{ message.revenue|floatformat:2 }}</td>
+            <td>
+              <span class="badge
+                {% if message.status == 'Sent' %}badge-success
+                {% elif message.status == 'Scheduled' %}badge-warning
+                {% else %}badge-secondary{% endif %}">
+                {{ message.status }}
+              </span>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% endif %}
+
+    <!-- Discounts with A/B Tests -->
+    {% if discounts %}
+    <div class="section">
+      <div class="section-header">
+        <div>
+          <div class="section-title">
+            <i class="fa-solid fa-percent"></i>
+            Promo Codes
+          </div>
+          <div class="section-subtitle">Discount codes with A/B test data</div>
+        </div>
+      </div>
+
+      <table>
+        <thead>
+          <tr>
+            <th>Name</th>
+            <th>Code</th>
+            <th>Type</th>
+            <th>Value</th>
+            <th>Variant</th>
+            <th>Tags</th>
+            <th>Tracking URL</th>
+            <th>Times Used</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for discount in discounts %}
+          <tr>
+            <td style="font-weight: 600;">{{ discount.name }}</td>
+            <td>
+              <code style="background: #f1f5f9; padding: 0.25rem 0.5rem; border-radius: 4px; font-weight: 600;">
+                {{ discount.code }}
+              </code>
+            </td>
+            <td>
+              <span class="badge badge-secondary">{{ discount.discount_type }}</span>
+            </td>
+            <td>{{ discount.value }}</td>
+            <td>
+              {% if discount.variant_name %}
+                <span class="variant-name" style="font-size: 0.875rem;">{{ discount.variant_name }}</span>
+              {% else %}
+                <span style="color: #cbd5e1;">—</span>
+              {% endif %}
+            </td>
+            <td>
+              {% if discount.test_tags %}
+                <div class="tag-list">
+                  <span class="tag">{{ discount.test_tags }}</span>
+                </div>
+              {% else %}
+                <span style="color: #cbd5e1;">—</span>
+              {% endif %}
+            </td>
+            <td>
+              {% if discount.tracking_url %}
+                <button onclick="copyToClipboard('{{ discount.tracking_url|escapejs }}')"
+                        style="background: #667eea; color: white; border: none; padding: 0.375rem 0.75rem; border-radius: 6px; cursor: pointer; font-size: 0.75rem; font-weight: 600; display: inline-flex; align-items: center; gap: 0.375rem; transition: all 0.2s;">
+                  <i class="fa-solid fa-link"></i>
+                  Copy URL
+                </button>
+              {% else %}
+                <span style="color: #cbd5e1;">—</span>
+              {% endif %}
+            </td>
+            <td>{{ discount.times_used }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% endif %}
+
+    <!-- Empty State -->
+    {% if not messages and not discounts %}
+    <div class="section">
+      <div class="empty-state">
+        <i class="fa-solid fa-flask-vial"></i>
+        <h3>No A/B Tests Found</h3>
+        <p>Create campaign messages or discounts with variant names or test tags to start tracking A/B test performance.</p>
+      </div>
+    </div>
+    {% endif %}
+  </div>
+
+  <!-- Create Test Modal -->
+  <div class="modal" id="createModal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2 class="modal-title">Create New A/B Test</h2>
+        <button class="modal-close" onclick="closeCreateModal()">×</button>
+      </div>
+      <form id="createTestForm" method="POST" onsubmit="submitTest(event)">
+        {% csrf_token %}
+        <div class="modal-body">
+          <div class="form-group">
+            <label class="form-label">Test Type</label>
+            <select class="form-select" id="testType" name="test_type" required onchange="updateFormFields()">
+              <option value="">Select type...</option>
+              <option value="campaign_message">Campaign Message (Email/SMS/Social)</option>
+              <option value="discount">Promo Code</option>
+            </select>
+          </div>
+
+          <!-- Campaign Message Fields -->
+          <div id="campaignFields" style="display: none;">
+            <div class="form-group">
+              <label class="form-label">Campaign</label>
+              <select class="form-select" name="campaign_id" id="campaignSelect">
+                <option value="">Select campaign...</option>
+                {% for campaign in campaigns %}
+                <option value="{{ campaign.id }}">{{ campaign.name }}</option>
+                {% endfor %}
+              </select>
+              <div class="form-help">Select which campaign this test belongs to</div>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Message Name *</label>
+              <input type="text" class="form-input" name="message_name" id="messageName" placeholder="e.g., Instagram Post - Variant A">
+              <div class="form-help">Give this test message a descriptive name</div>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Message Type *</label>
+              <select class="form-select" name="message_type" id="messageType">
+                <option value="email">Email</option>
+                <option value="sms">SMS</option>
+                <option value="instagram">Instagram</option>
+                <option value="tiktok">TikTok</option>
+                <option value="snapchat">Snapchat</option>
+                <option value="youtube">YouTube</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Discount Fields -->
+          <div id="discountFields" style="display: none;">
+            <div class="form-group">
+              <label class="form-label">Promo Code Name *</label>
+              <input type="text" class="form-input" name="discount_name" id="discountName" placeholder="e.g., Spring Sale 20%">
+            </div>
+
+            <div class="form-row">
+              <div class="form-group">
+                <label class="form-label">Code *</label>
+                <input type="text" class="form-input" name="discount_code" id="discountCode" placeholder="SPRING20" style="text-transform: uppercase;">
+              </div>
+              <div class="form-group">
+                <label class="form-label">Type *</label>
+                <select class="form-select" name="discount_type" id="discountType">
+                  <option value="percentage">Percentage Off</option>
+                  <option value="fixed">Fixed Amount Off</option>
+                  <option value="free_shipping">Free Shipping</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Value *</label>
+              <input type="number" class="form-input" name="discount_value" id="discountValue" placeholder="20" step="0.01">
+              <div class="form-help">For percentage: enter 20 for 20% off. For fixed: enter 10.00 for $10 off</div>
+            </div>
+          </div>
+
+          <!-- A/B Testing Fields (Common) -->
+          <div class="form-group">
+            <label class="form-label">Version Name *</label>
+            <div style="margin-bottom: 0.5rem;">
+              <div style="font-size: 0.75rem; color: #64748b; margin-bottom: 0.5rem;">Quick select:</div>
+              <div style="display: flex; flex-wrap: wrap; gap: 0.5rem;">
+                <button type="button" class="tag-chip" onclick="setVariantName('A')">A</button>
+                <button type="button" class="tag-chip" onclick="setVariantName('B')">B</button>
+                <button type="button" class="tag-chip" onclick="setVariantName('C')">C</button>
+                <button type="button" class="tag-chip" onclick="setVariantName('Original')">Original</button>
+                <button type="button" class="tag-chip" onclick="setVariantName('New')">New</button>
+                <button type="button" class="tag-chip" onclick="setVariantName('Control')">Control</button>
+              </div>
+            </div>
+            <input type="text" class="form-input" name="variant_name" id="variantName" placeholder="Or type your own (e.g., 'With Emoji', 'Short Copy')..." required>
+            <div class="form-help" style="background: #f0f9ff; padding: 0.75rem; border-radius: 6px; border-left: 3px solid #3b82f6;">
+              <div style="font-weight: 600; margin-bottom: 0.25rem;">💡 What is this?</div>
+              This is just a label to tell different versions apart.<br><br>
+              <strong>Example:</strong> You post the same product on Instagram twice with different captions:<br>
+              • Post 1 → Version Name: <strong>"A"</strong><br>
+              • Post 2 → Version Name: <strong>"B"</strong><br><br>
+              Later, you can see which version got more clicks and sales!
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Test Tags</label>
+            <div style="margin-bottom: 0.5rem;">
+              <div style="font-size: 0.75rem; color: #64748b; margin-bottom: 0.5rem;">Quick select:</div>
+              <div style="display: flex; flex-wrap: wrap; gap: 0.5rem;">
+                <button type="button" class="tag-chip" onclick="addTagChip('emoji')">emoji</button>
+                <button type="button" class="tag-chip" onclick="addTagChip('urgency')">urgency</button>
+                <button type="button" class="tag-chip" onclick="addTagChip('scarcity')">scarcity</button>
+                <button type="button" class="tag-chip" onclick="addTagChip('value')">value</button>
+                <button type="button" class="tag-chip" onclick="addTagChip('discount')">discount</button>
+                <button type="button" class="tag-chip" onclick="addTagChip('professional')">professional</button>
+                <button type="button" class="tag-chip" onclick="addTagChip('casual')">casual</button>
+                <button type="button" class="tag-chip" onclick="addTagChip('direct')">direct</button>
+                <button type="button" class="tag-chip" onclick="addTagChip('teaser')">teaser</button>
+              </div>
+            </div>
+
+            <!-- Tag Input Container -->
+            <div
+              id="tagInputContainer"
+              style="
+                background: white;
+                border: 2px solid #e2e8f0;
+                border-radius: 8px;
+                padding: 0.625rem;
+                transition: all 0.2s;
+              "
+            >
+              <!-- Selected Tags Display -->
+              <div id="tagChipsDisplay" style="display: none; flex-wrap: wrap; gap: 0.5rem; margin-bottom: 0.5rem;"></div>
+
+              <!-- Input Field -->
+              <input
+                type="text"
+                id="tagInput"
+                placeholder="Type tag and press Enter..."
+                style="
+                  width: 100%;
+                  border: none;
+                  background: transparent;
+                  outline: none;
+                  padding: 0.375rem;
+                  font-size: 0.875rem;
+                  color: #1e293b;
+                "
+                onkeydown="handleTagInput(event)"
+                onfocus="document.getElementById('tagInputContainer').style.borderColor='#667eea';"
+                onblur="document.getElementById('tagInputContainer').style.borderColor='#e2e8f0';"
+              >
+            </div>
+            <input type="hidden" name="test_tags" id="testTags">
+            <div class="form-help" style="background: #f0f9ff; padding: 0.5rem; border-radius: 4px; border-left: 3px solid #3b82f6;">
+              <strong>What are tags for?</strong> Tags help you organize and filter your tests later.<br>
+              <strong>Examples:</strong> Use "emoji" to find all emoji tests, "urgency" to find urgency-based messaging.<br>
+              <em>Note: Tags don't affect performance - they're just labels!</em>
+            </div>
+          </div>
+
+          <!-- URL Tracking Fields (Common) -->
+          <div class="form-group">
+            <label class="form-label">Landing URL *</label>
+            <div style="margin-bottom: 0.5rem;">
+              <div style="font-size: 0.75rem; color: #64748b; margin-bottom: 0.5rem;">Quick select:</div>
+              <div style="display: flex; flex-wrap: wrap; gap: 0.5rem;">
+                <button type="button" class="tag-chip" onclick="setLandingUrl('{{ request.scheme }}://{{ request.get_host }}/')">Home</button>
+                <button type="button" class="tag-chip" onclick="setLandingUrl('{{ request.scheme }}://{{ request.get_host }}/shop/')">Shop</button>
+                <button type="button" class="tag-chip" onclick="setLandingUrl('{{ request.scheme }}://{{ request.get_host }}/shop/new-arrivals/')">New Arrivals</button>
+                <button type="button" class="tag-chip" onclick="setLandingUrl('{{ request.scheme }}://{{ request.get_host }}/shop/sale/')">Sale</button>
+              </div>
+            </div>
+            <input type="url" class="form-input" name="landing_url" id="landingUrl" placeholder="Or enter custom URL..." value="{{ request.scheme }}://{{ request.get_host }}/" required>
+            <div class="form-help">Where people will land when they click your link</div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">UTM Source *</label>
+            <div style="margin-bottom: 0.5rem;">
+              <div style="font-size: 0.75rem; color: #64748b; margin-bottom: 0.5rem;">Quick select:</div>
+              <div style="display: flex; flex-wrap: wrap; gap: 0.5rem;">
+                <button type="button" class="tag-chip" onclick="setUtmSource('instagram')">Instagram</button>
+                <button type="button" class="tag-chip" onclick="setUtmSource('tiktok')">TikTok</button>
+                <button type="button" class="tag-chip" onclick="setUtmSource('facebook')">Facebook</button>
+                <button type="button" class="tag-chip" onclick="setUtmSource('email')">Email</button>
+                <button type="button" class="tag-chip" onclick="setUtmSource('snapchat')">Snapchat</button>
+              </div>
+            </div>
+            <input type="text" class="form-input" name="utm_source" id="utmSource" placeholder="Or type platform name..." required>
+            <div class="form-help">Where the traffic comes from</div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">UTM Medium *</label>
+            <div style="margin-bottom: 0.5rem;">
+              <div style="font-size: 0.75rem; color: #64748b; margin-bottom: 0.5rem;">Quick select:</div>
+              <div style="display: flex; flex-wrap: wrap; gap: 0.5rem;">
+                <button type="button" class="tag-chip" onclick="setUtmMedium('social')">Social</button>
+                <button type="button" class="tag-chip" onclick="setUtmMedium('post')">Post</button>
+                <button type="button" class="tag-chip" onclick="setUtmMedium('story')">Story</button>
+                <button type="button" class="tag-chip" onclick="setUtmMedium('ad')">Ad</button>
+                <button type="button" class="tag-chip" onclick="setUtmMedium('email')">Email</button>
+              </div>
+            </div>
+            <input type="text" class="form-input" name="utm_medium" id="utmMedium" placeholder="Or type medium type..." required>
+            <div class="form-help">Type of content or channel</div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">UTM Campaign *</label>
+            <div style="margin-bottom: 0.5rem;">
+              <div style="font-size: 0.75rem; color: #64748b; margin-bottom: 0.5rem;">Quick select:</div>
+              <div style="display: flex; flex-wrap: wrap; gap: 0.5rem;">
+                <button type="button" class="tag-chip" onclick="setUtmCampaign('spring_sale')">Spring Sale</button>
+                <button type="button" class="tag-chip" onclick="setUtmCampaign('summer_sale')">Summer Sale</button>
+                <button type="button" class="tag-chip" onclick="setUtmCampaign('new_arrivals')">New Arrivals</button>
+                <button type="button" class="tag-chip" onclick="setUtmCampaign('flash_sale')">Flash Sale</button>
+              </div>
+            </div>
+            <input type="text" class="form-input" name="utm_campaign" id="utmCampaign" placeholder="Or type campaign name..." required>
+            <div class="form-help">Campaign name or identifier</div>
+          </div>
+        </div>
+
+        <div class="modal-footer">
+          <button type="button" class="btn-secondary" onclick="closeCreateModal()">Cancel</button>
+          <button type="submit" class="btn-submit">
+            <i class="fa-solid fa-check"></i>
+            Create Test
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script>
+    function copyToClipboard(text) {
+      navigator.clipboard.writeText(text).then(function() {
+        // Show success notification
+        const notification = document.createElement('div');
+        notification.textContent = '✓ URL copied to clipboard!';
+        notification.style.cssText = `
+          position: fixed;
+          bottom: 2rem;
+          right: 2rem;
+          background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+          color: white;
+          padding: 1rem 1.5rem;
+          border-radius: 12px;
+          font-weight: 600;
+          font-size: 0.875rem;
+          box-shadow: 0 8px 24px rgba(16, 185, 129, 0.3);
+          z-index: 10000;
+          animation: slideInUp 0.3s ease-out;
+        `;
+        document.body.appendChild(notification);
+
+        setTimeout(() => {
+          notification.style.animation = 'slideOutDown 0.3s ease-out';
+          setTimeout(() => {
+            document.body.removeChild(notification);
+          }, 300);
+        }, 2000);
+      }).catch(function(err) {
+        alert('Failed to copy URL: ' + err);
+      });
+    }
+
+    // Add animation keyframes
+    const style = document.createElement('style');
+    style.textContent = `
+      @keyframes slideInUp {
+        from {
+          opacity: 0;
+          transform: translateY(20px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+      @keyframes slideOutDown {
+        from {
+          opacity: 1;
+          transform: translateY(0);
+        }
+        to {
+          opacity: 0;
+          transform: translateY(20px);
+        }
+      }
+    `;
+    document.head.appendChild(style);
+
+    // Modal functions
+    function openCreateModal() {
+      document.getElementById('createModal').classList.add('active');
+    }
+
+    function closeCreateModal() {
+      document.getElementById('createModal').classList.remove('active');
+      document.getElementById('createTestForm').reset();
+      document.getElementById('campaignFields').style.display = 'none';
+      document.getElementById('discountFields').style.display = 'none';
+    }
+
+    function updateFormFields() {
+      const testType = document.getElementById('testType').value;
+      const campaignFields = document.getElementById('campaignFields');
+      const discountFields = document.getElementById('discountFields');
+
+      if (testType === 'campaign_message') {
+        campaignFields.style.display = 'block';
+        discountFields.style.display = 'none';
+      } else if (testType === 'discount') {
+        campaignFields.style.display = 'none';
+        discountFields.style.display = 'block';
+      } else {
+        campaignFields.style.display = 'none';
+        discountFields.style.display = 'none';
+      }
+    }
+
+    async function submitTest(event) {
+      event.preventDefault();
+
+      const form = event.target;
+      const formData = new FormData(form);
+      const submitBtn = form.querySelector('.btn-submit');
+
+      // Disable submit button
+      submitBtn.disabled = true;
+      submitBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Creating...';
+
+      try {
+        const response = await fetch('{% url "admin_ab_testing" %}', {
+          method: 'POST',
+          body: formData,
+          headers: {
+            'X-CSRFToken': '{{ csrf_token }}'
+          }
+        });
+
+        const data = await response.json();
+
+        if (data.success) {
+          // Show success message
+          const notification = document.createElement('div');
+          notification.textContent = '✓ Test created successfully!';
+          notification.style.cssText = `
+            position: fixed;
+            bottom: 2rem;
+            right: 2rem;
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            color: white;
+            padding: 1rem 1.5rem;
+            border-radius: 12px;
+            font-weight: 600;
+            font-size: 0.875rem;
+            box-shadow: 0 8px 24px rgba(16, 185, 129, 0.3);
+            z-index: 10001;
+            animation: slideInUp 0.3s ease-out;
+          `;
+          document.body.appendChild(notification);
+
+          setTimeout(() => {
+            notification.style.animation = 'slideOutDown 0.3s ease-out';
+            setTimeout(() => {
+              document.body.removeChild(notification);
+            }, 300);
+          }, 2000);
+
+          // Close modal and reload page
+          closeCreateModal();
+          setTimeout(() => {
+            window.location.reload();
+          }, 500);
+        } else {
+          alert('Error: ' + (data.error || 'Failed to create test'));
+          submitBtn.disabled = false;
+          submitBtn.innerHTML = '<i class="fa-solid fa-check"></i> Create Test';
+        }
+      } catch (error) {
+        console.error('Error:', error);
+        alert('Error creating test. Please try again.');
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = '<i class="fa-solid fa-check"></i> Create Test';
+      }
+    }
+
+    // Close modal when clicking outside
+    document.getElementById('createModal').addEventListener('click', function(e) {
+      if (e.target === this) {
+        closeCreateModal();
+      }
+    });
+
+    // Toggle examples section
+    function toggleExamples() {
+      const section = document.getElementById('examplesSection');
+      const button = document.getElementById('examplesButtonText');
+      const icon = document.getElementById('examplesIcon');
+
+      if (section.style.display === 'none') {
+        section.style.display = 'block';
+        button.textContent = 'Hide Examples & Guide';
+        icon.className = 'fa-solid fa-lightbulb-on';
+      } else {
+        section.style.display = 'none';
+        button.textContent = 'Show Examples & Guide';
+        icon.className = 'fa-solid fa-lightbulb';
+      }
+    }
+
+    // Tag management
+    let currentTags = [];
+
+    function addTagChip(tag) {
+      tag = tag.trim().toLowerCase();
+      if (tag && !currentTags.includes(tag)) {
+        currentTags.push(tag);
+        renderTagChips();
+        updateHiddenTagInput();
+      }
+    }
+
+    function removeTagChip(tag) {
+      currentTags = currentTags.filter(t => t !== tag);
+      renderTagChips();
+      updateHiddenTagInput();
+    }
+
+    function renderTagChips() {
+      const display = document.getElementById('tagChipsDisplay');
+      if (currentTags.length === 0) {
+        display.style.display = 'none';
+      } else {
+        display.style.display = 'flex';
+      }
+      display.innerHTML = currentTags.map(tag => `
+        <span style="
+          background: #667eea;
+          color: white;
+          padding: 0.4rem 0.75rem;
+          border-radius: 16px;
+          font-size: 0.8125rem;
+          font-weight: 500;
+          display: inline-flex;
+          align-items: center;
+          gap: 0.4rem;
+          line-height: 1.2;
+        ">
+          ${tag}
+          <button
+            type="button"
+            onclick="removeTagChip('${tag}')"
+            style="
+              background: rgba(255, 255, 255, 0.25);
+              border: none;
+              color: white;
+              cursor: pointer;
+              padding: 0;
+              margin: 0;
+              width: 16px;
+              height: 16px;
+              border-radius: 50%;
+              font-size: 0.75rem;
+              line-height: 1;
+              display: flex;
+              align-items: center;
+              justify-content: center;
+              transition: all 0.15s;
+              flex-shrink: 0;
+            "
+            onmouseover="this.style.background='rgba(255, 255, 255, 0.4)'; this.style.transform='scale(1.1)';"
+            onmouseout="this.style.background='rgba(255, 255, 255, 0.25)'; this.style.transform='scale(1)';"
+          >×</button>
+        </span>
+      `).join('');
+    }
+
+    function updateHiddenTagInput() {
+      document.getElementById('testTags').value = currentTags.join(',');
+    }
+
+    function handleTagInput(event) {
+      if (event.key === 'Enter') {
+        event.preventDefault();
+        const input = event.target;
+        const tag = input.value.trim().toLowerCase();
+        if (tag) {
+          addTagChip(tag);
+          input.value = '';
+        }
+      }
+    }
+
+    // Focus border effect
+    document.getElementById('tagInput').addEventListener('focus', function() {
+      document.getElementById('tagInputContainer').style.borderColor = '#667eea';
+      document.getElementById('tagInputContainer').style.boxShadow = '0 0 0 3px rgba(102, 126, 234, 0.1)';
+    });
+
+    document.getElementById('tagInput').addEventListener('blur', function() {
+      document.getElementById('tagInputContainer').style.borderColor = '#e2e8f0';
+      document.getElementById('tagInputContainer').style.boxShadow = 'none';
+    });
+
+    // Set landing URL
+    function setLandingUrl(url) {
+      document.getElementById('landingUrl').value = url;
+    }
+
+    // Set variant name
+    function setVariantName(name) {
+      document.getElementById('variantName').value = name;
+    }
+
+    // Set UTM fields
+    function setUtmSource(value) {
+      document.getElementById('utmSource').value = value;
+    }
+
+    function setUtmMedium(value) {
+      document.getElementById('utmMedium').value = value;
+    }
+
+    function setUtmCampaign(value) {
+      document.getElementById('utmCampaign').value = value;
+    }
+  </script>
+</body>
+</html>

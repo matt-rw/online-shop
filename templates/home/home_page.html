@@ -1,40 +1,88 @@
 {% extends 'base.html' %}
+
 {% load static %}
 
 {% block extra_css %}
   <!-- AOS (Animate On Scroll) Library -->
   <link rel="stylesheet" href="https://unpkg.com/aos@2.3.4/dist/aos.css">
+  <!-- Preconnect to external domains for faster loading -->
+  <link rel="preconnect" href="https://unpkg.com">
+  <link rel="preconnect" href="https://www.instagram.com">
+  <link rel="dns-prefetch" href="https://cdn.jsdelivr.net">
+
+  <style>
+    /* Dark mode overrides for home page */
+    [data-theme='dark'] #subscribe,
+    [data-theme='dark'] #subscribe > div {
+      background-color: #1a1a1a !important;
+    }
+
+    [data-theme='dark'] .text-black {
+      color: #e5e5e5 !important;
+    }
+
+    [data-theme='dark'] .text-black-500 {
+      color: #a3a3a3 !important;
+    }
+
+    [data-theme='dark'] .border-black {
+      border-color: #404040 !important;
+    }
+
+    [data-theme='dark'] input[type="email"],
+    [data-theme='dark'] input[type="tel"] {
+      background-color: #262626 !important;
+      color: #e5e5e5 !important;
+      border-color: #404040 !important;
+    }
+
+    [data-theme='dark'] input[type="email"]::placeholder,
+    [data-theme='dark'] input[type="tel"]::placeholder {
+      color: #737373 !important;
+    }
+
+    [data-theme='dark'] .shadow-xl {
+      box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5), 0 8px 10px -6px rgba(0, 0, 0, 0.5) !important;
+    }
+  </style>
+
 {% endblock %}
 
 {% block content %}
-<!-- Debug Grid Overlay (dev tool) -->
-<script src="https://cdn.jsdelivr.net/npm/debug-grid-overlay-custom@1.0.5/index.min.js"></script>
+  <!-- Debug Grid Overlay (dev tool - only in DEBUG mode) -->
+  {% if DEBUG %}
+    <script src="https://cdn.jsdelivr.net/npm/debug-grid-overlay-custom@1.0.5/index.min.js"></script>
+  {% endif %}
 
-<!-- ============================================ -->
-<!-- HERO SECTION -->
-<!-- ============================================ -->
-<section
-  class="relative min-h-screen bg-cover bg-center w-full h-screen overflow-hidden bg-gray-900 -mt-[64px] pt-[64px]"
-  style="background-image: url('{% static 'images/unnamed.png' %}');"
->
-  <div class="relative z-10 flex flex-col items-center justify-center h-full text-white">
-    <a href="/" class="block">
-      <img
-        src="{% static 'images/font.png' %}"
-        class="h-lg w-auto"
-        alt="Blueprint Apparel"
-      />
-    </a>
-    <a
-      href="#subscribe"
-      class="mt-6 px-8 py-3 bg-black rounded-lg hover:bg-gray-600 transition"
-    >
-      Launch Info
-    </a>
-  </div>
-</section>
+  <!-- ============================================ -->
+  <!-- HERO SECTION -->
+  <!-- ============================================ -->
+  <section class="relative min-h-screen bg-cover bg-center w-full h-screen overflow-hidden bg-gray-900 -mt-[64px] pt-[64px]"
+           style="background-image: url('{% if site_settings.hero_image %}{{ site_settings.hero_image.url }}{% else %}{% static 'images/unnamed.webp' %}{% endif %}')">
+    <div class="relative z-10 flex flex-col items-center justify-center h-full text-white">
+      <a href="/" class="block">
+        <img src="{% static 'images/font.webp' %}"
+             class="h-lg w-auto"
+             alt="Blueprint Apparel"
+             width="400"
+             height="100" />
+      </a>
+      {% if site_settings.hero_title or site_settings.hero_subtitle %}
+        <div class="text-center mt-8 px-4">
+          {% if site_settings.hero_title %}
+            <h1 class="text-4xl md:text-6xl font-bold mb-4">{{ site_settings.hero_title }}</h1>
+          {% endif %}
+          {% if site_settings.hero_subtitle %}
+            <p class="text-xl md:text-2xl text-gray-200">{{ site_settings.hero_subtitle }}</p>
+          {% endif %}
+        </div>
+      {% endif %}
+      <a href="#subscribe"
+         class="mt-6 px-8 py-3 bg-black rounded-lg hover:bg-gray-600 transition">Launch Info</a>
+    </div>
+  </section>
 
-<!-- TODO: Background video alternative for hero section
+  <!-- TODO: Background video alternative for hero section
 <section class="relative w-full h-screen overflow-hidden">
   <video autoplay muted loop playsinline class="absolute top-0 left-0 w-full h-full object-cover">
     <source src="https://www.w3schools.com/html/mov_bbb.mp4" type="video/mp4" />
@@ -46,221 +94,218 @@
 </section>
 -->
 
-<!-- ============================================ -->
-<!-- PRODUCTS SECTION -->
-<!-- ============================================ -->
-<section
-  id="products"
-  class="w-full bg-cover bg-center bg-no-repeat overflow-hidden h-auto pt-16 md:pt-20 lg:pt-28"
-  style="background-image: url('{% static 'images/blueprint_bg1.png' %}');"
->
-  <!-- Foundation Drop Announcement -->
-  <div class="flex flex-row justify-between items-center">
-    <h2
-      data-aos="fade-right"
-      class="font-sans text-4xl md:text-7xl lg:text-8xl font-semibold w-full md:w-sm h-max tracking-tight text-white mb-24 mx-6 md:m-24 pt-8 md:pt-0"
-    >
-      The FOUNDATION DROP coming soon...
-    </h2>
-  </div>
-
-  <!-- Brand Philosophy -->
-  <div class="grid grid-cols-1 items-center justify-center mb-32 px-6">
-    <div class="group relative">
-      <p
-        class="font-sans w-full md:w-md text-3xl md:text-5xl leading-relaxed text-white md:ml-auto text-right mb-16"
-        data-aos="fade-left"
-      >
-        Our collection is about more than clothes.
-      </p>
-    </div>
-  </div>
-
-  <p
-    class="font-sans text-3xl md:text-5xl leading-relaxed text-white text-center mb-32 px-6"
-    data-aos="fade-up"
-  >
-    It's about creating a blueprint.
-  </p>
-
-  <div class="group relative px-6">
-    <h2
-      data-aos="fade-in"
-      class="font-sans text-even leading-tight mx-0 md:ml-16 text-5xl md:text-9xl text-white justify-left font-bold mb-32"
-    >
-      Follow your Path.
-    </h2>
-  </div>
-</section>
-
-<!-- ============================================ -->
-<!-- EMAIL SIGNUP SECTION -->
-<!-- ============================================ -->
-<div id="subscribe" class="mx-auto max-w-2xl px-4 py-16 sm:px-6 sm:py-24 lg:max-w-7xl lg:px-8 items-center bg-white rounded-3xl">
-  <div class="rounded-xl shadow-xl p-6 md:p-20 h-auto mt-12 mb-24" data-aos="fade-up">
-    <h2 class="font-sans text-3xl md:text-5xl text-black font-bold mb-10">
-      Join the Blueprint Community
-    </h2>
-    <p class="text-black-500 text-xl md:text-3xl mb-20">
-      Get early access to the Foundation-Fall drop, 10% off your first order, latest deals, and our Discord channel.
-    </p>
-
-    <!-- Messages -->
-    {% if messages %}
-      <div class="mb-6" id="message-container">
-        {% for message in messages %}
-          <div class="message-alert px-6 py-4 rounded-lg text-center font-medium mb-3 {% if message.tags == 'success' %}bg-green-100 text-green-800 border border-green-300{% elif message.tags == 'error' %}bg-red-100 text-red-800 border border-red-300{% elif message.tags == 'warning' %}bg-yellow-100 text-yellow-800 border border-yellow-300{% else %}bg-blue-100 text-blue-800 border border-blue-300{% endif %}"
-               style="animation: slideDown 0.3s ease-out; transition: opacity 0.5s ease-out;">
-            {{ message }}
-          </div>
-        {% endfor %}
-      </div>
-    {% endif %}
-
-    <!-- Subscription Type Toggle -->
-    <div class="flex gap-4 mb-6 justify-center">
-      <button type="button" onclick="showEmailForm()" id="email-tab" class="px-6 py-2 rounded-md font-semibold transition bg-gray-600 text-white">
-        Email
-      </button>
-      <button type="button" onclick="showSMSForm()" id="sms-tab" class="px-6 py-2 rounded-md font-semibold transition bg-gray-200 text-gray-700 hover:bg-gray-300">
-        SMS
-      </button>
-    </div>
-
-    <!-- Email Signup Form -->
-    <form id="email-form" action="{% url 'shop:subscribe' %}" method="POST" class="flex flex-col sm:flex-row gap-3">
-      {% csrf_token %}
-      <input
-        type="email"
-        name="email"
-        placeholder="Enter your email"
-        required
-        class="flex-1 px-4 py-2 rounded-md border text-xl text-black border-black"
-      />
-      <button
-        type="submit"
-        class="px-6 py-2 rounded-md bg-gray-600 text-white font-semibold hover:bg-indigo-500 transition"
-      >
-        Sign Up
-      </button>
-    </form>
-
-    <!-- SMS Signup Form -->
-    <form id="sms-form" action="{% url 'shop:subscribe_sms' %}" method="POST" class="flex flex-col sm:flex-row gap-3 hidden">
-      {% csrf_token %}
-      <input
-        type="tel"
-        name="phone_number"
-        placeholder="Enter your phone number"
-        required
-        pattern="[0-9\+\-\(\)\s]+"
-        class="flex-1 px-4 py-2 rounded-md border text-xl text-black border-black"
-      />
-      <button
-        type="submit"
-        class="px-6 py-2 rounded-md bg-gray-600 text-white font-semibold hover:bg-indigo-500 transition"
-      >
-        Sign Up
-      </button>
-    </form>
-    <p id="sms-disclaimer" class="text-xs text-gray-600 mt-2 hidden">
-      By subscribing, you agree to receive marketing text messages. Message and data rates may apply. Reply STOP to unsubscribe.
-    </p>
-  </div>
-
-  <!-- Brand Story -->
-  <div class="flex justify-center mx-6 md:mx-12 mb-12">
-    <p class="font-sans text-xl md:text-3xl text-black w-full md:w-lg leading-relaxed">
-      In our debut collection, we draw inspiration from Japanese gardens — balanced, intentional, and built with purpose —
-      relating back to our Chicago roots, we channel that into clean, versatile pieces designed to move wherever life takes you.
-      <br><br>
-      Whether you're chasing goals, finding your rhythm, or carving out your own identity, Blueprint Apparel reflects your
-      focus, discipline, and individuality.
-      <br><br>
-      This isn't about following trends — it's about following your path.
-    </p>
-  </div>
-
-  <!-- Feature Image -->
-  <img class="rounded-4xl mb-32" src="{% static 'images/web.png' %}" alt="Blueprint Collection" />
-
-  <!-- Design Inspiration -->
-  <div class="flex mx-6 md:mx-12 mb-12 justify-center">
-    <div class="w-full md:w-lg rounded-3xl" data-aos="zoom-in">
-      <p class="font-sans text-xl md:text-3xl text-black w-full leading-relaxed">
-        This first release is partly inspired by the design of the tiger in classical Korean art. This is something we
-        pay homage to as a prominent feature of the collection to instill courage and hope for the future.
-        <br><br>
-        Come back soon for an official release date/time, but in the meantime, subscribe to our email list for new deals
-        and arrivals or join us on our moderated Discord channel around design fundamentals and materials for lifestyle fashion.
-      </p>
-    </div>
-  </div>
-</div>
-
-<!-- ============================================ -->
-<!-- FOUNDATION LINE DETAILS SECTION -->
-<!-- ============================================ -->
-<section
-  class="w-full py-20 px-6 lg:py-32 lg:px-12"
-  style="background-color:#0d0d0d; background-image: url('{% static 'images/blueprint_bg1.png' %}'); background-size: cover; background-position: center;"
->
-  <div class="max-w-7xl mx-auto">
-    <!-- Section Title -->
-    <div class="text-center mb-16 lg:mb-24" data-aos="fade-up">
-      <h2 class="font-sans text-5xl lg:text-7xl text-white font-bold mb-6 tracking-tight">
-        The FOUNDATION Line
+  <!-- ============================================ -->
+  <!-- PRODUCTS SECTION -->
+  <!-- ============================================ -->
+  <section id="products"
+           class="w-full bg-cover bg-center bg-no-repeat overflow-hidden h-auto pt-16 md:pt-20 lg:pt-28"
+           style="background-image: url('{% static 'images/blueprint_bg1.webp' %}')">
+    <!-- Foundation Drop Announcement -->
+    <div class="flex flex-row justify-between items-center">
+      <h2 data-aos="fade-right"
+          class="font-sans text-4xl md:text-7xl lg:text-8xl font-semibold w-full md:w-sm h-max tracking-tight text-white mb-24 mx-6 md:m-24 pt-8 md:pt-0">
+        The FOUNDATION DROP coming soon...
       </h2>
-      <div class="w-24 h-1 bg-white mx-auto mb-6"></div>
-      <p class="text-white text-2xl lg:text-3xl font-light">Design Philosophy</p>
     </div>
 
-    <!-- Three Column Layout: Text | Instagram | Text -->
-    <div class="grid grid-cols-1 lg:grid-cols-[1fr_auto_1fr] gap-12 lg:gap-16 items-center">
-
-      <!-- Left - First Design Element -->
-      <div class="text-center lg:text-right space-y-6" data-aos="fade-right">
-        <h3 class="text-4xl lg:text-5xl font-sans text-white font-semibold leading-tight">
-          Quiet Discipline
-        </h3>
-        <p class="text-2xl lg:text-3xl text-white leading-relaxed font-light">
-          Every stone and every line serves a purpose. Inspired by flowing harmony and intentional design.
-        </p>
+    <!-- Brand Philosophy -->
+    <div class="grid grid-cols-1 items-center justify-center mb-32 px-6">
+      <div class="group relative">
+        <p class="font-sans w-full md:w-md text-3xl md:text-5xl leading-relaxed text-white md:ml-auto text-right mb-16"
+           data-aos="fade-left">Our collection is about more than clothes.</p>
       </div>
+    </div>
 
-      <!-- Center - Instagram -->
-      <div class="flex flex-col items-center justify-center mx-auto" data-aos="zoom-in">
-        <div class="w-full max-w-md lg:max-w-lg">
-          {% include 'partials/insta.html' %}
+    <p class="font-sans text-3xl md:text-5xl leading-relaxed text-white text-center mb-32 px-6"
+       data-aos="fade-up">It's about creating a blueprint.</p>
+
+    <div class="group relative px-6">
+      <h2 data-aos="fade-in"
+          class="font-sans text-even leading-tight mx-0 md:ml-16 text-5xl md:text-9xl text-white justify-left font-bold mb-32">
+        Follow your Path.
+      </h2>
+    </div>
+  </section>
+
+  <!-- ============================================ -->
+  <!-- EMAIL SIGNUP SECTION -->
+  <!-- ============================================ -->
+  <div id="subscribe"
+       class="mx-auto max-w-2xl px-4 py-16 sm:px-6 sm:py-24 lg:max-w-7xl lg:px-8 items-center bg-white rounded-3xl">
+    <div class="rounded-xl shadow-xl p-6 md:p-20 h-auto mt-12 mb-24" data-aos="fade-up">
+      <h2 class="font-sans text-3xl md:text-5xl text-black font-bold mb-10">Join the Blueprint Community</h2>
+      <p class="text-black-500 text-xl md:text-3xl mb-20">
+        Get early access to the Foundation-Fall drop, 10% off your first order, latest deals, and our Discord channel.
+      </p>
+
+      <!-- Messages -->
+      {% if messages %}
+        <div class="mb-6" id="message-container">
+          {% for message in messages %}
+            <div class="message-alert px-6 py-4 rounded-lg text-center font-medium mb-3
+                        {% if message.tags == 'success' %}
+                          bg-green-100 text-green-800 border border-green-300
+                        {% elif message.tags == 'error' %}
+                          bg-red-100 text-red-800 border border-red-300
+                        {% elif message.tags == 'warning' %}
+                          bg-yellow-100 text-yellow-800 border border-yellow-300
+                        {% else %}
+                          bg-blue-100 text-blue-800 border border-blue-300
+                        {% endif %}"
+                 style="animation: slideDown 0.3s ease-out;
+                        transition: opacity 0.5s ease-out">{{ message }}</div>
+          {% endfor %}
         </div>
-        <a
-          href="https://www.instagram.com/_blueprintapparel"
-          target="_blank"
-          class="mt-6 text-white hover:text-gray-300 transition-colors text-lg font-medium"
-        >
-          Follow us on Instagram →
-        </a>
+      {% endif %}
+
+      <!-- Subscription Type Toggle -->
+      <div class="flex gap-4 mb-6 justify-center">
+        <button type="button"
+                onclick="showEmailForm()"
+                id="email-tab"
+                class="px-6 py-2 rounded-md font-semibold transition bg-gray-600 text-white">Email</button>
+        <button type="button"
+                onclick="showSMSForm()"
+                id="sms-tab"
+                class="px-6 py-2 rounded-md font-semibold transition bg-gray-200 text-gray-700 hover:bg-gray-300">
+          SMS
+        </button>
       </div>
 
-      <!-- Right - Second Design Element -->
-      <div class="text-center lg:text-left space-y-6" data-aos="fade-left">
-        <h3 class="text-4xl lg:text-5xl font-sans text-white font-semibold leading-tight">
-          Modern Balance
-        </h3>
-        <p class="text-2xl lg:text-3xl text-white leading-relaxed font-light">
-          A map for your lifestyle, blending clean design with modern aesthetic and timeless versatility.
+      <!-- Email Signup Form -->
+      <form id="email-form"
+            action="{% url 'shop:subscribe' %}"
+            method="POST"
+            class="flex flex-col sm:flex-row gap-3">
+        {% csrf_token %}
+        <input type="email"
+               name="email"
+               placeholder="Enter your email"
+               required
+               class="flex-1 px-4 py-2 rounded-md border text-xl text-black border-black" />
+        <button type="submit"
+                class="px-6 py-2 rounded-md bg-gray-600 text-white font-semibold hover:bg-indigo-500 transition">
+          Sign Up
+        </button>
+      </form>
+
+      <!-- SMS Signup Form -->
+      <form id="sms-form"
+            action="{% url 'shop:subscribe_sms' %}"
+            method="POST"
+            class="flex flex-col sm:flex-row gap-3 hidden">
+        {% csrf_token %}
+        <input type="tel"
+               name="phone_number"
+               placeholder="Enter your phone number"
+               required
+               pattern="[0-9\+\-\(\)\s]+"
+               class="flex-1 px-4 py-2 rounded-md border text-xl text-black border-black" />
+        <button type="submit"
+                class="px-6 py-2 rounded-md bg-gray-600 text-white font-semibold hover:bg-indigo-500 transition">
+          Sign Up
+        </button>
+      </form>
+      <p id="sms-disclaimer" class="text-xs text-gray-600 mt-2 hidden">
+        By subscribing, you agree to receive marketing text messages. Message and data rates may apply. Reply STOP to unsubscribe.
+      </p>
+    </div>
+
+    <!-- Brand Story -->
+    <div class="flex justify-center mx-6 md:mx-12 mb-12">
+      <p class="font-sans text-xl md:text-3xl text-black w-full md:w-lg leading-relaxed">
+        In our debut collection, we draw inspiration from Japanese gardens — balanced, intentional, and built with purpose —
+        relating back to our Chicago roots, we channel that into clean, versatile pieces designed to move wherever life takes you.
+        <br>
+        <br>
+        Whether you're chasing goals, finding your rhythm, or carving out your own identity, Blueprint Apparel reflects your
+        focus, discipline, and individuality.
+        <br>
+        <br>
+        This isn't about following trends — it's about following your path.
+      </p>
+    </div>
+
+    <!-- Feature Image -->
+    <img class="rounded-4xl mb-32"
+         src="{% static 'images/web.webp' %}"
+         alt="Blueprint Collection"
+         loading="lazy"
+         width="1920"
+         height="1080" />
+
+    <!-- Design Inspiration -->
+    <div class="flex mx-6 md:mx-12 mb-12 justify-center">
+      <div class="w-full md:w-lg rounded-3xl" data-aos="zoom-in">
+        <p class="font-sans text-xl md:text-3xl text-black w-full leading-relaxed">
+          This first release is partly inspired by the design of the tiger in classical Korean art. This is something we
+          pay homage to as a prominent feature of the collection to instill courage and hope for the future.
+          <br>
+          <br>
+          Come back soon for an official release date/time, but in the meantime, subscribe to our email list for new deals
+          and arrivals or join us on our moderated Discord channel around design fundamentals and materials for lifestyle fashion.
         </p>
       </div>
-
     </div>
   </div>
-</section>
 
-<!-- ============================================ -->
-<!-- TODO: FUTURE FEATURE IDEAS -->
-<!-- ============================================ -->
+  <!-- ============================================ -->
+  <!-- FOUNDATION LINE DETAILS SECTION -->
+  <!-- ============================================ -->
+  <section class="w-full py-20 px-6 lg:py-32 lg:px-12"
+           style="background-color:#0d0d0d;
+                  background-image: url('{% static 'images/blueprint_bg1.webp' %}');
+                  background-size: cover;
+                  background-position: center">
+    <div class="max-w-7xl mx-auto">
+      <!-- Section Title -->
+      <div class="text-center mb-16 lg:mb-24" data-aos="fade-up">
+        <h2 class="font-sans text-5xl lg:text-7xl text-white font-bold mb-6 tracking-tight">The FOUNDATION Line</h2>
+        <div class="w-24 h-1 bg-white mx-auto mb-6"></div>
+        <p class="text-white text-2xl lg:text-3xl font-light">Design Philosophy</p>
+      </div>
 
-<!-- TODO: Alternative signup form with "Coming Soon" badge
+      <!-- Three Column Layout: Text | Instagram | Text -->
+      <div class="grid grid-cols-1 lg:grid-cols-[1fr_auto_1fr] gap-12 lg:gap-16 items-center">
+
+        <!-- Left - First Design Element -->
+        <div class="text-center lg:text-right space-y-6" data-aos="fade-right">
+          <h3 class="text-4xl lg:text-5xl font-sans text-white font-semibold leading-tight">Quiet Discipline</h3>
+          <p class="text-2xl lg:text-3xl text-white leading-relaxed font-light">
+            Every stone and every line serves a purpose. Inspired by flowing harmony and intentional design.
+          </p>
+        </div>
+
+        <!-- Center - Instagram -->
+        <div class="flex flex-col items-center justify-center mx-auto" data-aos="zoom-in">
+          <div class="w-full max-w-md lg:max-w-lg">
+            {% include 'partials/insta.html' %}
+
+          </div>
+          <a href="https://www.instagram.com/_blueprintapparel"
+             target="_blank"
+             class="mt-6 text-white hover:text-gray-300 transition-colors text-lg font-medium">
+            Follow us on Instagram →
+          </a>
+        </div>
+
+        <!-- Right - Second Design Element -->
+        <div class="text-center lg:text-left space-y-6" data-aos="fade-left">
+          <h3 class="text-4xl lg:text-5xl font-sans text-white font-semibold leading-tight">Modern Balance</h3>
+          <p class="text-2xl lg:text-3xl text-white leading-relaxed font-light">
+            A map for your lifestyle, blending clean design with modern aesthetic and timeless versatility.
+          </p>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================================ -->
+  <!-- TODO: FUTURE FEATURE IDEAS -->
+  <!-- ============================================ -->
+
+  <!-- TODO: Alternative signup form with "Coming Soon" badge
 <div class="mx-auto max-w-2xl px-4 py-16 sm:px-6 sm:py-24 lg:max-w-7xl lg:px-8 items-center">
   <div class="rounded-xl shadow-xl p-20 h-auto mt-12 mb-24" data-aos="fade-up">
     <h2 class="font-sans text-5xl md:text-5xl sm:text-4xl text-black font-bold mb-10">
@@ -277,7 +322,7 @@
 </div>
 -->
 
-<!-- TODO: Product card carousel with image gallery
+  <!-- TODO: Product card carousel with image gallery
 <div class="card bg-base-100 w-96 shadow-sm hover:scale-105 bg-white rounded-xl shadow-lg">
   <div class="carousel w-full">
     <div id="item3" class="carousel-item w-full">
@@ -300,7 +345,7 @@
 </div>
 -->
 
-<!-- TODO: Blurred product preview images
+  <!-- TODO: Blurred product preview images
 <div class="mt-12 grid grid-cols-1 gap-x-6 gap-y-10 sm:grid-cols-1 lg:grid-cols-2 xl:gap-x-24 items-center p-16">
   <div class="group relative items-center">
     <img src="{% static 'images/white_bg_top.png' %}" alt="Product preview" class="aspect-square w-lg rounded-md bg-gray-200 object-cover group-hover:opacity-75 lg:aspect-auto lg:h-160 blur-xl mb-24" />
@@ -311,7 +356,7 @@
 </div>
 -->
 
-<!-- TODO: Individual product cards with links
+  <!-- TODO: Individual product cards with links
 <a href="/shop/t-shirt/" class="bg-white rounded-xl shadow-lg p-6 w-130 aspect-square flex flex-col justify-center items-center hover:scale-105 transition">
   <img src="{% static 'images/white_bg_top.png' %}" alt="T-Shirt" class="w-full h-full object-cover rounded-lg mb-4">
   <h3 class="text-lg font-semibold">Foundation T-Shirt</h3>
@@ -325,7 +370,7 @@
 </a>
 -->
 
-<!-- TODO: Overlay signup modal with backdrop blur
+  <!-- TODO: Overlay signup modal with backdrop blur
 <div class="absolute flex justify-center items-center">
   <div class="bg-white/30 backdrop-blur-xs rounded-xl shadow-xl p-40 w-400 h-200 text-center">
     <h2 class="text-6xl text-black font-bold mb-10">Join the Blueprint Community</h2>
@@ -338,7 +383,7 @@
 </div>
 -->
 
-<!-- TODO: 20% discount signup variant
+  <!-- TODO: 20% discount signup variant
 <div class="group relative">
   <div class="flex flex-col items-center">
     <h2 class="font-sans text-6xl text-center md:text-7xl sm:text-6xl font-bold w-md h-max tracking-tight leading-tight text-white mb-16">
@@ -358,50 +403,51 @@
 {% endblock %}
 
 {% block extra_js %}
-<!-- AOS (Animate On Scroll) Initialization -->
-<script src="https://unpkg.com/aos@2.3.4/dist/aos.js"></script>
-<script>
-  AOS.init({
-    duration: 600,
-    easing: 'ease-out',
-    once: true
-  });
+  <!-- AOS (Animate On Scroll) Initialization -->
+  <script src="https://unpkg.com/aos@2.3.4/dist/aos.js"></script>
+  <script>
+      AOS.init({
+          duration: 600,
+          easing: 'ease-out',
+          once: true
+      });
 
-  // Auto-hide messages after 4 seconds
-  document.addEventListener('DOMContentLoaded', function() {
-    const messageContainer = document.getElementById('message-container');
-    if (messageContainer) {
-      setTimeout(function() {
-        const messages = messageContainer.querySelectorAll('.message-alert');
-        messages.forEach(function(msg) {
-          msg.style.opacity = '0';
-        });
-        setTimeout(function() {
-          messageContainer.style.display = 'none';
-        }, 500); // Wait for fade out animation
-      }, 4000); // Show for 4 seconds
-    }
-  });
+      // Auto-hide messages after 4 seconds
+      document.addEventListener('DOMContentLoaded', function() {
+          const messageContainer = document.getElementById('message-container');
+          if (messageContainer) {
+              setTimeout(function() {
+                  const messages = messageContainer.querySelectorAll('.message-alert');
+                  messages.forEach(function(msg) {
+                      msg.style.opacity = '0';
+                  });
+                  setTimeout(function() {
+                      messageContainer.style.display = 'none';
+                  }, 500); // Wait for fade out animation
+              }, 4000); // Show for 4 seconds
+          }
+      });
 
-  // Toggle between email and SMS subscription forms
-  function showEmailForm() {
-    document.getElementById('email-form').classList.remove('hidden');
-    document.getElementById('sms-form').classList.add('hidden');
-    document.getElementById('sms-disclaimer').classList.add('hidden');
-    document.getElementById('email-tab').classList.add('bg-gray-600', 'text-white');
-    document.getElementById('email-tab').classList.remove('bg-gray-200', 'text-gray-700');
-    document.getElementById('sms-tab').classList.remove('bg-gray-600', 'text-white');
-    document.getElementById('sms-tab').classList.add('bg-gray-200', 'text-gray-700');
-  }
+      // Toggle between email and SMS subscription forms
+      function showEmailForm() {
+          document.getElementById('email-form').classList.remove('hidden');
+          document.getElementById('sms-form').classList.add('hidden');
+          document.getElementById('sms-disclaimer').classList.add('hidden');
+          document.getElementById('email-tab').classList.add('bg-gray-600', 'text-white');
+          document.getElementById('email-tab').classList.remove('bg-gray-200', 'text-gray-700');
+          document.getElementById('sms-tab').classList.remove('bg-gray-600', 'text-white');
+          document.getElementById('sms-tab').classList.add('bg-gray-200', 'text-gray-700');
+      }
 
-  function showSMSForm() {
-    document.getElementById('email-form').classList.add('hidden');
-    document.getElementById('sms-form').classList.remove('hidden');
-    document.getElementById('sms-disclaimer').classList.remove('hidden');
-    document.getElementById('sms-tab').classList.add('bg-gray-600', 'text-white');
-    document.getElementById('sms-tab').classList.remove('bg-gray-200', 'text-gray-700');
-    document.getElementById('email-tab').classList.remove('bg-gray-600', 'text-white');
-    document.getElementById('email-tab').classList.add('bg-gray-200', 'text-gray-700');
-  }
-</script>
+      function showSMSForm() {
+          document.getElementById('email-form').classList.add('hidden');
+          document.getElementById('sms-form').classList.remove('hidden');
+          document.getElementById('sms-disclaimer').classList.remove('hidden');
+          document.getElementById('sms-tab').classList.add('bg-gray-600', 'text-white');
+          document.getElementById('sms-tab').classList.remove('bg-gray-200', 'text-gray-700');
+          document.getElementById('email-tab').classList.remove('bg-gray-600', 'text-white');
+          document.getElementById('email-tab').classList.add('bg-gray-200', 'text-gray-700');
+      }
+  </script>
+
 {% endblock %}

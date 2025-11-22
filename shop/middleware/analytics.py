@@ -1,8 +1,11 @@
 import time
-import requests
 from urllib.parse import urlparse
-from django.utils import timezone
+
 from django.conf import settings
+from django.utils import timezone
+
+import requests
+
 from shop.models import PageView, VisitorSession
 
 
@@ -41,13 +44,12 @@ class VisitorTrackingMiddleware:
     def _should_skip_tracking(self, path):
         """Determine if this path should be skipped."""
         skip_prefixes = [
-            '/admin/',
-            '/django-admin/',
-            '/wagtail-admin/',
-            '/static/',
-            '/media/',
-            '/__reload__/',
-            '/accounts/',  # Skip allauth pages
+            "/admin/",
+            "/django-admin/",
+            "/static/",
+            "/media/",
+            "/__reload__/",
+            "/accounts/",  # Skip allauth pages
         ]
         return any(path.startswith(prefix) for prefix in skip_prefixes)
 
@@ -55,11 +57,11 @@ class VisitorTrackingMiddleware:
         """Record page view and update session."""
         # Get visitor information
         ip_address = self._get_client_ip(request)
-        user_agent = request.META.get('HTTP_USER_AGENT', '')
-        referrer = request.META.get('HTTP_REFERER', '')
+        user_agent = request.META.get("HTTP_USER_AGENT", "")
+        referrer = request.META.get("HTTP_REFERER", "")
 
         # Parse referrer domain
-        referrer_domain = ''
+        referrer_domain = ""
         if referrer:
             try:
                 referrer_domain = urlparse(referrer).netloc
@@ -101,33 +103,37 @@ class VisitorTrackingMiddleware:
         session, created = VisitorSession.objects.get_or_create(
             session_id=session_id,
             defaults={
-                'landing_page': request.path,
-                'referrer': referrer[:1000] if referrer else None,
-                'ip_address': ip_address,
-                'user_agent': user_agent[:500],
-                'device_type': device_type,
-                'first_seen': timezone.now(),
-                'last_seen': timezone.now(),
-                'page_views': 1,
-                **{k: v for k, v in location_data.items() if k in ['country', 'country_name', 'region', 'city']},
-            }
+                "landing_page": request.path,
+                "referrer": referrer[:1000] if referrer else None,
+                "ip_address": ip_address,
+                "user_agent": user_agent[:500],
+                "device_type": device_type,
+                "first_seen": timezone.now(),
+                "last_seen": timezone.now(),
+                "page_views": 1,
+                **{
+                    k: v
+                    for k, v in location_data.items()
+                    if k in ["country", "country_name", "region", "city", "latitude", "longitude"]
+                },
+            },
         )
 
         if not created:
             # Update existing session
             session.last_seen = timezone.now()
             session.page_views += 1
-            session.save(update_fields=['last_seen', 'page_views'])
+            session.save(update_fields=["last_seen", "page_views"])
 
     def _get_location(self, ip_address):
         """Get geographic location from IP address using ip-api.com (free, no signup)."""
         location_data = {
-            'country': '',
-            'country_name': '',
-            'region': '',
-            'city': '',
-            'latitude': None,
-            'longitude': None,
+            "country": "",
+            "country_name": "",
+            "region": "",
+            "city": "",
+            "latitude": None,
+            "longitude": None,
         }
 
         if not ip_address:
@@ -135,24 +141,28 @@ class VisitorTrackingMiddleware:
 
         try:
             # Skip private/local IPs
-            if ip_address in ['127.0.0.1', 'localhost'] or ip_address.startswith('192.168.') or ip_address.startswith('10.'):
+            if (
+                ip_address in ["127.0.0.1", "localhost"]
+                or ip_address.startswith("192.168.")
+                or ip_address.startswith("10.")
+            ):
                 return location_data
 
             # Use ip-api.com free API (45 requests/minute, no key needed)
             response = requests.get(
-                f'http://ip-api.com/json/{ip_address}',
-                timeout=2  # Short timeout to not slow down requests
+                f"http://ip-api.com/json/{ip_address}",
+                timeout=2,  # Short timeout to not slow down requests
             )
 
             if response.status_code == 200:
                 data = response.json()
-                if data.get('status') == 'success':
-                    location_data['country'] = data.get('countryCode', '')
-                    location_data['country_name'] = data.get('country', '')
-                    location_data['region'] = data.get('regionName', '')
-                    location_data['city'] = data.get('city', '')
-                    location_data['latitude'] = data.get('lat')
-                    location_data['longitude'] = data.get('lon')
+                if data.get("status") == "success":
+                    location_data["country"] = data.get("countryCode", "")
+                    location_data["country_name"] = data.get("country", "")
+                    location_data["region"] = data.get("regionName", "")
+                    location_data["city"] = data.get("city", "")
+                    location_data["latitude"] = data.get("lat")
+                    location_data["longitude"] = data.get("lon")
 
         except Exception as e:
             # Silently fail for IPs that can't be geolocated or API issues
@@ -162,11 +172,11 @@ class VisitorTrackingMiddleware:
 
     def _get_client_ip(self, request):
         """Get the client's IP address."""
-        x_forwarded_for = request.META.get('HTTP_X_FORWARDED_FOR')
+        x_forwarded_for = request.META.get("HTTP_X_FORWARDED_FOR")
         if x_forwarded_for:
-            ip = x_forwarded_for.split(',')[0]
+            ip = x_forwarded_for.split(",")[0]
         else:
-            ip = request.META.get('REMOTE_ADDR')
+            ip = request.META.get("REMOTE_ADDR")
         return ip
 
     def _detect_device_type(self, user_agent):
@@ -174,51 +184,59 @@ class VisitorTrackingMiddleware:
         ua_lower = user_agent.lower()
 
         # Check for bots
-        bot_indicators = ['bot', 'crawl', 'spider', 'scrape', 'curl', 'wget']
+        bot_indicators = ["bot", "crawl", "spider", "scrape", "curl", "wget"]
         if any(indicator in ua_lower for indicator in bot_indicators):
-            return 'bot'
+            return "bot"
 
         # Check for mobile
-        mobile_indicators = ['mobile', 'android', 'iphone', 'ipad', 'ipod', 'blackberry', 'windows phone']
+        mobile_indicators = [
+            "mobile",
+            "android",
+            "iphone",
+            "ipad",
+            "ipod",
+            "blackberry",
+            "windows phone",
+        ]
         if any(indicator in ua_lower for indicator in mobile_indicators):
-            if 'ipad' in ua_lower or 'tablet' in ua_lower:
-                return 'tablet'
-            return 'mobile'
+            if "ipad" in ua_lower or "tablet" in ua_lower:
+                return "tablet"
+            return "mobile"
 
-        return 'desktop'
+        return "desktop"
 
     def _detect_browser(self, user_agent):
         """Simple browser detection."""
         ua_lower = user_agent.lower()
 
-        if 'edg' in ua_lower:
-            return 'Edge'
-        elif 'chrome' in ua_lower:
-            return 'Chrome'
-        elif 'safari' in ua_lower:
-            return 'Safari'
-        elif 'firefox' in ua_lower:
-            return 'Firefox'
-        elif 'opera' in ua_lower or 'opr' in ua_lower:
-            return 'Opera'
-        elif 'msie' in ua_lower or 'trident' in ua_lower:
-            return 'Internet Explorer'
+        if "edg" in ua_lower:
+            return "Edge"
+        elif "chrome" in ua_lower:
+            return "Chrome"
+        elif "safari" in ua_lower:
+            return "Safari"
+        elif "firefox" in ua_lower:
+            return "Firefox"
+        elif "opera" in ua_lower or "opr" in ua_lower:
+            return "Opera"
+        elif "msie" in ua_lower or "trident" in ua_lower:
+            return "Internet Explorer"
 
-        return 'Unknown'
+        return "Unknown"
 
     def _detect_os(self, user_agent):
         """Simple OS detection."""
         ua_lower = user_agent.lower()
 
-        if 'windows' in ua_lower:
-            return 'Windows'
-        elif 'mac os' in ua_lower or 'macos' in ua_lower:
-            return 'macOS'
-        elif 'linux' in ua_lower:
-            return 'Linux'
-        elif 'android' in ua_lower:
-            return 'Android'
-        elif 'iphone' in ua_lower or 'ipad' in ua_lower:
-            return 'iOS'
+        if "windows" in ua_lower:
+            return "Windows"
+        elif "mac os" in ua_lower or "macos" in ua_lower:
+            return "macOS"
+        elif "linux" in ua_lower:
+            return "Linux"
+        elif "android" in ua_lower:
+            return "Android"
+        elif "iphone" in ua_lower or "ipad" in ua_lower:
+            return "iOS"
 
-        return 'Unknown'
+        return "Unknown"

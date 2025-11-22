@@ -2,8 +2,11 @@
 Cart utility functions for managing shopping cart operations.
 Handles both authenticated and anonymous users.
 """
+
 from decimal import Decimal
+
 from django.contrib.auth import get_user_model
+
 from .models import Cart, CartItem, ProductVariant
 
 User = get_user_model()
@@ -17,18 +20,14 @@ def get_or_create_cart(request):
     For anonymous users: Use session key
     """
     if request.user.is_authenticated:
-        cart, created = Cart.objects.get_or_create(
-            user=request.user,
-            is_active=True
-        )
+        cart, created = Cart.objects.get_or_create(user=request.user, is_active=True)
     else:
         # Ensure session exists
         if not request.session.session_key:
             request.session.create()
 
         cart, created = Cart.objects.get_or_create(
-            session_key=request.session.session_key,
-            is_active=True
+            session_key=request.session.session_key, is_active=True
         )
 
     return cart
@@ -55,9 +54,7 @@ def add_to_cart(request, variant_id, quantity=1):
 
     # Check if item already in cart
     cart_item, created = CartItem.objects.get_or_create(
-        cart=cart,
-        variant=variant,
-        defaults={'quantity': quantity}
+        cart=cart, variant=variant, defaults={"quantity": quantity}
     )
 
     if not created:
@@ -83,12 +80,12 @@ def update_cart_item_quantity(cart_item_id, quantity, user=None, session_key=Non
     """
     try:
         # Build query filters
-        filters = {'id': cart_item_id, 'cart__is_active': True}
+        filters = {"id": cart_item_id, "cart__is_active": True}
 
         if user and user.is_authenticated:
-            filters['cart__user'] = user
+            filters["cart__user"] = user
         elif session_key:
-            filters['cart__session_key'] = session_key
+            filters["cart__session_key"] = session_key
         else:
             raise ValueError("Must provide either user or session_key")
 
@@ -131,7 +128,7 @@ def get_cart_total(cart):
     Returns:
         Decimal: Total price
     """
-    total = Decimal('0.00')
+    total = Decimal("0.00")
     for item in cart.items.all():
         total += item.variant.price * item.quantity
     return total
@@ -177,9 +174,7 @@ def merge_carts(user, session_key):
     # Merge items from anonymous cart into user cart
     for anon_item in anonymous_cart.items.all():
         user_item, created = CartItem.objects.get_or_create(
-            cart=user_cart,
-            variant=anon_item.variant,
-            defaults={'quantity': anon_item.quantity}
+            cart=user_cart, variant=anon_item.variant, defaults={"quantity": anon_item.quantity}
         )
 
         if not created:

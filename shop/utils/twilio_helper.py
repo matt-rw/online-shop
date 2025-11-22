@@ -1,4 +1,5 @@
 import logging
+
 from django.conf import settings
 from django.utils import timezone
 
@@ -28,13 +29,15 @@ def send_sms(phone_number, message, subscription=None, campaign=None, template=N
         message_body=message,
         campaign=campaign,
         template=template,
-        status='queued'
+        status="queued",
     )
 
     # Check if Twilio is configured
-    if not all([settings.TWILIO_ACCOUNT_SID, settings.TWILIO_AUTH_TOKEN, settings.TWILIO_PHONE_NUMBER]):
+    if not all(
+        [settings.TWILIO_ACCOUNT_SID, settings.TWILIO_AUTH_TOKEN, settings.TWILIO_PHONE_NUMBER]
+    ):
         logger.warning("Twilio credentials not configured. SMS not sent.")
-        log.status = 'failed'
+        log.status = "failed"
         log.error_message = "Twilio not configured"
         log.save()
         return False, log
@@ -45,13 +48,11 @@ def send_sms(phone_number, message, subscription=None, campaign=None, template=N
         client = Client(settings.TWILIO_ACCOUNT_SID, settings.TWILIO_AUTH_TOKEN)
 
         message_obj = client.messages.create(
-            body=message,
-            from_=settings.TWILIO_PHONE_NUMBER,
-            to=phone_number
+            body=message, from_=settings.TWILIO_PHONE_NUMBER, to=phone_number
         )
 
         # Update log with success
-        log.status = 'sent'
+        log.status = "sent"
         log.twilio_sid = message_obj.sid
         log.save()
 
@@ -66,7 +67,7 @@ def send_sms(phone_number, message, subscription=None, campaign=None, template=N
 
     except Exception as e:
         logger.error(f"Failed to send SMS to {phone_number}: {str(e)}")
-        log.status = 'failed'
+        log.status = "failed"
         log.error_message = str(e)
         log.save()
         return False, log
@@ -98,7 +99,7 @@ def send_from_template(phone_number, template, context=None, subscription=None, 
         message=message,
         subscription=subscription,
         campaign=campaign,
-        template=template
+        template=template,
     )
 
 
@@ -114,12 +115,12 @@ def send_campaign(campaign):
     """
     from shop.models import SMSSubscription
 
-    if campaign.status not in ['draft', 'scheduled']:
+    if campaign.status not in ["draft", "scheduled"]:
         logger.warning(f"Cannot send campaign {campaign.id} with status {campaign.status}")
-        return {'error': 'Invalid campaign status'}
+        return {"error": "Invalid campaign status"}
 
     # Update campaign status
-    campaign.status = 'sending'
+    campaign.status = "sending"
     campaign.started_at = timezone.now()
     campaign.save()
 
@@ -141,7 +142,7 @@ def send_campaign(campaign):
             phone_number=subscription.phone_number,
             template=campaign.template,
             subscription=subscription,
-            campaign=campaign
+            campaign=campaign,
         )
 
         if success:
@@ -155,17 +156,13 @@ def send_campaign(campaign):
         campaign.save()
 
     # Mark campaign as complete
-    campaign.status = 'sent'
+    campaign.status = "sent"
     campaign.completed_at = timezone.now()
     campaign.save()
 
     logger.info(f"Campaign {campaign.id} completed. Sent: {sent_count}, Failed: {failed_count}")
 
-    return {
-        'total': campaign.total_recipients,
-        'sent': sent_count,
-        'failed': failed_count
-    }
+    return {"total": campaign.total_recipients, "sent": sent_count, "failed": failed_count}
 
 
 def trigger_auto_send(trigger_type, subscription, context=None):
@@ -187,10 +184,7 @@ def trigger_auto_send(trigger_type, subscription, context=None):
 
     try:
         # Find active template with matching auto_trigger
-        template = SMSTemplate.objects.filter(
-            auto_trigger=trigger_type,
-            is_active=True
-        ).first()
+        template = SMSTemplate.objects.filter(auto_trigger=trigger_type, is_active=True).first()
 
         if not template:
             logger.info(f"No active template found for trigger: {trigger_type}")
@@ -201,7 +195,7 @@ def trigger_auto_send(trigger_type, subscription, context=None):
             phone_number=subscription.phone_number,
             template=template,
             context=context,
-            subscription=subscription
+            subscription=subscription,
         )
 
     except Exception as e:

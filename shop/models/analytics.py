@@ -6,9 +6,10 @@ class PageView(models.Model):
     """
     Track individual page views with visitor information.
     """
+
     # Request Information
     path = models.CharField(max_length=500)
-    method = models.CharField(max_length=10, default='GET')
+    method = models.CharField(max_length=10, default="GET")
 
     # Visitor Information
     ip_address = models.GenericIPAddressField(null=True, blank=True)
@@ -39,11 +40,11 @@ class PageView(models.Model):
     session_id = models.CharField(max_length=100, blank=True, db_index=True)
 
     class Meta:
-        ordering = ['-viewed_at']
+        ordering = ["-viewed_at"]
         indexes = [
-            models.Index(fields=['-viewed_at']),
-            models.Index(fields=['path', '-viewed_at']),
-            models.Index(fields=['referrer_domain', '-viewed_at']),
+            models.Index(fields=["-viewed_at"]),
+            models.Index(fields=["path", "-viewed_at"]),
+            models.Index(fields=["referrer_domain", "-viewed_at"]),
         ]
 
     def __str__(self):
@@ -55,7 +56,7 @@ class PageView(models.Model):
         if not self.referrer_domain:
             return False
         # Add your domain variations here
-        internal_domains = ['localhost', '127.0.0.1', 'blueprintapparel.com']
+        internal_domains = ["localhost", "127.0.0.1", "blueprintapparel.com"]
         return not any(domain in self.referrer_domain for domain in internal_domains)
 
 
@@ -63,6 +64,7 @@ class VisitorSession(models.Model):
     """
     Aggregate session-level visitor data.
     """
+
     session_id = models.CharField(max_length=100, unique=True, db_index=True)
 
     # First visit info
@@ -86,9 +88,11 @@ class VisitorSession(models.Model):
     country_name = models.CharField(max_length=100, blank=True)
     region = models.CharField(max_length=100, blank=True)
     city = models.CharField(max_length=100, blank=True)
+    latitude = models.FloatField(null=True, blank=True)
+    longitude = models.FloatField(null=True, blank=True)
 
     class Meta:
-        ordering = ['-last_seen']
+        ordering = ["-last_seen"]
 
     def __str__(self):
         return f"Session {self.session_id[:8]}... - {self.page_views} views"

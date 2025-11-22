@@ -1,10 +1,12 @@
 """
 Tests for user profile and saved addresses.
 """
-from django.test import TestCase
-from django.contrib.auth import get_user_model
 
-from shop.models import UserProfile, SavedAddress
+from django.contrib.auth import get_user_model
+from django.test import TestCase
+
+from shop.models import SavedAddress, UserProfile
+
 from .test_helpers import create_test_user
 
 User = get_user_model()
@@ -18,7 +20,7 @@ class UserProfileTestCase(TestCase):
         user = create_test_user()
 
         # Profile should exist
-        self.assertTrue(hasattr(user, 'profile'))
+        self.assertTrue(hasattr(user, "profile"))
         self.assertIsInstance(user.profile, UserProfile)
 
     def test_user_profile_fields(self):
@@ -26,14 +28,14 @@ class UserProfileTestCase(TestCase):
         user = create_test_user()
 
         profile = user.profile
-        profile.phone_number = '555-1234'
-        profile.stripe_customer_id = 'cus_test123'
+        profile.phone_number = "555-1234"
+        profile.stripe_customer_id = "cus_test123"
         profile.marketing_emails = False
         profile.save()
 
         profile.refresh_from_db()
-        self.assertEqual(profile.phone_number, '555-1234')
-        self.assertEqual(profile.stripe_customer_id, 'cus_test123')
+        self.assertEqual(profile.phone_number, "555-1234")
+        self.assertEqual(profile.stripe_customer_id, "cus_test123")
         self.assertFalse(profile.marketing_emails)
 
     def test_user_profile_str(self):
@@ -41,7 +43,7 @@ class UserProfileTestCase(TestCase):
         user = create_test_user()
 
         profile_str = str(user.profile)
-        self.assertIn('test@example.com', profile_str)
+        self.assertIn("test@example.com", profile_str)
 
 
 class SavedAddressTestCase(TestCase):
@@ -55,63 +57,63 @@ class SavedAddressTestCase(TestCase):
         """Test creating a saved address."""
         address = SavedAddress.objects.create(
             user=self.user,
-            label='Home',
-            full_name='John Doe',
-            line1='123 Main St',
-            line2='Apt 4B',
-            city='Chicago',
-            region='IL',
-            postal_code='60601',
-            country='US'
+            label="Home",
+            full_name="John Doe",
+            line1="123 Main St",
+            line2="Apt 4B",
+            city="Chicago",
+            region="IL",
+            postal_code="60601",
+            country="US",
         )
 
         self.assertEqual(address.user, self.user)
-        self.assertEqual(address.label, 'Home')
-        self.assertEqual(address.city, 'Chicago')
+        self.assertEqual(address.label, "Home")
+        self.assertEqual(address.city, "Chicago")
 
     def test_saved_address_str(self):
         """Test SavedAddress string representation."""
         address = SavedAddress.objects.create(
             user=self.user,
-            label='Home',
-            full_name='John Doe',
-            line1='123 Main St',
-            city='Chicago',
-            region='IL',
-            postal_code='60601',
-            country='US'
+            label="Home",
+            full_name="John Doe",
+            line1="123 Main St",
+            city="Chicago",
+            region="IL",
+            postal_code="60601",
+            country="US",
         )
 
         address_str = str(address)
-        self.assertIn('John Doe', address_str)
-        self.assertIn('Chicago', address_str)
-        self.assertIn('Home', address_str)
+        self.assertIn("John Doe", address_str)
+        self.assertIn("Chicago", address_str)
+        self.assertIn("Home", address_str)
 
     def test_default_shipping_address(self):
         """Test setting default shipping address."""
         address1 = SavedAddress.objects.create(
             user=self.user,
-            label='Home',
-            full_name='John Doe',
-            line1='123 Main St',
-            city='Chicago',
-            region='IL',
-            postal_code='60601',
-            country='US',
-            is_default_shipping=True
+            label="Home",
+            full_name="John Doe",
+            line1="123 Main St",
+            city="Chicago",
+            region="IL",
+            postal_code="60601",
+            country="US",
+            is_default_shipping=True,
         )
 
         # Create another address as default
         address2 = SavedAddress.objects.create(
             user=self.user,
-            label='Work',
-            full_name='John Doe',
-            line1='456 Office Blvd',
-            city='Chicago',
-            region='IL',
-            postal_code='60602',
-            country='US',
-            is_default_shipping=True
+            label="Work",
+            full_name="John Doe",
+            line1="456 Office Blvd",
+            city="Chicago",
+            region="IL",
+            postal_code="60602",
+            country="US",
+            is_default_shipping=True,
         )
 
         # First address should no longer be default
@@ -123,26 +125,26 @@ class SavedAddressTestCase(TestCase):
         """Test setting default billing address."""
         address1 = SavedAddress.objects.create(
             user=self.user,
-            label='Home',
-            full_name='John Doe',
-            line1='123 Main St',
-            city='Chicago',
-            region='IL',
-            postal_code='60601',
-            country='US',
-            is_default_billing=True
+            label="Home",
+            full_name="John Doe",
+            line1="123 Main St",
+            city="Chicago",
+            region="IL",
+            postal_code="60601",
+            country="US",
+            is_default_billing=True,
         )
 
         address2 = SavedAddress.objects.create(
             user=self.user,
-            label='Work',
-            full_name='John Doe',
-            line1='456 Office Blvd',
-            city='Chicago',
-            region='IL',
-            postal_code='60602',
-            country='US',
-            is_default_billing=True
+            label="Work",
+            full_name="John Doe",
+            line1="456 Office Blvd",
+            city="Chicago",
+            region="IL",
+            postal_code="60602",
+            country="US",
+            is_default_billing=True,
         )
 
         address1.refresh_from_db()
@@ -153,24 +155,24 @@ class SavedAddressTestCase(TestCase):
         """Test user can have multiple saved addresses."""
         address1 = SavedAddress.objects.create(
             user=self.user,
-            label='Home',
-            full_name='John Doe',
-            line1='123 Main St',
-            city='Chicago',
-            region='IL',
-            postal_code='60601',
-            country='US'
+            label="Home",
+            full_name="John Doe",
+            line1="123 Main St",
+            city="Chicago",
+            region="IL",
+            postal_code="60601",
+            country="US",
         )
 
         address2 = SavedAddress.objects.create(
             user=self.user,
-            label='Work',
-            full_name='John Doe',
-            line1='456 Office Blvd',
-            city='Chicago',
-            region='IL',
-            postal_code='60602',
-            country='US'
+            label="Work",
+            full_name="John Doe",
+            line1="456 Office Blvd",
+            city="Chicago",
+            region="IL",
+            postal_code="60602",
+            country="US",
         )
 
         self.assertEqual(self.user.saved_addresses.count(), 2)
@@ -179,30 +181,30 @@ class SavedAddressTestCase(TestCase):
         """Test saved addresses are ordered by default then created date."""
         address1 = SavedAddress.objects.create(
             user=self.user,
-            label='Work',
-            full_name='John Doe',
-            line1='456 Office Blvd',
-            city='Chicago',
-            region='IL',
-            postal_code='60602',
-            country='US',
-            is_default_shipping=False
+            label="Work",
+            full_name="John Doe",
+            line1="456 Office Blvd",
+            city="Chicago",
+            region="IL",
+            postal_code="60602",
+            country="US",
+            is_default_shipping=False,
         )
 
         address2 = SavedAddress.objects.create(
             user=self.user,
-            label='Home',
-            full_name='John Doe',
-            line1='123 Main St',
-            city='Chicago',
-            region='IL',
-            postal_code='60601',
-            country='US',
-            is_default_shipping=True
+            label="Home",
+            full_name="John Doe",
+            line1="123 Main St",
+            city="Chicago",
+            region="IL",
+            postal_code="60601",
+            country="US",
+            is_default_shipping=True,
         )
 
         addresses = list(self.user.saved_addresses.all())
 
         # Default should come first
-        self.assertEqual(addresses[0].label, 'Home')
-        self.assertEqual(addresses[1].label, 'Work')
+        self.assertEqual(addresses[0].label, "Home")
+        self.assertEqual(addresses[1].label, "Work")

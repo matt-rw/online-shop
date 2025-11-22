@@ -1,12 +1,14 @@
 {% load static %}
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="light">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Email Campaigns - Blueprint Apparel</title>
+  <link rel="icon" type="image/svg+xml" href="{% static 'admin-favicon.svg' %}">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
   <style>
+    {% include "admin/partials/dark_mode_styles.html" %}
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body {
       font-family: 'Inter', sans-serif;
@@ -166,6 +168,7 @@
       gap: 0.5rem;
     }
   </style>
+  {% include "admin/partials/dark_mode_apply.html" %}
 </head>
 <body>
   <div class="container">

@@ -1,12 +1,14 @@
 {% load static %}
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="light">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Two-Factor Authentication Required</title>
+  <link rel="icon" type="image/svg+xml" href="{% static 'admin-favicon.svg' %}">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <style>
+    {% include "admin/partials/dark_mode_styles.html" %}
     * {
       margin: 0;
       padding: 0;
@@ -135,6 +137,7 @@
       border-left: 4px solid #10b981;
     }
   </style>
+  {% include "admin/partials/dark_mode_apply.html" %}
 </head>
 <body>
   <div class="container">

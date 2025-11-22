@@ -1,387 +1,2039 @@
 {% load static %}
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="light">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Email Templates - Blueprint Apparel</title>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+  <title>Templates - Blueprint Apparel Admin</title>
+  <link rel="icon" type="image/svg+xml" href="{% static 'admin-favicon.svg' %}">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <script src="https://editor.unlayer.com/embed.js"></script>
   <style>
-    * { margin: 0; padding: 0; box-sizing: border-box; }
+    {% include "admin/partials/dark_mode_styles.html" %}
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
     body {
       font-family: 'Inter', sans-serif;
-      background: linear-gradient(135deg, rgba(102, 126, 234, 0.9) 0%, rgba(118, 75, 162, 0.9) 100%);
-      background-attachment: fixed;
+      background: #f1f5f9;
       min-height: 100vh;
-      padding: 2rem;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
     }
-    .container { max-width: 1400px; margin: 0 auto; }
-    .header {
-      background: white;
-      border-radius: 12px;
-      padding: 2rem;
+
+    .top-bar {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      padding: 2rem 0;
+      box-shadow: 0 4px 20px rgba(102, 126, 234, 0.15);
       margin-bottom: 2rem;
-      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
     }
-    .header h1 { color: #1a202c; font-size: 2rem; font-weight: 700; margin-bottom: 0.5rem; }
-    .header p { color: #667eea; font-size: 1.125rem; }
-    .nav-links { display: flex; gap: 1rem; margin-top: 1rem; flex-wrap: wrap; }
-    .nav-links a {
-      color: #667eea;
-      text-decoration: none;
+
+    .container {
+      max-width: 1600px;
+      margin: 0 auto;
+      padding: 0 2rem;
+    }
+
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1rem;
+    }
+
+    .header h1 {
+      color: white;
+      font-size: 2.5rem;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+    }
+
+    .nav-links {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      padding: 1rem 2rem;
+      display: flex;
+      gap: 0.75rem;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    .nav-link {
+      background: rgba(255, 255, 255, 0.15);
+      backdrop-filter: blur(10px);
+      color: white;
       padding: 0.5rem 1rem;
-      border-radius: 6px;
-      transition: background 0.2s;
+      border-radius: 8px;
+      text-decoration: none;
+      font-size: 0.875rem;
+      font-weight: 500;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      border: 1px solid rgba(255, 255, 255, 0.1);
     }
-    .nav-links a:hover { background: #f7fafc; }
-    .two-column {
+
+    .nav-link:hover {
+      background: rgba(255, 255, 255, 0.25);
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    }
+
+    .main-content {
+      padding: 0 2rem 2rem 2rem;
+      max-width: 1600px;
+      margin: 0 auto;
+    }
+
+    .stats-grid {
       display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 2rem;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 1.5rem;
+      margin-bottom: 3rem;
+      margin-top: -4rem;
+      position: relative;
+      z-index: 10;
     }
-    @media (max-width: 1024px) {
-      .two-column { grid-template-columns: 1fr; }
+
+    .stat-card {
+      background: white;
+      padding: 1.75rem;
+      border-radius: 16px;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+      border: 1px solid rgba(226, 232, 240, 0.8);
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      position: relative;
+      overflow: hidden;
     }
+
+    .stat-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 4px;
+      background: linear-gradient(90deg, #667eea, #764ba2);
+      opacity: 0;
+      transition: opacity 0.3s;
+    }
+
+    .stat-card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 12px 28px rgba(0, 0, 0, 0.12);
+    }
+
+    .stat-card:hover::before {
+      opacity: 1;
+    }
+
+    .stat-label {
+      font-size: 0.75rem;
+      color: #64748b;
+      font-weight: 600;
+      text-transform: uppercase;
+      margin-bottom: 0.5rem;
+      letter-spacing: 0.05em;
+    }
+
+    .stat-value {
+      font-size: 2rem;
+      font-weight: 800;
+      color: #0f172a;
+      line-height: 1;
+    }
+
+    .stat-icon {
+      font-size: 1.5rem;
+      margin-bottom: 0.5rem;
+    }
+
     .section {
       background: white;
-      border-radius: 12px;
+      border-radius: 16px;
       padding: 2rem;
       margin-bottom: 2rem;
-      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+      border: 1px solid #e2e8f0;
     }
-    .section h2 {
-      color: #1a202c;
+
+    .section-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1.5rem;
+      padding-bottom: 1rem;
+      border-bottom: 2px solid #f1f5f9;
+    }
+
+    .section-title {
       font-size: 1.5rem;
       font-weight: 700;
-      margin-bottom: 1.5rem;
-      padding-bottom: 0.75rem;
-      border-bottom: 2px solid #e2e8f0;
+      color: #0f172a;
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
     }
-    .form-group { margin-bottom: 1.5rem; }
-    .form-group label {
-      display: block;
-      color: #4a5568;
+
+    .filters-row {
+      display: grid;
+      grid-template-columns: 2fr 1fr 1fr 1fr 1.5fr auto;
+      gap: 1rem;
+      margin-bottom: 1.5rem;
+      align-items: end;
+    }
+
+    .filter-group {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+
+    .filter-label {
+      font-size: 0.75rem;
       font-weight: 600;
-      margin-bottom: 0.5rem;
+      color: #64748b;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .filter-input, .filter-select {
+      width: 100%;
+      padding: 0.625rem 0.875rem;
+      border: 2px solid #e2e8f0;
+      border-radius: 8px;
+      font-size: 0.875rem;
+      transition: all 0.2s;
+    }
+
+    .filter-input:focus, .filter-select:focus {
+      outline: none;
+      border-color: #667eea;
+      box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    th {
+      text-align: left;
+      font-size: 0.75rem;
+      font-weight: 700;
+      color: #64748b;
+      text-transform: uppercase;
+      padding: 0.75rem 1rem;
+      border-bottom: 2px solid #e2e8f0;
+      letter-spacing: 0.05em;
+      background: #f8fafc;
+    }
+
+    td {
+      padding: 1rem;
+      border-bottom: 1px solid #f1f5f9;
+      color: #0f172a;
       font-size: 0.875rem;
     }
-    .form-group input, .form-group select, .form-group textarea {
+
+    tr:hover {
+      background: #f8fafc;
+    }
+
+    .badge {
+      display: inline-block;
+      padding: 0.25rem 0.75rem;
+      border-radius: 6px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      letter-spacing: 0.025em;
+    }
+
+    .badge-welcome {
+      background: #d1fae5;
+      color: #065f46;
+    }
+
+    .badge-promo {
+      background: #dbeafe;
+      color: #1e40af;
+    }
+
+    .badge-notification {
+      background: #e0e7ff;
+      color: #3730a3;
+    }
+
+    .badge-reminder {
+      background: #fef3c7;
+      color: #92400e;
+    }
+
+    .badge-trigger {
+      background: #f1f5f9;
+      color: #475569;
+    }
+
+    .badge-active {
+      background: #d1fae5;
+      color: #065f46;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .badge-active:hover {
+      background: #a7f3d0;
+    }
+
+    .badge-inactive {
+      background: #fee2e2;
+      color: #991b1b;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .badge-inactive:hover {
+      background: #fecaca;
+    }
+
+    .btn {
+      padding: 0.5rem 1rem;
+      border-radius: 8px;
+      font-size: 0.875rem;
+      font-weight: 600;
+      border: none;
+      cursor: pointer;
+      transition: all 0.2s;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      text-decoration: none;
+    }
+
+    .btn-create {
+      background: white;
+      color: #667eea;
+      padding: 0.875rem 1.75rem;
+      border-radius: 12px;
+      font-weight: 700;
+      font-size: 1rem;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+      border: none;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .btn-create:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+    }
+
+    .btn-sm {
+      padding: 0.375rem 0.75rem;
+      font-size: 0.8125rem;
+    }
+
+    .btn-secondary {
+      background: #f1f5f9;
+      color: #64748b;
+      border: 1px solid #e2e8f0;
+    }
+
+    .btn-secondary:hover {
+      background: #e2e8f0;
+      color: #475569;
+    }
+
+    .btn-danger {
+      background: #fee2e2;
+      color: #991b1b;
+      border: 1px solid #fecaca;
+    }
+
+    .btn-danger:hover {
+      background: #fecaca;
+    }
+
+    .btn-clear {
+      background: transparent;
+      color: #64748b;
+      border: 2px dashed #e2e8f0;
+      margin-top: 1.75rem;
+    }
+
+    .btn-clear:hover {
+      border-color: #cbd5e1;
+      color: #475569;
+    }
+
+    .modal {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.5);
+      backdrop-filter: blur(4px);
+      z-index: 10000;
+      align-items: center;
+      justify-content: center;
+      padding: 1rem;
+      animation: fadeIn 0.2s ease-out;
+      overflow-y: auto;
+    }
+
+    .modal.active {
+      display: flex;
+    }
+
+    .modal-content {
+      background: white;
+      border-radius: 20px;
+      max-width: 1000px;
+      width: 100%;
+      max-height: 90vh;
+      display: flex;
+      flex-direction: column;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+      animation: slideInDown 0.3s ease-out;
+      margin: 1rem auto;
+    }
+
+    .modal-header {
+      padding: 1.5rem;
+      border-bottom: 2px solid #f1f5f9;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-shrink: 0;
+    }
+
+    .modal-title {
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: #0f172a;
+    }
+
+    .modal-close {
+      background: none;
+      border: none;
+      font-size: 1.5rem;
+      color: #64748b;
+      cursor: pointer;
+      padding: 0.5rem;
+      transition: all 0.2s;
+    }
+
+    .modal-close:hover {
+      color: #0f172a;
+      transform: rotate(90deg);
+    }
+
+    .modal-body {
+      padding: 1.5rem;
+      overflow-y: auto;
+      overflow-x: hidden;
+      flex: 1 1 0;
+      min-height: 0;
+      -webkit-overflow-scrolling: touch;
+      background: white;
+    }
+
+    .modal-body::-webkit-scrollbar {
+      width: 8px;
+    }
+
+    .modal-body::-webkit-scrollbar-track {
+      background: #f1f5f9;
+      border-radius: 4px;
+    }
+
+    .modal-body::-webkit-scrollbar-thumb {
+      background: #cbd5e1;
+      border-radius: 4px;
+    }
+
+    .modal-body::-webkit-scrollbar-thumb:hover {
+      background: #94a3b8;
+    }
+
+    .form-group {
+      margin-bottom: 1rem;
+    }
+
+    .form-group:last-child {
+      margin-bottom: 0;
+    }
+
+    .form-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1rem;
+      margin-bottom: 1rem;
+    }
+
+    @media (max-width: 768px) {
+      .form-row {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    /* Channel Selector */
+    .channel-option {
+      flex: 1;
+      cursor: pointer;
+    }
+
+    .channel-option input[type="radio"] {
+      display: none;
+    }
+
+    .channel-card {
+      padding: 1.25rem;
+      border: 2px solid #e2e8f0;
+      border-radius: 12px;
+      text-align: center;
+      transition: all 0.3s;
+      background: white;
+    }
+
+    .channel-card:hover {
+      border-color: #667eea;
+      box-shadow: 0 4px 12px rgba(102, 126, 234, 0.15);
+      transform: translateY(-2px);
+    }
+
+    .channel-option input[type="radio"]:checked + .channel-card {
+      border-color: #667eea;
+      background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
+      box-shadow: 0 4px 12px rgba(102, 126, 234, 0.2);
+    }
+
+    .form-label {
+      display: block;
+      font-size: 0.875rem;
+      font-weight: 600;
+      color: #0f172a;
+      margin-bottom: 0.5rem;
+    }
+
+    .form-help {
+      font-size: 0.75rem;
+      color: #64748b;
+      margin-top: 0.25rem;
+    }
+
+    .form-input, .form-select, .form-textarea {
       width: 100%;
       padding: 0.75rem;
       border: 2px solid #e2e8f0;
-      border-radius: 6px;
-      font-family: inherit;
-      font-size: 1rem;
-      transition: border-color 0.2s;
+      border-radius: 8px;
+      font-size: 0.875rem;
+      transition: all 0.2s;
     }
-    .form-group input:focus, .form-group select:focus, .form-group textarea:focus {
+
+    .form-input:focus, .form-select:focus, .form-textarea:focus {
       outline: none;
       border-color: #667eea;
+      box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
     }
-    .form-group textarea {
-      min-height: 150px;
+
+    .form-textarea {
       resize: vertical;
+      min-height: 120px;
       font-family: 'Courier New', monospace;
     }
-    .form-group small {
-      display: block;
-      color: #718096;
-      margin-top: 0.25rem;
-      font-size: 0.875rem;
-    }
-    .char-counter {
-      text-align: right;
-      color: #718096;
-      font-size: 0.875rem;
-      margin-top: 0.5rem;
-    }
-    .char-counter.warning { color: #ed8936; }
-    .char-counter.error { color: #f56565; }
+
     .variable-buttons {
       display: flex;
       gap: 0.5rem;
       flex-wrap: wrap;
-      margin-bottom: 1rem;
+      margin-bottom: 0.75rem;
     }
+
     .var-btn {
-      padding: 0.375rem 0.75rem;
-      background: #e2e8f0;
-      border: none;
-      border-radius: 4px;
-      cursor: pointer;
-      font-size: 0.875rem;
-      color: #4a5568;
-      transition: all 0.2s;
-    }
-    .var-btn:hover {
-      background: #cbd5e0;
-    }
-    .btn {
-      padding: 0.75rem 1.5rem;
-      border-radius: 6px;
-      border: none;
-      font-weight: 600;
-      cursor: pointer;
-      transition: all 0.2s;
-      font-size: 1rem;
-    }
-    .btn-primary { background: #667eea; color: white; }
-    .btn-primary:hover { background: #5a67d8; }
-    .btn-secondary { background: #e2e8f0; color: #4a5568; }
-    .btn-secondary:hover { background: #cbd5e0; }
-    .btn-danger {
-      background: #f56565;
-      color: white;
       padding: 0.5rem 1rem;
-      font-size: 0.875rem;
-    }
-    .btn-danger:hover { background: #e53e3e; }
-    .alert {
-      padding: 1rem;
-      border-radius: 8px;
-      margin-bottom: 1rem;
-    }
-    .alert-success { background: #c6f6d5; color: #22543d; border-left: 4px solid #38a169; }
-    .alert-error { background: #fed7d7; color: #742a2a; border-left: 4px solid #e53e3e; }
-    .template-card {
-      background: #f7fafc;
+      background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
       border: 2px solid #e2e8f0;
       border-radius: 8px;
-      padding: 1.5rem;
-      margin-bottom: 1rem;
-      transition: all 0.2s;
-    }
-    .template-card:hover {
-      border-color: #667eea;
-      box-shadow: 0 2px 8px rgba(102, 126, 234, 0.1);
-    }
-    .template-card h3 {
-      color: #1a202c;
-      font-size: 1.125rem;
-      margin-bottom: 0.5rem;
-    }
-    .template-card .meta {
-      color: #718096;
-      font-size: 0.875rem;
-      margin-bottom: 1rem;
-    }
-    .template-card .message-preview {
-      background: white;
-      border: 1px solid #e2e8f0;
-      border-radius: 4px;
-      padding: 1rem;
-      margin-bottom: 1rem;
-      font-family: 'Courier New', monospace;
-      font-size: 0.875rem;
-      color: #2d3748;
-    }
-    .template-card .actions {
-      display: flex;
+      cursor: pointer;
+      font-size: 0.8125rem;
+      color: #475569;
+      font-weight: 600;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      display: inline-flex;
+      align-items: center;
       gap: 0.5rem;
+      box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
     }
-    .badge {
-      display: inline-block;
-      padding: 0.25rem 0.75rem;
-      border-radius: 9999px;
+
+    .var-btn:hover {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      border-color: #667eea;
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+    }
+
+    .var-btn i {
+      font-size: 0.875rem;
+    }
+
+    /* Character Counter for SMS */
+    .char-counter {
+      text-align: right;
+      color: #64748b;
       font-size: 0.75rem;
+      margin-top: 0.5rem;
       font-weight: 600;
-      text-transform: uppercase;
-      margin-right: 0.5rem;
     }
-    .badge-active { background: #c6f6d5; color: #22543d; }
-    .badge-inactive { background: #e2e8f0; color: #4a5568; }
-    .info-box {
-      background: #ebf8ff;
-      border-left: 4px solid #4299e1;
-      padding: 1rem;
-      border-radius: 4px;
+
+    .char-counter.warning {
+      color: #f59e0b;
+    }
+
+    .char-counter.error {
+      color: #ef4444;
+    }
+
+    /* Help Button with Radiating Animation */
+    .help-button {
+      position: relative;
+      background: rgba(102, 126, 234, 0.15);
+      color: #667eea;
+      border: 2px solid rgba(102, 126, 234, 0.3);
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1rem;
+      cursor: pointer;
+      transition: all 0.3s;
+      box-shadow: 0 2px 8px rgba(102, 126, 234, 0.15);
+    }
+
+    .help-button:hover {
+      background: rgba(102, 126, 234, 0.25);
+      transform: scale(1.05);
+      box-shadow: 0 4px 12px rgba(102, 126, 234, 0.25);
+    }
+
+    .help-button::before {
+      content: '';
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 100%;
+      height: 100%;
+      border: 2px solid rgba(102, 126, 234, 0.4);
+      border-radius: 50%;
+      animation: radiate 4s ease-out infinite;
+    }
+
+    @keyframes radiate {
+      0% {
+        transform: translate(-50%, -50%) scale(1);
+        opacity: 0.6;
+      }
+      100% {
+        transform: translate(-50%, -50%) scale(1.5);
+        opacity: 0;
+      }
+    }
+
+    /* Email Editor Guide Section */
+    .guide-section {
+      background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
+      border-left: 4px solid #667eea;
+      border-radius: 12px;
+      padding: 1.5rem;
       margin-bottom: 1.5rem;
+      box-shadow: 0 4px 20px rgba(102, 126, 234, 0.1);
+      display: none;
     }
-    .info-box h4 {
-      color: #2c5282;
-      font-size: 0.875rem;
-      font-weight: 600;
+
+    .guide-section h3 {
+      font-size: 1.25rem;
+      font-weight: 700;
+      color: #667eea;
       margin-bottom: 0.5rem;
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
     }
-    .info-box p {
-      color: #2c5282;
+
+    .guide-section p {
+      color: #667eea;
       font-size: 0.875rem;
+      margin-bottom: 1.25rem;
+      opacity: 0.9;
+    }
+
+    .guide-steps {
+      display: grid;
+      gap: 1rem;
+    }
+
+    .guide-step {
+      background: white;
+      padding: 1rem;
+      border-radius: 8px;
+      border: 2px solid #dbeafe;
+      display: flex;
+      gap: 1rem;
+      transition: all 0.3s;
+    }
+
+    .guide-step:hover {
+      border-color: #667eea;
+      box-shadow: 0 2px 8px rgba(102, 126, 234, 0.15);
+    }
+
+    .guide-step-number {
+      flex-shrink: 0;
+      width: 32px;
+      height: 32px;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      font-size: 0.875rem;
+    }
+
+    .guide-step-content {
+      flex: 1;
+    }
+
+    .guide-step-title {
+      font-weight: 600;
+      color: #0f172a;
+      margin-bottom: 0.25rem;
+      font-size: 0.9375rem;
+    }
+
+    .guide-step-desc {
+      color: #64748b;
+      font-size: 0.8125rem;
       line-height: 1.5;
     }
+
+
+    /* Block Library Reference */
+    .block-library {
+      margin-top: 1rem;
+      border: 2px solid #e2e8f0;
+      border-radius: 12px;
+      overflow: hidden;
+    }
+
+    .block-library-header {
+      padding: 1rem 1.25rem;
+      background: linear-gradient(135deg, #f8fafc 0%, #ffffff 100%);
+      border-bottom: 2px solid #e2e8f0;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      transition: all 0.2s;
+    }
+
+    .block-library-header:hover {
+      background: linear-gradient(135deg, #f1f5f9 0%, #f8fafc 100%);
+    }
+
+    .block-library-title {
+      font-size: 0.9375rem;
+      font-weight: 700;
+      color: #0f172a;
+      display: flex;
+      align-items: center;
+      gap: 0.625rem;
+    }
+
+    .block-library-body {
+      padding: 1.5rem 1.25rem;
+      max-height: 400px;
+      opacity: 1;
+      transition: all 0.3s ease;
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 0.75rem;
+    }
+
+    .block-library.collapsed .block-library-body {
+      max-height: 0;
+      opacity: 0;
+      padding: 0 1.25rem;
+      overflow: hidden;
+    }
+
+    .block-library.collapsed .block-library-header .fa-chevron-down {
+      transform: rotate(-90deg);
+    }
+
+    .block-item {
+      padding: 0.75rem;
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+      transition: all 0.2s;
+    }
+
+    .block-item:hover {
+      background: white;
+      border-color: #667eea;
+      transform: translateY(-1px);
+      box-shadow: 0 2px 8px rgba(102, 126, 234, 0.15);
+    }
+
+    .block-item-icon {
+      font-size: 1.5rem;
+      margin-bottom: 0.5rem;
+    }
+
+    .block-item-name {
+      font-weight: 600;
+      color: #0f172a;
+      font-size: 0.875rem;
+      margin-bottom: 0.25rem;
+    }
+
+    .block-item-desc {
+      font-size: 0.75rem;
+      color: #64748b;
+      line-height: 1.4;
+    }
+
+    /* Collapsible Form Sections */
+    .form-section {
+      border: 2px solid #e2e8f0;
+      border-radius: 12px;
+      margin-bottom: 1.5rem;
+      overflow: hidden;
+      transition: all 0.3s ease;
+    }
+
+    .form-section-header {
+      padding: 1rem 1.25rem;
+      background: linear-gradient(135deg, #f8fafc 0%, #ffffff 100%);
+      border-bottom: 2px solid #e2e8f0;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      transition: all 0.2s;
+    }
+
+    .form-section-header:hover {
+      background: linear-gradient(135deg, #f1f5f9 0%, #f8fafc 100%);
+    }
+
+    .form-section-title {
+      font-size: 0.9375rem;
+      font-weight: 700;
+      color: #0f172a;
+      display: flex;
+      align-items: center;
+      gap: 0.625rem;
+    }
+
+    .form-section-toggle {
+      color: #64748b;
+      transition: transform 0.3s ease;
+    }
+
+    .form-section.collapsed .form-section-toggle {
+      transform: rotate(-90deg);
+    }
+
+    .form-section-body {
+      padding: 1.5rem 1.25rem;
+      max-height: 2000px;
+      opacity: 1;
+      transition: all 0.3s ease;
+    }
+
+    .form-section.collapsed .form-section-body {
+      max-height: 0;
+      opacity: 0;
+      padding: 0 1.25rem;
+      overflow: hidden;
+    }
+
+    .modal-footer {
+      padding: 1.25rem 1.5rem;
+      border-top: 2px solid #f1f5f9;
+      display: flex;
+      gap: 1rem;
+      justify-content: flex-end;
+      flex-shrink: 0;
+      background: white;
+      border-radius: 0 0 20px 20px;
+    }
+
+    /* GrapeJS Custom Styling - Kept for backwards compatibility with old templates */
+    .gjs-cv-canvas {
+      background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%) !important;
+    }
+
+    /* Hide Unlayer Branding */
+    #email-editor [data-cy="powered-by"],
+    #email-editor .blockbuilder-powered-by,
+    #email-editor [class*="powered"],
+    #email-editor [class*="branding"],
+    #email-editor iframe[title*="Unlayer"],
+    .unlayer-branding,
+    a[href*="unlayer.com"] {
+      display: none !important;
+      visibility: hidden !important;
+      opacity: 0 !important;
+      height: 0 !important;
+      overflow: hidden !important;
+    }
+
+    .gjs-pn-panel {
+      background: white !important;
+      border-color: #e2e8f0 !important;
+    }
+
+    .gjs-pn-buttons {
+      background: white !important;
+    }
+
+    .gjs-pn-btn {
+      color: #64748b !important;
+    }
+
+    .gjs-pn-btn.gjs-pn-active {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+      color: white !important;
+      box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3) !important;
+    }
+
+    .gjs-block {
+      border-color: #e2e8f0 !important;
+      background: white !important;
+      transition: all 0.2s !important;
+    }
+
+    .gjs-block:hover {
+      border-color: #667eea !important;
+      box-shadow: 0 4px 12px rgba(102, 126, 234, 0.15) !important;
+      transform: translateY(-2px) !important;
+    }
+
+    .gjs-block-label {
+      color: #0f172a !important;
+      font-weight: 500 !important;
+    }
+
+    .gjs-field input,
+    .gjs-field select {
+      border-color: #e2e8f0 !important;
+      color: #0f172a !important;
+    }
+
+    .gjs-field input:focus,
+    .gjs-field select:focus {
+      border-color: #667eea !important;
+      box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1) !important;
+    }
+
+    .gjs-sm-sector-title {
+      background: #f8fafc !important;
+      color: #0f172a !important;
+      border-color: #e2e8f0 !important;
+    }
+
+    .gjs-clm-tags {
+      border-color: #e2e8f0 !important;
+    }
+
+    /* Merge tag styling in emails */
+    .merge-tag {
+      background: linear-gradient(135deg, #f0f4ff 0%, #e8ecff 100%);
+      color: #667eea;
+      padding: 4px 10px;
+      border-radius: 6px;
+      font-family: 'Courier New', monospace;
+      font-size: 0.9em;
+      border: 2px solid #667eea;
+      font-weight: 600;
+      display: inline-block;
+    }
+
+    .merge-tag-link {
+      color: #667eea;
+      text-decoration: underline;
+      font-weight: 600;
+    }
+
+    /* Folder Sidebar */
+    .content-wrapper {
+      display: grid;
+      grid-template-columns: 280px 1fr;
+      gap: 2rem;
+      margin-top: 2rem;
+      transition: grid-template-columns 0.3s ease;
+    }
+
+    .content-wrapper.collapsed {
+      grid-template-columns: 60px 1fr;
+    }
+
+    .folder-sidebar {
+      background: white;
+      border-radius: 16px;
+      padding: 0;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+      height: fit-content;
+      position: sticky;
+      top: 2rem;
+      transition: all 0.3s ease;
+      overflow: hidden;
+    }
+
+    .folder-sidebar.collapsed {
+      /* Sidebar inherits width from grid column */
+    }
+
+    .folder-sidebar.collapsed .folder-sidebar-header {
+      padding: 1rem 0.5rem;
+      justify-content: center;
+    }
+
+    .folder-sidebar.collapsed .folder-sidebar-title {
+      display: none;
+    }
+
+    .folder-sidebar.collapsed .folder-sidebar-header button:first-of-type {
+      display: none;
+    }
+
+    .folder-sidebar.collapsed .folder-sidebar-content {
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    .folder-sidebar.collapsed .folder-item-label,
+    .folder-sidebar.collapsed .folder-item-count {
+      display: none;
+    }
+
+    .folder-sidebar-header {
+      padding: 1.5rem;
+      border-bottom: 2px solid #f1f5f9;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.5rem;
+      background: linear-gradient(135deg, #f8fafc 0%, #ffffff 100%);
+    }
+
+    .folder-sidebar-title {
+      font-size: 1rem;
+      font-weight: 700;
+      color: #0f172a;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      flex: 1;
+    }
+
+    .folder-collapse-btn {
+      background: transparent;
+      border: none;
+      color: #64748b;
+      cursor: pointer;
+      padding: 0.5rem;
+      border-radius: 6px;
+      transition: all 0.2s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .folder-collapse-btn:hover {
+      background: #f1f5f9;
+      color: #0f172a;
+    }
+
+    .folder-sidebar-content {
+      padding: 1.5rem;
+      transition: opacity 0.3s ease;
+    }
+
+    .folder-list {
+      display: flex;
+      flex-direction: column;
+      gap: 0.375rem;
+    }
+
+    .folder-item {
+      padding: 0.75rem 1rem;
+      border-radius: 10px;
+      cursor: pointer;
+      transition: all 0.2s;
+      display: grid;
+      grid-template-columns: 1fr auto auto;
+      align-items: center;
+      gap: 0.5rem;
+      font-size: 0.875rem;
+      color: #475569;
+      border: 2px solid transparent;
+    }
+
+    .folder-item:hover {
+      background: #f8fafc;
+      color: #0f172a;
+    }
+
+    .folder-item.active {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      font-weight: 600;
+      box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+    }
+
+    .folder-item-label {
+      display: flex;
+      align-items: center;
+      gap: 0.625rem;
+    }
+
+    .folder-item-count {
+      font-size: 0.75rem;
+      padding: 0.25rem 0.5rem;
+      background: rgba(255, 255, 255, 0.2);
+      border-radius: 6px;
+      font-weight: 600;
+    }
+
+    .folder-item:not(.active) .folder-item-count {
+      background: #e2e8f0;
+      color: #64748b;
+    }
+
+    .folder-delete-btn {
+      background: transparent;
+      border: none;
+      color: #ef4444;
+      cursor: pointer;
+      padding: 0.25rem 0.375rem;
+      border-radius: 4px;
+      font-size: 0.875rem;
+      opacity: 0;
+      transition: all 0.2s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .folder-item:hover .folder-delete-btn {
+      opacity: 0.6;
+    }
+
+    .folder-delete-btn:hover {
+      opacity: 1 !important;
+      background: #fee2e2;
+    }
+
+    .templates-content {
+      min-width: 0;
+    }
+
+    .empty-state {
+      text-align: center;
+      padding: 4rem 2rem;
+      color: #64748b;
+    }
+
+    .empty-state i {
+      font-size: 4rem;
+      color: #cbd5e1;
+      margin-bottom: 1rem;
+    }
+
+    .empty-state h3 {
+      font-size: 1.25rem;
+      color: #475569;
+      margin-bottom: 0.5rem;
+    }
+
+    .empty-state p {
+      font-size: 0.875rem;
+    }
+
+    .preview-modal {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.5);
+      backdrop-filter: blur(4px);
+      z-index: 10001;
+      align-items: center;
+      justify-content: center;
+      padding: 2rem;
+    }
+
+    .preview-modal.active {
+      display: flex;
+    }
+
+    .preview-content {
+      background: white;
+      border-radius: 20px;
+      max-width: 700px;
+      width: 100%;
+      max-height: 90vh;
+      overflow-y: auto;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+    }
+
+    .email-preview {
+      padding: 2rem;
+      background: #f8fafc;
+      border-radius: 8px;
+      border: 1px solid #e2e8f0;
+    }
+
+    .email-subject {
+      font-weight: 700;
+      font-size: 1.125rem;
+      color: #0f172a;
+      margin-bottom: 1rem;
+      padding-bottom: 1rem;
+      border-bottom: 2px solid #e2e8f0;
+    }
+
+    .email-body {
+      font-size: 0.9375rem;
+      line-height: 1.6;
+      color: #334155;
+    }
+
     .checkbox-group {
       display: flex;
       align-items: center;
       gap: 0.5rem;
     }
+
     .checkbox-group input[type="checkbox"] {
-      width: auto;
+      width: 20px;
+      height: 20px;
+      cursor: pointer;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+
+    @keyframes slideInDown {
+      from {
+        opacity: 0;
+        transform: translateY(-20px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    @media (max-width: 768px) {
+      .filters-row {
+        grid-template-columns: 1fr;
+      }
+      .stats-grid {
+        grid-template-columns: 1fr 1fr;
+        margin-top: -3rem;
+      }
+      table {
+        font-size: 0.8125rem;
+      }
+    }
+
+    /* TOAST NOTIFICATION */
+    .toast {
+      position: fixed;
+      top: 2rem;
+      right: 2rem;
+      background: white;
+      padding: 1rem 1.5rem;
+      border-radius: 12px;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+      display: none;
+      align-items: center;
+      gap: 0.75rem;
+      z-index: 10002;
+      animation: slideInRight 0.3s ease-out;
+      border-left: 4px solid #10b981;
+    }
+
+    .toast.active {
+      display: flex;
+    }
+
+    @keyframes slideInRight {
+      from {
+        opacity: 0;
+        transform: translateX(100px);
+      }
+      to {
+        opacity: 1;
+        transform: translateX(0);
+      }
+    }
+
+    @media (max-width: 480px) {
+      .stats-grid {
+        grid-template-columns: 1fr;
+      }
     }
   </style>
+  {% include "admin/partials/dark_mode_apply.html" %}
 </head>
 <body>
-  <div class="container">
-    <div class="header">
-      <h1>✉️ Email Templates</h1>
-      <p>Create and manage reusable Email message templates</p>
-      <div class="nav-links">
-        <a href="/admin/">← Admin Home</a>
-        <a href="/admin/email/">Email Dashboard</a>
-        <a href="/admin/email/campaigns/">Campaigns</a>
-      </div>
-    </div>
+  <div class="nav-links">
+    <a href="{% url 'admin_home' %}" class="nav-link"><i class="fa-solid fa-arrow-left"></i> Back</a>
+  </div>
 
-    {% if messages %}
-      {% for message in messages %}
-        <div class="alert alert-{{ message.tags }}">{{ message }}</div>
-      {% endfor %}
-    {% endif %}
-
-    <div class="two-column">
-      <!-- Create/Edit Template Form -->
-      <div class="section">
-        <h2>{% if edit_template %}Edit{% else %}Create{% endif %} Template</h2>
-
-        <div class="info-box">
-          <h4>💡 Variables</h4>
-          <p>Use variables like {first_name}, {code}, {link} to personalize messages. Click the buttons below to insert them.</p>
-        </div>
-
-        <form method="POST" id="templateForm">
-          {% csrf_token %}
-          <input type="hidden" name="action" value="{% if edit_template %}update{% else %}create{% endif %}">
-          {% if edit_template %}
-            <input type="hidden" name="template_id" value="{{ edit_template.id }}">
-          {% endif %}
-
-          <div class="form-group">
-            <label for="name">Template Name *</label>
-            <input type="text" name="name" id="name" required
-                   value="{% if edit_template %}{{ edit_template.name }}{% endif %}"
-                   placeholder="e.g., Welcome Email">
-          </div>
-
-          <div class="form-group">
-            <label for="template_type">Template Type *</label>
-            <select name="template_type" id="template_type" required>
-              {% for value, label in template_types %}
-                <option value="{{ value }}" {% if edit_template and edit_template.template_type == value %}selected{% endif %}>{{ label }}</option>
-              {% endfor %}
-            </select>
-          </div>
-
-          <div class="form-group">
-            <label for="auto_trigger">Auto Trigger *</label>
-            <select name="auto_trigger" id="auto_trigger" required>
-              {% for value, label in trigger_types %}
-                <option value="{{ value }}" {% if edit_template and edit_template.auto_trigger == value %}selected{% endif %}>{{ label }}</option>
-              {% endfor %}
-            </select>
-            <small>When should this template be automatically sent?</small>
-          </div>
-
-          <div class="form-group">
-            <label for="subject">Email Subject *</label>
-            <div class="variable-buttons">
-              <button type="button" class="var-btn" onclick="insertVariable('first_name', 'subject')">+{first_name}</button>
-              <button type="button" class="var-btn" onclick="insertVariable('last_name', 'subject')">+{last_name}</button>
-              <button type="button" class="var-btn" onclick="insertVariable('code', 'subject')">+{code}</button>
-            </div>
-            <input type="text" name="subject" id="subject" required
-                   value="{% if edit_template %}{{ edit_template.subject }}{% endif %}"
-                   placeholder="Welcome to Blueprint, {first_name}!">
-          </div>
-
-          <div class="form-group">
-            <label for="html_body">HTML Email Body *</label>
-            <div class="variable-buttons">
-              <button type="button" class="var-btn" onclick="insertVariable('first_name', 'html_body')">+{first_name}</button>
-              <button type="button" class="var-btn" onclick="insertVariable('last_name', 'html_body')">+{last_name}</button>
-              <button type="button" class="var-btn" onclick="insertVariable('code', 'html_body')">+{code}</button>
-              <button type="button" class="var-btn" onclick="insertVariable('link', 'html_body')">+{link}</button>
-            </div>
-            <textarea name="html_body" id="html_body" required
-                      placeholder="<h1>Welcome to Blueprint, {first_name}!</h1><p>We're excited to have you.</p>">{% if edit_template %}{{ edit_template.html_body }}{% endif %}</textarea>
-            <small>You can use HTML tags for formatting. A plain text version will be auto-generated.</small>
-          </div>
-
-          <div class="form-group">
-            <label for="text_body">Plain Text Body (optional)</label>
-            <div class="variable-buttons">
-              <button type="button" class="var-btn" onclick="insertVariable('first_name', 'text_body')">+{first_name}</button>
-              <button type="button" class="var-btn" onclick="insertVariable('last_name', 'text_body')">+{last_name}</button>
-              <button type="button" class="var-btn" onclick="insertVariable('code', 'text_body')">+{code}</button>
-              <button type="button" class="var-btn" onclick="insertVariable('link', 'text_body')">+{link}</button>
-            </div>
-            <textarea name="text_body" id="text_body"
-                      placeholder="Welcome to Blueprint, {first_name}! We're excited to have you.">{% if edit_template %}{{ edit_template.text_body }}{% endif %}</textarea>
-            <small>Leave empty to auto-generate from HTML. This is shown to users who can't view HTML emails.</small>
-          </div>
-
-          {% if edit_template %}
-            <div class="form-group">
-              <div class="checkbox-group">
-                <input type="checkbox" name="is_active" id="is_active" {% if edit_template.is_active %}checked{% endif %}>
-                <label for="is_active" style="margin: 0;">Template is Active</label>
-              </div>
-            </div>
-          {% endif %}
-
-          <div style="display: flex; gap: 1rem;">
-            <button type="submit" class="btn btn-primary">
-              {% if edit_template %}Update Template{% else %}Create Template{% endif %}
-            </button>
-            {% if edit_template %}
-              <a href="/admin/email/templates/" class="btn btn-secondary" style="text-decoration: none; display: inline-block; line-height: 1.5;">Cancel</a>
-            {% endif %}
-          </div>
-        </form>
-      </div>
-
-      <!-- Templates List -->
-      <div class="section">
-        <h2>All Templates ({{ templates|length }})</h2>
-
-        {% if templates %}
-          {% for template in templates %}
-            <div class="template-card">
-              <h3>{{ template.name }}</h3>
-              <div class="meta">
-                <span class="badge {% if template.is_active %}badge-active{% else %}badge-inactive{% endif %}">
-                  {% if template.is_active %}Active{% else %}Inactive{% endif %}
-                </span>
-                {{ template.get_template_type_display }} • {{ template.get_auto_trigger_display }}
-                <br>
-                Used {{ template.times_used }} times • Updated {{ template.updated_at|date:"M d, Y" }}
-              </div>
-              <div class="message-preview">{{ template.html_body|truncatewords:30 }}</div>
-              <div class="actions">
-                <a href="/admin/email/templates/?edit={{ template.id }}" class="btn btn-secondary" style="text-decoration: none;">Edit</a>
-                <form method="POST" style="display: inline;">
-                  {% csrf_token %}
-                  <input type="hidden" name="action" value="delete">
-                  <input type="hidden" name="template_id" value="{{ template.id }}">
-                  <button type="submit" class="btn btn-danger" onclick="return confirm('Delete this template?')">Delete</button>
-                </form>
-              </div>
-            </div>
-          {% endfor %}
-        {% else %}
-          <p style="text-align: center; color: #a0aec0; padding: 2rem;">
-            No templates yet. Create your first template!
-          </p>
-        {% endif %}
+  <div class="top-bar">
+    <div class="container">
+      <div class="header">
+        <h1>Templates</h1>
+        <button type="button" class="btn-create" onclick="openCreateModal()">
+          <i class="fa-solid fa-plus"></i>
+          Create Template
+        </button>
       </div>
     </div>
   </div>
 
+  <div class="main-content">
+    <!-- Stats Cards -->
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-icon">
+          <i class="fa-solid fa-file-lines" style="color: #667eea;"></i>
+        </div>
+        <div class="stat-label">Total Templates</div>
+        <div class="stat-value">{{ total_count }}</div>
+      </div>
+
+      <div class="stat-card">
+        <div class="stat-icon">
+          <i class="fa-solid fa-circle-check" style="color: #10b981;"></i>
+        </div>
+        <div class="stat-label">Active Templates</div>
+        <div class="stat-value">{{ active_count }}</div>
+      </div>
+
+      <div class="stat-card">
+        <div class="stat-icon">
+          <i class="fa-solid fa-circle-xmark" style="color: #ef4444;"></i>
+        </div>
+        <div class="stat-label">Inactive Templates</div>
+        <div class="stat-value">{{ inactive_count }}</div>
+      </div>
+
+      <div class="stat-card">
+        <div class="stat-icon">
+          <i class="fa-solid fa-paper-plane" style="color: #3b82f6;"></i>
+        </div>
+        <div class="stat-label">Total Sends</div>
+        <div class="stat-value">{{ total_usage }}</div>
+      </div>
+    </div>
+
+    <!-- Folder Sidebar and Templates -->
+    <div class="content-wrapper">
+      <!-- Folder Sidebar -->
+      <div class="folder-sidebar" id="folderSidebar">
+        <div class="folder-sidebar-header">
+          <div class="folder-sidebar-title">
+            <i class="fa-solid fa-folder"></i>
+            <span>Folders</span>
+          </div>
+          <button type="button" onclick="showAddFolderPrompt()"
+                  class="folder-collapse-btn"
+                  title="Add new folder">
+            <i class="fa-solid fa-plus-circle"></i>
+          </button>
+          <button type="button" onclick="toggleFolderSidebar()"
+                  class="folder-collapse-btn"
+                  title="Collapse sidebar">
+            <i class="fa-solid fa-angles-left" id="collapseIcon"></i>
+          </button>
+        </div>
+        <div class="folder-sidebar-content">
+          <div style="display: flex; justify-content: space-between; align-items: center; padding: 0.75rem 1rem; border-bottom: 1px solid #e2e8f0;">
+            <div style="font-size: 0.75rem; font-weight: 600; color: #64748b; text-transform: uppercase; letter-spacing: 0.05em;">Folders</div>
+            <button type="button" onclick="toggleEditMode()" style="background: none; border: 1px solid #e2e8f0; color: #64748b; padding: 0.25rem 0.75rem; border-radius: 6px; font-size: 0.75rem; cursor: pointer; font-weight: 500; transition: all 0.2s;">
+              <i class="fa-solid fa-pen-to-square"></i> Edit
+            </button>
+          </div>
+          <div class="folder-list">
+          <div class="folder-item active" data-folder="all" onclick="filterByFolder('all')">
+            <div class="folder-item-label">
+              <i class="fa-solid fa-inbox"></i>
+              All Templates
+            </div>
+            <span class="folder-item-count">{{ total_count }}</span>
+          </div>
+          {% for folder_key, folder_data in folder_counts.items %}
+            <div class="folder-item" data-folder="{{ folder_key }}" onclick="filterByFolder('{{ folder_key }}')">
+              <div class="folder-item-label">
+                <i class="fa-solid fa-folder"></i>
+                {{ folder_data.label }}
+              </div>
+              <span class="folder-item-count">{{ folder_data.count }}</span>
+              {% if folder_data.is_custom %}
+                <button type="button" class="folder-delete-btn" onclick="event.stopPropagation(); deleteFolder('{{ folder_key }}')" title="Delete folder" style="display: none;">
+                  <i class="fa-solid fa-xmark"></i>
+                </button>
+              {% endif %}
+            </div>
+          {% endfor %}
+          </div>
+        </div>
+      </div>
+
+      <!-- Templates Content -->
+      <div class="templates-content">
+        <!-- Templates Table -->
+        <div class="section">
+      <div class="section-header">
+        <div class="section-title">
+          <i class="fa-solid fa-table"></i>
+          All Templates
+        </div>
+      </div>
+
+      <!-- Filters -->
+      <div class="filters-row">
+        <div class="filter-group">
+          <label class="filter-label">Search</label>
+          <input type="text" id="searchInput" class="filter-input" placeholder="Search by name or subject...">
+        </div>
+
+        <div class="filter-group">
+          <label class="filter-label">Type</label>
+          <select id="typeFilter" class="filter-select">
+            <option value="">All Types</option>
+            {% for value, label in template_types %}
+              <option value="{{ value }}">{{ label }}</option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <div class="filter-group">
+          <label class="filter-label">Trigger</label>
+          <select id="triggerFilter" class="filter-select">
+            <option value="">All Triggers</option>
+            {% for value, label in trigger_types %}
+              <option value="{{ value }}">{{ label }}</option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <div class="filter-group">
+          <label class="filter-label">Status</label>
+          <select id="statusFilter" class="filter-select">
+            <option value="">All</option>
+            <option value="active">Active</option>
+            <option value="inactive">Inactive</option>
+          </select>
+        </div>
+
+        <div class="filter-group">
+          <label class="filter-label">Sort By</label>
+          <select id="sortFilter" class="filter-select" onchange="sortTable()">
+            <option value="name-asc">Name (A-Z)</option>
+            <option value="name-desc">Name (Z-A)</option>
+            <option value="most-used">Most Used</option>
+            <option value="least-used">Least Used</option>
+            <option value="recently-created">Recently Created</option>
+            <option value="oldest-created">Oldest Created</option>
+            <option value="recently-used">Recently Used</option>
+          </select>
+        </div>
+
+        <button class="btn btn-clear btn-sm" onclick="clearFilters()">
+          <i class="fa-solid fa-filter-circle-xmark"></i>
+          Clear
+        </button>
+      </div>
+
+      <!-- Bulk Actions Bar -->
+      <div id="bulkActionsBar" style="display: none; margin-bottom: 1rem; padding: 1rem; background: #f8fafc; border-radius: 8px; border: 2px solid #e2e8f0;">
+        <div style="display: flex; align-items: center; gap: 1rem; flex-wrap: wrap;">
+          <span style="font-weight: 600; color: #475569;">
+            <span id="selectedCount">0</span> selected
+          </span>
+          <button class="btn btn-secondary btn-sm" onclick="bulkActivate()">
+            <i class="fa-solid fa-circle-check"></i>
+            Activate
+          </button>
+          <button class="btn btn-secondary btn-sm" onclick="bulkDeactivate()">
+            <i class="fa-solid fa-circle-xmark"></i>
+            Deactivate
+          </button>
+          <button class="btn btn-danger btn-sm" onclick="bulkDelete()">
+            <i class="fa-solid fa-trash"></i>
+            Delete
+          </button>
+          <button class="btn btn-secondary btn-sm" onclick="clearSelection()">
+            <i class="fa-solid fa-xmark"></i>
+            Clear Selection
+          </button>
+        </div>
+      </div>
+
+      {% if templates %}
+        <table id="templatesTable">
+          <thead>
+            <tr>
+              <th style="width: 40px;">
+                <input type="checkbox" id="selectAll" onchange="toggleSelectAll(this)">
+              </th>
+              <th>Name</th>
+              <th>Type</th>
+              <th>Trigger</th>
+              <th>Status</th>
+              <th>Usage</th>
+              <th>Last Used</th>
+              <th>Updated</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for template in templates %}
+              <tr data-name="{{ template.name|lower }}"
+                  data-subject="{{ template.subject|lower }}"
+                  data-type="{{ template.template_type }}"
+                  data-trigger="{{ template.auto_trigger }}"
+                  data-status="{% if template.is_active %}active{% else %}inactive{% endif %}"
+                  data-folder="{{ template.folder }}">
+                <td>
+                  <input type="checkbox" class="template-checkbox" value="{{ template.id }}">
+                </td>
+                <td>
+                  <div style="font-weight: 600;">{{ template.name }}</div>
+                  <div style="font-size: 0.75rem; color: #64748b; margin-top: 0.25rem;">
+                    Subject: {{ template.subject|truncatewords:6 }}
+                  </div>
+                </td>
+                <td>
+                  <span class="badge badge-{{ template.template_type }}">
+                    {{ template.get_template_type_display }}
+                  </span>
+                </td>
+                <td>
+                  <span class="badge badge-trigger">
+                    {{ template.get_auto_trigger_display }}
+                  </span>
+                </td>
+                <td>
+                  <span class="badge {% if template.is_active %}badge-active{% else %}badge-inactive{% endif %}"
+                        onclick="toggleStatus({{ template.id }}, {% if template.is_active %}false{% else %}true{% endif %})">
+                    {% if template.is_active %}
+                      <i class="fa-solid fa-circle-check"></i> Active
+                    {% else %}
+                      <i class="fa-solid fa-circle-xmark"></i> Inactive
+                    {% endif %}
+                  </span>
+                </td>
+                <td style="font-weight: 600;">{{ template.times_used }}</td>
+                <td style="color: #64748b;">
+                  {% if template.last_used %}
+                    {{ template.last_used|date:"M d, Y" }}
+                  {% else %}
+                    <span style="opacity: 0.5;">Never</span>
+                  {% endif %}
+                </td>
+                <td style="color: #64748b;">{{ template.updated_at|date:"M d, Y" }}</td>
+                <td>
+                  <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+                    <button class="btn btn-secondary btn-sm" onclick="openPreview('{{ template.subject|escapejs }}', '{{ template.html_body|escapejs }}')" title="Preview">
+                      <i class="fa-solid fa-eye"></i>
+                    </button>
+                    <button class="btn btn-secondary btn-sm" onclick="copyToClipboard('{{ template.subject|escapejs }}')" title="Copy subject">
+                      <i class="fa-solid fa-clipboard"></i>
+                    </button>
+                    <button class="btn btn-secondary btn-sm" onclick="openEditModal({{ template.id }})" title="Edit">
+                      <i class="fa-solid fa-edit"></i>
+                    </button>
+                    <button class="btn btn-secondary btn-sm" onclick="duplicateTemplate({{ template.id }})" title="Duplicate">
+                      <i class="fa-solid fa-copy"></i>
+                    </button>
+                    <form method="POST" style="display: inline;" onsubmit="return confirm('Delete this template?')">
+                      {% csrf_token %}
+                      <input type="hidden" name="action" value="delete">
+                      <input type="hidden" name="template_id" value="{{ template.id }}">
+                      <button type="submit" class="btn btn-danger btn-sm" title="Delete">
+                        <i class="fa-solid fa-trash"></i>
+                      </button>
+                    </form>
+                  </div>
+                </td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      {% else %}
+        <div class="empty-state">
+          <i class="fa-solid fa-envelope"></i>
+          <h3>No Templates Yet</h3>
+          <p>Create your first email template to get started.</p>
+        </div>
+      {% endif %}
+    </div>
+      </div>
+      <!-- End templates-content -->
+    </div>
+    <!-- End content-wrapper -->
+  </div>
+  <!-- End main-content -->
+
+  <!-- Create/Edit Modal -->
+  <div class="modal" id="templateModal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2 class="modal-title" id="modalTitle">Create Template</h2>
+        <div style="display: flex; align-items: center; gap: 0.75rem;">
+          <button class="help-button" onclick="toggleGuide()" title="Show Quick Start Guide">
+            <i class="fa-solid fa-question"></i>
+          </button>
+          <button class="modal-close" onclick="closeModal()">&times;</button>
+        </div>
+      </div>
+      <form method="POST" id="templateForm">
+        {% csrf_token %}
+        <input type="hidden" name="action" id="formAction" value="create">
+        <input type="hidden" name="template_id" id="templateId">
+
+        <div class="modal-body">
+          <!-- Channel Selector -->
+          <div class="form-group" style="margin-bottom: 1.5rem;">
+            <label class="form-label">Template Channel *</label>
+            <div style="display: flex; gap: 1rem;">
+              <label class="channel-option" onclick="selectChannel('email')">
+                <input type="radio" name="channel" value="email" id="channelEmail" checked>
+                <div class="channel-card">
+                  <i class="fa-solid fa-envelope" style="font-size: 1.5rem; color: #667eea; margin-bottom: 0.5rem;"></i>
+                  <div style="font-weight: 600; color: #0f172a;">Email Template</div>
+                  <div style="font-size: 0.75rem; color: #64748b; margin-top: 0.25rem;">Rich HTML emails with design editor</div>
+                </div>
+              </label>
+              <label class="channel-option" onclick="selectChannel('sms')">
+                <input type="radio" name="channel" value="sms" id="channelSMS">
+                <div class="channel-card">
+                  <i class="fa-solid fa-message" style="font-size: 1.5rem; color: #10b981; margin-bottom: 0.5rem;"></i>
+                  <div style="font-weight: 600; color: #0f172a;">SMS Template</div>
+                  <div style="font-size: 0.75rem; color: #64748b; margin-top: 0.25rem;">Text messages up to 1600 characters</div>
+                </div>
+              </label>
+            </div>
+          </div>
+
+          <!-- Row 1: Name and Template Type -->
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label" for="name">Template Name *</label>
+              <input type="text" class="form-input" name="name" id="name" required placeholder="e.g., Welcome Email">
+            </div>
+
+            <div class="form-group">
+              <label class="form-label" for="template_type">Template Type *</label>
+              <select class="form-select" name="template_type" id="template_type" required>
+                {% for value, label in template_types %}
+                  <option value="{{ value }}">{{ label }}</option>
+                {% endfor %}
+              </select>
+            </div>
+          </div>
+
+          <!-- Row 2: Folder and Auto Trigger -->
+          <div class="form-row">
+            <div class="form-group" id="emailFolderGroup">
+              <label class="form-label" for="folder">Folder *</label>
+              <select class="form-select" name="folder" id="folder">
+                {% for value, label in folder_choices %}
+                  <option value="{{ value }}">📁 {{ label }}</option>
+                {% endfor %}
+              </select>
+              <div class="form-help">Organize templates into folders</div>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label" for="auto_trigger">Auto Trigger *</label>
+              <select class="form-select" name="auto_trigger" id="auto_trigger" required>
+                {% for value, label in trigger_types %}
+                  <option value="{{ value }}">{{ label }}</option>
+                {% endfor %}
+              </select>
+              <div class="form-help">When to send automatically</div>
+            </div>
+          </div>
+
+          <!-- EMAIL-SPECIFIC FIELDS -->
+          <div id="emailFields">
+          <!-- Subject Line -->
+          <div class="form-group">
+            <label class="form-label" for="subject">Email Subject *</label>
+            <div class="variable-buttons">
+              <button type="button" class="var-btn" onclick="insertVariable('first_name', 'subject')">
+                <i class="fa-solid fa-plus"></i> {first_name}
+              </button>
+              <button type="button" class="var-btn" onclick="insertVariable('last_name', 'subject')">
+                <i class="fa-solid fa-plus"></i> {last_name}
+              </button>
+              <button type="button" class="var-btn" onclick="insertVariable('code', 'subject')">
+                <i class="fa-solid fa-plus"></i> {code}
+              </button>
+            </div>
+            <input type="text" class="form-input" name="subject" id="subject" required
+                   placeholder="Welcome to Blueprint, {first_name}!">
+          </div>
+
+          <!-- Email Body Editor -->
+          <div class="form-group">
+            <label class="form-label">Email Design *</label>
+
+            <!-- Quick Start Guide (Hidden by default) -->
+            <div class="guide-section" id="guideSection">
+              <h3>
+                <span style="font-size: 2rem;">💡</span>
+                How to Use the Email Editor
+              </h3>
+              <p>Drag blocks from the left, click to edit, style with the right panel, and use merge tags for personalization</p>
+
+              <div class="guide-steps">
+                <div class="guide-step">
+                  <div class="guide-step-number">1</div>
+                  <div class="guide-step-content">
+                    <div class="guide-step-title">Drag blocks from left panel</div>
+                    <div class="guide-step-desc">Text, Image, Button, Columns, Social icons, and more</div>
+                  </div>
+                </div>
+
+                <div class="guide-step">
+                  <div class="guide-step-number">2</div>
+                  <div class="guide-step-content">
+                    <div class="guide-step-title">Click any block to edit</div>
+                    <div class="guide-step-desc">The right panel shows styling options: colors, fonts, spacing, borders</div>
+                  </div>
+                </div>
+
+                <div class="guide-step">
+                  <div class="guide-step-number">3</div>
+                  <div class="guide-step-content">
+                    <div class="guide-step-title">Add personalization with merge tags</div>
+                    <div class="guide-step-desc">
+                      <strong>Two ways to add merge tags:</strong><br>
+                      • Click a merge tag button below (copies to clipboard) → Click in text block → Paste (Ctrl/Cmd+V)<br>
+                      • Or double-click any text block → Click the merge tag icon (⚡) in the text editor toolbar
+                    </div>
+                  </div>
+                </div>
+
+                <div class="guide-step">
+                  <div class="guide-step-number">4</div>
+                  <div class="guide-step-content">
+                    <div class="guide-step-title">Common layouts to try</div>
+                    <div class="guide-step-desc">
+                      <strong>Welcome:</strong> Header → Hero → Text → Button<br>
+                      <strong>Sale:</strong> Product Grid (3 col) → Discount Code → CTA<br>
+                      <strong>Order:</strong> Text → Product Images → Tracking Button
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div style="margin-bottom: 0.75rem;">
+              <div style="font-size: 0.8125rem; font-weight: 600; color: #0f172a; margin-bottom: 0.5rem; display: flex; align-items: center; gap: 0.5rem;">
+                <i class="fa-solid fa-copy" style="color: #667eea;"></i>
+                Click to Copy Merge Tags
+              </div>
+              <div style="font-size: 0.75rem; color: #64748b; margin-bottom: 0.5rem;">
+                Click any button below to copy, then paste into your text block
+              </div>
+              <div class="variable-buttons">
+                <button type="button" class="var-btn" onclick="insertMergeTag('first_name')" title="Click to copy {first_name} - Customer's first name">
+                  <i class="fa-solid fa-copy"></i> {first_name}
+                </button>
+                <button type="button" class="var-btn" onclick="insertMergeTag('last_name')" title="Click to copy {last_name} - Customer's last name">
+                  <i class="fa-solid fa-copy"></i> {last_name}
+                </button>
+                <button type="button" class="var-btn" onclick="insertMergeTag('email')" title="Click to copy {email} - Customer's email address">
+                  <i class="fa-solid fa-copy"></i> {email}
+                </button>
+                <button type="button" class="var-btn" onclick="insertMergeTag('code')" title="Click to copy {code} - Discount or promo code">
+                  <i class="fa-solid fa-copy"></i> {code}
+                </button>
+                <button type="button" class="var-btn" onclick="insertMergeTag('order_number')" title="Click to copy {order_number} - Order number">
+                  <i class="fa-solid fa-copy"></i> {order_number}
+                </button>
+                <button type="button" class="var-btn" onclick="insertMergeTag('order_total')" title="Click to copy {order_total} - Order total amount">
+                  <i class="fa-solid fa-copy"></i> {order_total}
+                </button>
+                <button type="button" class="var-btn" onclick="insertMergeTag('tracking_number')" title="Click to copy {tracking_number} - Shipping tracking">
+                  <i class="fa-solid fa-copy"></i> {tracking_number}
+                </button>
+                <button type="button" class="var-btn" onclick="insertMergeTag('link')" title="Click to copy {link} - Custom link URL">
+                  <i class="fa-solid fa-copy"></i> {link}
+                </button>
+              </div>
+            </div>
+            <!-- Loading indicator -->
+            <div id="editorLoading" style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); text-align: center; z-index: 100;">
+              <i class="fa-solid fa-spinner fa-spin" style="font-size: 2rem; color: #667eea; margin-bottom: 1rem;"></i>
+              <div style="color: #64748b; font-weight: 600;">Loading Email Editor...</div>
+            </div>
+            <div id="email-editor" style="height: 600px; border: 2px solid #e2e8f0; border-radius: 12px; overflow: hidden; position: relative;"></div>
+            <textarea id="html_body" name="html_body" required style="display: none;"></textarea>
+            <input type="hidden" name="design_json" id="design_json">
+
+            <!-- Detailed Styling Tips -->
+            <div class="block-library collapsed" id="stylingTips" style="margin-top: 1rem;">
+              <div class="block-library-header" onclick="document.getElementById('stylingTips').classList.toggle('collapsed')">
+                <div class="block-library-title">
+                  <i class="fa-solid fa-palette"></i>
+                  Styling Tips
+                </div>
+                <i class="fa-solid fa-chevron-down" style="color: #64748b; transition: transform 0.3s;"></i>
+              </div>
+              <div class="block-library-body" style="display: grid; grid-template-columns: 1fr;">
+                <div style="font-size: 0.875rem; color: #475569; line-height: 1.8;">
+                  <div style="margin-bottom: 0.75rem;">
+                    <strong style="color: #0f172a;">🎨 Brand Colors:</strong><br>
+                    Use #667eea (Purple) or #764ba2 for buttons and accents
+                  </div>
+                  <div style="margin-bottom: 0.75rem;">
+                    <strong style="color: #0f172a;">🛍️ Product Showcase:</strong><br>
+                    Drag "Columns" block → Set 2 or 3 columns → Add Image + Text + Button to each
+                  </div>
+                  <div style="margin-bottom: 0.75rem;">
+                    <strong style="color: #0f172a;">⚡ Urgency (without timer):</strong><br>
+                    Use bold text like "24 HOURS LEFT!" or "ENDS TONIGHT" with red/orange background
+                  </div>
+                  <div style="margin-bottom: 0.75rem;">
+                    <strong style="color: #0f172a;">♻️ Consistency:</strong><br>
+                    Create header/footer once → Click ⭐ icon to save as reusable block → Reuse in all emails
+                  </div>
+                  <div>
+                    <strong style="color: #0f172a;">📱 Mobile-First:</strong><br>
+                    Editor auto-optimizes for mobile, but keep text 16px+ and buttons 44px+ height
+                  </div>
+                </div>
+              </div>
+            </div>
+
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="text_body">Plain Text Body (optional)</label>
+            <div class="variable-buttons">
+              <button type="button" class="var-btn" onclick="insertVariable('first_name', 'text_body')">
+                <i class="fa-solid fa-plus"></i> {first_name}
+              </button>
+              <button type="button" class="var-btn" onclick="insertVariable('last_name', 'text_body')">
+                <i class="fa-solid fa-plus"></i> {last_name}
+              </button>
+              <button type="button" class="var-btn" onclick="insertVariable('code', 'text_body')">
+                <i class="fa-solid fa-plus"></i> {code}
+              </button>
+              <button type="button" class="var-btn" onclick="insertVariable('link', 'text_body')">
+                <i class="fa-solid fa-plus"></i> {link}
+              </button>
+            </div>
+            <textarea class="form-textarea" name="text_body" id="text_body"
+                      placeholder="Welcome to Blueprint, {first_name}! We're excited to have you."></textarea>
+            <div class="form-help">Leave empty to auto-generate from HTML. Shown to users who can't view HTML emails.</div>
+          </div>
+          </div>
+          <!-- END EMAIL-SPECIFIC FIELDS -->
+
+          <!-- SMS-SPECIFIC FIELDS -->
+          <div id="smsFields" style="display: none;">
+            <div class="form-group">
+              <label class="form-label" for="sms_message_body">Message Content *</label>
+              <div style="font-size: 0.75rem; color: #64748b; margin-bottom: 0.5rem;">
+                Click any button below to copy, then paste into your message
+              </div>
+              <div class="variable-buttons">
+                <button type="button" class="var-btn" onclick="insertVariable('first_name', 'sms_message_body')" title="Insert {first_name}">
+                  <i class="fa-solid fa-plus"></i> {first_name}
+                </button>
+                <button type="button" class="var-btn" onclick="insertVariable('last_name', 'sms_message_body')" title="Insert {last_name}">
+                  <i class="fa-solid fa-plus"></i> {last_name}
+                </button>
+                <button type="button" class="var-btn" onclick="insertVariable('code', 'sms_message_body')" title="Insert {code}">
+                  <i class="fa-solid fa-plus"></i> {code}
+                </button>
+                <button type="button" class="var-btn" onclick="insertVariable('link', 'sms_message_body')" title="Insert {link}">
+                  <i class="fa-solid fa-plus"></i> {link}
+                </button>
+              </div>
+              <textarea class="form-textarea" name="message_body" id="sms_message_body"
+                        placeholder="Welcome to Blueprint, {first_name}! Reply STOP to unsubscribe."
+                        oninput="updateSMSCounter()"
+                        style="font-family: 'Courier New', monospace;"></textarea>
+              <div class="char-counter" id="smsCharCounter">0 / 160 characters</div>
+              <div class="form-help">SMS messages over 160 characters will be sent as multiple messages (max 1600).</div>
+            </div>
+          </div>
+          <!-- END SMS-SPECIFIC FIELDS -->
+
+          <!-- Row: Tags and Active Status -->
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label" for="tags">Tags (optional)</label>
+              <input type="text" class="form-input" name="tags" id="tags" placeholder="e.g., welcome, onboarding, newsletter">
+              <div class="form-help">Comma-separated tags</div>
+            </div>
+
+            <div class="form-group" id="activeGroup" style="display: none;">
+              <label class="form-label" style="opacity: 0; pointer-events: none;">Spacer</label>
+              <div class="checkbox-group" style="padding-top: 0.5rem;">
+                <input type="checkbox" name="is_active" id="is_active">
+                <label for="is_active" style="margin: 0;">Template is Active</label>
+              </div>
+            </div>
+          </div>
+
+          <!-- Notes (Full Width) -->
+          <div class="form-group">
+            <label class="form-label" for="notes">Internal Notes (optional)</label>
+            <textarea class="form-textarea" name="notes" id="notes" style="min-height: 80px;"
+                      placeholder="Internal notes about this template for team collaboration..."></textarea>
+            <div class="form-help">These notes are only visible to admins.</div>
+          </div>
+        </div>
+
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" onclick="closeModal()">Cancel</button>
+          <button type="submit" class="btn btn-create">
+            <i class="fa-solid fa-check"></i>
+            <span id="submitText">Create Template</span>
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Preview Modal -->
+  <div class="preview-modal" id="previewModal">
+    <div class="preview-content">
+      <div class="modal-header">
+        <h2 class="modal-title">Email Preview</h2>
+        <button class="modal-close" onclick="closePreview()">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="email-preview">
+          <div class="email-subject" id="previewSubject"></div>
+          <div class="email-body" id="previewBody"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast Notification -->
+  <div class="toast" id="toast">
+    <i class="fa-solid fa-check-circle" style="color: #10b981; font-size: 1.5rem;"></i>
+    <span id="toastMessage">Action completed!</span>
+  </div>
+
+  <!-- Add Folder Modal -->
+  <div class="modal" id="addFolderModal" style="z-index: 10002;">
+    <div class="modal-content" style="max-width: 450px; max-height: auto; height: auto;">
+      <div class="modal-header">
+        <h2 class="modal-title">
+          <i class="fa-solid fa-folder-plus"></i>
+          Add New Folder
+        </h2>
+        <button class="modal-close" onclick="closeAddFolderModal()">&times;</button>
+      </div>
+      <form onsubmit="submitAddFolder(event)">
+        <div class="modal-body" style="padding: 2rem 1.5rem;">
+          <div class="form-group">
+            <label class="form-label" for="newFolderName">Folder Name</label>
+            <input type="text"
+                   class="form-input"
+                   id="newFolderName"
+                   placeholder="e.g., Holiday Campaigns, Product Launches..."
+                   required
+                   autofocus
+                   style="font-size: 1rem;">
+            <div class="form-help" style="margin-top: 0.5rem;">
+              Choose a descriptive name to organize your email templates.
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" onclick="closeAddFolderModal()">Cancel</button>
+          <button type="submit" class="btn btn-create">
+            <i class="fa-solid fa-plus"></i>
+            Create Folder
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
   <script>
-    // Insert variable at cursor position
+    // Debug: Check if script is loading
+    console.log('Script loading started');
+
+    let templates = [];
+    try {
+      templates = {{ templates_json|safe }};
+      console.log('Templates loaded:', templates);
+    } catch (e) {
+      console.error('Error loading templates:', e);
+      templates = [];
+    }
+
+    // Toast notification
+    function showToast(message) {
+      const toast = document.getElementById('toast');
+      document.getElementById('toastMessage').textContent = message;
+      toast.classList.add('active');
+      setTimeout(() => {
+        toast.classList.remove('active');
+      }, 3000);
+    }
+
+    // Copy to clipboard
+    function copyToClipboard(text) {
+      navigator.clipboard.writeText(text).then(() => {
+        showToast('Copied to clipboard!');
+      }).catch(err => {
+        showToast('Failed to copy');
+      });
+    }
+
+    // Insert variable
     function insertVariable(varName, fieldId) {
       const field = document.getElementById(fieldId);
       const variable = `{${varName}}`;
 
       if (field.tagName === 'INPUT') {
-        // For input fields (subject)
         const cursorPos = field.selectionStart;
         const textBefore = field.value.substring(0, cursorPos);
         const textAfter = field.value.substring(cursorPos);
@@ -389,7 +2041,6 @@
         field.focus();
         field.selectionStart = field.selectionEnd = cursorPos + variable.length;
       } else {
-        // For textarea fields (html_body, text_body)
         const cursorPos = field.selectionStart;
         const textBefore = field.value.substring(0, cursorPos);
         const textAfter = field.value.substring(cursorPos);
@@ -398,6 +2049,862 @@
         field.selectionStart = field.selectionEnd = cursorPos + variable.length;
       }
     }
+
+    // Modal functions
+    function openCreateModal() {
+      console.log('openCreateModal called');
+      const modal = document.getElementById('templateModal');
+      if (!modal) {
+        console.error('Modal element not found');
+        return;
+      }
+
+      document.getElementById('modalTitle').textContent = 'Create Template';
+      document.getElementById('formAction').value = 'create';
+      document.getElementById('submitText').textContent = 'Create Template';
+      document.getElementById('templateForm').reset();
+      document.getElementById('activeGroup').style.display = 'none';
+
+      modal.classList.add('active');
+      console.log('Modal opened, active class added');
+
+      // Editor is already initialized on page load, no need to wait
+      // Just ensure it's ready
+      if (editorLoaded) {
+        const submitBtn = document.querySelector('#templateForm button[type="submit"]');
+        if (submitBtn) {
+          submitBtn.disabled = false;
+          submitBtn.title = '';
+        }
+      }
+    }
+
+    // Make function globally accessible
+    window.openCreateModal = openCreateModal;
+
+    function openEditModal(templateId) {
+      window.location.href = `/admin/email/templates/?edit=${templateId}`;
+    }
+
+    function closeModal() {
+      const modal = document.getElementById('templateModal');
+      if (modal) {
+        modal.classList.remove('active');
+      }
+    }
+
+    // Toggle guide visibility
+    function toggleGuide() {
+      const guide = document.getElementById('guideSection');
+      if (guide.style.display === 'none' || guide.style.display === '') {
+        guide.style.display = 'block';
+      } else {
+        guide.style.display = 'none';
+      }
+    }
+
+    // Make functions globally accessible
+    window.closeModal = closeModal;
+    window.toggleGuide = toggleGuide;
+
+    // Channel selection
+    function selectChannel(channel) {
+      const emailFields = document.getElementById('emailFields');
+      const smsFields = document.getElementById('smsFields');
+      const emailFolderGroup = document.getElementById('emailFolderGroup');
+      const subjectField = document.getElementById('subject');
+      const folderField = document.getElementById('folder');
+      const smsMessageBody = document.getElementById('sms_message_body');
+      const submitBtn = document.querySelector('#templateForm button[type="submit"]');
+
+      if (channel === 'email') {
+        // Show email fields, hide SMS fields
+        emailFields.style.display = 'block';
+        smsFields.style.display = 'none';
+        emailFolderGroup.style.display = 'block';
+
+        // Make email fields required
+        subjectField.required = true;
+        folderField.required = true;
+
+        // Make SMS fields not required
+        smsMessageBody.required = false;
+
+        // Disable submit button until editor is ready
+        if (submitBtn && !editorLoaded) {
+          submitBtn.disabled = true;
+          submitBtn.title = 'Please wait for the email editor to load...';
+        }
+      } else if (channel === 'sms') {
+        // Show SMS fields, hide email fields
+        emailFields.style.display = 'none';
+        smsFields.style.display = 'block';
+        emailFolderGroup.style.display = 'none';
+
+        // Make SMS fields required
+        smsMessageBody.required = true;
+
+        // Make email fields not required
+        subjectField.required = false;
+        folderField.required = false;
+
+        // Enable submit button for SMS (no editor needed)
+        if (submitBtn) {
+          submitBtn.disabled = false;
+          submitBtn.title = '';
+        }
+
+        // Update character counter
+        updateSMSCounter();
+      }
+    }
+
+    function updateSMSCounter() {
+      const textarea = document.getElementById('sms_message_body');
+      const counter = document.getElementById('smsCharCounter');
+
+      if (!textarea || !counter) return;
+
+      const length = textarea.value.length;
+      counter.textContent = `${length} / 160 characters`;
+
+      if (length > 1600) {
+        counter.classList.add('error');
+        counter.classList.remove('warning');
+      } else if (length > 320) {
+        counter.classList.add('warning');
+        counter.classList.remove('error');
+      } else {
+        counter.classList.remove('warning', 'error');
+      }
+    }
+
+    window.selectChannel = selectChannel;
+    window.updateSMSCounter = updateSMSCounter;
+
+    // Preview
+    function openPreview(subject, htmlBody) {
+      document.getElementById('previewSubject').textContent = subject;
+      document.getElementById('previewBody').innerHTML = htmlBody;
+      document.getElementById('previewModal').classList.add('active');
+    }
+
+    function closePreview() {
+      document.getElementById('previewModal').classList.remove('active');
+    }
+
+    // Duplicate template
+    function duplicateTemplate(templateId) {
+      if (confirm('Create a duplicate of this template?')) {
+        const form = document.createElement('form');
+        form.method = 'POST';
+        form.innerHTML = `
+          {% csrf_token %}
+          <input type="hidden" name="action" value="duplicate">
+          <input type="hidden" name="template_id" value="${templateId}">
+        `;
+        document.body.appendChild(form);
+        form.submit();
+      }
+    }
+
+    // Toggle status
+    function toggleStatus(templateId, newStatus) {
+      if (confirm(`${newStatus ? 'Activate' : 'Deactivate'} this template?`)) {
+        const form = document.createElement('form');
+        form.method = 'POST';
+        form.innerHTML = `
+          {% csrf_token %}
+          <input type="hidden" name="action" value="update">
+          <input type="hidden" name="template_id" value="${templateId}">
+          <input type="hidden" name="is_active" value="${newStatus ? 'on' : ''}">
+        `;
+        document.body.appendChild(form);
+        form.submit();
+      }
+    }
+
+    // Folder filtering
+    let currentFolder = 'all';
+
+    function filterByFolder(folderName) {
+      currentFolder = folderName;
+
+      // Update active folder in sidebar
+      document.querySelectorAll('.folder-item').forEach(item => {
+        item.classList.remove('active');
+      });
+      document.querySelector(`.folder-item[data-folder="${folderName}"]`).classList.add('active');
+
+      // Update section title
+      const titleText = folderName === 'all' ? 'All Templates' : document.querySelector(`.folder-item[data-folder="${folderName}"] .folder-item-label`).textContent.trim();
+      document.querySelector('.section-title').innerHTML = `<i class="fa-solid fa-table"></i> ${titleText}`;
+
+      // Apply all filters
+      filterTable();
+    }
+
+    window.filterByFolder = filterByFolder;
+
+    // Filtering
+    function filterTable() {
+      const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+      const typeFilter = document.getElementById('typeFilter').value;
+      const triggerFilter = document.getElementById('triggerFilter').value;
+      const statusFilter = document.getElementById('statusFilter').value;
+
+      const rows = document.querySelectorAll('#templatesTable tbody tr');
+
+      rows.forEach(row => {
+        const name = row.dataset.name;
+        const subject = row.dataset.subject;
+        const type = row.dataset.type;
+        const trigger = row.dataset.trigger;
+        const status = row.dataset.status;
+        const folder = row.dataset.folder;
+
+        const matchesSearch = name.includes(searchTerm) || subject.includes(searchTerm);
+        const matchesType = !typeFilter || type === typeFilter;
+        const matchesTrigger = !triggerFilter || trigger === triggerFilter;
+        const matchesStatus = !statusFilter || status === statusFilter;
+        const matchesFolder = currentFolder === 'all' || folder === currentFolder;
+
+        if (matchesSearch && matchesType && matchesTrigger && matchesStatus && matchesFolder) {
+          row.style.display = '';
+        } else {
+          row.style.display = 'none';
+        }
+      });
+    }
+
+    function clearFilters() {
+      document.getElementById('searchInput').value = '';
+      document.getElementById('typeFilter').value = '';
+      document.getElementById('triggerFilter').value = '';
+      document.getElementById('statusFilter').value = '';
+      filterTable();
+    }
+
+    // Attach filter listeners
+    document.getElementById('searchInput').addEventListener('input', filterTable);
+    document.getElementById('typeFilter').addEventListener('change', filterTable);
+    document.getElementById('triggerFilter').addEventListener('change', filterTable);
+    document.getElementById('statusFilter').addEventListener('change', filterTable);
+
+    // Bulk selection functions
+    function toggleSelectAll(checkbox) {
+      const checkboxes = document.querySelectorAll('.template-checkbox');
+      checkboxes.forEach(cb => cb.checked = checkbox.checked);
+      updateBulkActionsBar();
+    }
+
+    function updateBulkActionsBar() {
+      const checkboxes = document.querySelectorAll('.template-checkbox:checked');
+      const count = checkboxes.length;
+      const bulkBar = document.getElementById('bulkActionsBar');
+      const countSpan = document.getElementById('selectedCount');
+
+      if (count > 0) {
+        bulkBar.style.display = 'block';
+        countSpan.textContent = count;
+      } else {
+        bulkBar.style.display = 'none';
+        document.getElementById('selectAll').checked = false;
+      }
+    }
+
+    function getSelectedIds() {
+      const checkboxes = document.querySelectorAll('.template-checkbox:checked');
+      return Array.from(checkboxes).map(cb => cb.value);
+    }
+
+    function bulkActivate() {
+      const ids = getSelectedIds();
+      if (ids.length === 0) return;
+
+      if (confirm(`Activate ${ids.length} template(s)?`)) {
+        const form = document.createElement('form');
+        form.method = 'POST';
+        form.innerHTML = `
+          {% csrf_token %}
+          <input type="hidden" name="action" value="bulk_activate">
+          ${ids.map(id => `<input type="hidden" name="template_ids" value="${id}">`).join('')}
+        `;
+        document.body.appendChild(form);
+        form.submit();
+      }
+    }
+
+    function bulkDeactivate() {
+      const ids = getSelectedIds();
+      if (ids.length === 0) return;
+
+      if (confirm(`Deactivate ${ids.length} template(s)?`)) {
+        const form = document.createElement('form');
+        form.method = 'POST';
+        form.innerHTML = `
+          {% csrf_token %}
+          <input type="hidden" name="action" value="bulk_deactivate">
+          ${ids.map(id => `<input type="hidden" name="template_ids" value="${id}">`).join('')}
+        `;
+        document.body.appendChild(form);
+        form.submit();
+      }
+    }
+
+    function bulkDelete() {
+      const ids = getSelectedIds();
+      if (ids.length === 0) return;
+
+      if (confirm(`Delete ${ids.length} template(s)? This cannot be undone!`)) {
+        const form = document.createElement('form');
+        form.method = 'POST';
+        form.innerHTML = `
+          {% csrf_token %}
+          <input type="hidden" name="action" value="bulk_delete">
+          ${ids.map(id => `<input type="hidden" name="template_ids" value="${id}">`).join('')}
+        `;
+        document.body.appendChild(form);
+        form.submit();
+      }
+    }
+
+    function clearSelection() {
+      document.querySelectorAll('.template-checkbox').forEach(cb => cb.checked = false);
+      document.getElementById('selectAll').checked = false;
+      updateBulkActionsBar();
+    }
+
+    // Sort table
+    function sortTable() {
+      const sortValue = document.getElementById('sortFilter').value;
+      const tbody = document.querySelector('#templatesTable tbody');
+      const rows = Array.from(tbody.querySelectorAll('tr'));
+
+      rows.sort((a, b) => {
+        switch(sortValue) {
+          case 'name-asc':
+            return a.dataset.name.localeCompare(b.dataset.name);
+          case 'name-desc':
+            return b.dataset.name.localeCompare(a.dataset.name);
+          case 'most-used':
+            const aUsed = parseInt(a.querySelector('td:nth-child(6)').textContent);
+            const bUsed = parseInt(b.querySelector('td:nth-child(6)').textContent);
+            return bUsed - aUsed;
+          case 'least-used':
+            const aUsed2 = parseInt(a.querySelector('td:nth-child(6)').textContent);
+            const bUsed2 = parseInt(b.querySelector('td:nth-child(6)').textContent);
+            return aUsed2 - bUsed2;
+          case 'recently-created':
+            const aCreated = a.querySelector('td:nth-child(8)').textContent;
+            const bCreated = b.querySelector('td:nth-child(8)').textContent;
+            return new Date(bCreated) - new Date(aCreated);
+          case 'oldest-created':
+            const aCreated2 = a.querySelector('td:nth-child(8)').textContent;
+            const bCreated2 = b.querySelector('td:nth-child(8)').textContent;
+            return new Date(aCreated2) - new Date(bCreated2);
+          case 'recently-used':
+            const aUsedDate = a.querySelector('td:nth-child(7)').textContent;
+            const bUsedDate = b.querySelector('td:nth-child(7)').textContent;
+            if (aUsedDate.includes('Never')) return 1;
+            if (bUsedDate.includes('Never')) return -1;
+            return new Date(bUsedDate) - new Date(aUsedDate);
+          default:
+            return 0;
+        }
+      });
+
+      rows.forEach(row => tbody.appendChild(row));
+    }
+
+    // Attach checkbox listeners
+    document.querySelectorAll('.template-checkbox').forEach(checkbox => {
+      checkbox.addEventListener('change', updateBulkActionsBar);
+    });
+
+    // Make all functions globally accessible for inline onclick handlers
+    window.openPreview = openPreview;
+    window.closePreview = closePreview;
+    window.copyToClipboard = copyToClipboard;
+    window.insertVariable = insertVariable;
+    window.openEditModal = openEditModal;
+    window.duplicateTemplate = duplicateTemplate;
+    window.toggleStatus = toggleStatus;
+    window.filterTable = filterTable;
+    window.clearFilters = clearFilters;
+    window.toggleSelectAll = toggleSelectAll;
+    window.updateBulkActionsBar = updateBulkActionsBar;
+    window.bulkActivate = bulkActivate;
+    window.bulkDeactivate = bulkDeactivate;
+    window.bulkDelete = bulkDelete;
+    window.clearSelection = clearSelection;
+    window.sortTable = sortTable;
+
+    // Close modal on outside click
+    document.getElementById('templateModal').addEventListener('click', function(e) {
+      if (e.target === this) closeModal();
+    });
+
+    document.getElementById('previewModal').addEventListener('click', function(e) {
+      if (e.target === this) closePreview();
+    });
+
+    document.getElementById('addFolderModal').addEventListener('click', function(e) {
+      if (e.target === this) closeAddFolderModal();
+    });
+
+    // Initialize Unlayer Email Editor
+    let emailEditor = null;
+    let editorLoaded = false;
+
+    function initializeEmailEditor() {
+      if (emailEditor) return; // Already initialized
+
+      emailEditor = unlayer.createEditor({
+        id: 'email-editor',
+        projectId: 0,
+        displayMode: 'email',
+        appearance: {
+          theme: 'modern_light',
+          panels: {
+            tools: {
+              dock: 'left'
+            }
+          }
+        },
+        features: {
+          textEditor: {
+            spellChecker: true,
+          },
+          stockImages: {
+            enabled: true,
+            safeSearch: true
+          }
+        },
+        // Blueprint Apparel Brand Colors
+        customCSS: [
+          '.blockbuilder-layer { border-color: #667eea !important; }',
+          '.blockbuilder-layer.blockbuilder-layer-hover { background-color: rgba(102, 126, 234, 0.1) !important; }'
+        ],
+        // Merge Tags for Personalization
+        mergeTags: {
+          first_name: {
+            name: 'First Name',
+            value: '{first_name}',
+            sample: 'John'
+          },
+          last_name: {
+            name: 'Last Name',
+            value: '{last_name}',
+            sample: 'Doe'
+          },
+          email: {
+            name: 'Email Address',
+            value: '{email}',
+            sample: 'customer@example.com'
+          },
+          code: {
+            name: 'Discount Code',
+            value: '{code}',
+            sample: 'SAVE20'
+          },
+          link: {
+            name: 'Custom Link',
+            value: '{link}',
+            sample: 'https://blueprintapparel.com'
+          },
+          order_number: {
+            name: 'Order Number',
+            value: '{order_number}',
+            sample: '#12345'
+          },
+          order_total: {
+            name: 'Order Total',
+            value: '{order_total}',
+            sample: '$99.99'
+          },
+          tracking_number: {
+            name: 'Tracking Number',
+            value: '{tracking_number}',
+            sample: '1Z999AA10123456789'
+          }
+        },
+        // Special Links
+        specialLinks: [
+          {
+            name: 'Unsubscribe',
+            href: '{unsubscribe_url}',
+            target: '_blank'
+          },
+          {
+            name: 'View in Browser',
+            href: '{view_online_url}',
+            target: '_blank'
+          },
+          {
+            name: 'Update Preferences',
+            href: '{preferences_url}',
+            target: '_blank'
+          }
+        ],
+        // Design Tags (for conditional content)
+        designTagsConfig: {
+          delimiter: ['{{', '}}']
+        },
+        // Tools Configuration - Enable all available blocks
+        tools: {
+          // Basic blocks (always available)
+          text: { enabled: true },
+          image: { enabled: true },
+          button: { enabled: true },
+          divider: { enabled: true },
+          spacer: { enabled: true },
+          heading: { enabled: true },
+
+          // Layout blocks
+          columns: { enabled: true },
+
+          // Media blocks
+          video: { enabled: true },    // May require premium
+          html: { enabled: true },
+          code: { enabled: true },
+
+          // Social & Navigation
+          social: { enabled: true },
+          icons: { enabled: true },
+          menu: { enabled: true },
+
+          // Advanced blocks
+          timer: { enabled: true },    // Countdown - may require premium
+          carousel: { enabled: true }, // May require premium
+          accordion: { enabled: true }, // May require premium
+
+          // Disable form elements
+          form: { enabled: false }
+        },
+        // Default fonts
+        fonts: {
+          showDefaultFonts: true,
+          customFonts: [
+            {
+              label: 'Inter',
+              value: "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif"
+            },
+            {
+              label: 'Helvetica',
+              value: "'Helvetica Neue', Helvetica, Arial, sans-serif"
+            }
+          ]
+        },
+        // Editor options
+        options: {
+          features: {
+            preview: true,
+            sendTest: false,
+            export: true
+          }
+        }
+      });
+
+      emailEditor.addEventListener('editor:ready', function() {
+        editorLoaded = true;
+        console.log('Email editor ready');
+        // Hide loading message
+        const loadingMsg = document.getElementById('editorLoading');
+        if (loadingMsg) {
+          loadingMsg.style.display = 'none';
+        }
+        // Enable submit button for email templates if modal is open
+        const modal = document.getElementById('templateModal');
+        if (modal && modal.classList.contains('active')) {
+          const submitBtn = document.querySelector('#templateForm button[type="submit"]');
+          if (submitBtn) {
+            submitBtn.disabled = false;
+            submitBtn.title = '';
+          }
+          showToast('✓ Email editor ready! You can now create your template.');
+        } else {
+          // Editor loaded in background - just log it
+          console.log('Email editor pre-loaded and ready for use');
+        }
+      });
+    }
+
+    // Insert merge tag
+    function insertMergeTag(tagName) {
+      const mergeTag = `{${tagName}}`;
+
+      // Try modern clipboard API first
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(mergeTag).then(() => {
+          showToast(`✓ ${mergeTag} copied! Paste in any text block`);
+        }).catch((err) => {
+          console.error('Clipboard error:', err);
+          fallbackCopy(mergeTag);
+        });
+      } else {
+        // Fallback for older browsers or HTTP
+        fallbackCopy(mergeTag);
+      }
+    }
+
+    // Fallback copy method
+    function fallbackCopy(text) {
+      const textArea = document.createElement('textarea');
+      textArea.value = text;
+      textArea.style.position = 'fixed';
+      textArea.style.left = '-999999px';
+      textArea.style.top = '-999999px';
+      document.body.appendChild(textArea);
+      textArea.focus();
+      textArea.select();
+
+      try {
+        const successful = document.execCommand('copy');
+        document.body.removeChild(textArea);
+        if (successful) {
+          showToast(`✓ ${text} copied! Paste in any text block`);
+        } else {
+          showToast(`⚠️ Please manually copy: ${text}`);
+        }
+      } catch (err) {
+        document.body.removeChild(textArea);
+        console.error('Fallback copy failed:', err);
+        showToast(`⚠️ Please manually copy: ${text}`);
+      }
+    }
+
+    window.insertMergeTag = insertMergeTag;
+
+    // Folder management
+    function showAddFolderPrompt() {
+      const modal = document.getElementById('addFolderModal');
+      const input = document.getElementById('newFolderName');
+
+      if (!modal || !input) {
+        console.error('Add folder modal or input not found');
+        return;
+      }
+
+      modal.classList.add('active');
+      input.value = '';
+      setTimeout(() => {
+        input.focus();
+      }, 100);
+    }
+
+    function closeAddFolderModal() {
+      const modal = document.getElementById('addFolderModal');
+      if (modal) {
+        modal.classList.remove('active');
+      }
+    }
+
+    function submitAddFolder(event) {
+      event.preventDefault();
+      const folderName = document.getElementById('newFolderName').value.trim();
+
+      if (folderName) {
+        addFolder(folderName);
+      }
+    }
+
+    function addFolder(folderName) {
+      console.log('Creating folder:', folderName);
+      // Create form to submit new folder
+      const form = document.createElement('form');
+      form.method = 'POST';
+      form.innerHTML = `
+        {% csrf_token %}
+        <input type="hidden" name="action" value="add_folder">
+        <input type="hidden" name="folder_name" value="${folderName}">
+      `;
+      document.body.appendChild(form);
+      console.log('Submitting folder creation form');
+      form.submit();
+    }
+
+    // Expose folder functions immediately
+    window.showAddFolderPrompt = showAddFolderPrompt;
+    window.closeAddFolderModal = closeAddFolderModal;
+    window.submitAddFolder = submitAddFolder;
+
+    function deleteFolder(folderKey) {
+      // Check if folder has templates
+      const folderItem = document.querySelector(`.folder-item[data-folder="${folderKey}"]`);
+      if (!folderItem) {
+        console.error('Folder item not found');
+        return;
+      }
+
+      const countElem = folderItem.querySelector('.folder-item-count');
+      const count = countElem ? parseInt(countElem.textContent) : 0;
+
+      if (count > 0) {
+        if (!confirm(`This folder contains ${count} template(s). Deleting it will move templates to "General". Continue?`)) {
+          return;
+        }
+      } else {
+        if (!confirm('Delete this folder?')) {
+          return;
+        }
+      }
+
+      // Create form to submit delete request
+      const form = document.createElement('form');
+      form.method = 'POST';
+      form.innerHTML = `
+        {% csrf_token %}
+        <input type="hidden" name="action" value="delete_folder">
+        <input type="hidden" name="folder_name" value="${folderKey}">
+      `;
+      document.body.appendChild(form);
+      form.submit();
+    }
+
+    // Expose deleteFolder immediately
+    window.deleteFolder = deleteFolder;
+
+    // Toggle edit mode for folders
+    let editMode = false;
+    function toggleEditMode() {
+      editMode = !editMode;
+      const deleteButtons = document.querySelectorAll('.folder-delete-btn');
+      deleteButtons.forEach(btn => {
+        btn.style.display = editMode ? 'flex' : 'none';
+      });
+    }
+    window.toggleEditMode = toggleEditMode;
+
+    // Toggle folder sidebar
+    function toggleFolderSidebar() {
+      console.log('toggleFolderSidebar called');
+      const sidebar = document.getElementById('folderSidebar');
+      const contentWrapper = document.querySelector('.content-wrapper');
+      const icon = document.getElementById('collapseIcon');
+
+      if (!sidebar || !icon || !contentWrapper) {
+        console.error('Folder sidebar, content wrapper, or collapse icon not found', {sidebar, icon, contentWrapper});
+        return;
+      }
+
+      sidebar.classList.toggle('collapsed');
+      contentWrapper.classList.toggle('collapsed');
+      console.log('Sidebar collapsed state:', sidebar.classList.contains('collapsed'));
+
+      if (sidebar.classList.contains('collapsed')) {
+        icon.className = 'fa-solid fa-angles-right';
+      } else {
+        icon.className = 'fa-solid fa-angles-left';
+      }
+    }
+
+    // Expose toggleFolderSidebar immediately
+    window.toggleFolderSidebar = toggleFolderSidebar;
+
+    // Toggle form sections
+    function toggleSection(header) {
+      const section = header.closest('.form-section');
+      section.classList.toggle('collapsed');
+    }
+
+    window.toggleSection = toggleSection;
+
+    // Handle form submission - export design from Unlayer
+    document.getElementById('templateForm').addEventListener('submit', function(e) {
+      e.preventDefault();
+
+      const submitBtn = this.querySelector('button[type="submit"]');
+      const submitText = document.getElementById('submitText');
+      const form = this;
+
+      // Check which channel is selected
+      const selectedChannel = document.querySelector('input[name="channel"]:checked').value;
+
+      // Show loading state
+      const originalText = submitText.textContent;
+      submitBtn.disabled = true;
+      submitText.textContent = 'Saving...';
+      submitBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> <span id="submitText">Saving...</span>';
+
+      if (selectedChannel === 'sms') {
+        // For SMS templates, submit to SMS templates endpoint
+        form.action = '/admin/sms/templates/';
+        form.submit();
+      } else {
+        // For Email templates, export from Unlayer first
+        if (!emailEditor || !editorLoaded) {
+          showToast('⏳ Email editor is still loading... Please wait a moment and try again.');
+          submitBtn.disabled = false;
+          submitText.textContent = originalText;
+          submitBtn.innerHTML = '<i class="fa-solid fa-check"></i> <span id="submitText">' + originalText + '</span>';
+          return;
+        }
+
+        try {
+          emailEditor.exportHtml(function(data) {
+            const html = data.html;
+            const design = data.design;
+
+            // Store in form fields
+            document.getElementById('html_body').value = html;
+            document.getElementById('design_json').value = JSON.stringify(design);
+
+            // Submit the form
+            form.submit();
+          }, function(error) {
+            // Error callback
+            console.error('Export error:', error);
+            showToast('❌ Failed to save email design. Please try again.');
+            submitBtn.disabled = false;
+            submitText.textContent = originalText;
+            submitBtn.innerHTML = '<i class="fa-solid fa-check"></i> <span id="submitText">' + originalText + '</span>';
+          });
+        } catch (error) {
+          console.error('Error:', error);
+          showToast('❌ Error saving template. Please try again.');
+          submitBtn.disabled = false;
+          submitText.textContent = originalText;
+          submitBtn.innerHTML = '<i class="fa-solid fa-check"></i> <span id="submitText">' + originalText + '</span>';
+        }
+      }
+    });
+
+    // Pre-load Unlayer editor on page load for instant availability
+    // This happens in the background so users don't wait when clicking "Create Template"
+    initializeEmailEditor();
+
+    // Handle edit template if present
+    {% if edit_template %}
+      document.getElementById('modalTitle').textContent = 'Edit Template';
+      document.getElementById('formAction').value = 'update';
+      document.getElementById('submitText').textContent = 'Update Template';
+      document.getElementById('templateId').value = '{{ edit_template.id }}';
+      document.getElementById('name').value = '{{ edit_template.name }}';
+      document.getElementById('template_type').value = '{{ edit_template.template_type }}';
+      document.getElementById('folder').value = '{{ edit_template.folder }}';
+      document.getElementById('auto_trigger').value = '{{ edit_template.auto_trigger }}';
+      document.getElementById('subject').value = '{{ edit_template.subject|escapejs }}';
+      document.getElementById('html_body').value = '{{ edit_template.html_body|escapejs }}';
+      document.getElementById('text_body').value = '{{ edit_template.text_body|escapejs }}';
+      document.getElementById('tags').value = '{{ edit_template.tags|escapejs }}';
+      document.getElementById('notes').value = '{{ edit_template.notes|escapejs }}';
+      document.getElementById('is_active').checked = {{ edit_template.is_active|yesno:"true,false" }};
+      document.getElementById('activeGroup').style.display = 'block';
+      document.getElementById('templateModal').classList.add('active');
+
+      // Editor is pre-loaded on page load, just wait for it to be ready and load design
+      {% if edit_template.design_json %}
+        // Wait for editor to be ready then load design
+        const checkEditor = setInterval(function() {
+          if (editorLoaded && emailEditor) {
+            clearInterval(checkEditor);
+            const designData = {{ edit_template.design_json|safe }};
+            emailEditor.loadDesign(designData);
+          }
+        }, 100);
+      {% endif %}
+    {% endif %}
   </script>
 </body>
 </html>

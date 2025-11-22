@@ -1,0 +1,50 @@
+[flake8]
+# Maximum line length (matching black)
+max-line-length = 100
+
+# Extend default ignore list
+extend-ignore =
+    # E203: whitespace before ':' (conflicts with black)
+    E203,
+    # E501: line too long (handled by black)
+    E501,
+    # W503: line break before binary operator (conflicts with black)
+    W503,
+    # E231: missing whitespace after ',' (conflicts with black)
+    E231
+
+# Exclude directories
+exclude =
+    .git,
+    __pycache__,
+    */migrations/*,
+    venv,
+    .venv,
+    build,
+    dist,
+    *.egg-info,
+    .tox,
+    .mypy_cache,
+    .pytest_cache,
+    staticfiles,
+    static,
+    media
+
+# Per-file ignores
+per-file-ignores =
+    # Star imports are common in Django settings
+    */settings/*.py:F403,F405
+    # __init__.py files often have unused imports for easier imports
+    */__init__.py:F401
+
+# Maximum complexity (cyclomatic complexity)
+max-complexity = 10
+
+# Show source code for each error
+show-source = True
+
+# Count errors
+count = True
+
+# Enable statistics
+statistics = True

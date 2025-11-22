@@ -1,22 +1,25 @@
 """
 Tests for cart utility functions.
 """
+
 from decimal import Decimal
-from django.test import TestCase, RequestFactory
+
 from django.contrib.auth import get_user_model
 from django.contrib.sessions.middleware import SessionMiddleware
+from django.test import RequestFactory, TestCase
 
-from shop.models import Cart, CartItem, Product, ProductVariant, Size, Color
 from shop.cart_utils import (
-    get_or_create_cart,
     add_to_cart,
-    update_cart_item_quantity,
-    remove_from_cart,
-    get_cart_total,
+    clear_cart,
     get_cart_count,
+    get_cart_total,
+    get_or_create_cart,
     merge_carts,
-    clear_cart
+    remove_from_cart,
+    update_cart_item_quantity,
 )
+from shop.models import Cart, CartItem, Color, Product, ProductVariant, Size
+
 from .test_helpers import create_test_user
 
 User = get_user_model()
@@ -34,22 +37,19 @@ class CartUtilsTestCase(TestCase):
 
         # Create test products
         self.product = Product.objects.create(
-            name='Test T-Shirt',
-            slug='test-tshirt',
-            base_price=Decimal('29.99'),
-            is_active=True
+            name="Test T-Shirt", slug="test-tshirt", base_price=Decimal("29.99"), is_active=True
         )
 
-        self.size = Size.objects.create(code='M', label='Medium')
-        self.color = Color.objects.create(name='Black')
+        self.size = Size.objects.create(code="M", label="Medium")
+        self.color = Color.objects.create(name="Black")
 
         self.variant = ProductVariant.objects.create(
             product=self.product,
             size=self.size,
             color=self.color,
             stock_quantity=10,
-            price=Decimal('29.99'),
-            is_active=True
+            price=Decimal("29.99"),
+            is_active=True,
         )
 
     def _add_session_to_request(self, request):
@@ -61,7 +61,7 @@ class CartUtilsTestCase(TestCase):
 
     def test_get_or_create_cart_authenticated(self):
         """Test getting or creating cart for authenticated user."""
-        request = self.factory.get('/')
+        request = self.factory.get("/")
         request.user = self.user
         request = self._add_session_to_request(request)
 
@@ -77,7 +77,7 @@ class CartUtilsTestCase(TestCase):
 
     def test_get_or_create_cart_anonymous(self):
         """Test getting or creating cart for anonymous user."""
-        request = self.factory.get('/')
+        request = self.factory.get("/")
         request.user = User()  # Anonymous user
         request = self._add_session_to_request(request)
 
@@ -90,7 +90,7 @@ class CartUtilsTestCase(TestCase):
 
     def test_add_to_cart_new_item(self):
         """Test adding a new item to cart."""
-        request = self.factory.post('/')
+        request = self.factory.post("/")
         request.user = self.user
         request = self._add_session_to_request(request)
 
@@ -102,7 +102,7 @@ class CartUtilsTestCase(TestCase):
 
     def test_add_to_cart_existing_item(self):
         """Test adding to existing cart item (should update quantity)."""
-        request = self.factory.post('/')
+        request = self.factory.post("/")
         request.user = self.user
         request = self._add_session_to_request(request)
 
@@ -118,7 +118,7 @@ class CartUtilsTestCase(TestCase):
 
     def test_add_to_cart_invalid_variant(self):
         """Test adding invalid variant raises error."""
-        request = self.factory.post('/')
+        request = self.factory.post("/")
         request.user = self.user
         request = self._add_session_to_request(request)
 
@@ -127,43 +127,35 @@ class CartUtilsTestCase(TestCase):
 
     def test_update_cart_item_quantity(self):
         """Test updating cart item quantity."""
-        request = self.factory.post('/')
+        request = self.factory.post("/")
         request.user = self.user
         request = self._add_session_to_request(request)
 
         cart_item, _ = add_to_cart(request, self.variant.id, quantity=2)
 
         # Update quantity
-        updated_item = update_cart_item_quantity(
-            cart_item.id,
-            quantity=5,
-            user=self.user
-        )
+        updated_item = update_cart_item_quantity(cart_item.id, quantity=5, user=self.user)
 
         self.assertIsNotNone(updated_item)
         self.assertEqual(updated_item.quantity, 5)
 
     def test_update_cart_item_quantity_to_zero_deletes(self):
         """Test updating quantity to 0 deletes the item."""
-        request = self.factory.post('/')
+        request = self.factory.post("/")
         request.user = self.user
         request = self._add_session_to_request(request)
 
         cart_item, _ = add_to_cart(request, self.variant.id, quantity=2)
 
         # Update to 0
-        result = update_cart_item_quantity(
-            cart_item.id,
-            quantity=0,
-            user=self.user
-        )
+        result = update_cart_item_quantity(cart_item.id, quantity=0, user=self.user)
 
         self.assertIsNone(result)
         self.assertFalse(CartItem.objects.filter(id=cart_item.id).exists())
 
     def test_remove_from_cart(self):
         """Test removing item from cart."""
-        request = self.factory.post('/')
+        request = self.factory.post("/")
         request.user = self.user
         request = self._add_session_to_request(request)
 
@@ -177,7 +169,7 @@ class CartUtilsTestCase(TestCase):
 
     def test_get_cart_total(self):
         """Test calculating cart total."""
-        request = self.factory.post('/')
+        request = self.factory.post("/")
         request.user = self.user
         request = self._add_session_to_request(request)
 
@@ -192,20 +184,20 @@ class CartUtilsTestCase(TestCase):
             size=self.size,
             color=self.color,
             stock_quantity=10,
-            price=Decimal('39.99'),
-            is_active=True
+            price=Decimal("39.99"),
+            is_active=True,
         )
         add_to_cart(request, variant2.id, quantity=1)
 
         total = get_cart_total(cart)
 
         # 2 * 29.99 + 1 * 39.99 = 99.97
-        expected = (Decimal('29.99') * 2) + (Decimal('39.99') * 1)
+        expected = (Decimal("29.99") * 2) + (Decimal("39.99") * 1)
         self.assertEqual(total, expected)
 
     def test_get_cart_count(self):
         """Test getting cart item count."""
-        request = self.factory.post('/')
+        request = self.factory.post("/")
         request.user = self.user
         request = self._add_session_to_request(request)
 
@@ -222,7 +214,7 @@ class CartUtilsTestCase(TestCase):
     def test_merge_carts(self):
         """Test merging anonymous cart into user cart on login."""
         # Create anonymous cart
-        anon_request = self.factory.post('/')
+        anon_request = self.factory.post("/")
         anon_request.user = User()  # Anonymous
         anon_request = self._add_session_to_request(anon_request)
 
@@ -237,8 +229,8 @@ class CartUtilsTestCase(TestCase):
             size=self.size,
             color=self.color,
             stock_quantity=10,
-            price=Decimal('39.99'),
-            is_active=True
+            price=Decimal("39.99"),
+            is_active=True,
         )
 
         user_cart = Cart.objects.create(user=self.user, is_active=True)
@@ -257,7 +249,7 @@ class CartUtilsTestCase(TestCase):
     def test_merge_carts_same_item(self):
         """Test merging carts with same item adds quantities."""
         # Create anonymous cart
-        anon_request = self.factory.post('/')
+        anon_request = self.factory.post("/")
         anon_request.user = User()  # Anonymous
         anon_request = self._add_session_to_request(anon_request)
 
@@ -278,7 +270,7 @@ class CartUtilsTestCase(TestCase):
 
     def test_clear_cart(self):
         """Test clearing all items from cart."""
-        request = self.factory.post('/')
+        request = self.factory.post("/")
         request.user = self.user
         request = self._add_session_to_request(request)
 

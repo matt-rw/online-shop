@@ -1,12 +1,15 @@
 """
 Stripe webhook handlers for processing payment events.
 """
+
 import logging
-import stripe
+
 from django.conf import settings
 from django.http import HttpResponse, JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_POST
+
+import stripe
 
 from .models import Order, OrderStatus
 
@@ -26,19 +29,18 @@ def stripe_webhook(request):
     - payment_intent.payment_failed: Payment failed
     """
     payload = request.body
-    sig_header = request.META.get('HTTP_STRIPE_SIGNATURE')
+    sig_header = request.META.get("HTTP_STRIPE_SIGNATURE")
 
     # Verify webhook signature (set STRIPE_WEBHOOK_SECRET in settings)
-    webhook_secret = getattr(settings, 'STRIPE_WEBHOOK_SECRET', None)
+    webhook_secret = getattr(settings, "STRIPE_WEBHOOK_SECRET", None)
 
     try:
         if webhook_secret:
-            event = stripe.Webhook.construct_event(
-                payload, sig_header, webhook_secret
-            )
+            event = stripe.Webhook.construct_event(payload, sig_header, webhook_secret)
         else:
             # For development without webhook secret
             import json
+
             event = json.loads(payload)
 
     except ValueError as e:
@@ -51,20 +53,20 @@ def stripe_webhook(request):
         return HttpResponse(status=400)
 
     # Handle the event
-    event_type = event['type']
+    event_type = event["type"]
 
     logger.info(f"Received Stripe webhook: {event_type}")
 
-    if event_type == 'checkout.session.completed':
+    if event_type == "checkout.session.completed":
         handle_checkout_session_completed(event)
-    elif event_type == 'payment_intent.succeeded':
+    elif event_type == "payment_intent.succeeded":
         handle_payment_intent_succeeded(event)
-    elif event_type == 'payment_intent.payment_failed':
+    elif event_type == "payment_intent.payment_failed":
         handle_payment_intent_failed(event)
     else:
         logger.info(f"Unhandled event type: {event_type}")
 
-    return JsonResponse({'status': 'success'})
+    return JsonResponse({"status": "success"})
 
 
 def handle_checkout_session_completed(event):
@@ -72,9 +74,9 @@ def handle_checkout_session_completed(event):
     Handle successful checkout session completion.
     Update order status and send confirmation email.
     """
-    session = event['data']['object']
-    checkout_session_id = session['id']
-    payment_intent_id = session.get('payment_intent')
+    session = event["data"]["object"]
+    checkout_session_id = session["id"]
+    payment_intent_id = session.get("payment_intent")
 
     try:
         order = Order.objects.get(stripe_checkout_id=checkout_session_id)
@@ -84,8 +86,8 @@ def handle_checkout_session_completed(event):
         order.stripe_payment_intent_id = payment_intent_id
 
         # Get customer email from session if not already set
-        if not order.email and session.get('customer_details', {}).get('email'):
-            order.email = session['customer_details']['email']
+        if not order.email and session.get("customer_details", {}).get("email"):
+            order.email = session["customer_details"]["email"]
 
         order.save()
 
@@ -108,8 +110,8 @@ def handle_payment_intent_succeeded(event):
     Handle successful payment intent.
     This is a backup to checkout.session.completed.
     """
-    payment_intent = event['data']['object']
-    payment_intent_id = payment_intent['id']
+    payment_intent = event["data"]["object"]
+    payment_intent_id = payment_intent["id"]
 
     try:
         order = Order.objects.get(stripe_payment_intent_id=payment_intent_id)
@@ -130,8 +132,8 @@ def handle_payment_intent_failed(event):
     Handle failed payment intent.
     Mark order as failed.
     """
-    payment_intent = event['data']['object']
-    payment_intent_id = payment_intent['id']
+    payment_intent = event["data"]["object"]
+    payment_intent_id = payment_intent["id"]
 
     try:
         order = Order.objects.get(stripe_payment_intent_id=payment_intent_id)

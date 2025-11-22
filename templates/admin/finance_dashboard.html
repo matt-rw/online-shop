@@ -1,0 +1,1132 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Finances - Blueprint Apparel</title>
+  <link rel="icon" type="image/svg+xml" href="{% static 'admin-favicon.svg' %}">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <style>
+    {% include "admin/partials/dark_mode_styles.html" %}
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background: #f1f5f9;
+      min-height: 100vh;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
+
+    .nav-links {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      padding: 1rem 2rem;
+      display: flex;
+      gap: 0.75rem;
+      align-items: center;
+    }
+
+    .nav-link {
+      background: rgba(255, 255, 255, 0.15);
+      backdrop-filter: blur(10px);
+      color: white;
+      padding: 0.5rem 1rem;
+      border-radius: 8px;
+      text-decoration: none;
+      font-size: 0.875rem;
+      font-weight: 500;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .nav-link:hover {
+      background: rgba(255, 255, 255, 0.25);
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    }
+
+    .top-bar {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      padding: 2rem 0;
+      box-shadow: 0 4px 20px rgba(102, 126, 234, 0.15);
+      margin-bottom: 2rem;
+    }
+
+    .container {
+      max-width: 1600px;
+      margin: 0 auto;
+      padding: 0 2rem;
+    }
+
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1rem;
+    }
+
+    .header h1 {
+      color: white;
+      font-size: 2.5rem;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+    }
+
+    .main-content {
+      padding: 0 2rem 2rem 2rem;
+      max-width: 1600px;
+      margin: 0 auto;
+    }
+
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 1.5rem;
+      margin-bottom: 3rem;
+      margin-top: -4rem;
+      position: relative;
+      z-index: 10;
+    }
+
+    .stat-card {
+      background: white;
+      border-radius: 16px;
+      padding: 1.75rem;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+      text-align: center;
+      border: 1px solid rgba(226, 232, 240, 0.8);
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .stat-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 4px;
+      background: linear-gradient(90deg, #667eea, #764ba2);
+      opacity: 0;
+      transition: opacity 0.3s;
+    }
+
+    .stat-card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 12px 28px rgba(0, 0, 0, 0.12);
+    }
+
+    .stat-card:hover::before {
+      opacity: 1;
+    }
+
+    .stat-card h3 {
+      color: #64748b;
+      font-size: 0.75rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      margin-bottom: 0.75rem;
+    }
+
+    .stat-card .number {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      font-size: 2.25rem;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+    }
+
+    .stat-card .icon {
+      font-size: 1.75rem;
+      margin-bottom: 0.75rem;
+      color: #667eea;
+    }
+
+    .section {
+      background: white;
+      border-radius: 16px;
+      padding: 2rem;
+      box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
+      margin-bottom: 2rem;
+    }
+
+    .section h2 {
+      font-size: 1.5rem;
+      font-weight: 700;
+      margin-bottom: 1.5rem;
+      color: #0f172a;
+    }
+
+    .form-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 1.5rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .form-group {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .form-group label {
+      font-weight: 500;
+      margin-bottom: 0.5rem;
+      color: #0f172a;
+      font-size: 0.875rem;
+    }
+
+    .form-group input,
+    .form-group select,
+    .form-group textarea {
+      width: 100%;
+      padding: 0.625rem 0.875rem;
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+      font-size: 0.875rem;
+      font-family: 'Inter', sans-serif;
+      transition: border-color 0.2s;
+    }
+
+    .form-group input:focus,
+    .form-group select:focus,
+    .form-group textarea:focus {
+      outline: none;
+      border-color: #667eea;
+      box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+    }
+
+    .form-group textarea {
+      resize: vertical;
+      min-height: 80px;
+    }
+
+    .btn {
+      padding: 0.75rem 1.5rem;
+      border-radius: 8px;
+      font-size: 0.875rem;
+      font-weight: 600;
+      border: none;
+      cursor: pointer;
+      transition: all 0.2s;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+    }
+
+    .btn-primary:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+    }
+
+    .success-message {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      background: #d1fae5;
+      color: #065f46;
+      padding: 1rem 1.5rem;
+      border-radius: 12px;
+      font-size: 0.875rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+      z-index: 1000;
+      animation: slideIn 0.3s ease-out;
+      border-left: 4px solid #10b981;
+    }
+
+    .error-message {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      background: #fee2e2;
+      color: #991b1b;
+      padding: 1rem 1.5rem;
+      border-radius: 12px;
+      font-size: 0.875rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+      z-index: 1000;
+      animation: slideIn 0.3s ease-out;
+      border-left: 4px solid #ef4444;
+    }
+
+    @keyframes slideIn {
+      from {
+        transform: translateX(400px);
+        opacity: 0;
+      }
+      to {
+        transform: translateX(0);
+        opacity: 1;
+      }
+    }
+
+    .chart-container {
+      background: white;
+      border-radius: 16px;
+      padding: 2rem;
+      box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
+      margin-bottom: 2rem;
+    }
+
+    .chart-container h2 {
+      font-size: 1.5rem;
+      font-weight: 700;
+      margin-bottom: 1.5rem;
+      color: #0f172a;
+    }
+
+    .chart-header {
+      margin-bottom: 1.5rem;
+    }
+
+    .chart-header-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      margin-bottom: 0.5rem;
+    }
+
+    .chart-title-group {
+      display: flex;
+      align-items: baseline;
+      gap: 1rem;
+    }
+
+    .chart-buttons {
+      display: flex;
+      gap: 0.75rem;
+      flex-wrap: wrap;
+      align-items: baseline;
+    }
+
+    .chart-btn {
+      padding: 0.625rem 1.25rem;
+      border-radius: 8px;
+      font-size: 0.875rem;
+      font-weight: 600;
+      border: 2px solid #e2e8f0;
+      background: #f8fafc;
+      color: #64748b;
+      cursor: pointer;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      font-family: 'Inter', sans-serif;
+    }
+
+    .chart-btn:hover {
+      border-color: #667eea;
+      background: #f1f5f9;
+      transform: translateY(-1px);
+    }
+
+    .chart-btn.revenue.active {
+      background: #667eea;
+      color: white;
+      border: 2px solid #667eea;
+      box-shadow: 0 4px 16px rgba(102, 126, 234, 0.4);
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .chart-btn.costs.active {
+      background: #ef4444;
+      color: white;
+      border: 2px solid #ef4444;
+      box-shadow: 0 4px 16px rgba(239, 68, 68, 0.4);
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .chart-btn.profit.active {
+      background: #10b981;
+      color: white;
+      border: 2px solid #10b981;
+      box-shadow: 0 4px 16px rgba(16, 185, 129, 0.4);
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .chart-wrapper {
+      position: relative;
+      height: 400px;
+      width: 100%;
+    }
+
+    .year-selector {
+      padding: 0.5rem 1rem;
+      border: 2px solid #e2e8f0;
+      border-radius: 8px;
+      font-size: 0.875rem;
+      font-weight: 600;
+      color: #0f172a;
+      background: white;
+      cursor: pointer;
+      font-family: 'Inter', sans-serif;
+      transition: all 0.2s;
+    }
+
+    .year-selector:hover {
+      border-color: #667eea;
+      box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+    }
+
+    .year-selector:focus {
+      outline: none;
+      border-color: #667eea;
+      box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+    }
+
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.5);
+      z-index: 1000;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .modal-overlay.active {
+      display: flex;
+    }
+
+    .modal-content {
+      background: white;
+      border-radius: 16px;
+      padding: 2rem;
+      max-width: 600px;
+      width: 90%;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+      max-height: 90vh;
+      overflow-y: auto;
+    }
+
+    .modal-content h2 {
+      margin-top: 0;
+    }
+
+    @media (max-width: 768px) {
+      .stats-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .form-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .header h1 {
+        font-size: 1.75rem;
+      }
+    }
+  </style>
+  {% include "admin/partials/dark_mode_apply.html" %}
+</head>
+<body>
+  <div class="nav-links">
+    <a href="{% url 'admin_home' %}" class="nav-link">← Back</a>
+  </div>
+
+  <div class="top-bar">
+    <div class="container">
+      <div class="header">
+        <h1>Finances</h1>
+      </div>
+    </div>
+  </div>
+
+  <div class="main-content">
+    {% if messages %}
+      {% for message in messages %}
+        {% if message.tags == 'success' %}
+          <div class="success-message">
+            {{ message }}
+          </div>
+        {% elif message.tags == 'error' %}
+          <div class="error-message">
+            {{ message }}
+          </div>
+        {% endif %}
+      {% endfor %}
+    {% endif %}
+
+    <!-- Stats Grid -->
+    <div class="stats-grid">
+      <div class="stat-card">
+        <h3>Total Revenue</h3>
+        <div class="number">${{ stats.total_revenue|floatformat:0 }}</div>
+      </div>
+      <div class="stat-card">
+        <h3>Total Expenses</h3>
+        <div class="number">${{ stats.total_expenses|floatformat:0 }}</div>
+      </div>
+      <div class="stat-card">
+        <h3>Net Profit</h3>
+        <div class="number">${{ stats.total_profit|floatformat:0 }}</div>
+      </div>
+      <div class="stat-card">
+        <h3>Tax Collected</h3>
+        <div class="number">${{ stats.total_tax_collected|floatformat:0 }}</div>
+      </div>
+    </div>
+
+    <!-- Monthly Overview Chart -->
+    <div class="chart-container">
+      <div class="chart-header">
+        <div class="chart-header-top">
+          <div class="chart-title-group">
+            <h2>Monthly Overview</h2>
+            <select id="yearSelector" onchange="changeYear()" class="year-selector">
+              {% for year in available_years %}
+                <option value="{{ year }}" {% if year == selected_year %}selected{% endif %}>{{ year }}</option>
+              {% endfor %}
+            </select>
+          </div>
+          <div class="chart-buttons">
+            <button class="chart-btn revenue active" data-dataset="revenue">
+              Revenue
+            </button>
+            <button class="chart-btn costs active" data-dataset="costs">
+              Costs
+            </button>
+            <button class="chart-btn profit active" data-dataset="profit">
+              Profit
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div class="chart-wrapper">
+        <canvas id="financialChart"></canvas>
+      </div>
+    </div>
+
+    <!-- Add Expense Form -->
+    <div class="section">
+      <h2>Add New Expense</h2>
+
+      <form method="POST" action="">
+        {% csrf_token %}
+        <input type="hidden" name="action" value="add_expense">
+
+        <div class="form-grid">
+          <div class="form-group">
+            <label for="category">Category *</label>
+            <select id="category" name="category" required>
+              <option value="">Select category...</option>
+              {% for cat in expense_categories %}
+                <option value="{{ cat.id }}">{{ cat.name }}</option>
+              {% endfor %}
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label for="amount">Amount *</label>
+            <input type="number" id="amount" name="amount" step="0.01" min="0" required placeholder="0.00">
+          </div>
+
+          <div class="form-group">
+            <label for="date">Date *</label>
+            <input type="date" id="date" name="date" value="{{ today }}" required>
+          </div>
+
+          <div class="form-group">
+            <label for="vendor">Vendor</label>
+            <input type="text" id="vendor" name="vendor" placeholder="e.g., Office Depot">
+          </div>
+
+          <div class="form-group">
+            <label for="payment_method">Payment Method</label>
+            <input type="text" id="payment_method" name="payment_method" placeholder="e.g., Credit Card, Cash">
+          </div>
+        </div>
+
+        <div class="form-grid">
+          <div class="form-group">
+            <label for="description">Description *</label>
+            <input type="text" id="description" name="description" required placeholder="Brief description of expense">
+          </div>
+
+          <div class="form-group">
+            <label for="notes">Notes</label>
+            <textarea id="notes" name="notes" placeholder="Additional notes (optional)"></textarea>
+          </div>
+        </div>
+
+        <button type="submit" class="btn btn-primary">
+          Add Expense
+        </button>
+      </form>
+    </div>
+
+    <!-- Recurring Monthly Charges -->
+    <div class="section">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+        <div>
+          <h2 style="margin: 0 0 0.5rem 0;">Recurring Monthly Charges</h2>
+          <p style="color: #64748b; font-size: 0.875rem; margin: 0;">
+            Track subscriptions like Render, software licenses, and other recurring services.
+          </p>
+        </div>
+        <button onclick="openRecurringChargeModal()" class="btn btn-primary">
+          <i class="fa-solid fa-plus"></i> Add Recurring Charge
+        </button>
+      </div>
+
+      {% if recurring_expenses %}
+        <div style="overflow-x: auto;">
+          <table style="width: 100%; border-collapse: collapse;">
+            <thead>
+              <tr style="border-bottom: 2px solid #e2e8f0;">
+                <th style="padding: 0.75rem; text-align: left; font-size: 0.75rem; color: #64748b; text-transform: uppercase; font-weight: 600;">Service</th>
+                <th style="padding: 0.75rem; text-align: left; font-size: 0.75rem; color: #64748b; text-transform: uppercase; font-weight: 600;">Vendor</th>
+                <th style="padding: 0.75rem; text-align: left; font-size: 0.75rem; color: #64748b; text-transform: uppercase; font-weight: 600;">Category</th>
+                <th style="padding: 0.75rem; text-align: left; font-size: 0.75rem; color: #64748b; text-transform: uppercase; font-weight: 600;">Date</th>
+                <th style="padding: 0.75rem; text-align: right; font-size: 0.75rem; color: #64748b; text-transform: uppercase; font-weight: 600;">Amount</th>
+                <th style="padding: 0.75rem; text-align: center; font-size: 0.75rem; color: #64748b; text-transform: uppercase; font-weight: 600; width: 60px;">Edit</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for expense in recurring_expenses %}
+                <tr style="border-bottom: 1px solid #f1f5f9;">
+                  <td style="padding: 0.75rem; font-weight: 500; color: #0f172a;">{{ expense.description }}</td>
+                  <td style="padding: 0.75rem; color: #64748b;">{{ expense.vendor|default:"—" }}</td>
+                  <td style="padding: 0.75rem;">
+                    <span style="display: inline-block; padding: 0.25rem 0.5rem; border-radius: 6px; font-size: 0.75rem; font-weight: 500; background: #e0e7ff; color: #3730a3;">
+                      {{ expense.category }}
+                    </span>
+                  </td>
+                  <td style="padding: 0.75rem; font-size: 0.875rem; color: #64748b;">{{ expense.date }}</td>
+                  <td style="padding: 0.75rem; text-align: right; font-weight: 700; color: #0f172a;">${{ expense.amount|floatformat:2 }}</td>
+                  <td style="padding: 0.75rem; text-align: center;">
+                    <button onclick='openEditRecurringChargeModal({{ expense.id }}, "{{ expense.description|escapejs }}", "{{ expense.vendor|escapejs }}", {{ expense.amount }}, {{ expense.category_id }}, "{{ expense.date }}", "{{ expense.payment_method }}", "{{ expense.notes|escapejs }}")' style="background: transparent; border: none; color: #667eea; cursor: pointer; padding: 0.25rem 0.5rem; transition: color 0.2s;" onmouseover="this.style.color='#764ba2'" onmouseout="this.style.color='#667eea'">
+                      <i class="fa-solid fa-pen-to-square" style="font-size: 1rem;"></i>
+                    </button>
+                  </td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      {% else %}
+        <div style="text-align: center; padding: 3rem; color: #64748b; background: #f8fafc; border-radius: 12px;">
+          <i class="fa-solid fa-calendar-check" style="font-size: 3rem; opacity: 0.3; margin-bottom: 1rem;"></i>
+          <p>No recurring charges tracked yet.</p>
+          <p style="font-size: 0.875rem; margin-top: 0.5rem;">Add expenses with categories like "Hosting", "Software Subscriptions", "Services", or "Platform Fees".</p>
+        </div>
+      {% endif %}
+    </div>
+
+    <!-- Stripe Fees -->
+    <div class="section">
+      <div id="stripeFeesHeader" style="display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 0.5rem; transition: margin-bottom 0.3s;">
+        <div style="display: flex; align-items: baseline; gap: 1rem;">
+          <h2 style="margin: 0;">Stripe Processing Fees</h2>
+          <select onchange="changeYear()" class="year-selector">
+            {% for year in available_years %}
+              <option value="{{ year }}" {% if year == selected_year %}selected{% endif %}>{{ year }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div style="display: flex; align-items: center; gap: 1rem; cursor: pointer;" onclick="toggleStripeTable()">
+          <div style="font-size: 1.5rem; font-weight: 700; color: #667eea;">
+            ${{ stripe_fees_total_year|floatformat:2 }}
+          </div>
+          <i class="fa-solid fa-chevron-down" id="stripeChevron" style="color: #64748b; transition: transform 0.3s; font-size: 1rem;"></i>
+        </div>
+      </div>
+
+      <div id="stripeFeesTable" style="overflow: hidden; max-height: 0; transition: max-height 0.3s ease-out;">
+        <div style="overflow-x: auto; margin-bottom: 1rem;">
+          <table style="width: 100%; border-collapse: collapse;">
+            <thead>
+              <tr style="border-bottom: 2px solid #e2e8f0;">
+                <th style="padding: 0.75rem; text-align: left; font-size: 0.75rem; color: #64748b; text-transform: uppercase; font-weight: 600;">Month</th>
+                <th style="padding: 0.75rem; text-align: right; font-size: 0.75rem; color: #64748b; text-transform: uppercase; font-weight: 600;">Transactions</th>
+                <th style="padding: 0.75rem; text-align: right; font-size: 0.75rem; color: #64748b; text-transform: uppercase; font-weight: 600;">Fees (2.9% + $0.30)</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for month_data in stripe_fees_by_month %}
+                <tr style="border-bottom: 1px solid #f1f5f9;">
+                  <td style="padding: 0.75rem; font-weight: 600; color: #0f172a;">{{ month_data.month }}</td>
+                  <td style="padding: 0.75rem; text-align: right; color: #64748b;">{{ month_data.transactions }}</td>
+                  <td style="padding: 0.75rem; text-align: right; font-weight: 600; color: #667eea;">${{ month_data.fees|floatformat:2 }}</td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+        <div style="padding: 0.75rem; background: #f8fafc; border-radius: 8px; font-size: 0.875rem; color: #64748b;">
+          <i class="fa-solid fa-info-circle"></i> Stripe charges 2.9% + $0.30 per successful transaction. These are estimated fees based on your order totals. Use the year selector above to view fees for different years.
+        </div>
+      </div>
+    </div>
+
+    <!-- Recent Transactions -->
+    <div class="section">
+      <h2>Recent Transactions (Last 50)</h2>
+
+      {% if transactions %}
+        <div style="overflow-x: auto;">
+          <table style="width: 100%; border-collapse: collapse;">
+            <thead>
+              <tr style="border-bottom: 2px solid #e2e8f0;">
+                <th style="padding: 0.75rem; text-align: left; font-size: 0.75rem; color: #64748b; text-transform: uppercase; font-weight: 600;">Order</th>
+                <th style="padding: 0.75rem; text-align: left; font-size: 0.75rem; color: #64748b; text-transform: uppercase; font-weight: 600;">Customer</th>
+                <th style="padding: 0.75rem; text-align: left; font-size: 0.75rem; color: #64748b; text-transform: uppercase; font-weight: 600;">Date</th>
+                <th style="padding: 0.75rem; text-align: right; font-size: 0.75rem; color: #64748b; text-transform: uppercase; font-weight: 600;">Subtotal</th>
+                <th style="padding: 0.75rem; text-align: right; font-size: 0.75rem; color: #64748b; text-transform: uppercase; font-weight: 600;">Tax</th>
+                <th style="padding: 0.75rem; text-align: right; font-size: 0.75rem; color: #64748b; text-transform: uppercase; font-weight: 600;">Shipping</th>
+                <th style="padding: 0.75rem; text-align: right; font-size: 0.75rem; color: #64748b; text-transform: uppercase; font-weight: 600;">Total</th>
+                <th style="padding: 0.75rem; text-align: left; font-size: 0.75rem; color: #64748b; text-transform: uppercase; font-weight: 600;">Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for txn in transactions %}
+                <tr style="border-bottom: 1px solid #f1f5f9;">
+                  <td style="padding: 0.75rem; font-weight: 600; color: #667eea;">{{ txn.order_number }}</td>
+                  <td style="padding: 0.75rem;">
+                    <div style="font-weight: 500; color: #0f172a;">{{ txn.customer }}</div>
+                    <div style="font-size: 0.75rem; color: #64748b;">{{ txn.email }}</div>
+                  </td>
+                  <td style="padding: 0.75rem; font-size: 0.875rem; color: #64748b;">{{ txn.created_at|slice:":10" }}</td>
+                  <td style="padding: 0.75rem; text-align: right; font-weight: 500;">${{ txn.subtotal|floatformat:2 }}</td>
+                  <td style="padding: 0.75rem; text-align: right; color: #64748b;">${{ txn.tax|floatformat:2 }}</td>
+                  <td style="padding: 0.75rem; text-align: right; color: #64748b;">${{ txn.shipping|floatformat:2 }}</td>
+                  <td style="padding: 0.75rem; text-align: right; font-weight: 700; color: #0f172a;">${{ txn.total|floatformat:2 }}</td>
+                  <td style="padding: 0.75rem;">
+                    <span style="display: inline-block; padding: 0.25rem 0.5rem; border-radius: 6px; font-size: 0.75rem; font-weight: 500; background: #d1fae5; color: #065f46;">
+                      {{ txn.status|title }}
+                    </span>
+                  </td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      {% else %}
+        <div style="text-align: center; padding: 3rem; color: #64748b;">
+          <p>No transactions yet.</p>
+        </div>
+      {% endif %}
+    </div>
+  </div>
+
+  <script>
+    // Monthly Financial Data from Backend
+    const monthlyData = {{ monthly_data_json|safe }};
+
+    // Extract data for chart
+    const months = monthlyData.map(d => d.month);
+    const revenueData = monthlyData.map(d => d.revenue);
+    const costsData = monthlyData.map(d => d.costs);
+    const profitData = monthlyData.map(d => d.profit);
+
+    // Chart Configuration
+    const ctx = document.getElementById('financialChart').getContext('2d');
+    const financialChart = new Chart(ctx, {
+      type: 'line',
+      data: {
+        labels: months,
+        datasets: [
+          {
+            label: 'Revenue',
+            data: revenueData,
+            borderColor: '#667eea',
+            backgroundColor: 'rgba(102, 126, 234, 0.1)',
+            borderWidth: 3,
+            fill: true,
+            tension: 0.4,
+            pointRadius: 4,
+            pointHoverRadius: 6,
+            pointBackgroundColor: '#667eea',
+            pointBorderColor: '#fff',
+            pointBorderWidth: 2,
+            hidden: false
+          },
+          {
+            label: 'Costs',
+            data: costsData,
+            borderColor: '#ef4444',
+            backgroundColor: 'rgba(239, 68, 68, 0.1)',
+            borderWidth: 3,
+            fill: true,
+            tension: 0.4,
+            pointRadius: 4,
+            pointHoverRadius: 6,
+            pointBackgroundColor: '#ef4444',
+            pointBorderColor: '#fff',
+            pointBorderWidth: 2,
+            hidden: false
+          },
+          {
+            label: 'Profit',
+            data: profitData,
+            borderColor: '#10b981',
+            backgroundColor: 'rgba(16, 185, 129, 0.1)',
+            borderWidth: 3,
+            fill: true,
+            tension: 0.4,
+            pointRadius: 4,
+            pointHoverRadius: 6,
+            pointBackgroundColor: '#10b981',
+            pointBorderColor: '#fff',
+            pointBorderWidth: 2,
+            hidden: false
+          }
+        ]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        interaction: {
+          mode: 'index',
+          intersect: false,
+        },
+        plugins: {
+          legend: {
+            display: false
+          },
+          tooltip: {
+            backgroundColor: 'rgba(0, 0, 0, 0.8)',
+            padding: 12,
+            titleFont: {
+              size: 14,
+              weight: '600',
+              family: 'Inter'
+            },
+            bodyFont: {
+              size: 13,
+              family: 'Inter'
+            },
+            cornerRadius: 8,
+            displayColors: true,
+            callbacks: {
+              label: function(context) {
+                let label = context.dataset.label || '';
+                if (label) {
+                  label += ': ';
+                }
+                if (context.parsed.y !== null) {
+                  label += '$' + context.parsed.y.toLocaleString();
+                }
+                return label;
+              }
+            }
+          }
+        },
+        scales: {
+          x: {
+            grid: {
+              display: false
+            },
+            ticks: {
+              font: {
+                family: 'Inter',
+                size: 11,
+                weight: '500'
+              },
+              color: '#64748b'
+            }
+          },
+          y: {
+            beginAtZero: true,
+            grid: {
+              color: 'rgba(0, 0, 0, 0.05)',
+              drawBorder: false
+            },
+            ticks: {
+              font: {
+                family: 'Inter',
+                size: 11,
+                weight: '500'
+              },
+              color: '#64748b',
+              callback: function(value) {
+                return '$' + (value / 1000) + 'k';
+              }
+            }
+          }
+        },
+        animation: {
+          duration: 750,
+          easing: 'easeInOutQuart'
+        }
+      }
+    });
+
+    // Toggle Dataset Visibility
+    const chartButtons = document.querySelectorAll('.chart-btn');
+    const datasetMap = {
+      'revenue': 0,
+      'costs': 1,
+      'profit': 2
+    };
+
+    chartButtons.forEach(button => {
+      button.addEventListener('click', function() {
+        const dataset = this.getAttribute('data-dataset');
+        const datasetIndex = datasetMap[dataset];
+
+        // Toggle button active state
+        this.classList.toggle('active');
+
+        // Toggle dataset visibility
+        const meta = financialChart.getDatasetMeta(datasetIndex);
+        meta.hidden = !this.classList.contains('active');
+
+        // Update chart
+        financialChart.update();
+      });
+    });
+
+    // Year selector change handler
+    function changeYear() {
+      const selectedYear = document.getElementById('yearSelector').value;
+      window.location.href = `?year=${selectedYear}`;
+    }
+
+    // Toggle Stripe fees table
+    function toggleStripeTable() {
+      const table = document.getElementById('stripeFeesTable');
+      const chevron = document.getElementById('stripeChevron');
+      const header = document.getElementById('stripeFeesHeader');
+
+      if (table.style.maxHeight === '0px' || table.style.maxHeight === '') {
+        table.style.maxHeight = table.scrollHeight + 'px';
+        chevron.style.transform = 'rotate(180deg)';
+        header.style.marginBottom = '1.5rem';
+      } else {
+        table.style.maxHeight = '0px';
+        chevron.style.transform = 'rotate(0deg)';
+        header.style.marginBottom = '0.5rem';
+      }
+    }
+  </script>
+
+  <!-- Recurring Charge Modal -->
+  <div class="modal-overlay" id="recurringChargeModal">
+    <div class="modal-content">
+      <h2 style="margin-bottom: 0.5rem;">Add Recurring Charge</h2>
+      <p style="color: #64748b; font-size: 0.875rem; margin-bottom: 2rem;">
+        Add monthly subscriptions like Render, Stripe, or other recurring services
+      </p>
+
+      <form method="POST" action="">
+        {% csrf_token %}
+        <input type="hidden" name="action" value="add_expense">
+
+        <div style="margin-bottom: 1.75rem;">
+          <label for="recurringCategory" style="display: block; font-weight: 500; margin-bottom: 0.5rem; color: #0f172a; font-size: 0.875rem;">Category *</label>
+          <select id="recurringCategory" name="category" required style="width: 100%; padding: 0.625rem 0.875rem; border: 1px solid #e2e8f0; border-radius: 8px; font-size: 0.875rem; font-family: 'Inter', sans-serif;">
+            <option value="">Select category...</option>
+            {% for cat in expense_categories %}
+              {% if cat.name in "Hosting,Software Subscriptions,Services,Platform Fees" %}
+                <option value="{{ cat.id }}" {% if cat.name == "Hosting" %}selected{% endif %}>{{ cat.name }}</option>
+              {% endif %}
+            {% endfor %}
+          </select>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin-bottom: 1.75rem;">
+          <div>
+            <label for="recurringDescription" style="display: block; font-weight: 500; margin-bottom: 0.5rem; color: #0f172a; font-size: 0.875rem;">Service Name *</label>
+            <input type="text" id="recurringDescription" name="description" required placeholder="e.g., Render Web Service" style="width: 100%; padding: 0.625rem 0.875rem; border: 1px solid #e2e8f0; border-radius: 8px; font-size: 0.875rem; font-family: 'Inter', sans-serif;">
+          </div>
+
+          <div>
+            <label for="recurringVendor" style="display: block; font-weight: 500; margin-bottom: 0.5rem; color: #0f172a; font-size: 0.875rem;">Vendor *</label>
+            <input type="text" id="recurringVendor" name="vendor" required placeholder="e.g., Render" style="width: 100%; padding: 0.625rem 0.875rem; border: 1px solid #e2e8f0; border-radius: 8px; font-size: 0.875rem; font-family: 'Inter', sans-serif;">
+          </div>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin-bottom: 1.75rem;">
+          <div>
+            <label for="recurringAmount" style="display: block; font-weight: 500; margin-bottom: 0.5rem; color: #0f172a; font-size: 0.875rem;">Amount *</label>
+            <input type="number" id="recurringAmount" name="amount" step="0.01" min="0" required placeholder="0.00" style="width: 100%; padding: 0.625rem 0.875rem; border: 1px solid #e2e8f0; border-radius: 8px; font-size: 0.875rem; font-family: 'Inter', sans-serif;">
+          </div>
+
+          <div>
+            <label for="recurringDate" style="display: block; font-weight: 500; margin-bottom: 0.5rem; color: #0f172a; font-size: 0.875rem;">Date *</label>
+            <input type="date" id="recurringDate" name="date" value="{{ today }}" required style="width: 100%; padding: 0.625rem 0.875rem; border: 1px solid #e2e8f0; border-radius: 8px; font-size: 0.875rem; font-family: 'Inter', sans-serif;">
+          </div>
+        </div>
+
+        <div style="margin-bottom: 1.75rem;">
+          <label for="recurringPaymentMethod" style="display: block; font-weight: 500; margin-bottom: 0.5rem; color: #0f172a; font-size: 0.875rem;">Payment Method</label>
+          <select id="recurringPaymentMethod" name="payment_method" style="width: 100%; padding: 0.625rem 0.875rem; border: 1px solid #e2e8f0; border-radius: 8px; font-size: 0.875rem; font-family: 'Inter', sans-serif;">
+            <option value="">Select method...</option>
+            <option value="credit_card">Credit Card</option>
+            <option value="debit_card">Debit Card</option>
+            <option value="bank_transfer">Bank Transfer</option>
+            <option value="paypal">PayPal</option>
+            <option value="stripe">Stripe</option>
+            <option value="other">Other</option>
+          </select>
+        </div>
+
+        <div style="margin-bottom: 2rem;">
+          <label for="recurringNotes" style="display: block; font-weight: 500; margin-bottom: 0.5rem; color: #0f172a; font-size: 0.875rem;">Notes</label>
+          <textarea id="recurringNotes" name="notes" placeholder="e.g., Billed monthly on the 1st" style="width: 100%; padding: 0.75rem; border: 1px solid #e2e8f0; border-radius: 8px; font-size: 0.875rem; font-family: 'Inter', sans-serif; resize: vertical; min-height: 80px;"></textarea>
+        </div>
+
+        <div style="display: flex; gap: 1rem; margin-top: 2rem;">
+          <button type="button" class="btn btn-secondary" onclick="closeRecurringChargeModal()">
+            Cancel
+          </button>
+          <button type="submit" class="btn btn-primary">
+            <i class="fa-solid fa-plus"></i> Add Charge
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Edit Recurring Charge Modal -->
+  <div class="modal-overlay" id="editRecurringChargeModal">
+    <div class="modal-content">
+      <h2 style="margin-bottom: 0.5rem;">Edit Recurring Charge</h2>
+      <p style="color: #64748b; font-size: 0.875rem; margin-bottom: 2rem;">
+        Update the details for this recurring charge
+      </p>
+
+      <form method="POST" action="">
+        {% csrf_token %}
+        <input type="hidden" name="action" value="edit_expense">
+        <input type="hidden" id="editExpenseId" name="expense_id">
+
+        <div style="margin-bottom: 1.75rem;">
+          <label for="editRecurringCategory" style="display: block; font-weight: 500; margin-bottom: 0.5rem; color: #0f172a; font-size: 0.875rem;">Category *</label>
+          <select id="editRecurringCategory" name="category" required style="width: 100%; padding: 0.625rem 0.875rem; border: 1px solid #e2e8f0; border-radius: 8px; font-size: 0.875rem; font-family: 'Inter', sans-serif;">
+            <option value="">Select category...</option>
+            {% for cat in expense_categories %}
+              {% if cat.name in "Hosting,Software Subscriptions,Services,Platform Fees" %}
+                <option value="{{ cat.id }}">{{ cat.name }}</option>
+              {% endif %}
+            {% endfor %}
+          </select>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin-bottom: 1.75rem;">
+          <div>
+            <label for="editRecurringDescription" style="display: block; font-weight: 500; margin-bottom: 0.5rem; color: #0f172a; font-size: 0.875rem;">Service Name *</label>
+            <input type="text" id="editRecurringDescription" name="description" required placeholder="e.g., Render Web Service" style="width: 100%; padding: 0.625rem 0.875rem; border: 1px solid #e2e8f0; border-radius: 8px; font-size: 0.875rem; font-family: 'Inter', sans-serif;">
+          </div>
+
+          <div>
+            <label for="editRecurringVendor" style="display: block; font-weight: 500; margin-bottom: 0.5rem; color: #0f172a; font-size: 0.875rem;">Vendor *</label>
+            <input type="text" id="editRecurringVendor" name="vendor" required placeholder="e.g., Render" style="width: 100%; padding: 0.625rem 0.875rem; border: 1px solid #e2e8f0; border-radius: 8px; font-size: 0.875rem; font-family: 'Inter', sans-serif;">
+          </div>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin-bottom: 1.75rem;">
+          <div>
+            <label for="editRecurringAmount" style="display: block; font-weight: 500; margin-bottom: 0.5rem; color: #0f172a; font-size: 0.875rem;">Amount *</label>
+            <input type="number" id="editRecurringAmount" name="amount" step="0.01" min="0" required placeholder="0.00" style="width: 100%; padding: 0.625rem 0.875rem; border: 1px solid #e2e8f0; border-radius: 8px; font-size: 0.875rem; font-family: 'Inter', sans-serif;">
+          </div>
+
+          <div>
+            <label for="editRecurringDate" style="display: block; font-weight: 500; margin-bottom: 0.5rem; color: #0f172a; font-size: 0.875rem;">Date *</label>
+            <input type="date" id="editRecurringDate" name="date" required style="width: 100%; padding: 0.625rem 0.875rem; border: 1px solid #e2e8f0; border-radius: 8px; font-size: 0.875rem; font-family: 'Inter', sans-serif;">
+          </div>
+        </div>
+
+        <div style="margin-bottom: 1.75rem;">
+          <label for="editRecurringPaymentMethod" style="display: block; font-weight: 500; margin-bottom: 0.5rem; color: #0f172a; font-size: 0.875rem;">Payment Method</label>
+          <select id="editRecurringPaymentMethod" name="payment_method" style="width: 100%; padding: 0.625rem 0.875rem; border: 1px solid #e2e8f0; border-radius: 8px; font-size: 0.875rem; font-family: 'Inter', sans-serif;">
+            <option value="">Select method...</option>
+            <option value="credit_card">Credit Card</option>
+            <option value="debit_card">Debit Card</option>
+            <option value="bank_transfer">Bank Transfer</option>
+            <option value="paypal">PayPal</option>
+            <option value="stripe">Stripe</option>
+            <option value="other">Other</option>
+          </select>
+        </div>
+
+        <div style="margin-bottom: 2rem;">
+          <label for="editRecurringNotes" style="display: block; font-weight: 500; margin-bottom: 0.5rem; color: #0f172a; font-size: 0.875rem;">Notes</label>
+          <textarea id="editRecurringNotes" name="notes" placeholder="e.g., Billed monthly on the 1st" style="width: 100%; padding: 0.75rem; border: 1px solid #e2e8f0; border-radius: 8px; font-size: 0.875rem; font-family: 'Inter', sans-serif; resize: vertical; min-height: 80px;"></textarea>
+        </div>
+
+        <div style="display: flex; gap: 1rem; margin-top: 2rem;">
+          <button type="button" class="btn btn-secondary" onclick="closeEditRecurringChargeModal()">
+            Cancel
+          </button>
+          <button type="submit" class="btn btn-primary">
+            <i class="fa-solid fa-save"></i> Save Changes
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script>
+    function openRecurringChargeModal() {
+      document.getElementById('recurringChargeModal').classList.add('active');
+    }
+
+    function closeRecurringChargeModal() {
+      document.getElementById('recurringChargeModal').classList.remove('active');
+    }
+
+    function openEditRecurringChargeModal(id, description, vendor, amount, categoryId, date, paymentMethod, notes) {
+      document.getElementById('editExpenseId').value = id;
+      document.getElementById('editRecurringDescription').value = description;
+      document.getElementById('editRecurringVendor').value = vendor;
+      document.getElementById('editRecurringAmount').value = amount;
+      document.getElementById('editRecurringCategory').value = categoryId;
+      document.getElementById('editRecurringDate').value = date;
+      document.getElementById('editRecurringPaymentMethod').value = paymentMethod;
+      document.getElementById('editRecurringNotes').value = notes;
+      document.getElementById('editRecurringChargeModal').classList.add('active');
+    }
+
+    function closeEditRecurringChargeModal() {
+      document.getElementById('editRecurringChargeModal').classList.remove('active');
+    }
+
+    // Close modals on overlay click
+    document.getElementById('recurringChargeModal').addEventListener('click', function(e) {
+      if (e.target === this) {
+        closeRecurringChargeModal();
+      }
+    });
+
+    document.getElementById('editRecurringChargeModal').addEventListener('click', function(e) {
+      if (e.target === this) {
+        closeEditRecurringChargeModal();
+      }
+    });
+
+    // Close modals on Escape key
+    document.addEventListener('keydown', function(e) {
+      if (e.key === 'Escape') {
+        closeRecurringChargeModal();
+        closeEditRecurringChargeModal();
+      }
+    });
+  </script>
+</body>
+</html>

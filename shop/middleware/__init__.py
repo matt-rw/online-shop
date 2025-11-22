@@ -1,1 +1,2 @@
 from .analytics import VisitorTrackingMiddleware
+from .connection_log import ConnectionLogMiddleware

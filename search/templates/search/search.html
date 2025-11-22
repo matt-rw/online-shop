@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% load static wagtailcore_tags %}
+{% load static %}
 
 {% block body_class %}template-searchresults{% endblock %}
 
@@ -17,9 +17,9 @@
 <ul>
     {% for result in search_results %}
     <li>
-        <h4><a href="{% pageurl result %}">{{ result }}</a></h4>
-        {% if result.search_description %}
-        {{ result.search_description }}
+        <h4><a href="{% url 'product_detail' result.slug %}">{{ result.name }}</a></h4>
+        {% if result.description %}
+        <p>{{ result.description|truncatewords:30 }}</p>
         {% endif %}
     </li>
     {% endfor %}

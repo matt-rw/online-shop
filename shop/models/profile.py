@@ -11,7 +11,8 @@ class UserProfile(models.Model):
     Extended user profile for storing additional user information.
     Automatically created when a user signs up.
     """
-    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='profile')
+
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name="profile")
 
     # Optional profile fields
     phone_number = models.CharField(max_length=20, blank=True)
@@ -34,12 +35,11 @@ class SavedAddress(models.Model):
     Saved addresses for quick checkout.
     Users can have multiple saved addresses.
     """
-    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='saved_addresses')
+
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="saved_addresses")
 
     label = models.CharField(
-        max_length=50,
-        blank=True,
-        help_text="E.g., 'Home', 'Work', 'Mom's House'"
+        max_length=50, blank=True, help_text="E.g., 'Home', 'Work', 'Mom's House'"
     )
 
     full_name = models.CharField(max_length=120)
@@ -48,7 +48,7 @@ class SavedAddress(models.Model):
     city = models.CharField(max_length=100)
     region = models.CharField(max_length=100, blank=True, verbose_name="State/Province")
     postal_code = models.CharField(max_length=20)
-    country = models.CharField(max_length=2, default='US', help_text="2-letter country code")
+    country = models.CharField(max_length=2, default="US", help_text="2-letter country code")
 
     is_default_shipping = models.BooleanField(default=False)
     is_default_billing = models.BooleanField(default=False)
@@ -57,7 +57,7 @@ class SavedAddress(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
-        ordering = ['-is_default_shipping', '-created_at']
+        ordering = ["-is_default_shipping", "-created_at"]
         verbose_name_plural = "Saved addresses"
 
     def __str__(self):
@@ -67,16 +67,14 @@ class SavedAddress(models.Model):
     def save(self, *args, **kwargs):
         # If this is set as default, unset other defaults for this user
         if self.is_default_shipping:
-            SavedAddress.objects.filter(
-                user=self.user,
-                is_default_shipping=True
-            ).exclude(pk=self.pk).update(is_default_shipping=False)
+            SavedAddress.objects.filter(user=self.user, is_default_shipping=True).exclude(
+                pk=self.pk
+            ).update(is_default_shipping=False)
 
         if self.is_default_billing:
-            SavedAddress.objects.filter(
-                user=self.user,
-                is_default_billing=True
-            ).exclude(pk=self.pk).update(is_default_billing=False)
+            SavedAddress.objects.filter(user=self.user, is_default_billing=True).exclude(
+                pk=self.pk
+            ).update(is_default_billing=False)
 
         super().save(*args, **kwargs)
 
@@ -92,5 +90,5 @@ def create_user_profile(sender, instance, created, **kwargs):
 @receiver(post_save, sender=User)
 def save_user_profile(sender, instance, **kwargs):
     """Save the UserProfile whenever the User is saved."""
-    if hasattr(instance, 'profile'):
+    if hasattr(instance, "profile"):
         instance.profile.save()
