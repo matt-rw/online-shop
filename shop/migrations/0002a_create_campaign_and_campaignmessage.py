@@ -94,6 +94,11 @@ class Migration(migrations.Migration):
                 updated_at TIMESTAMP WITH TIME ZONE NOT NULL,
                 sent_at TIMESTAMP WITH TIME ZONE,
                 "order" INTEGER NOT NULL DEFAULT 0,
+                landing_url VARCHAR(200) NOT NULL DEFAULT '',
+                utm_source VARCHAR(100) NOT NULL DEFAULT '',
+                utm_medium VARCHAR(100) NOT NULL DEFAULT '',
+                utm_campaign VARCHAR(100) NOT NULL DEFAULT '',
+                utm_content VARCHAR(100) NOT NULL DEFAULT '',
                 campaign_id BIGINT NOT NULL REFERENCES shop_campaign(id) ON DELETE CASCADE,
                 discount_id BIGINT REFERENCES shop_discount(id) ON DELETE SET NULL,
                 email_template_id BIGINT REFERENCES shop_emailtemplate(id) ON DELETE SET NULL,
@@ -129,5 +134,40 @@ class Migration(migrations.Migration):
                 ON shop_campaignmessage(sms_template_id);
             """,
             reverse_sql="-- No reverse needed for indexes"
+        ),
+
+        # Add UTM columns to existing CampaignMessage table if they don't exist
+        migrations.RunSQL(
+            sql="""
+            DO $$
+            BEGIN
+                IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = 'shop_campaignmessage') THEN
+                    ALTER TABLE shop_campaignmessage
+                        ADD COLUMN IF NOT EXISTS landing_url VARCHAR(200) NOT NULL DEFAULT '',
+                        ADD COLUMN IF NOT EXISTS utm_source VARCHAR(100) NOT NULL DEFAULT '',
+                        ADD COLUMN IF NOT EXISTS utm_medium VARCHAR(100) NOT NULL DEFAULT '',
+                        ADD COLUMN IF NOT EXISTS utm_campaign VARCHAR(100) NOT NULL DEFAULT '',
+                        ADD COLUMN IF NOT EXISTS utm_content VARCHAR(100) NOT NULL DEFAULT '';
+                END IF;
+            END $$;
+            """,
+            reverse_sql="-- No reverse needed"
+        ),
+
+        # Add UTM columns to shop_discount table if they don't exist
+        migrations.RunSQL(
+            sql="""
+            DO $$
+            BEGIN
+                IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = 'shop_discount') THEN
+                    ALTER TABLE shop_discount
+                        ADD COLUMN IF NOT EXISTS landing_url VARCHAR(200) NOT NULL DEFAULT '',
+                        ADD COLUMN IF NOT EXISTS utm_source VARCHAR(100) NOT NULL DEFAULT '',
+                        ADD COLUMN IF NOT EXISTS utm_medium VARCHAR(100) NOT NULL DEFAULT '',
+                        ADD COLUMN IF NOT EXISTS utm_campaign VARCHAR(100) NOT NULL DEFAULT '';
+                END IF;
+            END $$;
+            """,
+            reverse_sql="-- No reverse needed"
         ),
     ]
