@@ -6,7 +6,7 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('shop', '0002_expensecategory_revenue_expense'),
+        ('shop', '0002a_create_campaignmessage'),
     ]
 
     operations = [
