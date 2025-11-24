@@ -11,6 +11,139 @@
   <link rel="dns-prefetch" href="https://cdn.jsdelivr.net">
 
   <style>
+    /* News ticker animation */
+    @keyframes ticker {
+      0% {
+        transform: translateX(0%);
+      }
+      100% {
+        transform: translateX(-50%);
+      }
+    }
+
+    .ticker-animate {
+      display: inline-flex;
+      animation: ticker 25s linear infinite;
+      white-space: nowrap;
+      will-change: transform;
+    }
+
+    .ticker-wrapper {
+      display: flex;
+      overflow: hidden;
+    }
+
+    /* Smooth scroll snapping */
+    html {
+      scroll-behavior: smooth;
+      scroll-snap-type: y mandatory;
+    }
+
+    .scroll-section {
+      scroll-snap-align: start;
+      scroll-snap-stop: always;
+    }
+
+    /* Blueprint Grid Overlay */
+    .blueprint-grid {
+      background-image:
+        linear-gradient(rgba(250, 204, 21, 0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(250, 204, 21, 0.03) 1px, transparent 1px);
+      background-size: 20px 20px;
+      position: relative;
+    }
+
+    .blueprint-grid::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background-image:
+        linear-gradient(rgba(250, 204, 21, 0.08) 2px, transparent 2px),
+        linear-gradient(90deg, rgba(250, 204, 21, 0.08) 2px, transparent 2px);
+      background-size: 100px 100px;
+      pointer-events: none;
+    }
+
+    .blueprint-grid::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(ellipse at center, transparent 0%, transparent 40%, rgba(255, 255, 255, 0.8) 100%);
+      pointer-events: none;
+      z-index: 1;
+    }
+
+    /* Technical Drawing Lines */
+    .blueprint-corner {
+      position: relative;
+    }
+
+    .blueprint-corner::before,
+    .blueprint-corner::after {
+      content: '';
+      position: absolute;
+      background: linear-gradient(to right, #fbbf24 0%, transparent 100%);
+      height: 1px;
+    }
+
+    .blueprint-corner::before {
+      top: 0;
+      left: 0;
+      width: 60px;
+    }
+
+    .blueprint-corner::after {
+      top: 0;
+      left: 0;
+      width: 1px;
+      height: 60px;
+      background: linear-gradient(to bottom, #fbbf24 0%, transparent 100%);
+    }
+
+    /* Measurement Lines Animation */
+    @keyframes measure-slide {
+      0%, 100% { transform: translateX(0); }
+      50% { transform: translateX(10px); }
+    }
+
+    .blueprint-measure {
+      animation: measure-slide 3s ease-in-out infinite;
+    }
+
+    /* Image Shimmer Effect */
+    @keyframes shimmer {
+      0% {
+        transform: translateX(-100%) translateY(-100%) rotate(30deg);
+      }
+      100% {
+        transform: translateX(100%) translateY(100%) rotate(30deg);
+      }
+    }
+
+    .shimmer-effect {
+      position: relative;
+      overflow: hidden;
+    }
+
+    .shimmer-effect::after {
+      content: '';
+      position: absolute;
+      top: -50%;
+      left: -50%;
+      width: 200%;
+      height: 200%;
+      background: linear-gradient(
+        90deg,
+        transparent,
+        rgba(250, 204, 21, 0.1),
+        rgba(250, 204, 21, 0.3),
+        rgba(250, 204, 21, 0.1),
+        transparent
+      );
+      animation: shimmer 3s ease-in-out infinite;
+      pointer-events: none;
+    }
+
     /* Dark mode overrides for home page */
     [data-theme='dark'] #subscribe,
     [data-theme='dark'] #subscribe > div {
@@ -44,6 +177,25 @@
     [data-theme='dark'] .shadow-xl {
       box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5), 0 8px 10px -6px rgba(0, 0, 0, 0.5) !important;
     }
+
+    /* Film Grain Effect */
+    @keyframes grain {
+      0%, 100% { transform: translate(0, 0); }
+      10% { transform: translate(-5%, -10%); }
+      20% { transform: translate(-15%, 5%); }
+      30% { transform: translate(7%, -25%); }
+      40% { transform: translate(-5%, 25%); }
+      50% { transform: translate(-15%, 10%); }
+      60% { transform: translate(15%, 0%); }
+      70% { transform: translate(0%, 15%); }
+      80% { transform: translate(3%, 35%); }
+      90% { transform: translate(-10%, 10%); }
+    }
+
+    .film-grain {
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 400 400' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
+      animation: grain 8s steps(10) infinite;
+    }
   </style>
 
 {% endblock %}
@@ -57,30 +209,270 @@
   <!-- ============================================ -->
   <!-- HERO SECTION -->
   <!-- ============================================ -->
-  <section class="relative min-h-screen bg-cover bg-center w-full h-screen overflow-hidden bg-gray-900 -mt-[64px] pt-[64px]"
-           style="background-image: url('{% if site_settings.hero_image %}{{ site_settings.hero_image.url }}{% else %}{% static 'images/unnamed.webp' %}{% endif %}')">
+  <section class="scroll-section relative min-h-screen bg-center w-full h-screen overflow-hidden -mt-[64px] pt-[64px]">
+
+    <!-- Purple to pink gradient background (matching nav bar) -->
+    <div class="absolute inset-0 bg-gradient-to-r from-purple-950 via-black to-pink-950"></div>
+
+    <!-- Slideshow backgrounds -->
+    <div class="absolute inset-0 hero-slide hero-slide-1" style="opacity: 1; transition: opacity 0.8s ease-in-out;">
+      <!-- Split view: left and right images -->
+      <div class="absolute inset-0 flex gap-0">
+        <div class="hidden md:block" style="width: 70%; background-image: url('{% static 'images/nature_shots/full-dark.jpeg' %}'); background-size: cover; background-position: 85% center; background-repeat: no-repeat;"></div>
+        <div class="w-full md:w-[30%]" style="background-image: url('{% static 'images/nature_shots/full-top-forward.jpeg' %}'); background-size: cover; background-position: 10% center; background-repeat: no-repeat;"></div>
+      </div>
+    </div>
+    <div class="absolute inset-0 hero-slide hero-slide-2" style="background-image: url('{% static 'images/nature_shots/pants-bottom-low.jpeg' %}'); background-size: cover; background-position: center center; background-repeat: no-repeat; opacity: 0; transition: opacity 0.8s ease-in-out;"></div>
+
+    <!-- Nav bar gradient overlay (matching nav bar exactly) -->
+    <div class="absolute inset-0 bg-gradient-to-r from-purple-950 via-black to-pink-950 opacity-50"></div>
+
+    <!-- Center darkening layer (only middle column) -->
+    <div class="absolute inset-0" style="background: linear-gradient(to right, transparent 0%, transparent 15%, rgba(0,0,0,0.3) 35%, rgba(0,0,0,0.3) 65%, transparent 85%, transparent 100%);"></div>
+
+    <!-- Slideshow navigation dots -->
+    <div class="absolute bottom-8 left-1/2 transform -translate-x-1/2 flex gap-4 z-30">
+      <button onmouseenter="changeHeroSlide(1)" class="hero-dot hero-dot-1 w-5 h-5 rounded-full bg-yellow-400 transition-all hover:scale-110" style="opacity: 1;"></button>
+      <button onmouseenter="changeHeroSlide(2)" class="hero-dot hero-dot-2 w-5 h-5 rounded-full bg-white transition-all hover:scale-110" style="opacity: 1;"></button>
+    </div>
+
+    <!-- Blueprint Technical Grid Pattern -->
+    <div class="absolute inset-0 opacity-20 z-0">
+      <svg class="w-full h-full" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="none">
+        <defs>
+          <pattern id="blueprintGrid" width="100" height="100" patternUnits="userSpaceOnUse">
+            <path d="M 100 0 L 0 0 0 100" fill="none" stroke="rgba(250, 204, 21, 0.3)" stroke-width="0.5"/>
+            <path d="M 50 0 L 50 100 M 0 50 L 100 50" fill="none" stroke="rgba(250, 204, 21, 0.15)" stroke-width="0.5" stroke-dasharray="2,2"/>
+          </pattern>
+        </defs>
+        <rect width="100%" height="100%" fill="url(#blueprintGrid)" />
+      </svg>
+    </div>
+
+    <!-- Blueprint Technical Drawing Lines -->
+    <div class="absolute inset-0 opacity-25 z-0">
+      <svg class="w-full h-full" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1920 1080">
+        <defs>
+          <linearGradient id="blueprintYellow" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" style="stop-color:rgb(250, 204, 21);stop-opacity:0.8" />
+            <stop offset="100%" style="stop-color:rgb(245, 158, 11);stop-opacity:0.6" />
+          </linearGradient>
+        </defs>
+
+        <!-- Horizontal construction lines -->
+        <line x1="0" y1="200" x2="1920" y2="200" stroke="url(#blueprintYellow)" stroke-width="1" stroke-dasharray="10,5" opacity="0.6"/>
+        <line x1="0" y1="400" x2="1920" y2="400" stroke="url(#blueprintYellow)" stroke-width="1.5" opacity="0.8"/>
+        <line x1="0" y1="600" x2="1920" y2="600" stroke="url(#blueprintYellow)" stroke-width="1" stroke-dasharray="10,5" opacity="0.6"/>
+        <line x1="0" y1="800" x2="1920" y2="800" stroke="url(#blueprintYellow)" stroke-width="1" stroke-dasharray="5,3" opacity="0.5"/>
+
+        <!-- Vertical construction lines -->
+        <line x1="400" y1="0" x2="400" y2="1080" stroke="url(#blueprintYellow)" stroke-width="1" stroke-dasharray="10,5" opacity="0.6"/>
+        <line x1="960" y1="0" x2="960" y2="1080" stroke="url(#blueprintYellow)" stroke-width="1.5" opacity="0.8"/>
+        <line x1="1520" y1="0" x2="1520" y2="1080" stroke="url(#blueprintYellow)" stroke-width="1" stroke-dasharray="10,5" opacity="0.6"/>
+
+        <!-- Diagonal architectural lines -->
+        <line x1="0" y1="0" x2="600" y2="400" stroke="url(#blueprintYellow)" stroke-width="0.5" stroke-dasharray="3,3" opacity="0.4"/>
+        <line x1="1920" y1="0" x2="1320" y2="400" stroke="url(#blueprintYellow)" stroke-width="0.5" stroke-dasharray="3,3" opacity="0.4"/>
+      </svg>
+    </div>
+
+    <!-- Blueprint Measurement Marks -->
+    <div class="absolute top-12 left-12 text-yellow-400 font-mono text-xs opacity-40">
+      <div class="flex flex-col gap-4">
+        <div class="flex items-center gap-2">
+          <div class="w-3 h-3 border-2 border-yellow-400 rounded-full"></div>
+          <div class="w-16 h-px bg-yellow-400"></div>
+          <span>A1</span>
+        </div>
+        <div class="flex items-center gap-2">
+          <div class="w-3 h-3 border-2 border-yellow-400"></div>
+          <div class="w-16 h-px bg-yellow-400"></div>
+          <span>A2</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="absolute top-12 right-12 text-yellow-400 font-mono text-xs opacity-40 text-right">
+      <div class="flex flex-col gap-4 items-end">
+        <div class="flex items-center gap-2">
+          <span>REV.001</span>
+          <div class="w-16 h-px bg-yellow-400"></div>
+          <div class="w-3 h-3 border-2 border-yellow-400 rounded-full"></div>
+        </div>
+        <div class="flex items-center gap-2">
+          <span>2024</span>
+          <div class="w-16 h-px bg-yellow-400"></div>
+          <div class="w-3 h-3 border-2 border-yellow-400"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Blueprint Corner Registration Marks -->
+    <div class="absolute top-0 left-0 w-24 h-24 border-l-2 border-t-2 border-yellow-400 opacity-30"></div>
+    <div class="absolute top-0 right-0 w-24 h-24 border-r-2 border-t-2 border-yellow-400 opacity-30"></div>
+    <div class="absolute bottom-0 left-0 w-24 h-24 border-l-2 border-b-2 border-yellow-400 opacity-30"></div>
+    <div class="absolute bottom-0 right-0 w-24 h-24 border-r-2 border-b-2 border-yellow-400 opacity-30"></div>
+
+    <!-- Golden Ratio Spiral (Fibonacci) - LARGE & PROMINENT -->
+    <div class="absolute top-0 right-0 w-full h-full opacity-30 z-0" style="transform: rotate(-15deg) scale(1.4); transform-origin: 70% 40%;">
+      <svg width="100%" height="100%" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 800" preserveAspectRatio="xMidYMid meet">
+        <defs>
+          <linearGradient id="goldenGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" style="stop-color:rgb(250, 204, 21);stop-opacity:1" />
+            <stop offset="50%" style="stop-color:rgb(251, 191, 36);stop-opacity:0.8" />
+            <stop offset="100%" style="stop-color:rgb(245, 158, 11);stop-opacity:0.6" />
+          </linearGradient>
+        </defs>
+
+        <!-- Fibonacci spiral - larger arcs -->
+        <path d="M 400 400 Q 400 300 500 300" stroke="url(#goldenGrad)" stroke-width="3" fill="none" opacity="0.9"/>
+        <path d="M 500 300 Q 600 300 600 400" stroke="url(#goldenGrad)" stroke-width="3" fill="none" opacity="0.9"/>
+        <path d="M 600 400 Q 600 560 440 560" stroke="url(#goldenGrad)" stroke-width="3" fill="none" opacity="0.9"/>
+        <path d="M 440 560 Q 180 560 180 300" stroke="url(#goldenGrad)" stroke-width="3" fill="none" opacity="0.9"/>
+        <path d="M 180 300 Q 180 40 500 40" stroke="url(#goldenGrad)" stroke-width="3" fill="none" opacity="0.9"/>
+        <path d="M 500 40 Q 820 40 820 400" stroke="url(#goldenGrad)" stroke-width="3" fill="none" opacity="0.85"/>
+
+        <!-- Fibonacci rectangles with stronger presence -->
+        <rect x="400" y="300" width="100" height="100" stroke="#fbbf24" stroke-width="2" fill="none" opacity="0.7"/>
+        <rect x="500" y="300" width="100" height="100" stroke="#fbbf24" stroke-width="2" fill="none" opacity="0.7"/>
+        <rect x="440" y="400" width="160" height="160" stroke="#fbbf24" stroke-width="1.8" fill="none" opacity="0.6"/>
+        <rect x="180" y="300" width="260" height="260" stroke="#fbbf24" stroke-width="1.6" fill="none" opacity="0.55"/>
+        <rect x="180" y="40" width="420" height="420" stroke="#fbbf24" stroke-width="1.4" fill="none" opacity="0.5"/>
+        <rect x="500" y="40" width="320" height="320" stroke="#fbbf24" stroke-width="1.2" fill="none" opacity="0.45"/>
+
+        <!-- Golden ratio markers -->
+        <circle cx="400" cy="300" r="4" fill="#fbbf24" opacity="0.9"/>
+        <circle cx="500" cy="300" r="4" fill="#fbbf24" opacity="0.9"/>
+        <circle cx="600" cy="400" r="4" fill="#fbbf24" opacity="0.9"/>
+        <circle cx="440" cy="560" r="4" fill="#fbbf24" opacity="0.9"/>
+
+        <!-- Phi notation -->
+        <text x="420" y="380" font-family="monospace" font-size="18" fill="#fbbf24" opacity="0.6">φ</text>
+        <text x="620" y="420" font-family="monospace" font-size="14" fill="#fbbf24" opacity="0.5">1.618</text>
+      </svg>
+    </div>
+
     <div class="relative z-10 flex flex-col items-center justify-center h-full text-white">
-      <a href="/" class="block">
-        <img src="{% static 'images/font.webp' %}"
-             class="h-lg w-auto"
-             alt="Blueprint Apparel"
-             width="400"
-             height="100" />
+      <a href="/" class="block group">
+        <div class="relative">
+          <!-- Yellow glow around logo -->
+          <div class="absolute -inset-8 bg-gradient-to-r from-yellow-400 via-amber-400 to-yellow-500 rounded-full blur-3xl opacity-30 group-hover:opacity-45 transition-opacity duration-500"></div>
+          <img src="{% static 'images/font.webp' %}?v=2"
+               class="relative h-24 sm:h-48 md:h-48 lg:h-64 w-auto transition-all duration-300 group-hover:scale-105"
+               alt="Blueprint Apparel"
+               width="400"
+               height="100" />
+        </div>
       </a>
       {% if site_settings.hero_title or site_settings.hero_subtitle %}
         <div class="text-center mt-8 px-4">
           {% if site_settings.hero_title %}
-            <h1 class="text-4xl md:text-6xl font-bold mb-4">{{ site_settings.hero_title }}</h1>
+            <h1 class="text-4xl md:text-6xl font-bold mb-4 text-white">{{ site_settings.hero_title }}</h1>
           {% endif %}
           {% if site_settings.hero_subtitle %}
-            <p class="text-xl md:text-2xl text-gray-200">{{ site_settings.hero_subtitle }}</p>
+            <p class="text-xl md:text-2xl text-yellow-400">{{ site_settings.hero_subtitle }}</p>
           {% endif %}
         </div>
       {% endif %}
-      <a href="#subscribe"
-         class="mt-6 px-8 py-3 bg-black rounded-lg hover:bg-gray-600 transition">Launch Info</a>
     </div>
   </section>
+
+  <!-- ============================================ -->
+  <!-- NEWS TICKER BANNER -->
+  <!-- ============================================ -->
+  <div class="w-full bg-black py-4 overflow-hidden relative ticker-wrapper">
+    <div class="ticker-animate font-mono font-bold text-base text-yellow-400">
+      <span>FOUNDATION RELEASE COMING SOON!&nbsp;&nbsp;&nbsp;•&nbsp;&nbsp;&nbsp;FOUNDATION RELEASE COMING SOON!&nbsp;&nbsp;&nbsp;•&nbsp;&nbsp;&nbsp;FOUNDATION RELEASE COMING SOON!&nbsp;&nbsp;&nbsp;•&nbsp;&nbsp;&nbsp;FOUNDATION RELEASE COMING SOON!&nbsp;&nbsp;&nbsp;•&nbsp;&nbsp;&nbsp;FOUNDATION RELEASE COMING SOON!&nbsp;&nbsp;&nbsp;•&nbsp;&nbsp;&nbsp;FOUNDATION RELEASE COMING SOON!&nbsp;&nbsp;&nbsp;•&nbsp;&nbsp;&nbsp;</span>
+      <span aria-hidden="true">FOUNDATION RELEASE COMING SOON!&nbsp;&nbsp;&nbsp;•&nbsp;&nbsp;&nbsp;FOUNDATION RELEASE COMING SOON!&nbsp;&nbsp;&nbsp;•&nbsp;&nbsp;&nbsp;FOUNDATION RELEASE COMING SOON!&nbsp;&nbsp;&nbsp;•&nbsp;&nbsp;&nbsp;FOUNDATION RELEASE COMING SOON!&nbsp;&nbsp;&nbsp;•&nbsp;&nbsp;&nbsp;FOUNDATION RELEASE COMING SOON!&nbsp;&nbsp;&nbsp;•&nbsp;&nbsp;&nbsp;FOUNDATION RELEASE COMING SOON!&nbsp;&nbsp;&nbsp;•&nbsp;&nbsp;&nbsp;</span>
+    </div>
+  </div>
+
+  <!-- ============================================ -->
+  <!-- SIGNUP MODAL POPUP -->
+  <!-- ============================================ -->
+  <div id="signup-modal" class="fixed inset-0 backdrop-blur-xl bg-white/10 z-50 flex items-center justify-center hidden transition-all duration-300 opacity-0">
+    <div class="bg-white rounded-3xl shadow-2xl max-w-lg w-full mx-4 transform transition-all duration-300 scale-95 modal-content relative">
+      <!-- Close Button -->
+      <button type="button" onclick="closeSignupModal()" class="absolute top-5 right-5 text-gray-400 hover:text-gray-700 transition-colors z-10 p-1 hover:bg-gray-100 rounded-full">
+        <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"></path>
+        </svg>
+      </button>
+
+      <!-- Modal Content -->
+      <div class="px-8 py-10 sm:px-10 sm:py-12">
+        <!-- Logo or Icon -->
+        <div class="text-center mb-8">
+          <div class="relative inline-block mb-5">
+            <!-- Colorful glow effect (bottom layer) -->
+            <div class="absolute inset-0 -m-2 bg-gradient-to-r from-purple-400 via-fuchsia-400 to-rose-400 rounded-full blur-md z-0"></div>
+            <div class="absolute inset-0 -m-3 bg-gradient-to-r from-purple-500 via-fuchsia-500 to-rose-500 rounded-full blur-lg z-0"></div>
+            <div class="absolute inset-0 -m-5 bg-gradient-to-r from-purple-600 via-fuchsia-600 to-rose-600 rounded-full blur-xl opacity-70 z-0"></div>
+            <!-- Black glow ring around the logo (middle layer - transition) -->
+            <div class="absolute -inset-0.5 bg-black rounded-full blur-sm z-[5]"></div>
+            <div class="absolute -inset-1 bg-black rounded-full blur-md opacity-70 z-[5]"></div>
+            <div class="absolute -inset-2 bg-black rounded-full blur-lg opacity-40 z-[5]"></div>
+            <!-- Logo on top -->
+            <img src="{% static 'images/blueprint_b_circular.png' %}" alt="Blueprint" class="relative z-10 w-20 h-20" style="mask-image: radial-gradient(circle, black 85%, transparent 100%); -webkit-mask-image: radial-gradient(circle, black 85%, transparent 100%);" />
+          </div>
+          <h2 class="text-3xl sm:text-4xl font-bold text-gray-800 mb-3 leading-tight tracking-tight">Join Blueprint</h2>
+          <p class="text-gray-600 text-lg sm:text-xl leading-relaxed max-w-sm mx-auto" style="text-wrap: balance;">
+            Get early access to the Foundation drop plus <strong class="text-gray-800">10% off</strong> your first order
+          </p>
+        </div>
+
+        <!-- Messages -->
+        {% if messages %}
+          <div class="mb-6" id="modal-message-container">
+            {% for message in messages %}
+              <div class="message-alert px-4 py-3.5 rounded-xl text-left text-base font-medium mb-2
+                          {% if message.tags == 'success' %}
+                            bg-green-50 text-green-900 border border-green-200
+                          {% elif message.tags == 'error' %}
+                            bg-red-50 text-red-900 border border-red-200
+                          {% elif message.tags == 'warning' %}
+                            bg-yellow-50 text-yellow-900 border border-yellow-200
+                          {% else %}
+                            bg-blue-50 text-blue-900 border border-blue-200
+                          {% endif %}">{{ message }}</div>
+            {% endfor %}
+          </div>
+        {% endif %}
+
+        <!-- Smart Signup Form (Auto-detects Email or SMS) -->
+        <form id="modal-smart-form"
+              method="POST"
+              onsubmit="return handleModalSmartSubmit(event)"
+              class="space-y-5">
+          {% csrf_token %}
+          <div>
+            <label for="modal-contact-input" class="block text-sm font-semibold text-gray-900 mb-2">
+              Email or Phone Number
+            </label>
+            <input type="text"
+                   id="modal-contact-input"
+                   name="contact"
+                   placeholder="Enter email or phone"
+                   required
+                   oninput="updateModalInputType(this)"
+                   class="w-full px-4 py-3.5 text-base rounded-xl border-2 border-gray-300 focus:ring-2 focus:ring-gray-900 focus:border-gray-900 transition-all text-gray-900 placeholder-gray-400 font-medium" />
+            <input type="hidden" id="modal-email-field" name="email" value="">
+            <input type="hidden" id="modal-phone-field" name="phone_number" value="">
+            <p id="modal-input-hint" class="text-sm font-medium text-gray-600 mt-2.5 opacity-0 transition-opacity">
+              <!-- Hint will appear here -->
+            </p>
+          </div>
+          <button type="submit"
+                  class="w-full px-6 py-4 text-lg rounded-xl bg-gray-900 text-white font-bold hover:bg-gray-800 active:bg-black transition-all shadow-xl hover:shadow-2xl hover:scale-105 transform">
+            Get Early Access
+          </button>
+        </form>
+        <p id="modal-sms-disclaimer" class="text-sm text-gray-600 mt-4 text-left leading-relaxed opacity-0 transition-opacity">
+          By subscribing, you agree to receive marketing texts. Reply STOP to unsubscribe.
+        </p>
+      </div>
+    </div>
+  </div>
 
   <!-- TODO: Background video alternative for hero section
 <section class="relative w-full h-screen overflow-hidden">
@@ -95,210 +487,231 @@
 -->
 
   <!-- ============================================ -->
-  <!-- PRODUCTS SECTION -->
-  <!-- ============================================ -->
-  <section id="products"
-           class="w-full bg-cover bg-center bg-no-repeat overflow-hidden h-auto pt-16 md:pt-20 lg:pt-28"
-           style="background-image: url('{% static 'images/blueprint_bg1.webp' %}')">
-    <!-- Foundation Drop Announcement -->
-    <div class="flex flex-row justify-between items-center">
-      <h2 data-aos="fade-right"
-          class="font-sans text-4xl md:text-7xl lg:text-8xl font-semibold w-full md:w-sm h-max tracking-tight text-white mb-24 mx-6 md:m-24 pt-8 md:pt-0">
-        The FOUNDATION DROP coming soon...
-      </h2>
-    </div>
-
-    <!-- Brand Philosophy -->
-    <div class="grid grid-cols-1 items-center justify-center mb-32 px-6">
-      <div class="group relative">
-        <p class="font-sans w-full md:w-md text-3xl md:text-5xl leading-relaxed text-white md:ml-auto text-right mb-16"
-           data-aos="fade-left">Our collection is about more than clothes.</p>
-      </div>
-    </div>
-
-    <p class="font-sans text-3xl md:text-5xl leading-relaxed text-white text-center mb-32 px-6"
-       data-aos="fade-up">It's about creating a blueprint.</p>
-
-    <div class="group relative px-6">
-      <h2 data-aos="fade-in"
-          class="font-sans text-even leading-tight mx-0 md:ml-16 text-5xl md:text-9xl text-white justify-left font-bold mb-32">
-        Follow your Path.
-      </h2>
-    </div>
-  </section>
-
-  <!-- ============================================ -->
-  <!-- EMAIL SIGNUP SECTION -->
+  <!-- OUR STORY & SIGNUP SECTION -->
   <!-- ============================================ -->
   <div id="subscribe"
-       class="mx-auto max-w-2xl px-4 py-16 sm:px-6 sm:py-24 lg:max-w-7xl lg:px-8 items-center bg-white rounded-3xl">
-    <div class="rounded-xl shadow-xl p-6 md:p-20 h-auto mt-12 mb-24" data-aos="fade-up">
-      <h2 class="font-sans text-3xl md:text-5xl text-black font-bold mb-10">Join the Blueprint Community</h2>
-      <p class="text-black-500 text-xl md:text-3xl mb-20">
-        Get early access to the Foundation-Fall drop, 10% off your first order, latest deals, and our Discord channel.
-      </p>
+       class="scroll-section blueprint-grid bg-white min-h-screen flex items-center">
 
-      <!-- Messages -->
-      {% if messages %}
-        <div class="mb-6" id="message-container">
-          {% for message in messages %}
-            <div class="message-alert px-6 py-4 rounded-lg text-center font-medium mb-3
-                        {% if message.tags == 'success' %}
-                          bg-green-100 text-green-800 border border-green-300
-                        {% elif message.tags == 'error' %}
-                          bg-red-100 text-red-800 border border-red-300
-                        {% elif message.tags == 'warning' %}
-                          bg-yellow-100 text-yellow-800 border border-yellow-300
-                        {% else %}
-                          bg-blue-100 text-blue-800 border border-blue-300
-                        {% endif %}"
-                 style="animation: slideDown 0.3s ease-out;
-                        transition: opacity 0.5s ease-out">{{ message }}</div>
-          {% endfor %}
+    <!-- Two Column Layout: Left (Our Story + Signup) | Right (Tall Image) -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 items-center w-full" style="gap: 8rem;">
+      <!-- Left Column: Our Story + Signup -->
+      <div class="flex flex-col justify-center pt-20 pb-8 sm:pt-16 sm:pb-16 lg:py-12 px-4 sm:px-6 lg:px-12 mx-auto w-full" style="max-width: 800px;" data-aos="fade-right">
+        <!-- Our Story Text -->
+        <div class="space-y-6">
+          <div class="relative">
+            <!-- Yellow accent bars -->
+            <div class="flex gap-2 mb-4 mt-8 md:mt-0">
+              <div class="w-16 h-1 bg-gradient-to-r from-yellow-400 to-yellow-500 animate-pulse"></div>
+              <div class="w-12 h-1 bg-gradient-to-r from-yellow-500 to-amber-500 animate-pulse" style="animation-delay: 0.2s;"></div>
+              <div class="w-8 h-1 bg-gradient-to-r from-amber-500 to-yellow-600 animate-pulse" style="animation-delay: 0.4s;"></div>
+            </div>
+            <h3 class="font-sans text-3xl md:text-4xl font-bold text-gray-900">Our Story</h3>
+          </div>
+          <div class="space-y-5 text-gray-700 text-lg md:text-xl leading-relaxed">
+            <p>
+              In our debut collection, we draw inspiration from Japanese gardens — balanced, intentional, and built with purpose.
+            </p>
+            <p>
+              Relating back to our Chicago roots, we channel that into clean, versatile pieces designed to move wherever life takes you.
+            </p>
+            <p>
+              Whether you're chasing goals, finding your rhythm, or carving out your own identity, Blueprint Apparel reflects your
+              focus, discipline, and individuality.
+            </p>
+            <p class="font-semibold text-gray-900 italic border-l-4 border-transparent pl-4 relative mb-16 md:mb-20">
+              <span class="absolute left-0 top-0 bottom-0 w-1 bg-gradient-to-b from-yellow-400 via-yellow-500 to-amber-500"></span>
+              This isn't about following trends — it's about following your path.
+            </p>
+          </div>
         </div>
-      {% endif %}
 
-      <!-- Subscription Type Toggle -->
-      <div class="flex gap-4 mb-6 justify-center">
-        <button type="button"
-                onclick="showEmailForm()"
-                id="email-tab"
-                class="px-6 py-2 rounded-md font-semibold transition bg-gray-600 text-white">Email</button>
-        <button type="button"
-                onclick="showSMSForm()"
-                id="sms-tab"
-                class="px-6 py-2 rounded-md font-semibold transition bg-gray-200 text-gray-700 hover:bg-gray-300">
-          SMS
-        </button>
+        <!-- Join the Blueprint Community Signup -->
+        <div class="relative overflow-hidden rounded-2xl shadow-2xl p-4 md:p-8 blueprint-corner flex flex-col justify-center">
+        <!-- Psychedelic Abstract Background -->
+        <div class="absolute inset-0 bg-gradient-to-br from-purple-200 via-pink-200 to-orange-200"></div>
+
+        <!-- Abstract geometric patterns -->
+        <div class="absolute top-0 right-0 w-48 h-48 bg-gradient-to-br from-cyan-500/30 to-purple-600/30 rounded-full blur-3xl"></div>
+        <div class="absolute bottom-0 left-0 w-48 h-48 bg-gradient-to-tr from-pink-500/30 to-orange-600/30 rounded-full blur-3xl"></div>
+        <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-72 h-72 opacity-10">
+          <div class="w-full h-full" style="background: conic-gradient(from 0deg,
+            #a855f7 0deg 60deg,
+            #ec4899 60deg 120deg,
+            #f97316 120deg 180deg,
+            #3b82f6 180deg 240deg,
+            #10b981 240deg 300deg,
+            #a855f7 300deg 360deg);"></div>
+        </div>
+
+        <div class="relative">
+          <!-- Animated accent bars -->
+          <div class="flex justify-center gap-2 mb-4">
+            <div class="w-16 h-1 bg-gradient-to-r from-yellow-400 to-yellow-500 rounded-full animate-pulse"></div>
+            <div class="w-16 h-1 bg-gradient-to-r from-yellow-500 to-amber-500 rounded-full animate-pulse" style="animation-delay: 0.2s;"></div>
+            <div class="w-16 h-1 bg-gradient-to-r from-amber-500 to-yellow-400 rounded-full animate-pulse" style="animation-delay: 0.4s;"></div>
+          </div>
+          <h2 class="font-sans text-2xl md:text-3xl font-bold mb-4 text-center text-gray-900">Join the Blueprint Community</h2>
+          <ul class="text-gray-700 text-sm md:text-base mb-6 font-medium space-y-2">
+            <li class="flex items-center gap-2">
+              <svg class="w-5 h-5 text-yellow-500 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path>
+              </svg>
+              <span>Early access to the Foundation drop</span>
+            </li>
+            <li class="flex items-center gap-2">
+              <svg class="w-5 h-5 text-yellow-500 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path>
+              </svg>
+              <span><strong class="text-gray-900">10% off</strong> your first order</span>
+            </li>
+            <li class="flex items-center gap-2">
+              <svg class="w-5 h-5 text-yellow-500 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path>
+              </svg>
+              <span>Latest deals and exclusive offers</span>
+            </li>
+            <li class="flex items-center gap-2">
+              <svg class="w-5 h-5 text-indigo-500 flex-shrink-0" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M20.317 4.37a19.791 19.791 0 00-4.885-1.515.074.074 0 00-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 00-5.487 0 12.64 12.64 0 00-.617-1.25.077.077 0 00-.079-.037A19.736 19.736 0 003.677 4.37a.07.07 0 00-.032.027C.533 9.046-.32 13.58.099 18.057a.082.082 0 00.031.057 19.9 19.9 0 005.993 3.03.078.078 0 00.084-.028c.462-.63.874-1.295 1.226-1.994a.076.076 0 00-.041-.106 13.107 13.107 0 01-1.872-.892.077.077 0 01-.008-.128 10.2 10.2 0 00.372-.292.074.074 0 01.077-.01c3.928 1.793 8.18 1.793 12.062 0a.074.074 0 01.078.01c.12.098.246.198.373.292a.077.077 0 01-.006.127 12.299 12.299 0 01-1.873.892.077.077 0 00-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 00.084.028 19.839 19.839 0 006.002-3.03.077.077 0 00.032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 00-.031-.03zM8.02 15.33c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.956-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.956 2.418-2.157 2.418zm7.975 0c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.955-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.946 2.418-2.157 2.418z"/>
+              </svg>
+              <span>Access to our Discord community</span>
+            </li>
+          </ul>
+
+          <!-- Messages -->
+          {% if messages %}
+            <div class="mb-6" id="message-container">
+              {% for message in messages %}
+                <div class="message-alert px-6 py-4 rounded-lg text-center font-medium mb-3
+                            {% if message.tags == 'success' %}
+                              bg-green-100 text-green-800 border border-green-300
+                            {% elif message.tags == 'error' %}
+                              bg-red-100 text-red-800 border border-red-300
+                            {% elif message.tags == 'warning' %}
+                              bg-yellow-100 text-yellow-800 border border-yellow-300
+                            {% else %}
+                              bg-blue-100 text-blue-800 border border-blue-300
+                            {% endif %}"
+                     style="animation: slideDown 0.3s ease-out;
+                            transition: opacity 0.5s ease-out">{{ message }}</div>
+              {% endfor %}
+            </div>
+          {% endif %}
+
+          <!-- Smart Signup Form (Auto-detects Email or SMS) -->
+          <form id="main-smart-form"
+                method="POST"
+                onsubmit="return handleMainSmartSubmit(event)"
+                class="flex flex-col gap-2 relative">
+            {% csrf_token %}
+            <div class="flex-1">
+              <input type="text"
+                     id="main-contact-input"
+                     name="contact"
+                     placeholder="Enter your email or phone number"
+                     required
+                     oninput="updateMainInputType(this)"
+                     class="w-full px-3 py-2 rounded-lg border text-base text-black border-gray-900 placeholder:text-gray-900 focus:ring-2 focus:ring-yellow-500 focus:border-transparent transition-all" />
+              <input type="hidden" id="main-email-field" name="email" value="">
+              <input type="hidden" id="main-phone-field" name="phone_number" value="">
+              <p id="main-input-hint" class="text-xs text-gray-600 mt-1 opacity-0 transition-opacity absolute">
+                <!-- Hint will appear here -->
+              </p>
+            </div>
+            <button type="submit"
+                    class="px-6 py-2.5 rounded-lg bg-gray-900 text-white font-bold hover:bg-gray-800 active:bg-black transition-all shadow-xl hover:shadow-2xl hover:scale-105 transform">
+              Sign Up
+            </button>
+          </form>
+          <p id="main-sms-disclaimer" class="text-xs text-gray-600 mt-2 text-center opacity-0 transition-opacity">
+            By subscribing, you agree to receive marketing texts. Reply STOP to unsubscribe.
+          </p>
+        </div>
+        </div>
       </div>
 
-      <!-- Email Signup Form -->
-      <form id="email-form"
-            action="{% url 'shop:subscribe' %}"
-            method="POST"
-            class="flex flex-col sm:flex-row gap-3">
-        {% csrf_token %}
-        <input type="email"
-               name="email"
-               placeholder="Enter your email"
-               required
-               class="flex-1 px-4 py-2 rounded-md border text-xl text-black border-black" />
-        <button type="submit"
-                class="px-6 py-2 rounded-md bg-gray-600 text-white font-semibold hover:bg-indigo-500 transition">
-          Sign Up
-        </button>
-      </form>
-
-      <!-- SMS Signup Form -->
-      <form id="sms-form"
-            action="{% url 'shop:subscribe_sms' %}"
-            method="POST"
-            class="flex flex-col sm:flex-row gap-3 hidden">
-        {% csrf_token %}
-        <input type="tel"
-               name="phone_number"
-               placeholder="Enter your phone number"
-               required
-               pattern="[0-9\+\-\(\)\s]+"
-               class="flex-1 px-4 py-2 rounded-md border text-xl text-black border-black" />
-        <button type="submit"
-                class="px-6 py-2 rounded-md bg-gray-600 text-white font-semibold hover:bg-indigo-500 transition">
-          Sign Up
-        </button>
-      </form>
-      <p id="sms-disclaimer" class="text-xs text-gray-600 mt-2 hidden">
-        By subscribing, you agree to receive marketing text messages. Message and data rates may apply. Reply STOP to unsubscribe.
-      </p>
-    </div>
-
-    <!-- Brand Story -->
-    <div class="flex justify-center mx-6 md:mx-12 mb-12">
-      <p class="font-sans text-xl md:text-3xl text-black w-full md:w-lg leading-relaxed">
-        In our debut collection, we draw inspiration from Japanese gardens — balanced, intentional, and built with purpose —
-        relating back to our Chicago roots, we channel that into clean, versatile pieces designed to move wherever life takes you.
-        <br>
-        <br>
-        Whether you're chasing goals, finding your rhythm, or carving out your own identity, Blueprint Apparel reflects your
-        focus, discipline, and individuality.
-        <br>
-        <br>
-        This isn't about following trends — it's about following your path.
-      </p>
-    </div>
-
-    <!-- Feature Image -->
-    <img class="rounded-4xl mb-32"
-         src="{% static 'images/web.webp' %}"
-         alt="Blueprint Collection"
-         loading="lazy"
-         width="1920"
-         height="1080" />
-
-    <!-- Design Inspiration -->
-    <div class="flex mx-6 md:mx-12 mb-12 justify-center">
-      <div class="w-full md:w-lg rounded-3xl" data-aos="zoom-in">
-        <p class="font-sans text-xl md:text-3xl text-black w-full leading-relaxed">
-          This first release is partly inspired by the design of the tiger in classical Korean art. This is something we
-          pay homage to as a prominent feature of the collection to instill courage and hope for the future.
-          <br>
-          <br>
-          Come back soon for an official release date/time, but in the meantime, subscribe to our email list for new deals
-          and arrivals or join us on our moderated Discord channel around design fundamentals and materials for lifestyle fashion.
-        </p>
+      <!-- Right Column: Image -->
+      <div class="relative h-screen overflow-hidden shimmer-effect">
+        <img class="w-full h-full object-cover"
+             src="{% static 'images/web.webp' %}"
+             alt="Blueprint Collection"
+             loading="lazy" />
       </div>
     </div>
+
   </div>
 
   <!-- ============================================ -->
   <!-- FOUNDATION LINE DETAILS SECTION -->
   <!-- ============================================ -->
-  <section class="w-full py-20 px-6 lg:py-32 lg:px-12"
-           style="background-color:#0d0d0d;
-                  background-image: url('{% static 'images/blueprint_bg1.webp' %}');
-                  background-size: cover;
-                  background-position: center">
-    <div class="max-w-7xl mx-auto">
-      <!-- Section Title -->
-      <div class="text-center mb-16 lg:mb-24" data-aos="fade-up">
-        <h2 class="font-sans text-5xl lg:text-7xl text-white font-bold mb-6 tracking-tight">The FOUNDATION Line</h2>
-        <div class="w-24 h-1 bg-white mx-auto mb-6"></div>
-        <p class="text-white text-2xl lg:text-3xl font-light">Design Philosophy</p>
-      </div>
+  <section class="scroll-section w-full h-screen relative overflow-hidden" style="background: #0a0a0a;">
+    <!-- Background Video -->
+    <video id="foundation-video" autoplay muted loop playsinline class="absolute inset-0 w-full h-full object-cover opacity-30" style="z-index: 0; object-position: 30% center;">
+      <!-- Mobile: Optimized 720p version (1-2MB) -->
+      <source src="{% static 'images/screen_recording_mobile.mp4' %}" type="video/mp4" media="(max-width: 768px)">
+      <!-- Desktop/Tablet: Optimized 1080p version (2-4MB) -->
+      <source src="{% static 'images/screen_recording_desktop.mp4' %}" type="video/mp4">
+      <!-- Fallback: Original quality (12MB) if optimized versions missing -->
+      <source src="{% static 'images/screen_recording.mov' %}" type="video/mp4">
+      Your browser does not support the video tag.
+    </video>
 
-      <!-- Three Column Layout: Text | Instagram | Text -->
-      <div class="grid grid-cols-1 lg:grid-cols-[1fr_auto_1fr] gap-12 lg:gap-16 items-center">
+    <!-- Subtle gradient overlay -->
+    <div class="absolute inset-0 bg-gradient-to-b from-black/60 via-transparent to-black/60 pointer-events-none" style="z-index: 1;"></div>
 
-        <!-- Left - First Design Element -->
-        <div class="text-center lg:text-right space-y-6" data-aos="fade-right">
-          <h3 class="text-4xl lg:text-5xl font-sans text-white font-semibold leading-tight">Quiet Discipline</h3>
-          <p class="text-2xl lg:text-3xl text-white leading-relaxed font-light">
-            Every stone and every line serves a purpose. Inspired by flowing harmony and intentional design.
-          </p>
+    <!-- The FOUNDATION Line - Centered on all screens -->
+    <div class="absolute left-1/2 -translate-x-1/2 top-8 lg:top-12" style="z-index: 10;" data-aos="fade-left">
+      <div class="bg-black/20 backdrop-blur-md p-4 md:p-6 lg:p-8 rounded-lg shadow-2xl max-w-[280px] sm:max-w-sm md:max-w-xl lg:max-w-2xl">
+        <div class="flex gap-2 mb-2 md:mb-3 lg:mb-4">
+          <div class="w-8 md:w-12 h-0.5 bg-yellow-400"></div>
+          <div class="w-8 md:w-12 h-0.5 bg-yellow-500"></div>
         </div>
-
-        <!-- Center - Instagram -->
-        <div class="flex flex-col items-center justify-center mx-auto" data-aos="zoom-in">
-          <div class="w-full max-w-md lg:max-w-lg">
-            {% include 'partials/insta.html' %}
-
-          </div>
-          <a href="https://www.instagram.com/_blueprintapparel"
-             target="_blank"
-             class="mt-6 text-white hover:text-gray-300 transition-colors text-lg font-medium">
-            Follow us on Instagram →
-          </a>
-        </div>
-
-        <!-- Right - Second Design Element -->
-        <div class="text-center lg:text-left space-y-6" data-aos="fade-left">
-          <h3 class="text-4xl lg:text-5xl font-sans text-white font-semibold leading-tight">Modern Balance</h3>
-          <p class="text-2xl lg:text-3xl text-white leading-relaxed font-light">
-            A map for your lifestyle, blending clean design with modern aesthetic and timeless versatility.
-          </p>
-        </div>
-
+        <h2 class="font-sans text-lg md:text-2xl lg:text-5xl font-bold mb-2 md:mb-3 lg:mb-4 tracking-tight text-white drop-shadow-lg whitespace-nowrap">The FOUNDATION Line</h2>
+        <p class="text-yellow-400 text-xs lg:text-sm font-medium tracking-wider">Design Inspiration</p>
+        <ul class="space-y-1.5 md:space-y-2 text-gray-100 text-xs lg:text-base hidden md:block mt-3 lg:mt-4">
+          <li class="flex items-start gap-2">
+            <span class="text-yellow-400 mt-0.5 md:mt-1">•</span>
+            <span>The tiger's strength reimagined in contemporary form</span>
+          </li>
+          <li class="flex items-start gap-2">
+            <span class="text-yellow-400 mt-0.5 md:mt-1">•</span>
+            <span>Where tradition meets minimalist design</span>
+          </li>
+          <li class="flex items-start gap-2">
+            <span class="text-yellow-400 mt-0.5 md:mt-1">•</span>
+            <span>Crafted for those who move with intention</span>
+          </li>
+        </ul>
       </div>
     </div>
+
+    <!-- Instagram Post - Centered on all screens -->
+    <div class="absolute left-1/2 -translate-x-1/2 bottom-8 md:bottom-12 lg:bottom-24" style="z-index: 15;" data-aos="fade-up">
+      <div class="relative inline-block">
+        <div class="absolute bg-gradient-to-r from-amber-500/20 to-orange-500/20 rounded-2xl blur-2xl opacity-50" style="top: -1rem; right: -1rem; bottom: -1rem; left: -1rem;"></div>
+        <div class="relative bg-white/5 backdrop-blur-sm rounded-xl border border-white/20" style="padding: 1rem 1rem 0.5rem 1rem;">
+          {% include 'partials/insta.html' %}
+        </div>
+      </div>
+    </div>
+
+    <style>
+      /* Instagram post responsive scaling */
+      .absolute[data-aos="fade-up"] {
+        transform: scale(0.8) !important;
+      }
+      @media (min-width: 768px) {
+        .absolute[data-aos="fade-up"] {
+          transform: scale(0.85) !important;
+        }
+      }
+      @media (min-width: 1024px) {
+        .absolute[data-aos="fade-up"] {
+          transform: scale(1.2) !important;
+        }
+      }
+    </style>
+
   </section>
 
   <!-- ============================================ -->
@@ -312,7 +725,7 @@
       Join the Blueprint Community
     </h2>
     <p class="text-black-500 text-2xl mb-20">
-      Get early access to the Foundation/Fall drop, latest deals, and our Discord channel.
+      Get early access to the Foundation drop, latest deals, and our Discord channel.
     </p>
     <form action="#" method="POST" class="flex flex-col sm:flex-row gap-3">
       <input type="email" name="email" placeholder="Enter your email" class="flex-1 px-4 py-2 rounded-md border text-xl text-black border-black">
@@ -374,7 +787,7 @@
 <div class="absolute flex justify-center items-center">
   <div class="bg-white/30 backdrop-blur-xs rounded-xl shadow-xl p-40 w-400 h-200 text-center">
     <h2 class="text-6xl text-black font-bold mb-10">Join the Blueprint Community</h2>
-    <p class="text-black text-2xl mb-20">Get early access to the Foundation/Fall release.</p>
+    <p class="text-black text-2xl mb-20">Get early access to the Foundation release.</p>
     <form action="#" method="POST" class="flex flex-col sm:flex-row gap-3">
       <input type="email" name="email" placeholder="Enter your email" class="flex-1 px-4 py-2 rounded-md border text-xl text-black border-black">
       <button type="submit" class="px-6 py-2 rounded-md bg-gray-600 text-white font-semibold hover:bg-indigo-500">Sign Up</button>
@@ -399,6 +812,75 @@
   </div>
 </div>
 -->
+
+  <!-- ============================================ -->
+  <!-- FOOTER -->
+  <!-- ============================================ -->
+  <footer class="relative bg-gradient-to-r from-purple-950 via-black to-pink-950 text-white py-16">
+    <!-- Animated accent line at top -->
+    <div class="absolute top-0 left-0 right-0 h-0.5 bg-gradient-to-r from-yellow-400 via-amber-400 to-yellow-500"></div>
+
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div style="display: flex; flex-wrap: wrap; gap: 2rem; margin-bottom: 2rem;">
+        <!-- Brand Column -->
+        <div style="flex: 1; min-width: 200px;">
+          <img src="{% static 'images/font.webp' %}" alt="Blueprint Apparel" class="h-10 md:h-16 w-auto mb-4 px-2" style="image-rendering: smooth; filter: blur(0.3px);" />
+          <p class="text-gray-400 text-xs leading-relaxed">
+            Clean, versatile pieces designed for wherever life takes you.
+          </p>
+        </div>
+
+        <!-- Shop Column -->
+        <div style="flex: 1; min-width: 200px;">
+          <h3 class="text-white font-bold text-sm mb-3">Shop</h3>
+          <ul class="space-y-1.5">
+            <li><a href="{% url 'shop:coming_soon' %}" class="text-gray-400 hover:text-yellow-400 transition-colors text-xs">Foundation Collection</a></li>
+            <li><a href="{% url 'shop:coming_soon' %}" class="text-gray-400 hover:text-yellow-400 transition-colors text-xs">New Arrivals</a></li>
+            <li><a href="{% url 'shop:coming_soon' %}" class="text-gray-400 hover:text-yellow-400 transition-colors text-xs">Best Sellers</a></li>
+          </ul>
+        </div>
+
+        <!-- Company Column -->
+        <div style="flex: 1; min-width: 200px;">
+          <h3 class="text-white font-bold text-sm mb-3">Company</h3>
+          <ul class="space-y-1.5">
+            <li><a href="{% url 'shop:coming_soon' %}" class="text-gray-400 hover:text-yellow-400 transition-colors text-xs">About Us</a></li>
+            <li><a href="{% url 'shop:coming_soon' %}" class="text-gray-400 hover:text-yellow-400 transition-colors text-xs">Our Story</a></li>
+            <li><a href="{% url 'shop:coming_soon' %}" class="text-gray-400 hover:text-yellow-400 transition-colors text-xs">Contact</a></li>
+          </ul>
+        </div>
+
+        <!-- Connect Column -->
+        <div style="flex: 1; min-width: 200px;">
+          <h3 class="text-white font-bold text-sm mb-3">Connect</h3>
+          <div class="flex gap-4 mb-2">
+            <a href="https://www.instagram.com/_blueprintapparel" target="_blank" class="text-gray-400 hover:text-yellow-400 transition-colors">
+              <svg class="w-8 h-8" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/>
+              </svg>
+            </a>
+            <a href="https://discord.com/invite/4dNh3zQe" target="_blank" class="text-gray-400 hover:text-yellow-400 transition-colors">
+              <svg class="w-8 h-8" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M20.317 4.37a19.791 19.791 0 00-4.885-1.515.074.074 0 00-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 00-5.487 0 12.64 12.64 0 00-.617-1.25.077.077 0 00-.079-.037A19.736 19.736 0 003.677 4.37a.07.07 0 00-.032.027C.533 9.046-.32 13.58.099 18.057a.082.082 0 00.031.057 19.9 19.9 0 005.993 3.03.078.078 0 00.084-.028c.462-.63.874-1.295 1.226-1.994a.076.076 0 00-.041-.106 13.107 13.107 0 01-1.872-.892.077.077 0 01-.008-.128 10.2 10.2 0 00.372-.292.074.074 0 01.077-.01c3.928 1.793 8.18 1.793 12.062 0a.074.074 0 01.078.01c.12.098.246.198.373.292a.077.077 0 01-.006.127 12.299 12.299 0 01-1.873.892.077.077 0 00-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 00.084.028 19.839 19.839 0 006.002-3.03.077.077 0 00.032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 00-.031-.03z"/>
+              </svg>
+            </a>
+          </div>
+          <p class="text-gray-400 text-xs">Join our Discord community for exclusive updates and deals.</p>
+        </div>
+      </div>
+
+      <!-- Bottom Bar -->
+      <div class="border-t border-gray-800 pt-6 flex flex-col md:flex-row justify-between items-center">
+        <p class="text-gray-400 text-sm mb-4 md:mb-0">
+          &copy; 2024 Blueprint Apparel. All rights reserved.
+        </p>
+        <div class="flex gap-6">
+          <a href="{% url 'shop:coming_soon' %}" class="text-gray-400 hover:text-yellow-400 text-sm transition-colors">Privacy Policy</a>
+          <a href="{% url 'shop:coming_soon' %}" class="text-gray-400 hover:text-yellow-400 text-sm transition-colors">Terms of Service</a>
+        </div>
+      </div>
+    </div>
+  </footer>
 
 {% endblock %}
 
@@ -428,26 +910,288 @@
           }
       });
 
-      // Toggle between email and SMS subscription forms
-      function showEmailForm() {
-          document.getElementById('email-form').classList.remove('hidden');
-          document.getElementById('sms-form').classList.add('hidden');
-          document.getElementById('sms-disclaimer').classList.add('hidden');
-          document.getElementById('email-tab').classList.add('bg-gray-600', 'text-white');
-          document.getElementById('email-tab').classList.remove('bg-gray-200', 'text-gray-700');
-          document.getElementById('sms-tab').classList.remove('bg-gray-600', 'text-white');
-          document.getElementById('sms-tab').classList.add('bg-gray-200', 'text-gray-700');
+      // ============================================
+      // SMART SIGNUP FORM DETECTION
+      // ============================================
+
+      function detectInputType(value) {
+          // Remove whitespace for detection
+          const trimmed = value.trim();
+
+          // Email detection: contains @ and basic email pattern
+          if (trimmed.includes('@') && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmed)) {
+              return 'email';
+          }
+
+          // Phone detection: contains mostly numbers, +, -, (, ), or spaces
+          if (/^[\d\s\+\-\(\)]+$/.test(trimmed) && trimmed.replace(/\D/g, '').length >= 10) {
+              return 'phone';
+          }
+
+          // Default to email if it contains @, otherwise phone if it has numbers
+          if (trimmed.includes('@')) return 'email';
+          if (/\d/.test(trimmed)) return 'phone';
+
+          return 'email'; // default
       }
 
-      function showSMSForm() {
-          document.getElementById('email-form').classList.add('hidden');
-          document.getElementById('sms-form').classList.remove('hidden');
-          document.getElementById('sms-disclaimer').classList.remove('hidden');
-          document.getElementById('sms-tab').classList.add('bg-gray-600', 'text-white');
-          document.getElementById('sms-tab').classList.remove('bg-gray-200', 'text-gray-700');
-          document.getElementById('email-tab').classList.remove('bg-gray-600', 'text-white');
-          document.getElementById('email-tab').classList.add('bg-gray-200', 'text-gray-700');
+      // Modal input detection
+      function updateModalInputType(input) {
+          const type = detectInputType(input.value);
+          const hint = document.getElementById('modal-input-hint');
+          const disclaimer = document.getElementById('modal-sms-disclaimer');
+
+          if (input.value.trim().length > 0) {
+              if (type === 'email') {
+                  hint.textContent = '📧 Email detected';
+                  hint.classList.remove('opacity-0');
+                  hint.classList.add('text-blue-600');
+                  hint.classList.remove('text-green-600');
+                  disclaimer.classList.add('opacity-0');
+              } else {
+                  hint.textContent = '📱 Phone number detected';
+                  hint.classList.remove('opacity-0');
+                  hint.classList.add('text-green-600');
+                  hint.classList.remove('text-blue-600');
+                  disclaimer.classList.remove('opacity-0');
+              }
+          } else {
+              hint.classList.add('opacity-0');
+              disclaimer.classList.add('opacity-0');
+          }
       }
+
+      // Main form input detection
+      function updateMainInputType(input) {
+          const type = detectInputType(input.value);
+          const hint = document.getElementById('main-input-hint');
+          const disclaimer = document.getElementById('main-sms-disclaimer');
+
+          if (input.value.trim().length > 0) {
+              if (type === 'email') {
+                  hint.textContent = '📧 Email detected';
+                  hint.classList.remove('opacity-0');
+                  hint.classList.add('text-blue-600');
+                  hint.classList.remove('text-green-600');
+                  disclaimer.classList.add('opacity-0');
+              } else {
+                  hint.textContent = '📱 Phone number detected';
+                  hint.classList.remove('opacity-0');
+                  hint.classList.add('text-green-600');
+                  hint.classList.remove('text-blue-600');
+                  disclaimer.classList.remove('opacity-0');
+              }
+          } else {
+              hint.classList.add('opacity-0');
+              disclaimer.classList.add('opacity-0');
+          }
+      }
+
+      // Modal form submission
+      function handleModalSmartSubmit(event) {
+          event.preventDefault();
+          const input = document.getElementById('modal-contact-input');
+          const type = detectInputType(input.value);
+          const form = event.target;
+
+          // Populate the correct hidden field
+          if (type === 'email') {
+              document.getElementById('modal-email-field').value = input.value.trim();
+              document.getElementById('modal-phone-field').value = '';
+              form.action = "{% url 'shop:subscribe' %}";
+          } else {
+              document.getElementById('modal-phone-field').value = input.value.trim();
+              document.getElementById('modal-email-field').value = '';
+              form.action = "{% url 'shop:subscribe_sms' %}";
+          }
+
+          // Submit the form
+          form.submit();
+          return false;
+      }
+
+      // Main form submission
+      function handleMainSmartSubmit(event) {
+          event.preventDefault();
+          const input = document.getElementById('main-contact-input');
+          const type = detectInputType(input.value);
+          const form = event.target;
+
+          // Populate the correct hidden field
+          if (type === 'email') {
+              document.getElementById('main-email-field').value = input.value.trim();
+              document.getElementById('main-phone-field').value = '';
+              form.action = "{% url 'shop:subscribe' %}";
+          } else {
+              document.getElementById('main-phone-field').value = input.value.trim();
+              document.getElementById('main-email-field').value = '';
+              form.action = "{% url 'shop:subscribe_sms' %}";
+          }
+
+          // Submit the form
+          form.submit();
+          return false;
+      }
+
+      // ============================================
+      // SIGNUP MODAL FUNCTIONALITY
+      // ============================================
+
+      let modalAutoShown = false; // Track if modal has auto-shown
+
+      // Open the signup modal
+      function openSignupModal() {
+          console.log('Opening signup modal...');
+          const modal = document.getElementById('signup-modal');
+          if (!modal) {
+              console.error('Modal not found!');
+              return;
+          }
+
+          modal.classList.remove('hidden');
+          // Trigger animation
+          setTimeout(() => {
+              modal.classList.remove('opacity-0');
+              const modalContent = modal.querySelector('.modal-content');
+              if (modalContent) {
+                  modalContent.classList.remove('scale-95');
+                  modalContent.classList.add('scale-100');
+              }
+          }, 10);
+          // Prevent body scroll
+          document.body.style.overflow = 'hidden';
+          console.log('Modal opened successfully');
+      }
+
+      // Close the signup modal
+      function closeSignupModal() {
+          console.log('Closing signup modal...');
+          const modal = document.getElementById('signup-modal');
+          if (!modal) return;
+
+          modal.classList.add('opacity-0');
+          const modalContent = modal.querySelector('.modal-content');
+          if (modalContent) {
+              modalContent.classList.remove('scale-100');
+              modalContent.classList.add('scale-95');
+          }
+          setTimeout(() => {
+              modal.classList.add('hidden');
+          }, 300);
+          // Restore body scroll
+          document.body.style.overflow = '';
+          // Mark as shown (in-memory only, sessionStorage blocked by browser)
+          modalAutoShown = true;
+          console.log('Modal closed');
+      }
+
+
+      // Initialize modal functionality - run immediately
+      (function() {
+          console.log('Modal script loaded');
+
+          function initModal() {
+              console.log('Initializing modal...');
+
+              // Auto-show modal immediately (only once - using in-memory flag only)
+              // Note: sessionStorage disabled due to browser tracking prevention
+              console.log('modalAutoShown flag:', modalAutoShown);
+
+              if (!modalAutoShown) {
+                  console.log('Attempting to show modal...');
+                  try {
+                      openSignupModal();
+                      modalAutoShown = true;
+                  } catch (error) {
+                      console.error('Error opening modal:', error);
+                  }
+              } else {
+                  console.log('Modal already shown, skipping');
+              }
+
+              // Close modal when clicking outside
+              const modal = document.getElementById('signup-modal');
+              if (modal) {
+                  console.log('Modal element found, adding click listener');
+                  modal.addEventListener('click', function(e) {
+                      if (e.target === modal) {
+                          closeSignupModal();
+                      }
+                  });
+              } else {
+                  console.error('Modal element not found!');
+              }
+
+              // Close modal with Escape key
+              document.addEventListener('keydown', function(e) {
+                  if (e.key === 'Escape') {
+                      const modal = document.getElementById('signup-modal');
+                      if (modal && !modal.classList.contains('hidden')) {
+                          closeSignupModal();
+                      }
+                  }
+              });
+          }
+
+          // Run immediately if DOM is already loaded, otherwise wait
+          if (document.readyState === 'loading') {
+              console.log('DOM still loading, waiting for DOMContentLoaded...');
+              document.addEventListener('DOMContentLoaded', initModal);
+          } else {
+              console.log('DOM already loaded, running immediately');
+              initModal();
+          }
+      })();
+
+      // ============================================
+      // HERO SLIDESHOW CONTROLS
+      // ============================================
+      let currentHeroSlide = 1;
+
+      function changeHeroSlide(slideNum) {
+          // Hide all slides
+          document.querySelectorAll('.hero-slide').forEach(slide => {
+              slide.style.opacity = '0';
+          });
+
+          // Reset all dots
+          document.querySelectorAll('.hero-dot').forEach(dot => {
+              dot.style.opacity = '1';
+              dot.classList.remove('bg-yellow-400');
+              dot.classList.add('bg-white');
+          });
+
+          // Show selected slide
+          document.querySelector('.hero-slide-' + slideNum).style.opacity = '1';
+
+          // Highlight selected dot
+          const selectedDot = document.querySelector('.hero-dot-' + slideNum);
+          selectedDot.style.opacity = '1';
+          selectedDot.classList.remove('bg-white');
+          selectedDot.classList.add('bg-yellow-400');
+
+          currentHeroSlide = slideNum;
+      }
+
+      // Auto-advance slideshow every 8 seconds
+      setInterval(() => {
+          const nextSlide = currentHeroSlide === 1 ? 2 : 1;
+          changeHeroSlide(nextSlide);
+      }, 8000);
+
+      // ============================================
+      // SLOW DOWN FOUNDATION VIDEO
+      // ============================================
+      const foundationVideo = document.getElementById('foundation-video');
+      if (foundationVideo) {
+          foundationVideo.playbackRate = 0.5; // Play at half speed
+      }
+
+      // ============================================
+      // SMOOTH SCROLL SNAPPING (Book-like page turning)
+      // ============================================
+      // The CSS scroll-snap properties handle the smooth snapping behavior
+      // User scrolls once and it smoothly transitions to the next section
   </script>
 
 {% endblock %}

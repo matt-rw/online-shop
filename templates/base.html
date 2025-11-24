@@ -13,11 +13,12 @@
 
     <!-- Favicon -->
     <link rel="icon" href="{% static 'favicon.ico' %}" type="image/x-icon" />
+    <link rel="icon" href="{% static 'favicon.png' %}" type="image/png" sizes="128x128" />
 
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400..900&display=swap"
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Playfair+Display:wght@400..900&display=swap"
           rel="stylesheet">
 
     <!-- Stylesheets -->
@@ -96,13 +97,6 @@
 
       {% block content %}{% endblock %}
     </main>
-
-    <!-- Footer -->
-    <footer class="bg-gray-100 mt-16 border-t" style="transition: background-color 0.3s ease, border-color 0.3s ease;">
-      <div class="max-w-7xl mx-auto px-4 py-6 text-sm text-gray-600 text-center" style="transition: color 0.3s ease;">
-        © {{ now|date:"Y" }} Blueprint Apparel. All rights reserved.
-      </div>
-    </footer>
 
     <!-- Lenis Smooth Scroll -->
     <script type="module">

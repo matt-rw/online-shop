@@ -1,8 +1,17 @@
 {% load static %}
 
-<nav class="navbar bg-base-100 shadow-sm bg-black">
+<nav class="navbar bg-base-100 shadow-sm relative overflow-hidden">
+  <!-- Psychedelic gradient background -->
+  <div class="absolute inset-0 bg-gradient-to-r from-purple-950 via-black to-pink-950"></div>
+
+  <!-- Animated accent line at bottom -->
+  <div class="absolute bottom-0 left-0 right-0 h-0.5 bg-gradient-to-r from-yellow-400 via-amber-400 to-yellow-500 z-50"></div>
+
+  <!-- Subtle pattern overlay -->
+  <div class="absolute inset-0 opacity-10" style="background-image: radial-gradient(circle at 20% 50%, rgba(168, 85, 247, 0.3) 0%, transparent 50%), radial-gradient(circle at 80% 50%, rgba(236, 72, 153, 0.3) 0%, transparent 50%);"></div>
+
   <!-- Left side (reserved for future menu) -->
-  <div class="navbar-start">
+  <div class="navbar-start relative z-10">
     <!-- TODO: Mobile dropdown menu for categories
     <div class="dropdown">
       <button tabindex="0" role="button" class="btn btn-ghost btn-circle">
@@ -20,16 +29,28 @@
   </div>
 
   <!-- Center - Logo -->
-  <div class="navbar-center">
-    <a href="/" class="block">
-      <img src="{% static 'images/blueprint_b_circle.jpg' %}"
-           class="h-[50px] w-auto"
-           alt="Blueprint Apparel Logo" />
+  <div class="navbar-center relative z-10">
+    <a href="/" class="block group">
+      <div class="relative inline-block">
+        <!-- Colorful glow effect (bottom layer) -->
+        <div class="absolute inset-0 -m-3 bg-gradient-to-r from-purple-400 via-pink-400 to-rose-500 rounded-full blur-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-0"></div>
+        <div class="absolute inset-0 -m-5 bg-gradient-to-r from-purple-500 via-pink-500 to-rose-600 rounded-full blur-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-0"></div>
+        <div class="absolute inset-0 -m-8 bg-gradient-to-r from-purple-600 via-pink-600 to-rose-700 rounded-full blur-2xl opacity-0 group-hover:opacity-75 transition-opacity duration-300 z-0"></div>
+        <!-- Black glow ring (middle layer - transition) -->
+        <div class="absolute -inset-1 bg-black rounded-full blur-sm opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-[5]"></div>
+        <div class="absolute -inset-2 bg-black rounded-full blur-md opacity-0 group-hover:opacity-90 transition-opacity duration-300 z-[5]"></div>
+        <div class="absolute -inset-3 bg-black rounded-full blur-lg opacity-0 group-hover:opacity-70 transition-opacity duration-300 z-[5]"></div>
+        <div class="absolute -inset-4 bg-black rounded-full blur-xl opacity-0 group-hover:opacity-50 transition-opacity duration-300 z-[5]"></div>
+        <!-- Logo on top -->
+        <img src="{% static 'images/blueprint_b_circular.png' %}"
+             class="relative z-10 h-[50px] w-[50px] transition-transform duration-300 group-hover:scale-110"
+             alt="Blueprint Apparel Logo" />
+      </div>
     </a>
   </div>
 
-  <!-- Right side (cart/profile) -->
-  <div class="navbar-end">
+  <!-- Right side (reserved for future cart/profile) -->
+  <div class="navbar-end relative z-10">
     <!-- TODO: Shopping cart dropdown
     <div class="dropdown dropdown-end">
       <button tabindex="0" role="button" class="btn btn-ghost btn-circle">
@@ -51,43 +72,5 @@
       </div>
     </div>
     -->
-
-    <!-- User profile dropdown -->
-    {% if user.is_authenticated %}
-      <div class="dropdown dropdown-end">
-        <button tabindex="0" role="button" class="btn btn-ghost btn-circle avatar">
-          <div class="w-10 rounded-full bg-gradient-to-br from-purple-500 to-purple-700 flex items-center justify-center text-white font-bold text-sm">
-            {{ user.username|slice:":2"|upper }}
-          </div>
-        </button>
-        <ul tabindex="0" class="menu menu-sm dropdown-content bg-base-100 rounded-box z-[1] mt-3 w-52 p-2 shadow-lg border border-gray-200">
-          <li class="menu-title">
-            <span class="text-xs text-gray-500">{{ user.email }}</span>
-          </li>
-          {% if user.is_staff %}
-            <li><a href="{% url 'admin_home' %}">
-              <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-              </svg>
-              Admin Dashboard
-            </a></li>
-          {% endif %}
-          <li><a href="/accounts/logout/">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-            </svg>
-            Sign Out
-          </a></li>
-        </ul>
-      </div>
-    {% else %}
-      <a href="/accounts/login/" class="btn btn-ghost btn-sm text-white">
-        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1" />
-        </svg>
-        Sign In
-      </a>
-    {% endif %}
   </div>
 </nav>

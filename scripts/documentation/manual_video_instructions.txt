@@ -1,0 +1,261 @@
+========================================
+VIDEO OPTIMIZATION - MANUAL INSTRUCTIONS
+========================================
+
+❌ ffmpeg is not available on this system
+✅ Original video is safely backed up at:
+   static/images/originals/video/screen_recording.mov
+
+========================================
+SOLUTION: USE ONLINE TOOL (5-10 minutes)
+========================================
+
+I'll guide you through using CloudConvert (free, no signup required):
+
+========================================
+STEP 1: CREATE MOBILE VERSION (720p)
+========================================
+
+1. Open in browser:
+   https://cloudconvert.com/mov-to-mp4
+
+2. Click "Select File" and upload:
+   static/images/screen_recording.mov
+
+3. Click the WRENCH ICON (⚙️) next to the file to open settings
+
+4. Configure these settings:
+
+   Video Codec: H.264
+
+   Resolution: Custom
+   → Width: (leave auto)
+   → Height: 720
+
+   Quality: CRF
+   → Value: 28
+
+   Profile: Main
+
+   Audio Codec: Remove Audio
+   (or set to "None")
+
+   Fast Start: ✓ (checked)
+
+5. Click "Convert"
+
+6. Wait for conversion (2-3 minutes)
+
+7. Download the file
+
+8. Rename downloaded file to:
+   screen_recording_mobile.mp4
+
+9. Move to your project:
+   static/images/screen_recording_mobile.mp4
+
+✅ Mobile version complete!
+
+Expected size: 1-2 MB (from 11.24 MB)
+
+========================================
+STEP 2: CREATE DESKTOP VERSION (1080p)
+========================================
+
+1. Go back to CloudConvert:
+   https://cloudconvert.com/mov-to-mp4
+
+2. Upload the SAME file again:
+   static/images/screen_recording.mov
+
+3. Click the WRENCH ICON (⚙️) for settings
+
+4. Configure these settings:
+
+   Video Codec: H.264
+
+   Resolution: Custom
+   → Width: (leave auto)
+   → Height: 1080
+
+   Quality: CRF
+   → Value: 23
+
+   Profile: High
+
+   Audio Codec: Remove Audio
+   (or set to "None")
+
+   Fast Start: ✓ (checked)
+
+5. Click "Convert"
+
+6. Wait for conversion (3-4 minutes)
+
+7. Download the file
+
+8. Rename downloaded file to:
+   screen_recording_desktop.mp4
+
+9. Move to your project:
+   static/images/static/images/screen_recording_desktop.mp4
+
+✅ Desktop version complete!
+
+Expected size: 2-4 MB (from 11.24 MB)
+
+========================================
+STEP 3: VERIFY FILES
+========================================
+
+Check that you now have all three files:
+
+cd /home/matt/projects/online-shop
+ls -lh static/images/screen_recording*.{mov,mp4}
+
+You should see:
+✅ screen_recording.mov (11.24 MB - original, for fallback)
+✅ screen_recording_mobile.mp4 (1-2 MB - for phones)
+✅ screen_recording_desktop.mp4 (2-4 MB - for computers)
+
+========================================
+STEP 4: TEST IN BROWSER
+========================================
+
+1. Run Django server:
+   python manage.py runserver
+
+2. Open homepage: http://localhost:8000
+
+3. Open DevTools (F12) → Network tab
+
+4. Test MOBILE:
+   - Click device toolbar icon (Ctrl+Shift+M)
+   - Select "iPhone 12" or similar
+   - Reload page
+   - Look in Network tab for video file
+   - Should load: screen_recording_mobile.mp4 (~1-2MB)
+
+5. Test DESKTOP:
+   - Turn off device toolbar
+   - Ensure window is wide (>768px)
+   - Reload page
+   - Should load: screen_recording_desktop.mp4 (~2-4MB)
+
+6. Check video quality:
+   - Mobile: Should look great on small screen
+   - Desktop: Should look excellent on large screen
+
+========================================
+ALTERNATIVE: HANDBRAKE APP
+========================================
+
+If you prefer a desktop app:
+
+1. Download Handbrake:
+   https://handbrake.fr/downloads.php
+
+2. Open Handbrake
+
+3. For MOBILE version:
+   - Open File: screen_recording.mov
+   - Preset: "Fast 720p30"
+   - Video tab → Quality: RF 28
+   - Audio tab → Remove all tracks
+   - Save to: screen_recording_mobile.mp4
+
+4. For DESKTOP version:
+   - Open File: screen_recording.mov
+   - Preset: "Fast 1080p30"
+   - Video tab → Quality: RF 23
+   - Audio tab → Remove all tracks
+   - Save to: screen_recording_desktop.mp4
+
+========================================
+QUALITY CHECK GUIDE
+========================================
+
+After creating both files:
+
+Mobile (720p, CRF 28):
+□ File size: 1-2 MB ✓
+□ Plays smoothly ✓
+□ No pixelation ✓
+□ Looks good on phone ✓
+
+Desktop (1080p, CRF 23):
+□ File size: 2-4 MB ✓
+□ Sharp on large screen ✓
+□ No compression artifacts ✓
+□ Professional quality ✓
+
+If quality isn't good enough:
+→ See COMPLETE_VIDEO_OPTIMIZATION.md
+→ Can adjust CRF values (lower = better quality)
+
+========================================
+EXPECTED PERFORMANCE IMPROVEMENT
+========================================
+
+Before (everyone loads 11.24 MB):
+- Mobile 3G: 15-20 seconds
+- Desktop WiFi: 2-3 seconds
+
+After (optimized versions):
+- Mobile 3G: 2-3 seconds (1-2 MB)
+- Desktop WiFi: 1-2 seconds (2-4 MB)
+
+Total bandwidth saved per visitor:
+- Mobile: ~9 MB (80% reduction)
+- Desktop: ~7 MB (65% reduction)
+
+========================================
+CURRENT FILE LOCATIONS
+========================================
+
+Original (backed up):
+/home/matt/projects/online-shop/static/images/originals/video/screen_recording.mov
+
+Working copy (for fallback):
+/home/matt/projects/online-shop/static/images/screen_recording.mov
+
+Optimized versions (create these):
+/home/matt/projects/online-shop/static/images/screen_recording_mobile.mp4
+/home/matt/projects/online-shop/static/images/screen_recording_desktop.mp4
+
+========================================
+TROUBLESHOOTING
+========================================
+
+"CloudConvert says file too large":
+→ File is 11.24 MB, should be fine
+→ Try splitting into smaller segments if needed
+
+"Quality looks bad":
+→ Lower CRF value (28→26 for mobile, 23→20 for desktop)
+→ Increase resolution slightly
+→ Original still available as fallback
+
+"Can't find downloaded file":
+→ Check browser's Downloads folder
+→ Look for .mp4 files
+→ Rename to exact names above
+
+"Video won't play in browser":
+→ Check file extension is .mp4
+→ Verify file is in static/images/
+→ Clear browser cache (Ctrl+Shift+R)
+→ Check console for errors (F12)
+
+========================================
+NEED HELP?
+========================================
+
+Detailed guides available:
+- COMPLETE_VIDEO_OPTIMIZATION.md (full guide)
+- VIDEO_QUICK_START.txt (quick reference)
+
+The HTML is already configured to use these files
+automatically once you create them!
+
+========================================

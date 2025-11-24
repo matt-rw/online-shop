@@ -276,6 +276,15 @@
     .btn-secondary:hover {
       background: #e2e8f0;
     }
+
+    .content-card {
+      background: white;
+      border: 1px solid #e2e8f0;
+    }
+
+    .content-card h2 {
+      color: #0f172a;
+    }
   </style>
   {% include "admin/partials/dark_mode_apply.html" %}
 </head>
@@ -319,7 +328,7 @@
     </div>
 
     <!-- Returns List -->
-    <div style="background: white; border-radius: 16px; padding: 2rem; box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);">
+    <div class="content-card" style="border-radius: 16px; padding: 2rem; box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);">
       <h2 style="font-size: 1.5rem; font-weight: 700; margin-bottom: 1.5rem;">All Returns ({{ returns|length }})</h2>
 
       {% if returns %}

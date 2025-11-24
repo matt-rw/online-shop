@@ -12,7 +12,13 @@ html {
 [data-theme='dark'] .stat-box,
 [data-theme='dark'] .admin-card,
 [data-theme='dark'] .card,
-[data-theme='dark'] .products-section {
+[data-theme='dark'] .products-section,
+[data-theme='dark'] .section,
+[data-theme='dark'] .chart-section,
+[data-theme='dark'] .order-card,
+[data-theme='dark'] .content-card,
+[data-theme='dark'] .category-item,
+[data-theme='dark'] .discounts-section {
   background: #1a1f26 !important;
   border-color: #2d3748 !important;
 }
@@ -45,6 +51,24 @@ html {
 
 [data-theme='dark'] .stat-label {
   color: #a0aec0 !important;
+}
+
+[data-theme='dark'] .stat-card {
+  background: #1a1f26 !important;
+  border-color: #2d3748 !important;
+}
+
+[data-theme='dark'] .stat-card h3,
+[data-theme='dark'] .stat-card p {
+  color: #e5e5e5 !important;
+}
+
+[data-theme='dark'] .discounts-section .section-title,
+[data-theme='dark'] .discounts-section h2,
+[data-theme='dark'] .discounts-section h3,
+[data-theme='dark'] .discounts-section td,
+[data-theme='dark'] .discounts-section p {
+  color: #e5e5e5 !important;
 }
 
 /* Tables */
@@ -99,8 +123,14 @@ html {
 }
 
 [data-theme='dark'] .btn-primary {
-  background: #667eea !important;
-  color: white !important;
+  background: #2d3748 !important;
+  color: #e5e5e5 !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3) !important;
+}
+
+[data-theme='dark'] .btn-primary:hover {
+  background: #374151 !important;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.4) !important;
 }
 
 /* Modals */
@@ -138,4 +168,54 @@ html {
 /* Badges */
 [data-theme='dark'] .badge {
   opacity: 0.9;
+}
+
+/* Campaign Pages */
+[data-theme='dark'] .section h2 {
+  color: #e5e5e5 !important;
+  border-color: #2d3748 !important;
+}
+
+[data-theme='dark'] .filter-tab {
+  background: #1a1f26 !important;
+  color: #a0aec0 !important;
+  border-color: #2d3748 !important;
+}
+
+[data-theme='dark'] .filter-tab:hover {
+  border-color: #667eea !important;
+  color: #667eea !important;
+}
+
+[data-theme='dark'] .filter-tab.active {
+  background: #667eea !important;
+  color: white !important;
+  border-color: #667eea !important;
+}
+
+[data-theme='dark'] .nav-links a {
+  color: #a0aec0 !important;
+}
+
+[data-theme='dark'] .nav-links a:hover {
+  background: #2d3748 !important;
+  color: #e5e5e5 !important;
+}
+
+[data-theme='dark'] .form-group small {
+  color: #a0aec0 !important;
+}
+
+[data-theme='dark'] .alert {
+  border-color: #2d3748 !important;
+}
+
+[data-theme='dark'] .alert-success {
+  background: #1a3a2a !important;
+  color: #9ae6b4 !important;
+}
+
+[data-theme='dark'] .alert-error {
+  background: #3a1a1a !important;
+  color: #fc8181 !important;
 }

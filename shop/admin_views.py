@@ -42,23 +42,61 @@ def admin_home(request):
     Central admin dashboard with quick access to all admin tools.
     Only accessible to admin/staff users.
     """
-    from .models.analytics import PageView
+    from .models.analytics import PageView, VisitorSession
+    from .models.cart import Order
+    from .models.product import ProductVariant
+    from decimal import Decimal
 
     now = timezone.now()
     last_24h = now - timedelta(hours=24)
+    last_30d = now - timedelta(days=30)
 
-    # Quick stats
+    # Calculate orders and revenue
+    total_orders = Order.objects.count()
+    orders_30d = Order.objects.filter(created_at__gte=last_30d).count()
+    total_revenue = Order.objects.aggregate(total=Sum("total"))["total"] or Decimal("0")
+    revenue_30d = Order.objects.filter(created_at__gte=last_30d).aggregate(total=Sum("total"))["total"] or Decimal("0")
+
+    # Calculate active sessions and visitors
+    active_sessions = VisitorSession.objects.filter(last_seen__gte=now - timedelta(hours=1)).count()
+    total_visitors = VisitorSession.objects.count()
+
+    # Calculate conversion rate
+    total_sessions = VisitorSession.objects.count()
+    conversion_rate = (total_orders / total_sessions * 100) if total_sessions > 0 else 0
+
+    # Quick stats - comprehensive metrics from all dashboards
     stats = {
+        # Users & Subscribers
         "total_users": User.objects.count(),
         "total_email_subs": EmailSubscription.objects.count(),
         "total_sms_subs": SMSSubscription.objects.count(),
-        "total_products": Product.objects.count(),
-        "total_page_views": PageView.objects.count(),
-        "page_views_24h": PageView.objects.filter(viewed_at__gte=last_24h).count(),
         "new_email_subs_24h": EmailSubscription.objects.filter(subscribed_at__gte=last_24h).count(),
         "new_sms_subs_24h": SMSSubscription.objects.filter(subscribed_at__gte=last_24h).count(),
+
+        # Products & Inventory
+        "total_products": Product.objects.count(),
+        "active_products": Product.objects.filter(is_active=True).count(),
+        "low_stock_items": ProductVariant.objects.filter(stock_quantity__lte=10, stock_quantity__gt=0).count(),
+        "out_of_stock": ProductVariant.objects.filter(stock_quantity=0).count(),
+
+        # Orders & Sales
+        "total_orders": total_orders,
+        "orders_30d": orders_30d,
+        "total_revenue": float(total_revenue),
+        "revenue_30d": float(revenue_30d),
+
+        # Marketing & Campaigns
         "email_campaigns": EmailCampaign.objects.count(),
         "sms_campaigns": SMSCampaign.objects.count(),
+        "active_campaigns": Campaign.objects.filter(status="active").count(),
+
+        # Analytics & Traffic
+        "total_page_views": PageView.objects.count(),
+        "page_views_24h": PageView.objects.filter(viewed_at__gte=last_24h).count(),
+        "total_visitors": total_visitors,
+        "active_sessions": active_sessions,
+        "conversion_rate": round(conversion_rate, 2),
     }
 
     context = {

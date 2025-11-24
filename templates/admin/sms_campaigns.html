@@ -25,8 +25,11 @@
       margin-bottom: 2rem;
       box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
     }
-    .header h1 { color: #1a202c; font-size: 2rem; font-weight: 700; margin-bottom: 0.5rem; }
-    .header p { color: #667eea; font-size: 1.125rem; }
+
+    html:not([data-theme='dark']) .header h1 { color: #1a202c; }
+    .header h1 { font-size: 2rem; font-weight: 700; margin-bottom: 0.5rem; }
+    html:not([data-theme='dark']) .header p { color: #667eea; }
+    .header p { font-size: 1.125rem; }
     .nav-links {
       display: flex;
       gap: 1rem;
@@ -48,13 +51,17 @@
       margin-bottom: 2rem;
       box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
     }
+
     .section h2 {
-      color: #1a202c;
       font-size: 1.5rem;
       font-weight: 700;
       margin-bottom: 1.5rem;
       padding-bottom: 0.75rem;
       border-bottom: 2px solid #e2e8f0;
+    }
+
+    html:not([data-theme='dark']) .section h2 {
+      color: #1a202c;
     }
     .form-group {
       margin-bottom: 1.5rem;
@@ -166,6 +173,73 @@
     .action-buttons {
       display: flex;
       gap: 0.5rem;
+    }
+
+    /* Dark mode overrides for this page */
+    html[data-theme='dark'] body {
+      background: #0f1419 !important;
+    }
+
+    html[data-theme='dark'] .header {
+      background: #1a1f26 !important;
+      border-color: #2d3748 !important;
+    }
+
+    html[data-theme='dark'] .header h1,
+    html[data-theme='dark'] .header p {
+      color: #e5e5e5 !important;
+    }
+
+    html[data-theme='dark'] .section {
+      background: #1a1f26 !important;
+      border-color: #2d3748 !important;
+    }
+
+    html[data-theme='dark'] .section h2 {
+      color: #e5e5e5 !important;
+      border-color: #2d3748 !important;
+    }
+
+    html[data-theme='dark'] .nav-links a {
+      color: #a0aec0 !important;
+    }
+
+    html[data-theme='dark'] .nav-links a:hover {
+      background: #2d3748 !important;
+      color: #e5e5e5 !important;
+    }
+
+    html[data-theme='dark'] .form-group label {
+      color: #e5e5e5 !important;
+    }
+
+    html[data-theme='dark'] .form-group input,
+    html[data-theme='dark'] .form-group select,
+    html[data-theme='dark'] .form-group textarea {
+      background: #0f1419 !important;
+      color: #e5e5e5 !important;
+      border-color: #2d3748 !important;
+    }
+
+    html[data-theme='dark'] td {
+      color: #e5e5e5 !important;
+    }
+
+    html[data-theme='dark'] table {
+      background: #1a1f26 !important;
+    }
+
+    html[data-theme='dark'] th {
+      background: #0f1419 !important;
+      color: #a0aec0 !important;
+    }
+
+    html[data-theme='dark'] tbody tr {
+      background: #1a1f26 !important;
+    }
+
+    html[data-theme='dark'] tbody tr:hover {
+      background: #0f1419 !important;
     }
   </style>
   {% include "admin/partials/dark_mode_apply.html" %}

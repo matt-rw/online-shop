@@ -8,6 +8,8 @@ urlpatterns = [
     # Health checks (for monitoring)
     path("health/", views.health_check, name="health"),
     path("health/detailed/", views.health_check_detailed, name="health_detailed"),
+    # Coming soon page
+    path("coming-soon/", views.coming_soon, name="coming_soon"),
     # Email subscription
     path("subscribe/", views.subscribe, name="subscribe"),
     # SMS subscription

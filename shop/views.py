@@ -200,6 +200,11 @@ def health_check_detailed(request):
 #     return redirect('home:home')
 
 
+def coming_soon(request):
+    """Simple coming soon page for footer links."""
+    return render(request, "home/coming_soon.html")
+
+
 @csrf_exempt
 @require_http_methods(["GET", "POST"])
 def process_campaigns_webhook(request):

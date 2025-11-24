@@ -260,6 +260,17 @@
     .status-dot.unknown {
       background: #a0aec0;
     }
+
+    .content-card {
+      background: white;
+      border: 1px solid #e2e8f0;
+    }
+
+    .content-card h2,
+    .content-card h3 {
+      color: #0f172a;
+    }
+
     @media (max-width: 1024px) {
       .main-content {
         padding: 0 1rem 1rem 1rem;
@@ -338,7 +349,7 @@
 
     <!-- Security Alerts (Compact) -->
     {% if warnings %}
-    <div style="background: white; border-radius: 16px; padding: 2rem; margin-bottom: 2rem; box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);">
+    <div class="content-card" style="border-radius: 16px; padding: 2rem; margin-bottom: 2rem; box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);">
       <h3 style="color: #0f172a; font-size: 1.5rem; margin-bottom: 1rem; font-weight: 700;">Security Alerts</h3>
       <div style="display: grid; gap: 0.5rem;">
         {% for warning in warnings %}

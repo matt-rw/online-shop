@@ -106,6 +106,23 @@
       margin: 0 auto;
     }
 
+    .content-card {
+      background: white;
+      border: 1px solid #e2e8f0;
+    }
+
+    .content-card h2 {
+      color: #1e293b;
+    }
+
+    .category-item {
+      background: #fafbfc;
+    }
+
+    .category-item h3 {
+      color: #0f172a;
+    }
+
     .stats-grid {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
@@ -305,17 +322,17 @@
 
   <div class="main-content">
 
-    <div style="background: white; border-radius: 16px; padding: 2rem; box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);">
-      <h2 style="font-size: 1.5rem; font-weight: 700; margin-bottom: 1.5rem;">All Categories ({{ total_categories }})</h2>
+    <div class="content-card" style="border-radius: 16px; padding: 2rem; box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);">
+      <h2 style="font-size: 1.5rem; font-weight: 700; margin-bottom: 1.5rem; color: inherit;">All Categories ({{ total_categories }})</h2>
 
       {% if categories %}
         <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 1.5rem;">
         {% for category in categories %}
-        <div style="border: 1px solid #e2e8f0; border-radius: 12px; padding: 1.5rem; background: #fafbfc; transition: all 0.3s; cursor: pointer; position: relative; overflow: hidden;" onmouseover="this.style.transform='translateY(-4px)'; this.style.boxShadow='0 8px 16px rgba(0,0,0,0.1)'" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='none'">
+        <div class="category-item" style="border: 1px solid #e2e8f0; border-radius: 12px; padding: 1.5rem; transition: all 0.3s; cursor: pointer; position: relative; overflow: hidden;" onmouseover="this.style.transform='translateY(-4px)'; this.style.boxShadow='0 8px 16px rgba(0,0,0,0.1)'" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='none'">
           <div style="position: absolute; top: 0; left: 0; right: 0; height: 4px; background: linear-gradient(90deg, #f59e0b, #d97706);"></div>
 
           <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 1.5rem;">
-            <h3 style="font-size: 1.25rem; font-weight: 700; color: #0f172a;">{{ category.name }}</h3>
+            <h3 style="font-size: 1.25rem; font-weight: 700;">{{ category.name }}</h3>
             <button class="btn btn-secondary btn-sm" style="background: white; color: #64748b; border: 1px solid #e2e8f0; padding: 0.375rem 0.75rem; font-size: 0.8125rem; flex-shrink: 0;" onclick="event.stopPropagation(); openEditCategoryModal({{ category.id }})">
               <i class="fa-solid fa-edit"></i>
             </button>
