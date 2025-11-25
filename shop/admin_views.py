@@ -2198,6 +2198,53 @@ def products_dashboard(request):
             except Product.DoesNotExist:
                 return JsonResponse({"success": False, "error": "Product not found"})
 
+        elif action == "create_product":
+            from django.http import JsonResponse
+            from django.utils.text import slugify
+
+            from shop.models import Category
+
+            name = request.POST.get("name", "").strip()
+            if not name:
+                return JsonResponse({"success": False, "error": "Product name is required"})
+
+            # Generate slug from name
+            base_slug = slugify(name)
+            slug = base_slug
+            counter = 1
+            while Product.objects.filter(slug=slug).exists():
+                slug = f"{base_slug}-{counter}"
+                counter += 1
+
+            # Get category if provided
+            category_slug = request.POST.get("category")
+            category_obj = None
+            if category_slug:
+                try:
+                    category_obj = Category.objects.get(slug=category_slug)
+                except Category.DoesNotExist:
+                    pass
+
+            # Get base price (default to 0 if not provided)
+            try:
+                base_price = float(request.POST.get("base_price", 0))
+            except (ValueError, TypeError):
+                base_price = 0
+
+            try:
+                product = Product.objects.create(
+                    name=name,
+                    slug=slug,
+                    description=request.POST.get("description", ""),
+                    base_price=base_price,
+                    category_obj=category_obj,
+                    is_active=request.POST.get("is_active") == "true",
+                    featured=request.POST.get("featured") == "true",
+                )
+                return JsonResponse({"success": True, "product_id": product.id, "slug": product.slug})
+            except Exception as e:
+                return JsonResponse({"success": False, "error": str(e)})
+
         elif action == "update_price":
             from django.http import JsonResponse
 
