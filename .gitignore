@@ -19,6 +19,12 @@ __pycache__/
 staticfiles/
 media/
 *.log
+logs/
+
+# Runtime files
+gunicorn.pid
+*.pid
+celerybeat-schedule
 
 # IDE
 .vscode/

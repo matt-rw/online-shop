@@ -1,246 +1,95 @@
+{% extends 'base.html' %}
 {% load static %}
 
-<!DOCTYPE html>
-<html lang="en">
-  <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sign In - Blueprint Apparel</title>
-    <link rel="icon" type="image/svg+xml" href="{% static 'admin-favicon.svg' %}">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"
-          rel="stylesheet">
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
+{% block title %}Sign In - Blueprint Apparel{% endblock %}
 
-        body {
-            font-family: 'Inter', sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            min-height: 100vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 2rem;
-            position: relative;
-            overflow: hidden;
-        }
+{% block content %}
+<section class="bg-white min-h-[80vh] flex items-center justify-center">
+  <div class="max-w-md w-full mx-4">
 
-        body::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background:
-                radial-gradient(circle at 20% 50%, rgba(255, 255, 255, 0.1) 0%, transparent 50%),
-                radial-gradient(circle at 80% 80%, rgba(255, 255, 255, 0.08) 0%, transparent 50%);
-            pointer-events: none;
-        }
+    <!-- Header -->
+    <div class="text-center mb-8">
+      <span class="text-xs tracking-widest uppercase text-neutral-400 block mb-4">Welcome Back</span>
+      <h1 class="text-3xl font-bold tracking-tight">"SIGN IN"</h1>
+    </div>
 
-        .login-container {
-            background: white;
-            border-radius: 24px;
-            padding: 3rem;
-            max-width: 420px;
-            width: 100%;
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
-            position: relative;
-            z-index: 1;
-        }
+    <!-- Errors -->
+    {% if form.non_field_errors %}
+      <div class="mb-6">
+        {% for error in form.non_field_errors %}
+          <div class="px-4 py-3 text-sm border bg-red-50 text-red-800 border-red-200 mb-2">{{ error }}</div>
+        {% endfor %}
+      </div>
+    {% endif %}
 
-        h1 {
-            color: #0f172a;
-            font-size: 1.75rem;
-            font-weight: 700;
-            margin-bottom: 2rem;
-            letter-spacing: -0.02em;
-            text-align: center;
-        }
+    <!-- Form -->
+    <form method="POST" action="{% url 'account_login' %}" class="space-y-4">
+      {% csrf_token %}
 
-        .form-group {
-            margin-bottom: 1.5rem;
-        }
-
-        .form-group label {
-            display: block;
-            color: #475569;
-            font-weight: 600;
-            margin-bottom: 0.5rem;
-            font-size: 0.875rem;
-        }
-
-        .form-group input {
-            width: 100%;
-            padding: 0.875rem 1rem;
-            border: 2px solid #e2e8f0;
-            border-radius: 12px;
-            font-family: inherit;
-            font-size: 1rem;
-            transition: all 0.2s;
-        }
-
-        .form-group input:focus {
-            outline: none;
-            border-color: #667eea;
-            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
-        }
-
-        .btn {
-            width: 100%;
-            padding: 1rem 2rem;
-            border-radius: 12px;
-            font-weight: 600;
-            font-size: 1rem;
-            border: none;
-            cursor: pointer;
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            text-decoration: none;
-            display: inline-block;
-        }
-
-        .btn-primary {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
-            margin-bottom: 1rem;
-        }
-
-        .btn-primary:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
-        }
-
-        .btn-secondary {
-            background: #f1f5f9;
-            color: #475569;
-            border: 2px solid #e2e8f0;
-            text-align: center;
-        }
-
-        .btn-secondary:hover {
-            background: #e2e8f0;
-            transform: translateY(-2px);
-        }
-
-        .logo {
-            font-size: 1.5rem;
-            font-weight: 800;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-            margin-bottom: 2rem;
-            letter-spacing: -0.02em;
-            text-align: center;
-        }
-
-        .checkbox-group {
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-            margin-bottom: 1.5rem;
-        }
-
-        .checkbox-group input[type="checkbox"] {
-            width: auto;
-            cursor: pointer;
-        }
-
-        .checkbox-group label {
-            font-size: 0.875rem;
-            color: #475569;
-            margin: 0;
-            cursor: pointer;
-        }
-
-        .errorlist {
-            list-style: none;
-            padding: 0;
-            margin-bottom: 1rem;
-        }
-
-        .errorlist li {
-            background: #fee2e2;
-            color: #991b1b;
-            padding: 0.75rem 1rem;
-            border-radius: 8px;
-            font-size: 0.875rem;
-            margin-bottom: 0.5rem;
-        }
-
-        @media (max-width: 640px) {
-            .login-container {
-                padding: 2rem;
-            }
-
-            h1 {
-                font-size: 1.5rem;
-            }
-        }
-    </style>
-  </head>
-  <body>
-    <div class="login-container">
-      <div class="logo">Blueprint Apparel</div>
-
-      <h1>Sign In</h1>
-
-      {% if form.non_field_errors %}
-        <ul class="errorlist">
-          {% for error in form.non_field_errors %}
-            <li>{{ error }}</li>
+      <div>
+        <label class="text-xs tracking-wider uppercase text-neutral-500 block mb-2">Email</label>
+        <input type="text" name="login" id="id_login" required
+               class="w-full px-4 py-3 border border-black text-sm focus:outline-none focus:ring-1 focus:ring-black" />
+        {% if form.login.errors %}
+          {% for error in form.login.errors %}
+            <p class="text-red-600 text-xs mt-1">{{ error }}</p>
           {% endfor %}
-        </ul>
+        {% endif %}
+      </div>
+
+      <div>
+        <label class="text-xs tracking-wider uppercase text-neutral-500 block mb-2">Password</label>
+        <input type="password" name="password" id="id_password" required
+               class="w-full px-4 py-3 border border-black text-sm focus:outline-none focus:ring-1 focus:ring-black" />
+        {% if form.password.errors %}
+          {% for error in form.password.errors %}
+            <p class="text-red-600 text-xs mt-1">{{ error }}</p>
+          {% endfor %}
+        {% endif %}
+      </div>
+
+      <div class="flex items-center justify-between">
+        <label class="flex items-center gap-2 text-xs text-neutral-500">
+          <input type="checkbox" name="remember" id="id_remember" class="w-4 h-4 border-black">
+          Remember me
+        </label>
+        <a href="{% url 'account_reset_password' %}" class="text-xs text-neutral-500 hover:text-black transition-colors underline">Forgot password?</a>
+      </div>
+
+      {% if redirect_field_value %}
+        <input type="hidden" name="{{ redirect_field_name }}" value="{{ redirect_field_value }}"/>
       {% endif %}
 
-      <form method="POST" action="{% url 'account_login' %}">
-        {% csrf_token %}
+      <button type="submit"
+              class="w-full py-4 bg-black text-white text-xs tracking-widest uppercase font-medium hover:bg-neutral-800 transition-colors">
+        Sign In
+      </button>
+    </form>
 
-        <div class="form-group">
-          <label for="id_login">Email or Username</label>
-          <input type="text" name="login" id="id_login" placeholder="Enter email or username" required>
-          {% if form.login.errors %}
-            <ul class="errorlist">
-              {% for error in form.login.errors %}
-                <li>{{ error }}</li>
-              {% endfor %}
-            </ul>
-          {% endif %}
-        </div>
-
-        <div class="form-group">
-          <label for="id_password">Password</label>
-          <input type="password" name="password" id="id_password" placeholder="Enter password" required>
-          {% if form.password.errors %}
-            <ul class="errorlist">
-              {% for error in form.password.errors %}
-                <li>{{ error }}</li>
-              {% endfor %}
-            </ul>
-          {% endif %}
-        </div>
-
-        <div class="checkbox-group">
-          <input type="checkbox" name="remember" id="id_remember">
-          <label for="id_remember">Remember me</label>
-        </div>
-
-        {% if redirect_field_value %}
-          <input type="hidden" name="{{ redirect_field_name }}" value="{{ redirect_field_value }}"/>
-        {% endif %}
-
-        <button type="submit" class="btn btn-primary">
-          Sign In
-        </button>
-
-        <a href="/" class="btn btn-secondary">
-          Back to Home
-        </a>
-      </form>
+    <!-- Divider -->
+    <div class="flex items-center gap-4 my-8">
+      <span class="flex-1 h-px bg-neutral-200"></span>
+      <span class="text-xs text-neutral-400 uppercase tracking-wider">or</span>
+      <span class="flex-1 h-px bg-neutral-200"></span>
     </div>
-  </body>
-</html>
+
+    <!-- Create Account -->
+    <div class="text-center">
+      <p class="text-sm text-neutral-600 mb-4">Don't have an account?</p>
+      <a href="{% url 'account_signup' %}"
+         class="inline-block w-full py-4 border border-black text-xs tracking-widest uppercase font-medium hover:bg-black hover:text-white transition-colors text-center">
+        Create Account
+      </a>
+    </div>
+
+    <!-- Back Home -->
+    <div class="text-center mt-6">
+      <a href="{% url 'home' %}" class="text-xs tracking-wider uppercase text-neutral-500 hover:text-black transition-colors">
+        Back to Home
+      </a>
+    </div>
+
+  </div>
+</section>
+
+{% endblock %}

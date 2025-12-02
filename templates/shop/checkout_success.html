@@ -1,0 +1,121 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Order Confirmed - Blueprint Apparel{% endblock %}
+
+{% block content %}
+
+<!-- Success Header -->
+<section class="bg-white min-h-[60vh] flex items-center justify-center py-16">
+  <div class="max-w-lg w-full mx-4 text-center">
+
+    <!-- Success Icon -->
+    <div class="mb-8">
+      <div class="w-20 h-20 mx-auto bg-black text-white flex items-center justify-center">
+        <svg class="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+        </svg>
+      </div>
+    </div>
+
+    <!-- Header -->
+    <span class="text-xs tracking-widest uppercase text-neutral-400 block mb-3">Order Confirmed</span>
+    <h1 class="text-3xl font-bold tracking-tight mb-4">"THANK YOU"</h1>
+
+    <!-- Order Number -->
+    <p class="text-neutral-600 mb-2">Your order has been placed successfully.</p>
+    <p class="text-sm text-neutral-500 mb-8">
+      Order #{{ order.id }} | {{ order.created_at|date:"F j, Y" }}
+    </p>
+
+    <!-- Confirmation Email Notice -->
+    <div class="bg-neutral-50 border border-neutral-200 px-6 py-4 mb-8">
+      <p class="text-sm text-neutral-600">
+        A confirmation email has been sent to<br />
+        <span class="font-medium text-black">{{ order.email }}</span>
+      </p>
+    </div>
+
+    <!-- Order Summary -->
+    <div class="text-left border border-black p-6 mb-8">
+      <h2 class="text-xs tracking-widest uppercase font-medium mb-4">"Order Summary"</h2>
+
+      <div class="space-y-3 mb-4 pb-4 border-b border-neutral-200">
+        {% for item in order.items.all %}
+        <div class="flex justify-between text-sm">
+          <span class="text-neutral-600">
+            {{ item.variant.product.name }}
+            {% if item.variant.size %} - {{ item.variant.size }}{% endif %}
+            {% if item.variant.color %} / {{ item.variant.color }}{% endif %}
+            <span class="text-neutral-400">x{{ item.quantity }}</span>
+          </span>
+          <span class="font-medium">${{ item.line_total }}</span>
+        </div>
+        {% endfor %}
+      </div>
+
+      <div class="space-y-2 text-sm">
+        <div class="flex justify-between">
+          <span class="text-neutral-600">Subtotal</span>
+          <span>${{ order.subtotal }}</span>
+        </div>
+        <div class="flex justify-between">
+          <span class="text-neutral-600">Shipping</span>
+          <span>${{ order.shipping }}</span>
+        </div>
+        <div class="flex justify-between">
+          <span class="text-neutral-600">Tax</span>
+          <span>${{ order.tax|floatformat:2 }}</span>
+        </div>
+        <div class="flex justify-between pt-3 border-t border-black">
+          <span class="text-xs tracking-widest uppercase font-medium">Total</span>
+          <span class="text-lg font-bold">${{ order.total|floatformat:2 }}</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- What's Next -->
+    <div class="text-left mb-8">
+      <h2 class="text-xs tracking-widest uppercase font-medium mb-4">"What's Next"</h2>
+      <div class="space-y-3 text-sm text-neutral-600">
+        <div class="flex items-start gap-3">
+          <span class="w-6 h-6 bg-black text-white text-xs flex items-center justify-center flex-shrink-0">1</span>
+          <p>We're preparing your order for shipment.</p>
+        </div>
+        <div class="flex items-start gap-3">
+          <span class="w-6 h-6 bg-neutral-200 text-neutral-600 text-xs flex items-center justify-center flex-shrink-0">2</span>
+          <p>You'll receive tracking information once your order ships.</p>
+        </div>
+        <div class="flex items-start gap-3">
+          <span class="w-6 h-6 bg-neutral-200 text-neutral-600 text-xs flex items-center justify-center flex-shrink-0">3</span>
+          <p>Estimated delivery: 3-5 business days.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Actions -->
+    <div class="space-y-3">
+      {% if user.is_authenticated %}
+      <a href="{% url 'shop:account' %}"
+         class="block w-full py-4 bg-black text-white text-xs tracking-widest uppercase font-medium hover:bg-neutral-800 transition-colors text-center">
+        View Order History
+      </a>
+      {% endif %}
+      <a href="{% url 'shop:shop' %}"
+         class="block w-full py-4 border border-black text-xs tracking-widest uppercase font-medium hover:bg-black hover:text-white transition-colors text-center">
+        Continue Shopping
+      </a>
+    </div>
+
+  </div>
+</section>
+
+<!-- Section Divider -->
+<div class="border-t border-black">
+  <div class="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center">
+    <span class="text-xs tracking-wider text-neutral-500">Questions? Contact support@blueprintapparel.com</span>
+    <span class="text-xs tracking-widest uppercase font-medium">Blueprint Apparel</span>
+  </div>
+</div>
+
+{% endblock %}

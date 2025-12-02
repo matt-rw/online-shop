@@ -1,267 +1,104 @@
+{% extends 'base.html' %}
 {% load static %}
 
-<!DOCTYPE html>
-<html lang="en">
-  <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sign Up - Blueprint Apparel</title>
-    <link rel="icon" type="image/svg+xml" href="{% static 'admin-favicon.svg' %}">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"
-          rel="stylesheet">
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
+{% block title %}Create Account - Blueprint Apparel{% endblock %}
 
-        body {
-            font-family: 'Inter', sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            min-height: 100vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 2rem;
-            position: relative;
-            overflow: hidden;
-        }
+{% block content %}
+<section class="bg-white min-h-[80vh] flex items-center justify-center py-12">
+  <div class="max-w-md w-full mx-4">
 
-        body::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background:
-                radial-gradient(circle at 20% 50%, rgba(255, 255, 255, 0.1) 0%, transparent 50%),
-                radial-gradient(circle at 80% 80%, rgba(255, 255, 255, 0.08) 0%, transparent 50%);
-            pointer-events: none;
-        }
+    <!-- Header -->
+    <div class="text-center mb-8">
+      <span class="text-xs tracking-widest uppercase text-neutral-400 block mb-4">Join Us</span>
+      <h1 class="text-3xl font-bold tracking-tight">"CREATE ACCOUNT"</h1>
+    </div>
 
-        .signup-container {
-            background: white;
-            border-radius: 24px;
-            padding: 3rem;
-            max-width: 420px;
-            width: 100%;
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
-            position: relative;
-            z-index: 1;
-        }
+    <!-- Errors -->
+    {% if form.non_field_errors %}
+      <div class="mb-6">
+        {% for error in form.non_field_errors %}
+          <div class="px-4 py-3 text-sm border bg-red-50 text-red-800 border-red-200 mb-2">{{ error }}</div>
+        {% endfor %}
+      </div>
+    {% endif %}
 
-        h1 {
-            color: #0f172a;
-            font-size: 1.75rem;
-            font-weight: 700;
-            margin-bottom: 2rem;
-            letter-spacing: -0.02em;
-            text-align: center;
-        }
+    <!-- Form -->
+    <form method="POST" action="{% url 'account_signup' %}" class="space-y-4">
+      {% csrf_token %}
 
-        .form-group {
-            margin-bottom: 1.5rem;
-        }
-
-        .form-group label {
-            display: block;
-            color: #475569;
-            font-weight: 600;
-            margin-bottom: 0.5rem;
-            font-size: 0.875rem;
-        }
-
-        .form-group input {
-            width: 100%;
-            padding: 0.875rem 1rem;
-            border: 2px solid #e2e8f0;
-            border-radius: 12px;
-            font-family: inherit;
-            font-size: 1rem;
-            transition: all 0.2s;
-        }
-
-        .form-group input:focus {
-            outline: none;
-            border-color: #667eea;
-            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
-        }
-
-        .btn {
-            width: 100%;
-            padding: 1rem 2rem;
-            border-radius: 12px;
-            font-weight: 600;
-            font-size: 1rem;
-            border: none;
-            cursor: pointer;
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            text-decoration: none;
-            display: inline-block;
-            text-align: center;
-        }
-
-        .btn-primary {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
-            margin-bottom: 1rem;
-        }
-
-        .btn-primary:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
-        }
-
-        .btn-secondary {
-            background: #f1f5f9;
-            color: #475569;
-            border: 2px solid #e2e8f0;
-        }
-
-        .btn-secondary:hover {
-            background: #e2e8f0;
-            transform: translateY(-2px);
-        }
-
-        .logo {
-            font-size: 1.5rem;
-            font-weight: 800;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-            margin-bottom: 2rem;
-            letter-spacing: -0.02em;
-            text-align: center;
-        }
-
-        .errorlist {
-            list-style: none;
-            padding: 0;
-            margin-bottom: 1rem;
-        }
-
-        .errorlist li {
-            background: #fee2e2;
-            color: #991b1b;
-            padding: 0.75rem 1rem;
-            border-radius: 8px;
-            font-size: 0.875rem;
-            margin-bottom: 0.5rem;
-        }
-
-        .signin-link {
-            text-align: center;
-            margin-top: 1.5rem;
-            color: #64748b;
-            font-size: 0.875rem;
-        }
-
-        .signin-link a {
-            color: #667eea;
-            font-weight: 600;
-            text-decoration: none;
-        }
-
-        .signin-link a:hover {
-            text-decoration: underline;
-        }
-
-        @media (max-width: 640px) {
-            .signup-container {
-                padding: 2rem;
-            }
-
-            h1 {
-                font-size: 1.5rem;
-            }
-        }
-    </style>
-  </head>
-  <body>
-    <div class="signup-container">
-      <div class="logo">Blueprint Apparel</div>
-
-      <h1>Create Account</h1>
-
-      {% if form.non_field_errors %}
-        <ul class="errorlist">
-          {% for error in form.non_field_errors %}
-            <li>{{ error }}</li>
+      <div>
+        <label class="text-xs tracking-wider uppercase text-neutral-500 block mb-2">Email</label>
+        <input type="email" name="email" id="id_email" required
+               class="w-full px-4 py-3 border border-black text-sm focus:outline-none focus:ring-1 focus:ring-black" />
+        {% if form.email.errors %}
+          {% for error in form.email.errors %}
+            <p class="text-red-600 text-xs mt-1">{{ error }}</p>
           {% endfor %}
-        </ul>
+        {% endif %}
+      </div>
+
+      <div>
+        <label class="text-xs tracking-wider uppercase text-neutral-500 block mb-2">Password</label>
+        <input type="password" name="password1" id="id_password1" required
+               class="w-full px-4 py-3 border border-black text-sm focus:outline-none focus:ring-1 focus:ring-black" />
+        {% if form.password1.errors %}
+          {% for error in form.password1.errors %}
+            <p class="text-red-600 text-xs mt-1">{{ error }}</p>
+          {% endfor %}
+        {% endif %}
+      </div>
+
+      <div>
+        <label class="text-xs tracking-wider uppercase text-neutral-500 block mb-2">Confirm Password</label>
+        <input type="password" name="password2" id="id_password2" required
+               class="w-full px-4 py-3 border border-black text-sm focus:outline-none focus:ring-1 focus:ring-black" />
+        {% if form.password2.errors %}
+          {% for error in form.password2.errors %}
+            <p class="text-red-600 text-xs mt-1">{{ error }}</p>
+          {% endfor %}
+        {% endif %}
+      </div>
+
+      {% if redirect_field_value %}
+        <input type="hidden" name="{{ redirect_field_name }}" value="{{ redirect_field_value }}"/>
       {% endif %}
 
-      <form method="POST" action="{% url 'account_signup' %}">
-        {% csrf_token %}
+      <button type="submit"
+              class="w-full py-4 bg-black text-white text-xs tracking-widest uppercase font-medium hover:bg-neutral-800 transition-colors">
+        Create Account
+      </button>
 
-        <div class="form-group">
-          <label for="id_username">Username</label>
-          <input type="text" name="username" id="id_username" placeholder="Choose a username" required>
-          {% if form.username.errors %}
-            <ul class="errorlist">
-              {% for error in form.username.errors %}
-                <li>{{ error }}</li>
-              {% endfor %}
-            </ul>
-          {% endif %}
-        </div>
+      <p class="text-xs text-neutral-500 text-center leading-relaxed">
+        By creating an account, you agree to our
+        <a href="{% url 'shop:terms' %}" class="underline hover:text-black">Terms of Service</a> and
+        <a href="{% url 'shop:privacy' %}" class="underline hover:text-black">Privacy Policy</a>.
+      </p>
+    </form>
 
-        <div class="form-group">
-          <label for="id_email">Email</label>
-          <input type="email" name="email" id="id_email" placeholder="your@email.com" required>
-          {% if form.email.errors %}
-            <ul class="errorlist">
-              {% for error in form.email.errors %}
-                <li>{{ error }}</li>
-              {% endfor %}
-            </ul>
-          {% endif %}
-        </div>
-
-        <div class="form-group">
-          <label for="id_password1">Password</label>
-          <input type="password" name="password1" id="id_password1" placeholder="Create a password" required>
-          {% if form.password1.errors %}
-            <ul class="errorlist">
-              {% for error in form.password1.errors %}
-                <li>{{ error }}</li>
-              {% endfor %}
-            </ul>
-          {% endif %}
-        </div>
-
-        <div class="form-group">
-          <label for="id_password2">Confirm Password</label>
-          <input type="password" name="password2" id="id_password2" placeholder="Confirm your password" required>
-          {% if form.password2.errors %}
-            <ul class="errorlist">
-              {% for error in form.password2.errors %}
-                <li>{{ error }}</li>
-              {% endfor %}
-            </ul>
-          {% endif %}
-        </div>
-
-        {% if redirect_field_value %}
-          <input type="hidden" name="{{ redirect_field_name }}" value="{{ redirect_field_value }}"/>
-        {% endif %}
-
-        <button type="submit" class="btn btn-primary">
-          Sign Up
-        </button>
-
-        <a href="/" class="btn btn-secondary">
-          Back to Home
-        </a>
-      </form>
-
-      <div class="signin-link">
-        Already have an account? <a href="{% url 'account_login' %}">Sign In</a>
-      </div>
+    <!-- Divider -->
+    <div class="flex items-center gap-4 my-8">
+      <span class="flex-1 h-px bg-neutral-200"></span>
+      <span class="text-xs text-neutral-400 uppercase tracking-wider">or</span>
+      <span class="flex-1 h-px bg-neutral-200"></span>
     </div>
-  </body>
-</html>
+
+    <!-- Sign In -->
+    <div class="text-center">
+      <p class="text-sm text-neutral-600 mb-4">Already have an account?</p>
+      <a href="{% url 'account_login' %}"
+         class="inline-block w-full py-4 border border-black text-xs tracking-widest uppercase font-medium hover:bg-black hover:text-white transition-colors text-center">
+        Sign In
+      </a>
+    </div>
+
+    <!-- Back Home -->
+    <div class="text-center mt-6">
+      <a href="{% url 'home' %}" class="text-xs tracking-wider uppercase text-neutral-500 hover:text-black transition-colors">
+        Back to Home
+      </a>
+    </div>
+
+  </div>
+</section>
+
+{% endblock %}

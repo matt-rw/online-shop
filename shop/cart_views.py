@@ -22,7 +22,7 @@ from .cart_utils import (
     remove_from_cart,
     update_cart_item_quantity,
 )
-from .models import Address, CartItem, Order, OrderItem, ProductVariant
+from .models import Address, Cart, CartItem, Order, OrderItem, ProductVariant
 
 logger = logging.getLogger(__name__)
 stripe.api_key = settings.STRIPE_SECRET_KEY
@@ -32,22 +32,43 @@ stripe.api_key = settings.STRIPE_SECRET_KEY
 def add_to_cart_view(request):
     """
     Add a product variant to the cart.
-    Expects POST data: variant_id, quantity (optional, defaults to 1)
+    Expects POST data: variant_id OR product_id, quantity (optional, defaults to 1)
     """
     variant_id = request.POST.get("variant_id")
+    product_id = request.POST.get("product_id")
     quantity = int(request.POST.get("quantity", 1))
 
+    # If no variant_id but we have product_id, find or create a default variant
+    if not variant_id and product_id:
+        from .models import Product
+        try:
+            product = Product.objects.get(id=product_id, is_active=True)
+            # Try to get the first active variant
+            variant = product.variants.filter(is_active=True).first()
+            if variant:
+                variant_id = variant.id
+            else:
+                # Create a default variant for this product
+                variant = ProductVariant.objects.create(
+                    product=product,
+                    price=product.base_price,
+                    stock_quantity=100,
+                    is_active=True,
+                )
+                variant_id = variant.id
+                logger.info(f"Created default variant {variant_id} for product {product_id}")
+        except Product.DoesNotExist:
+            messages.error(request, "Product not found.")
+            return redirect(request.META.get("HTTP_REFERER", "/"))
+
     if not variant_id:
-        messages.error(request, "Please select a product variant.")
+        messages.error(request, "Please select a product.")
         return redirect(request.META.get("HTTP_REFERER", "/"))
 
     try:
         cart_item, created = add_to_cart(request, variant_id, quantity)
 
-        if created:
-            messages.success(request, f"Added {cart_item.variant} to your cart!")
-        else:
-            messages.success(request, f"Updated {cart_item.variant} quantity in cart.")
+        # Silently add to cart without notification
 
         logger.info(f"Added variant {variant_id} to cart (qty: {quantity})")
 
@@ -82,18 +103,15 @@ def cart_view(request):
 
     # Calculate totals
     subtotal = get_cart_total(cart)
-    # TODO: Calculate shipping and tax based on user location
-    shipping = Decimal("0.00")  # Free shipping for now
-    tax = Decimal("0.00")  # Calculate tax at checkout
-    total = subtotal + shipping + tax
+    # Shipping is calculated at checkout based on destination
+    # Free shipping on orders $100+
+    free_shipping = subtotal >= Decimal("100.00")
 
     context = {
         "cart": cart,
         "cart_items": cart_items,
         "subtotal": subtotal,
-        "shipping": shipping,
-        "tax": tax,
-        "total": total,
+        "free_shipping": free_shipping,
         "stripe_publishable_key": settings.STRIPE_PUBLISHABLE_KEY,
     }
 
@@ -114,10 +132,7 @@ def update_cart_item_view(request, item_id):
 
         cart_item = update_cart_item_quantity(item_id, quantity, user, session_key)
 
-        if cart_item:
-            messages.success(request, "Cart updated successfully.")
-        else:
-            messages.success(request, "Item removed from cart.")
+        # Silently update cart without notification
 
         # Return JSON for AJAX requests
         if request.headers.get("X-Requested-With") == "XMLHttpRequest":
@@ -155,7 +170,7 @@ def remove_from_cart_view(request, item_id):
         session_key = request.session.session_key if not user else None
 
         remove_from_cart(item_id, user, session_key)
-        messages.success(request, "Item removed from cart.")
+        # Silently remove from cart without notification
 
         # Return JSON for AJAX requests
         if request.headers.get("X-Requested-With") == "XMLHttpRequest":
@@ -193,27 +208,180 @@ def checkout_view(request):
 
     # Calculate totals
     subtotal = get_cart_total(cart)
-    shipping = Decimal("10.00")  # Flat rate shipping
-    tax = subtotal * Decimal("0.07")  # 7% tax (should be based on location)
-    total = subtotal + shipping + tax
+    # Free shipping on orders $100+
+    free_shipping = subtotal >= Decimal("100.00")
 
-    # Get saved addresses for logged-in users
+    # Get saved addresses and user info for logged-in users
     saved_addresses = []
+    user_full_name = ""
+    user_email = ""
     if request.user.is_authenticated:
         saved_addresses = request.user.saved_addresses.all()
+        user_full_name = request.user.get_full_name()
+        user_email = request.user.email
+        # Fallback to allauth email if not on user model
+        if not user_email:
+            try:
+                from allauth.account.models import EmailAddress
+                email_obj = EmailAddress.objects.filter(user=request.user, primary=True).first()
+                if email_obj:
+                    user_email = email_obj.email
+            except Exception:
+                pass
 
     context = {
         "cart": cart,
         "cart_items": cart_items,
         "subtotal": subtotal,
-        "shipping": shipping,
-        "tax": tax,
-        "total": total,
+        "free_shipping": free_shipping,
         "saved_addresses": saved_addresses,
+        "user_full_name": user_full_name,
+        "user_email": user_email,
         "stripe_publishable_key": settings.STRIPE_PUBLISHABLE_KEY,
     }
 
     return render(request, "shop/checkout.html", context)
+
+
+@require_POST
+def get_shipping_rates_view(request):
+    """
+    AJAX endpoint to get real-time shipping rates based on destination address.
+    Returns available shipping options from EasyPost.
+    """
+    import json
+
+    try:
+        data = json.loads(request.body) if request.content_type == 'application/json' else request.POST
+    except json.JSONDecodeError:
+        data = request.POST
+
+    postal_code = data.get("postal_code", "").strip()
+    city = data.get("city", "").strip()
+    state = data.get("state", "").strip()
+    country = data.get("country", "US").strip()
+
+    if not postal_code:
+        return JsonResponse({"success": False, "error": "Postal code is required"}, status=400)
+
+    cart = get_or_create_cart(request)
+    cart_items = cart.items.select_related("variant__product").all()
+
+    if not cart_items.exists():
+        return JsonResponse({"success": False, "error": "Cart is empty"}, status=400)
+
+    # Calculate cart subtotal for free shipping threshold
+    subtotal = get_cart_total(cart)
+
+    # Free shipping on orders $100+
+    if subtotal >= Decimal("100.00"):
+        return JsonResponse({
+            "success": True,
+            "rates": [{
+                "id": "free_shipping",
+                "carrier": "Standard",
+                "service": "Free Shipping",
+                "rate": 0.00,
+                "delivery_days": "5-7",
+                "description": "Free standard shipping on orders $100+"
+            }],
+            "free_shipping": True
+        })
+
+    # Try to get real rates from EasyPost
+    try:
+        import easypost
+        easypost_key = getattr(settings, "EASYPOST_API_KEY", None)
+
+        if easypost_key:
+            client = easypost.EasyPostClient(easypost_key)
+
+            # Calculate parcel based on cart items
+            total_weight = 0
+            for item in cart_items:
+                # Estimate weight: 8oz per item (typical for apparel)
+                total_weight += item.quantity * 8
+
+            # Create shipment to get rates
+            shipment = client.shipment.create(
+                to_address={
+                    "city": city,
+                    "state": state,
+                    "zip": postal_code,
+                    "country": country,
+                },
+                from_address={
+                    "name": getattr(settings, "WAREHOUSE_NAME", "Blueprint Apparel"),
+                    "street1": getattr(settings, "WAREHOUSE_ADDRESS_LINE1", "123 Fashion Ave"),
+                    "city": getattr(settings, "WAREHOUSE_CITY", "New York"),
+                    "state": getattr(settings, "WAREHOUSE_STATE", "NY"),
+                    "zip": getattr(settings, "WAREHOUSE_ZIP", "10001"),
+                    "country": "US",
+                },
+                parcel={
+                    "length": 12,
+                    "width": 10,
+                    "height": 4,
+                    "weight": max(total_weight, 8),  # Minimum 8oz
+                }
+            )
+
+            rates = []
+            for rate in shipment.rates:
+                # Filter to common services
+                if rate.service in ["Priority", "Ground", "Express", "First", "GroundAdvantage", "PriorityMailExpress"]:
+                    rates.append({
+                        "id": rate.id,
+                        "carrier": rate.carrier,
+                        "service": rate.service,
+                        "rate": float(rate.rate),
+                        "delivery_days": rate.delivery_days or "3-7",
+                        "description": f"{rate.carrier} {rate.service}"
+                    })
+
+            # Sort by price
+            rates.sort(key=lambda x: x["rate"])
+
+            if rates:
+                return JsonResponse({"success": True, "rates": rates, "free_shipping": False})
+
+    except ImportError:
+        logger.warning("EasyPost not installed")
+    except Exception as e:
+        logger.error(f"EasyPost error: {e}")
+
+    # Fallback: flat rate options
+    return JsonResponse({
+        "success": True,
+        "rates": [
+            {
+                "id": "standard",
+                "carrier": "USPS",
+                "service": "Standard",
+                "rate": 7.99,
+                "delivery_days": "5-7",
+                "description": "USPS Standard (5-7 business days)"
+            },
+            {
+                "id": "priority",
+                "carrier": "USPS",
+                "service": "Priority",
+                "rate": 12.99,
+                "delivery_days": "2-3",
+                "description": "USPS Priority (2-3 business days)"
+            },
+            {
+                "id": "express",
+                "carrier": "USPS",
+                "service": "Express",
+                "rate": 24.99,
+                "delivery_days": "1-2",
+                "description": "USPS Express (1-2 business days)"
+            }
+        ],
+        "free_shipping": False,
+        "fallback": True
+    })
 
 
 @require_POST
@@ -246,73 +414,100 @@ def create_checkout_session(request):
                 }
             )
 
-        # Add shipping as a line item
-        line_items.append(
-            {
-                "price_data": {
-                    "currency": "usd",
-                    "unit_amount": 1000,  # $10.00 flat rate
-                    "product_data": {
-                        "name": "Shipping",
+        # Get subtotal and selected shipping cost from form
+        subtotal = get_cart_total(cart)
+
+        # Get shipping cost from form (selected by customer)
+        try:
+            shipping_cost = Decimal(request.POST.get("shipping_cost", "0"))
+        except (ValueError, TypeError):
+            shipping_cost = Decimal("0.00")
+
+        # Validate shipping - free only if subtotal >= $100
+        if subtotal < Decimal("100.00") and shipping_cost <= 0:
+            # Fallback to standard rate if no shipping selected
+            shipping_cost = Decimal("7.99")
+
+        # Get customer email from form (fallback to user account email)
+        customer_email = request.POST.get("email", "").strip()
+        if not customer_email and request.user.is_authenticated:
+            customer_email = request.user.email
+
+        # Get shipping method details for the line item name
+        shipping_rate_id = request.POST.get("shipping_rate_id", "standard")
+        shipping_label = "Shipping"
+        if shipping_cost == 0:
+            shipping_label = "Free Shipping"
+
+        # Add shipping as a line item (only if not free)
+        if shipping_cost > 0:
+            line_items.append(
+                {
+                    "price_data": {
+                        "currency": "usd",
+                        "unit_amount": int(shipping_cost * 100),  # Convert to cents
+                        "product_data": {
+                            "name": shipping_label,
+                        },
                     },
-                },
-                "quantity": 1,
-            }
-        )
+                    "quantity": 1,
+                }
+            )
 
         # Create Stripe checkout session
+        # Note: To enable automatic tax calculation, set up Stripe Tax in your dashboard
+        # and uncomment automatic_tax below
+        # Order will be created in webhook after successful payment
         session = stripe.checkout.Session.create(
             payment_method_types=["card"],
             line_items=line_items,
             mode="payment",
+            # automatic_tax={"enabled": True},  # Enable after setting up Stripe Tax
             success_url=request.build_absolute_uri("/shop/checkout/success/")
             + "?session_id={CHECKOUT_SESSION_ID}",
             cancel_url=request.build_absolute_uri("/shop/checkout/"),
-            customer_email=request.user.email if request.user.is_authenticated else None,
+            customer_email=customer_email if customer_email else None,
             metadata={
-                "cart_id": cart.id,
-                "user_id": request.user.id if request.user.is_authenticated else None,
+                "cart_id": str(cart.id),
+                "user_id": str(request.user.id) if request.user.is_authenticated else "",
+                "customer_email": customer_email or "",
+                "subtotal": str(subtotal),
+                "shipping_cost": str(shipping_cost),
+                # Shipping address
+                "shipping_name": request.POST.get("shipping_name", ""),
+                "shipping_line1": request.POST.get("shipping_line1", ""),
+                "shipping_line2": request.POST.get("shipping_line2", ""),
+                "shipping_city": request.POST.get("shipping_city", ""),
+                "shipping_region": request.POST.get("shipping_region", ""),
+                "shipping_postal": request.POST.get("shipping_postal", ""),
+                "shipping_country": request.POST.get("shipping_country", "US"),
             },
         )
 
-        # Create Order record
-        order = Order.objects.create(
-            user=request.user if request.user.is_authenticated else None,
-            email=request.user.email if request.user.is_authenticated else "",
-            status="AWAITING_PAYMENT",
-            subtotal=get_cart_total(cart),
-            shipping=Decimal("10.00"),
-            tax=get_cart_total(cart) * Decimal("0.07"),
-            total=get_cart_total(cart)
-            + Decimal("10.00")
-            + (get_cart_total(cart) * Decimal("0.07")),
-            stripe_checkout_id=session.id,
-        )
-
-        # Copy cart items to order items
-        for item in cart_items:
-            OrderItem.objects.create(
-                order=order,
-                variant=item.variant,
-                sku=str(item.variant.id),
-                quantity=item.quantity,
-                line_total=item.variant.price * item.quantity,
-            )
-
-        logger.info(f"Created Stripe checkout session {session.id} for order {order.id}")
+        logger.info(f"Created Stripe checkout session {session.id} for cart {cart.id}")
 
         return redirect(session.url, code=303)
 
     except Exception as e:
-        logger.error(f"Error creating checkout session: {e}")
-        messages.error(request, "There was an error processing your checkout. Please try again.")
+        error_msg = str(e)
+        logger.error(f"Error creating checkout session: {error_msg}")
+
+        # Provide helpful error messages
+        if "api_key" in error_msg.lower() or "authentication" in error_msg.lower():
+            messages.error(request, "Payment system configuration error. Please contact support.")
+        else:
+            messages.error(request, f"There was an error processing your checkout: {error_msg[:100]}")
         return redirect("shop:checkout")
 
 
 def checkout_success_view(request):
     """
     Display order confirmation after successful payment.
+    Order is created by webhook, but we handle the case where webhook hasn't run yet.
     """
+    from django.contrib.auth import get_user_model
+    User = get_user_model()
+
     session_id = request.GET.get("session_id")
 
     if not session_id:
@@ -323,19 +518,82 @@ def checkout_success_view(request):
         # Retrieve the session from Stripe
         session = stripe.checkout.Session.retrieve(session_id)
 
-        # Find the order
-        order = Order.objects.get(stripe_checkout_id=session_id)
+        # Check payment status
+        if session.payment_status != "paid":
+            messages.error(request, "Payment was not completed.")
+            return redirect("shop:checkout")
 
-        # Clear the cart
-        cart_id = session.metadata.get("cart_id")
-        if cart_id:
+        # Try to find existing order (created by webhook)
+        order = Order.objects.filter(stripe_checkout_id=session_id).first()
+
+        # If webhook hasn't created the order yet, create it now
+        if not order:
+            metadata = session.metadata or {}
+            cart_id = metadata.get("cart_id")
+
+            if not cart_id:
+                messages.error(request, "Invalid checkout session.")
+                return redirect("home:home")
+
             try:
                 cart = Cart.objects.get(id=cart_id)
-                clear_cart(cart)
-                cart.is_active = False
-                cart.save()
+                cart_items = cart.items.select_related("variant__product").all()
+
+                if cart_items.exists():
+                    # Get user if exists
+                    user = None
+                    user_id = metadata.get("user_id")
+                    if user_id:
+                        try:
+                            user = User.objects.get(id=user_id)
+                        except User.DoesNotExist:
+                            pass
+
+                    # Get customer email
+                    customer_email = metadata.get("customer_email") or ""
+                    if not customer_email and session.customer_details:
+                        customer_email = session.customer_details.get("email", "")
+
+                    # Parse amounts
+                    subtotal = Decimal(metadata.get("subtotal", "0"))
+                    shipping_cost = Decimal(metadata.get("shipping_cost", "0"))
+
+                    # Create order
+                    order = Order.objects.create(
+                        user=user,
+                        email=customer_email,
+                        status="PAID",
+                        subtotal=subtotal,
+                        shipping=shipping_cost,
+                        tax=Decimal("0.00"),
+                        total=subtotal + shipping_cost,
+                        stripe_checkout_id=session_id,
+                        stripe_payment_intent_id=session.payment_intent,
+                    )
+
+                    # Create order items
+                    for item in cart_items:
+                        OrderItem.objects.create(
+                            order=order,
+                            variant=item.variant,
+                            sku=str(item.variant.id),
+                            quantity=item.quantity,
+                            line_total=item.variant.price * item.quantity,
+                        )
+
+                    # Clear cart
+                    cart.items.all().delete()
+                    cart.is_active = False
+                    cart.save()
+
+                    logger.info(f"Order {order.id} created in success view (webhook fallback)")
+
             except Cart.DoesNotExist:
                 pass
+
+        if not order:
+            messages.error(request, "Could not find your order. Please contact support.")
+            return redirect("home:home")
 
         context = {
             "order": order,

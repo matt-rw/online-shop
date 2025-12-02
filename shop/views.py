@@ -1,6 +1,7 @@
 import logging
 
 from django.contrib import messages
+from django.contrib.auth.decorators import login_required
 from django.core.mail import send_mail
 from django.http import JsonResponse
 from django.shortcuts import redirect, render
@@ -203,6 +204,309 @@ def health_check_detailed(request):
 def coming_soon(request):
     """Simple coming soon page for footer links."""
     return render(request, "home/coming_soon.html")
+
+
+def about(request):
+    """About page with Our Story and Foundation Line sections."""
+    return render(request, "home/about.html")
+
+
+def privacy(request):
+    """Privacy Policy page."""
+    return render(request, "home/privacy.html")
+
+
+def terms(request):
+    """Terms of Service page."""
+    return render(request, "home/terms.html")
+
+
+@login_required(login_url='account_login')
+def account(request):
+    """User account page - requires customer login."""
+    # Get user's orders, profile, and addresses
+    orders = []
+    addresses = []
+    profile = None
+
+    if request.user.is_authenticated:
+        # Handle POST requests
+        if request.method == "POST":
+            form_type = request.POST.get("form_type")
+
+            if form_type == "details":
+                # Update user details
+                from django.contrib import messages
+
+                request.user.first_name = request.POST.get("first_name", "")
+                request.user.last_name = request.POST.get("last_name", "")
+                request.user.save()
+
+                # Update or create profile with phone
+                try:
+                    from .models import UserProfile
+                    profile, created = UserProfile.objects.get_or_create(user=request.user)
+                    profile.phone = request.POST.get("phone", "")
+                    profile.save()
+                except Exception:
+                    pass
+
+                messages.success(request, "Your details have been updated.")
+                return redirect("shop:account")
+
+            elif form_type == "address":
+                # Add new address
+                from django.contrib import messages
+
+                try:
+                    from .models import SavedAddress
+                    is_default = request.POST.get("is_default") == "on"
+
+                    # If setting as default, unset other defaults
+                    if is_default:
+                        SavedAddress.objects.filter(user=request.user, is_default_shipping=True).update(is_default_shipping=False)
+
+                    SavedAddress.objects.create(
+                        user=request.user,
+                        label=request.POST.get("label", ""),
+                        full_name=request.user.get_full_name() or request.user.email,
+                        line1=request.POST.get("street", ""),
+                        city=request.POST.get("city", ""),
+                        region=request.POST.get("state", ""),
+                        postal_code=request.POST.get("zip_code", ""),
+                        country="US",
+                        is_default_shipping=is_default,
+                    )
+                    messages.success(request, "Address added successfully.")
+                except Exception as e:
+                    logger.error(f"Error adding address: {e}")
+                    messages.error(request, "Failed to add address.")
+
+                return redirect("shop:account")
+
+            elif form_type == "delete_address":
+                # Delete address
+                from django.contrib import messages
+
+                try:
+                    from .models import SavedAddress
+                    address_id = request.POST.get("address_id")
+                    SavedAddress.objects.filter(id=address_id, user=request.user).delete()
+                    messages.success(request, "Address deleted.")
+                except Exception as e:
+                    logger.error(f"Error deleting address: {e}")
+                    messages.error(request, "Failed to delete address.")
+
+                return redirect("shop:account")
+
+            elif form_type == "password":
+                # Handle password change inline
+                from django.contrib import messages
+                from django.contrib.auth import update_session_auth_hash
+
+                old_password = request.POST.get("oldpassword", "")
+                new_password1 = request.POST.get("password1", "")
+                new_password2 = request.POST.get("password2", "")
+
+                # Validate old password
+                if not request.user.check_password(old_password):
+                    messages.error(request, "Your current password is incorrect.")
+                    return redirect("shop:account")
+
+                # Validate new passwords match
+                if new_password1 != new_password2:
+                    messages.error(request, "New passwords do not match.")
+                    return redirect("shop:account")
+
+                # Validate password length
+                if len(new_password1) < 8:
+                    messages.error(request, "Password must be at least 8 characters.")
+                    return redirect("shop:account")
+
+                # Update password
+                request.user.set_password(new_password1)
+                request.user.save()
+
+                # Keep user logged in after password change
+                update_session_auth_hash(request, request.user)
+
+                messages.success(request, "Your password has been updated.")
+                return redirect("shop:account")
+
+        # Try to get orders
+        try:
+            from .models import Order
+            orders = Order.objects.filter(user=request.user).order_by('-created_at')[:5]
+        except Exception:
+            pass
+
+        # Try to get profile
+        try:
+            from .models import UserProfile
+            profile = UserProfile.objects.filter(user=request.user).first()
+        except Exception:
+            pass
+
+        # Try to get addresses
+        try:
+            from .models import SavedAddress
+            addresses = SavedAddress.objects.filter(user=request.user)
+        except Exception:
+            pass
+
+    # Get email from allauth if not on user model
+    user_email = request.user.email
+    if not user_email and request.user.is_authenticated:
+        try:
+            from allauth.account.models import EmailAddress
+            email_obj = EmailAddress.objects.filter(user=request.user, primary=True).first()
+            if email_obj:
+                user_email = email_obj.email
+        except Exception:
+            pass
+
+    context = {
+        "user": request.user,
+        "user_email": user_email,
+        "orders": orders,
+        "profile": profile,
+        "addresses": addresses,
+    }
+
+    return render(request, "shop/account.html", context)
+
+
+def product_detail(request, slug):
+    """Product detail page."""
+    from django.shortcuts import get_object_or_404
+
+    from .models import Product
+
+    product = get_object_or_404(Product, slug=slug, is_active=True)
+
+    # Get all variants for this product with related size and color
+    variants = product.variants.filter(is_active=True).select_related("size", "color")
+
+    # Collect unique sizes and colors from variants
+    sizes = []
+    colors = []
+    seen_sizes = set()
+    seen_colors = set()
+
+    for variant in variants:
+        if variant.size and variant.size.code not in seen_sizes:
+            sizes.append({
+                "code": variant.size.code,
+                "label": variant.size.label or variant.size.code,
+                "available": variant.stock_quantity > 0
+            })
+            seen_sizes.add(variant.size.code)
+        if variant.color and variant.color.name not in seen_colors:
+            colors.append({
+                "name": variant.color.name,
+                "hex": "#000000"  # Default, could be extended to store hex in model
+            })
+            seen_colors.add(variant.color.name)
+
+    # Collect all images from variants
+    images = []
+    for variant in variants:
+        if variant.images:
+            images.extend(variant.images)
+
+    # If no variant images, use placeholder based on product category
+    if not images:
+        if product.category_legacy and "bottom" in product.category_legacy.lower():
+            images = ["/static/images/white_bg_bottom.webp"]
+        elif product.slug and "pants" in product.slug.lower():
+            images = ["/static/images/white_bg_bottom.webp"]
+        else:
+            images = ["/static/images/white_bg_top.webp"]
+
+    main_image = images[0] if images else "/static/images/white_bg_top.webp"
+
+    # Get default variant (first active one)
+    default_variant = variants.first()
+    default_variant_id = default_variant.id if default_variant else None
+
+    context = {
+        "product": product,
+        "variants": variants,
+        "sizes": sizes,
+        "colors": colors,
+        "images": images,
+        "main_image": main_image,
+        "default_variant_id": default_variant_id,
+    }
+
+    return render(request, "shop/product_detail.html", context)
+
+
+def shop(request):
+    """Shop catalog page - lists all products with filtering."""
+    from django.db.models import Prefetch
+    from .models import Category, Product, ProductVariant
+
+    # Get filter parameters
+    category_slug = request.GET.get("category")
+    sort_by = request.GET.get("sort", "newest")
+
+    # Base queryset - active products with prefetched variants
+    products = Product.objects.filter(is_active=True).prefetch_related(
+        Prefetch(
+            "variants",
+            queryset=ProductVariant.objects.filter(is_active=True),
+            to_attr="active_variants"
+        )
+    )
+
+    # Filter by category if specified
+    selected_category = None
+    if category_slug:
+        selected_category = Category.objects.filter(slug=category_slug).first()
+        if selected_category:
+            products = products.filter(category_obj=selected_category)
+
+    # Sort products
+    if sort_by == "price_low":
+        products = products.order_by("base_price")
+    elif sort_by == "price_high":
+        products = products.order_by("-base_price")
+    elif sort_by == "name":
+        products = products.order_by("name")
+    else:  # newest (default)
+        products = products.order_by("-created_at")
+
+    # Get all categories for filter
+    categories = Category.objects.all()
+
+    # Build product data with images (no extra queries due to prefetch)
+    product_list = []
+    for product in products:
+        # Get first variant image or use placeholder
+        first_variant = product.active_variants[0] if product.active_variants else None
+        if first_variant and first_variant.images:
+            image = first_variant.images[0]
+        elif "pants" in product.slug.lower() or "bottom" in product.name.lower():
+            image = "/static/images/white_bg_bottom.webp"
+        else:
+            image = "/static/images/white_bg_top.webp"
+
+        product_list.append({
+            "product": product,
+            "image": image,
+            "variant_count": len(product.active_variants),
+        })
+
+    context = {
+        "products": product_list,
+        "categories": categories,
+        "selected_category": selected_category,
+        "sort_by": sort_by,
+        "product_count": len(product_list),
+    }
+
+    return render(request, "shop/shop.html", context)
 
 
 @csrf_exempt

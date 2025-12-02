@@ -4252,11 +4252,42 @@ def finance_dashboard(request):
     from decimal import Decimal
 
     import pytz
+    import stripe
+    from django.conf import settings
     from django.contrib import messages
     from django.db.models import Count, Q, Sum
     from django.utils import timezone
 
     from shop.models import Expense, ExpenseCategory, Order, OrderStatus
+
+    # Handle Stripe connection test
+    stripe_status = None
+    if request.method == "POST" and request.POST.get("action") == "test_stripe":
+        try:
+            stripe.api_key = settings.STRIPE_SECRET_KEY
+            # Test the connection by retrieving account info
+            account = stripe.Account.retrieve()
+            stripe_status = {
+                "success": True,
+                "account_id": account.id,
+                "business_name": account.get("business_profile", {}).get("name", "N/A"),
+                "country": account.country,
+                "charges_enabled": account.charges_enabled,
+                "payouts_enabled": account.payouts_enabled,
+            }
+            messages.success(request, f"Stripe connection successful! Account: {account.id}")
+        except stripe.AuthenticationError:
+            stripe_status = {"success": False, "error": "Invalid API key"}
+            messages.error(request, "Stripe connection failed: Invalid API key")
+        except stripe.APIConnectionError:
+            stripe_status = {"success": False, "error": "Network error connecting to Stripe"}
+            messages.error(request, "Stripe connection failed: Network error")
+        except stripe.StripeError as e:
+            stripe_status = {"success": False, "error": str(e)}
+            messages.error(request, f"Stripe connection failed: {str(e)}")
+        except Exception as e:
+            stripe_status = {"success": False, "error": str(e)}
+            messages.error(request, f"Stripe connection failed: {str(e)}")
 
     # Ensure recurring expense categories exist
     recurring_category_names = [
@@ -4535,6 +4566,7 @@ def finance_dashboard(request):
         "recurring_expenses": recurring_list,
         "stripe_fees_by_month": stripe_fees_by_month,
         "stripe_fees_total_year": sum(m["fees"] for m in stripe_fees_by_month),
+        "stripe_status": stripe_status,
     }
 
     return render(request, "admin/finance_dashboard.html", context)

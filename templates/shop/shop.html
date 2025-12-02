@@ -1,0 +1,158 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Shop - Blueprint Apparel{% endblock %}
+
+{% block content %}
+
+<!-- Breadcrumb -->
+<div class="border-b border-black">
+  <div class="max-w-7xl mx-auto px-6 py-3">
+    <nav class="flex items-center text-xs tracking-wider">
+      <a href="{% url 'home' %}" class="text-neutral-500 hover:text-black transition-colors uppercase">Home</a>
+      <span class="mx-3 text-neutral-300">/</span>
+      <span class="text-black uppercase">Shop</span>
+    </nav>
+  </div>
+</div>
+
+<!-- Shop Header & Filters -->
+<section class="bg-white border-b border-black">
+  <div class="max-w-7xl mx-auto">
+
+    <!-- Header Row -->
+    <div class="px-6 pt-10 pb-8 md:pt-12 md:pb-10">
+      <div class="flex flex-col md:flex-row md:items-end md:justify-between gap-3">
+        <h1 class="text-3xl md:text-4xl font-bold tracking-tight">
+          {% if selected_category %}"{{ selected_category.name|upper }}"{% else %}"ALL PRODUCTS"{% endif %}
+        </h1>
+        <p class="text-sm text-neutral-400">
+          {{ product_count }} product{{ product_count|pluralize }}
+        </p>
+      </div>
+    </div>
+
+    <!-- Filter Bar -->
+    <div class="px-6 py-3 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+
+      <!-- Category Tabs -->
+      <div class="flex items-center gap-1 overflow-x-auto hide-scrollbar -mx-1 px-1">
+        <a href="{% url 'shop:shop' %}{% if sort_by != 'newest' %}?sort={{ sort_by }}{% endif %}"
+           class="relative px-4 py-2 text-sm transition-colors flex-shrink-0 {% if not selected_category %}text-black font-medium{% else %}text-neutral-400 hover:text-black{% endif %}">
+          All
+          {% if not selected_category %}<span class="absolute bottom-0 left-4 right-4 h-0.5 bg-black"></span>{% endif %}
+        </a>
+        {% for category in categories %}
+        <a href="{% url 'shop:shop' %}?category={{ category.slug }}{% if sort_by != 'newest' %}&sort={{ sort_by }}{% endif %}"
+           class="relative px-4 py-2 text-sm transition-colors flex-shrink-0 {% if selected_category.slug == category.slug %}text-black font-medium{% else %}text-neutral-400 hover:text-black{% endif %}">
+          {{ category.name }}
+          {% if selected_category.slug == category.slug %}<span class="absolute bottom-0 left-4 right-4 h-0.5 bg-black"></span>{% endif %}
+        </a>
+        {% endfor %}
+      </div>
+
+      <!-- Sort -->
+      <div class="flex items-center gap-2 flex-shrink-0">
+        <label for="sort-select" class="text-sm text-neutral-400">Sort by</label>
+        <select id="sort-select" onchange="window.location.href=this.value"
+                class="sort-dropdown text-sm pl-3 pr-6 py-2 bg-transparent border-b border-neutral-300 focus:outline-none focus:border-black cursor-pointer">
+          <option value="{% url 'shop:shop' %}?{% if selected_category %}category={{ selected_category.slug }}&{% endif %}sort=newest" {% if sort_by == 'newest' %}selected{% endif %}>Newest</option>
+          <option value="{% url 'shop:shop' %}?{% if selected_category %}category={{ selected_category.slug }}&{% endif %}sort=price_low" {% if sort_by == 'price_low' %}selected{% endif %}>Price: Low to High</option>
+          <option value="{% url 'shop:shop' %}?{% if selected_category %}category={{ selected_category.slug }}&{% endif %}sort=price_high" {% if sort_by == 'price_high' %}selected{% endif %}>Price: High to Low</option>
+          <option value="{% url 'shop:shop' %}?{% if selected_category %}category={{ selected_category.slug }}&{% endif %}sort=name" {% if sort_by == 'name' %}selected{% endif %}>Name: A-Z</option>
+        </select>
+      </div>
+
+    </div>
+
+  </div>
+</section>
+
+<style>
+  .hide-scrollbar::-webkit-scrollbar { display: none; }
+  .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+  /* Custom select dropdown */
+  .sort-dropdown {
+    appearance: none;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%239ca3af'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 0 center;
+    background-size: 1rem;
+  }
+  .sort-dropdown::-ms-expand {
+    display: none;
+  }
+</style>
+
+<!-- Products Grid -->
+<section class="bg-white">
+  <div class="max-w-7xl mx-auto">
+    {% if products %}
+    <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 border-l border-black">
+      {% for item in products %}
+      <a href="{% url 'shop:product_detail' slug=item.product.slug %}" class="group block border-r border-b border-black">
+        <!-- Product Image -->
+        <div class="overflow-hidden bg-neutral-50" style="aspect-ratio: 3/4;">
+          <img src="{{ item.image }}"
+               alt="{{ item.product.name }}"
+               class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+               loading="lazy" />
+        </div>
+
+        <!-- Product Info -->
+        <div class="p-4 border-t border-black">
+          <div class="flex justify-between items-start gap-2">
+            <div class="min-w-0">
+              <p class="text-xs text-neutral-500 uppercase tracking-wider mb-1">
+                {% if item.product.category_obj %}{{ item.product.category_obj.name }}{% else %}Foundation{% endif %}
+              </p>
+              <h3 class="text-sm font-medium tracking-wide truncate">"{{ item.product.name|upper }}"</h3>
+              {% if item.variant_count > 1 %}
+              <p class="text-xs text-neutral-400 mt-1">{{ item.variant_count }} variants</p>
+              {% endif %}
+            </div>
+            <span class="text-sm font-medium flex-shrink-0">${{ item.product.base_price }}</span>
+          </div>
+        </div>
+      </a>
+      {% endfor %}
+    </div>
+
+    <!-- Fix grid border issues -->
+    <div class="border-t border-black hidden"></div>
+
+    {% else %}
+    <!-- Empty State -->
+    <div class="py-24 text-center">
+      <div class="mb-8">
+        <svg class="w-16 h-16 mx-auto text-neutral-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"></path>
+        </svg>
+      </div>
+      <p class="text-neutral-500 text-sm mb-2">No products found</p>
+      {% if selected_category %}
+      <p class="text-neutral-400 text-xs mb-8">Try removing the filter or check back later</p>
+      <a href="{% url 'shop:shop' %}"
+         class="inline-block px-8 py-4 bg-black text-white text-xs tracking-widest uppercase font-medium hover:bg-neutral-800 transition-colors">
+        View All Products
+      </a>
+      {% else %}
+      <p class="text-neutral-400 text-xs">Check back soon for new arrivals</p>
+      {% endif %}
+    </div>
+    {% endif %}
+  </div>
+</section>
+
+<!-- Section Footer -->
+<div class="border-t border-black bg-white">
+  <div class="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center">
+    <span class="text-xs tracking-wider text-neutral-500">Free shipping on orders over $100</span>
+    <span class="text-xs tracking-widest uppercase font-medium">Blueprint Apparel</span>
+  </div>
+</div>
+
+{% endblock %}

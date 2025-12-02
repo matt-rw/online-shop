@@ -3,9 +3,12 @@ Cart utility functions for managing shopping cart operations.
 Handles both authenticated and anonymous users.
 """
 
+import logging
 from decimal import Decimal
 
 from django.contrib.auth import get_user_model
+
+logger = logging.getLogger(__name__)
 
 from .models import Cart, CartItem, ProductVariant
 
@@ -147,7 +150,8 @@ def get_cart_count(request):
     try:
         cart = get_or_create_cart(request)
         return sum(item.quantity for item in cart.items.all())
-    except:
+    except Exception as e:
+        logger.error(f"Error getting cart count: {e}")
         return 0
 
 
