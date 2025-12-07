@@ -5,7 +5,7 @@
     <div class="flex items-center justify-between h-16 relative">
 
       <!-- Left - Hamburger Menu -->
-      <div class="flex items-center">
+      <div id="menu-trigger" class="flex items-center">
         <button id="menu-toggle" type="button" class="p-2 -ml-2 hover:opacity-70 transition-opacity" aria-label="Menu">
           <svg class="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M4 6h16M4 12h16M4 18h16"></path>
@@ -24,7 +24,7 @@
 
       <!-- Right - Account & Cart Icons -->
       <div class="flex items-center gap-2">
-        <div class="relative">
+        <div id="account-trigger" class="relative">
           <button id="account-toggle" type="button" class="p-2 hover:opacity-70 transition-opacity" aria-label="Account">
             <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2M12 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8z"></path>
@@ -99,29 +99,79 @@
 
 <script>
 (function() {
+  const menuTrigger = document.getElementById('menu-trigger');
   const menuToggle = document.getElementById('menu-toggle');
   const navMenu = document.getElementById('nav-menu');
+  const accountTrigger = document.getElementById('account-trigger');
   const accountToggle = document.getElementById('account-toggle');
   const accountMenu = document.getElementById('account-menu');
 
-  // Main menu toggle
-  menuToggle.addEventListener('click', () => {
-    navMenu.classList.toggle('hidden');
-    accountMenu.classList.add('hidden'); // Close account menu when opening main menu
+  let menuTimeout;
+  let accountTimeout;
+
+  // Main menu - open on hover
+  menuTrigger.addEventListener('mouseenter', () => {
+    clearTimeout(menuTimeout);
+    navMenu.classList.remove('hidden');
+    accountMenu.classList.add('hidden');
   });
 
-  // Account menu toggle
+  navMenu.addEventListener('mouseenter', () => {
+    clearTimeout(menuTimeout);
+  });
+
+  menuTrigger.addEventListener('mouseleave', () => {
+    menuTimeout = setTimeout(() => {
+      navMenu.classList.add('hidden');
+    }, 150);
+  });
+
+  navMenu.addEventListener('mouseleave', () => {
+    menuTimeout = setTimeout(() => {
+      navMenu.classList.add('hidden');
+    }, 150);
+  });
+
+  // Account menu - open on hover
+  accountTrigger.addEventListener('mouseenter', () => {
+    clearTimeout(accountTimeout);
+    accountMenu.classList.remove('hidden');
+    navMenu.classList.add('hidden');
+  });
+
+  accountMenu.addEventListener('mouseenter', () => {
+    clearTimeout(accountTimeout);
+  });
+
+  accountTrigger.addEventListener('mouseleave', () => {
+    accountTimeout = setTimeout(() => {
+      accountMenu.classList.add('hidden');
+    }, 150);
+  });
+
+  accountMenu.addEventListener('mouseleave', () => {
+    accountTimeout = setTimeout(() => {
+      accountMenu.classList.add('hidden');
+    }, 150);
+  });
+
+  // Keep click functionality for mobile/accessibility
+  menuToggle.addEventListener('click', () => {
+    navMenu.classList.toggle('hidden');
+    accountMenu.classList.add('hidden');
+  });
+
   accountToggle.addEventListener('click', () => {
     accountMenu.classList.toggle('hidden');
-    navMenu.classList.add('hidden'); // Close main menu when opening account menu
+    navMenu.classList.add('hidden');
   });
 
   // Close menus when clicking outside
   document.addEventListener('click', (e) => {
-    if (!menuToggle.contains(e.target) && !navMenu.contains(e.target)) {
+    if (!menuTrigger.contains(e.target) && !navMenu.contains(e.target)) {
       navMenu.classList.add('hidden');
     }
-    if (!accountToggle.contains(e.target) && !accountMenu.contains(e.target)) {
+    if (!accountTrigger.contains(e.target) && !accountMenu.contains(e.target)) {
       accountMenu.classList.add('hidden');
     }
   });

@@ -59,6 +59,7 @@ typing-extensions==4.13.2
 urllib3==2.2.3
 whitenoise==6.7.0
 APScheduler==3.10.4
+redis==4.6.0
 
 # Code quality and linting
 black==24.8.0

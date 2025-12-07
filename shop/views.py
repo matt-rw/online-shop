@@ -378,6 +378,7 @@ def account(request):
 
 def product_detail(request, slug):
     """Product detail page."""
+    import json
     from django.shortcuts import get_object_or_404
 
     from .models import Product
@@ -387,18 +388,35 @@ def product_detail(request, slug):
     # Get all variants for this product with related size and color
     variants = product.variants.filter(is_active=True).select_related("size", "color")
 
+    # Build variant data map for JavaScript (size -> variant info)
+    # This allows the frontend to look up stock and variant ID by size
+    variant_data = {}
+    for variant in variants:
+        size_code = variant.size.code if variant.size else "one-size"
+        color_name = variant.color.name if variant.color else "default"
+        key = f"{size_code}_{color_name}"
+        variant_data[key] = {
+            "id": variant.id,
+            "stock": variant.stock_quantity,
+            "price": str(variant.price),
+        }
+
     # Collect unique sizes and colors from variants
     sizes = []
     colors = []
     seen_sizes = set()
     seen_colors = set()
 
+    # Calculate total stock across all variants
+    total_stock = sum(v.stock_quantity for v in variants)
+
     for variant in variants:
         if variant.size and variant.size.code not in seen_sizes:
             sizes.append({
                 "code": variant.size.code,
                 "label": variant.size.label or variant.size.code,
-                "available": variant.stock_quantity > 0
+                "available": variant.stock_quantity > 0,
+                "stock": variant.stock_quantity,
             })
             seen_sizes.add(variant.size.code)
         if variant.color and variant.color.name not in seen_colors:
@@ -425,9 +443,17 @@ def product_detail(request, slug):
 
     main_image = images[0] if images else "/static/images/white_bg_top.webp"
 
-    # Get default variant (first active one)
-    default_variant = variants.first()
+    # Get default variant (first active one with stock, or just first)
+    default_variant = None
+    for v in variants:
+        if v.stock_quantity > 0:
+            default_variant = v
+            break
+    if not default_variant:
+        default_variant = variants.first()
+
     default_variant_id = default_variant.id if default_variant else None
+    default_variant_stock = default_variant.stock_quantity if default_variant else 0
 
     context = {
         "product": product,
@@ -437,6 +463,9 @@ def product_detail(request, slug):
         "images": images,
         "main_image": main_image,
         "default_variant_id": default_variant_id,
+        "default_variant_stock": default_variant_stock,
+        "total_stock": total_stock,
+        "variant_data_json": json.dumps(variant_data),
     }
 
     return render(request, "shop/product_detail.html", context)

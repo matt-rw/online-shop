@@ -130,17 +130,24 @@
         {% endif %}
 
         <!-- Quantity -->
-        <div class="mb-8">
-          <span class="text-xs tracking-widest uppercase font-medium block mb-3">"Quantity"</span>
+        <div class="mb-8" id="quantity-section" {% if total_stock == 0 %}style="display: none;"{% endif %}>
+          <div class="flex items-center justify-between mb-3">
+            <span class="text-xs tracking-widest uppercase font-medium">"Quantity"</span>
+            <span id="stock-display" class="text-xs text-neutral-500">
+              {% if default_variant_stock > 0 %}
+                {{ default_variant_stock }} in stock
+              {% endif %}
+            </span>
+          </div>
           <div class="flex items-center border border-black w-fit">
-            <button onclick="decrementQty()" class="px-4 py-2 hover:bg-black hover:text-white transition-colors">
+            <button type="button" onclick="decrementQty()" class="px-4 py-2 hover:bg-black hover:text-white transition-colors">
               <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 12H4"></path>
               </svg>
             </button>
-            <input type="number" id="quantity" name="quantity" value="1" min="1" max="10"
+            <input type="number" id="quantity" name="quantity" value="1" min="1" max="{{ default_variant_stock|default:1 }}"
                    class="w-12 text-center border-x border-black py-2 font-medium" readonly />
-            <button onclick="incrementQty()" class="px-4 py-2 hover:bg-black hover:text-white transition-colors">
+            <button type="button" onclick="incrementQty()" class="px-4 py-2 hover:bg-black hover:text-white transition-colors">
               <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
               </svg>
@@ -149,15 +156,22 @@
         </div>
 
         <!-- Add to Cart Button -->
-        <form action="{% url 'shop:add_to_cart' %}" method="POST" class="mb-8">
+        <form action="{% url 'shop:add_to_cart' %}" method="POST" class="mb-8" id="add-to-cart-form">
           {% csrf_token %}
           <input type="hidden" name="product_id" value="{{ product.id }}">
           <input type="hidden" name="variant_id" id="variant-id" value="{{ default_variant_id|default:'' }}">
           <input type="hidden" name="quantity" id="form-quantity" value="1">
-          <button type="submit"
+          {% if total_stock == 0 %}
+          <button type="button" disabled
+                  class="w-full py-4 bg-neutral-300 text-neutral-500 font-bold uppercase tracking-widest text-sm cursor-not-allowed">
+            Out of Stock
+          </button>
+          {% else %}
+          <button type="submit" id="add-to-cart-btn"
                   class="w-full py-4 bg-black text-white font-bold uppercase tracking-widest text-sm hover:bg-neutral-800 transition-colors">
             Add to Cart
           </button>
+          {% endif %}
         </form>
 
         <!-- Product Description -->
@@ -218,6 +232,12 @@
 
 {% block extra_js %}
 <script>
+  // Variant data from server
+  const variantData = {{ variant_data_json|safe }};
+  let currentStock = {{ default_variant_stock|default:0 }};
+  let selectedSize = '';
+  let selectedColor = '{{ colors.0.name|default:"default" }}';
+
   // Image gallery
   let currentImage = 1;
   const totalImages = {{ images|length|default:1 }};
@@ -240,6 +260,7 @@
 
   // Size selection
   function selectSize(size) {
+    selectedSize = size;
     document.getElementById('selected-size').value = size;
 
     // Update button states
@@ -256,6 +277,7 @@
 
   // Color selection
   function selectColor(color) {
+    selectedColor = color;
     document.getElementById('selected-color').value = color;
 
     // Update button states
@@ -270,20 +292,71 @@
     updateVariant();
   }
 
-  // Update variant ID based on selections
+  // Update variant ID and stock based on selections
   function updateVariant() {
-    // This would typically make an AJAX call to get the variant ID
-    // For now, we'll use the first variant or the product ID
-    const variantId = document.getElementById('variant-id');
-    // Placeholder - in production this would fetch the correct variant
+    const sizeCode = selectedSize || 'one-size';
+    const colorName = selectedColor || 'default';
+    const key = `${sizeCode}_${colorName}`;
+
+    const variant = variantData[key];
+
+    if (variant) {
+      // Update variant ID
+      document.getElementById('variant-id').value = variant.id;
+
+      // Update stock
+      currentStock = variant.stock;
+      updateStockDisplay();
+    }
   }
 
-  // Quantity controls
+  // Update stock display and button state
+  function updateStockDisplay() {
+    const stockDisplay = document.getElementById('stock-display');
+    const quantitySection = document.getElementById('quantity-section');
+    const addToCartBtn = document.getElementById('add-to-cart-btn');
+    const quantityInput = document.getElementById('quantity');
+
+    if (currentStock > 0) {
+      // In stock
+      stockDisplay.textContent = `${currentStock} in stock`;
+      quantitySection.style.display = '';
+      quantityInput.max = currentStock;
+
+      // Reset quantity if it exceeds new stock
+      if (parseInt(quantityInput.value) > currentStock) {
+        quantityInput.value = currentStock;
+        document.getElementById('form-quantity').value = currentStock;
+      }
+
+      // Update button
+      if (addToCartBtn) {
+        addToCartBtn.disabled = false;
+        addToCartBtn.textContent = 'Add to Cart';
+        addToCartBtn.className = 'w-full py-4 bg-black text-white font-bold uppercase tracking-widest text-sm hover:bg-neutral-800 transition-colors';
+      }
+    } else {
+      // Out of stock
+      stockDisplay.textContent = 'Out of stock';
+      quantitySection.style.display = 'none';
+
+      // Update button to show out of stock
+      if (addToCartBtn) {
+        addToCartBtn.disabled = true;
+        addToCartBtn.textContent = 'Out of Stock';
+        addToCartBtn.className = 'w-full py-4 bg-neutral-300 text-neutral-500 font-bold uppercase tracking-widest text-sm cursor-not-allowed';
+      }
+    }
+  }
+
+  // Quantity controls with stock limits
   function incrementQty() {
     const input = document.getElementById('quantity');
     const formInput = document.getElementById('form-quantity');
-    if (parseInt(input.value) < 10) {
-      input.value = parseInt(input.value) + 1;
+    const currentVal = parseInt(input.value);
+
+    if (currentVal < currentStock) {
+      input.value = currentVal + 1;
       formInput.value = input.value;
     }
   }

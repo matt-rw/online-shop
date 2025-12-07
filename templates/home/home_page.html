@@ -540,45 +540,42 @@
     <div class="border-b border-black">
       <div class="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center">
         <span class="text-xs tracking-widest uppercase font-medium">"Foundation"</span>
-        <span class="text-xs tracking-wider text-neutral-500">001 / 002</span>
+        <span class="text-xs tracking-wider text-neutral-500">001 / {% if featured_products %}{{ featured_products|length|stringformat:"03d" }}{% else %}000{% endif %}</span>
       </div>
     </div>
 
     <!-- Product Grid -->
     <div class="max-w-7xl mx-auto">
-      <div style="display: grid; grid-template-columns: 1fr 1fr;">
+      <div style="display: grid; grid-template-columns: repeat({{ featured_products|length|default:2 }}, 1fr);">
 
-        <!-- Product 1 -->
-        <a href="{% url 'shop:product_detail' slug='foundation-tee' %}" class="group block border-r border-black">
+        {% for product in featured_products %}
+        <a href="{% url 'shop:product_detail' slug=product.slug %}" class="group block {% if not forloop.last %}border-r border-black{% endif %}">
           <div class="overflow-hidden" style="aspect-ratio: 4/5;">
-            <img src="{% static 'images/white_bg_top.webp' %}"
-                 alt="Foundation Tee"
+            {% with first_variant=product.variants.first %}
+            {% if first_variant and first_variant.images %}
+            <img src="{% static first_variant.images.0 %}"
+                 alt="{{ product.name }}"
                  class="w-full h-full object-cover transition-all duration-700 group-hover:scale-105" />
+            {% else %}
+            <div class="w-full h-full bg-neutral-100 flex items-center justify-center">
+              <span class="text-neutral-400">No image</span>
+            </div>
+            {% endif %}
+            {% endwith %}
           </div>
           <div class="border-t border-black p-4 flex justify-between items-start">
             <div>
-              <p class="text-xs text-neutral-500 uppercase tracking-wider mb-1">Tops</p>
-              <h3 class="text-sm font-medium tracking-wide">"FOUNDATION TEE"</h3>
+              <p class="text-xs text-neutral-500 uppercase tracking-wider mb-1">{{ product.category_obj.name|default:"Products" }}</p>
+              <h3 class="text-sm font-medium tracking-wide">"{{ product.name|upper }}"</h3>
             </div>
-            <span class="text-sm font-medium">$45</span>
+            <span class="text-sm font-medium">${{ product.base_price|floatformat:0 }}</span>
           </div>
         </a>
-
-        <!-- Product 2 -->
-        <a href="{% url 'shop:product_detail' slug='foundation-pants' %}" class="group block">
-          <div class="overflow-hidden" style="aspect-ratio: 4/5;">
-            <img src="{% static 'images/white_bg_bottom.webp' %}"
-                 alt="Foundation Pants"
-                 class="w-full h-full object-cover transition-all duration-700 group-hover:scale-105" />
-          </div>
-          <div class="border-t border-black p-4 flex justify-between items-start">
-            <div>
-              <p class="text-xs text-neutral-500 uppercase tracking-wider mb-1">Bottoms</p>
-              <h3 class="text-sm font-medium tracking-wide">"FOUNDATION PANTS"</h3>
-            </div>
-            <span class="text-sm font-medium">$85</span>
-          </div>
-        </a>
+        {% empty %}
+        <div class="col-span-2 p-12 text-center text-neutral-500">
+          <p>No featured products yet.</p>
+        </div>
+        {% endfor %}
 
       </div>
     </div>
@@ -587,7 +584,7 @@
     <div class="border-t border-black">
       <div class="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center">
         <span class="text-xs tracking-wider text-neutral-500">COMING SOON</span>
-        <span class="text-xs tracking-widest uppercase font-medium">View All →</span>
+        <a href="{% url 'shop:shop' %}" class="text-xs tracking-widest uppercase font-medium hover:opacity-70 transition-opacity">View All →</a>
       </div>
     </div>
   </section>
@@ -616,7 +613,7 @@
     <!-- Footer Header -->
     <div class="border-b border-white/10">
       <div class="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center">
-        <span class="text-xs tracking-widest uppercase font-medium">"Blueprint"</span>
+        <span class="text-xs tracking-widest uppercase font-medium">Blueprint</span>
         <span class="text-xs tracking-wider text-white/50">EST. 2024</span>
       </div>
     </div>
@@ -635,7 +632,7 @@
 
         <!-- Shop Column -->
         <div class="p-6 border-b md:border-b-0 md:border-r border-white/10">
-          <h3 class="text-xs tracking-widest uppercase font-medium mb-4">"Shop"</h3>
+          <h3 class="text-xs tracking-widest uppercase font-medium mb-4">Shop</h3>
           <ul class="space-y-2">
             <li><a href="{% url 'shop:coming_soon' %}" class="group flex items-center text-white/50 hover:text-white transition-colors text-xs tracking-wide uppercase"><span class="w-3 h-px bg-white/30 mr-2 group-hover:w-5 transition-all"></span>Foundation</a></li>
             <li><a href="{% url 'shop:coming_soon' %}" class="group flex items-center text-white/50 hover:text-white transition-colors text-xs tracking-wide uppercase"><span class="w-3 h-px bg-white/30 mr-2 group-hover:w-5 transition-all"></span>New Arrivals</a></li>
@@ -645,7 +642,7 @@
 
         <!-- Company Column -->
         <div class="p-6 border-b md:border-b-0 md:border-r border-white/10">
-          <h3 class="text-xs tracking-widest uppercase font-medium mb-4">"Company"</h3>
+          <h3 class="text-xs tracking-widest uppercase font-medium mb-4">Company</h3>
           <ul class="space-y-2">
             <li><a href="{% url 'shop:about' %}" class="group flex items-center text-white/50 hover:text-white transition-colors text-xs tracking-wide uppercase"><span class="w-3 h-px bg-white/30 mr-2 group-hover:w-5 transition-all"></span>About</a></li>
             <li><a href="{% url 'shop:coming_soon' %}" class="group flex items-center text-white/50 hover:text-white transition-colors text-xs tracking-wide uppercase"><span class="w-3 h-px bg-white/30 mr-2 group-hover:w-5 transition-all"></span>Contact</a></li>
@@ -654,7 +651,7 @@
 
         <!-- Connect Column -->
         <div class="p-6">
-          <h3 class="text-xs tracking-widest uppercase font-medium mb-4">"Connect"</h3>
+          <h3 class="text-xs tracking-widest uppercase font-medium mb-4">Connect</h3>
           <div class="flex gap-4 mb-4">
             <a href="https://www.instagram.com/_blueprintapparel" target="_blank" class="text-white/50 hover:text-white transition-colors">
               <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
