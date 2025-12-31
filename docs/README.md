@@ -1,7 +1,7 @@
 # E-commerce CMS Platform
 
 ## Overview
-A backend application built with Django, Wagtail CMS, Tailwind CSS, and Stripe that supports structured content management and secure payment processing.
+A backend application built with Django, Tailwind CSS, and Stripe that supports structured content management and secure payment processing.
 
 ## Technology
 Python, Django, Wagtail CMS, Tailwind CSS, Stripe
