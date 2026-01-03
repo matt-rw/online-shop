@@ -490,6 +490,61 @@
       </div>
     </div>
 
+    <!-- Stripe Connection Test -->
+    <div class="section" style="margin-bottom: 2rem;">
+      <div style="display: flex; justify-content: space-between; align-items: center;">
+        <div>
+          <h2 style="margin: 0 0 0.5rem 0;">Stripe Connection</h2>
+          <p style="color: #64748b; font-size: 0.875rem; margin: 0;">Test your Stripe API connection and view account status.</p>
+        </div>
+        <form method="POST" action="" style="display: inline;">
+          {% csrf_token %}
+          <input type="hidden" name="action" value="test_stripe">
+          <button type="submit" class="btn btn-primary">
+            <i class="fa-solid fa-plug"></i> Test Connection
+          </button>
+        </form>
+      </div>
+
+      {% if stripe_status %}
+        <div style="margin-top: 1.5rem; padding: 1.25rem; border-radius: 12px; {% if stripe_status.success %}background: #d1fae5; border: 1px solid #10b981;{% else %}background: #fee2e2; border: 1px solid #ef4444;{% endif %}">
+          {% if stripe_status.success %}
+            <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 1rem;">
+              <i class="fa-solid fa-circle-check" style="color: #10b981; font-size: 1.25rem;"></i>
+              <span style="font-weight: 600; color: #065f46;">Connection Successful</span>
+            </div>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 1rem;">
+              <div>
+                <div style="font-size: 0.75rem; color: #64748b; text-transform: uppercase; font-weight: 600;">Account ID</div>
+                <div style="font-size: 0.875rem; font-weight: 500; color: #0f172a;">{{ stripe_status.account_id }}</div>
+              </div>
+              <div>
+                <div style="font-size: 0.75rem; color: #64748b; text-transform: uppercase; font-weight: 600;">Country</div>
+                <div style="font-size: 0.875rem; font-weight: 500; color: #0f172a;">{{ stripe_status.country }}</div>
+              </div>
+              <div>
+                <div style="font-size: 0.75rem; color: #64748b; text-transform: uppercase; font-weight: 600;">Charges Enabled</div>
+                <div style="font-size: 0.875rem; font-weight: 500; color: {% if stripe_status.charges_enabled %}#10b981{% else %}#ef4444{% endif %};">
+                  {% if stripe_status.charges_enabled %}Yes{% else %}No{% endif %}
+                </div>
+              </div>
+              <div>
+                <div style="font-size: 0.75rem; color: #64748b; text-transform: uppercase; font-weight: 600;">Payouts Enabled</div>
+                <div style="font-size: 0.875rem; font-weight: 500; color: {% if stripe_status.payouts_enabled %}#10b981{% else %}#ef4444{% endif %};">
+                  {% if stripe_status.payouts_enabled %}Yes{% else %}No{% endif %}
+                </div>
+              </div>
+            </div>
+          {% else %}
+            <div style="display: flex; align-items: center; gap: 0.75rem;">
+              <i class="fa-solid fa-circle-xmark" style="color: #ef4444; font-size: 1.25rem;"></i>
+              <span style="font-weight: 600; color: #991b1b;">Connection Failed: {{ stripe_status.error }}</span>
+            </div>
+          {% endif %}
+        </div>
+      {% endif %}
+    </div>
+
     <!-- Monthly Overview Chart -->
     <div class="chart-container">
       <div class="chart-header">

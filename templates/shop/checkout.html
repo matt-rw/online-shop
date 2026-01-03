@@ -1,0 +1,571 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Checkout - Blueprint Apparel{% endblock %}
+
+{% block content %}
+
+<!-- Breadcrumb -->
+<div class="border-b border-black">
+  <div class="max-w-7xl mx-auto px-6 py-3">
+    <nav class="flex items-center text-xs tracking-wider">
+      <a href="{% url 'home' %}" class="text-neutral-500 hover:text-black transition-colors uppercase">Home</a>
+      <span class="mx-3 text-neutral-300">/</span>
+      <a href="{% url 'shop:cart' %}" class="text-neutral-500 hover:text-black transition-colors uppercase">Cart</a>
+      <span class="mx-3 text-neutral-300">/</span>
+      <span class="text-black uppercase">Checkout</span>
+    </nav>
+  </div>
+</div>
+
+<!-- Checkout Header -->
+<section class="bg-white border-b border-black">
+  <div class="max-w-7xl mx-auto px-6 py-8">
+    <div class="flex items-center justify-between">
+      <div>
+        <p class="text-xs text-neutral-500 uppercase tracking-wider mb-2">Secure</p>
+        <h1 class="text-2xl md:text-3xl font-bold tracking-tight">"CHECKOUT"</h1>
+      </div>
+      <div class="flex items-center gap-2">
+        <svg class="w-5 h-5 text-neutral-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path>
+        </svg>
+        <span class="text-xs tracking-widest text-neutral-500 uppercase">Secure Checkout</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Checkout Content -->
+<section class="bg-white">
+  <div class="max-w-7xl mx-auto">
+
+    {% if messages %}
+    <div class="px-6 pt-6">
+      {% for message in messages %}
+        <div class="px-4 py-3 text-sm mb-2 border
+          {% if message.tags == 'error' %}bg-red-50 text-red-800 border-red-200
+          {% elif message.tags == 'warning' %}bg-yellow-50 text-yellow-800 border-yellow-200
+          {% else %}bg-neutral-50 text-neutral-800 border-neutral-200{% endif %}">
+          {{ message }}
+        </div>
+      {% endfor %}
+    </div>
+    {% endif %}
+
+    <form id="checkout-form" method="POST" action="{% url 'shop:create_checkout_session' %}">
+      {% csrf_token %}
+      <div class="grid grid-cols-1 lg:grid-cols-3">
+
+        <!-- Shipping & Billing Forms -->
+        <div class="lg:col-span-2 border-r border-black">
+
+          <!-- Contact Information -->
+          <div class="p-6 lg:p-8 border-b border-black">
+            <h2 class="text-xs tracking-widest uppercase font-medium mb-6">"Contact Information"</h2>
+
+            <div class="space-y-4">
+              <div>
+                <label for="email" class="text-xs tracking-wider uppercase text-neutral-500 block mb-2">Email Address</label>
+                <input type="email" id="email" name="email" required
+                       value="{{ user_email }}"
+                       placeholder="your@email.com"
+                       class="w-full px-4 py-3 border border-black text-sm focus:outline-none focus:ring-1 focus:ring-black" />
+              </div>
+
+              <div>
+                <label for="phone" class="text-xs tracking-wider uppercase text-neutral-500 block mb-2">Phone (Optional)</label>
+                <input type="tel" id="phone" name="phone"
+                       placeholder="+1 (555) 000-0000"
+                       class="w-full px-4 py-3 border border-black text-sm focus:outline-none focus:ring-1 focus:ring-black" />
+              </div>
+            </div>
+          </div>
+
+          <!-- Shipping Address -->
+          <div class="p-6 lg:p-8 border-b border-black">
+            <h2 class="text-xs tracking-widest uppercase font-medium mb-6">"Shipping Address"</h2>
+
+            {% if saved_addresses %}
+            <div class="mb-6">
+              <label for="saved_address" class="text-xs tracking-wider uppercase text-neutral-500 block mb-2">Saved Addresses</label>
+              <select id="saved_address" name="saved_address"
+                      class="w-full px-4 py-3 border border-black text-sm focus:outline-none focus:ring-1 focus:ring-black bg-white">
+                <option value="">Enter new address</option>
+                {% for addr in saved_addresses %}
+                <option value="{{ addr.id }}" data-name="{{ addr.full_name }}" data-line1="{{ addr.line1 }}" data-line2="{{ addr.line2 }}" data-city="{{ addr.city }}" data-region="{{ addr.region }}" data-postal="{{ addr.postal_code }}" data-country="{{ addr.country }}">
+                  {{ addr.full_name }} - {{ addr.line1 }}, {{ addr.city }}
+                </option>
+                {% endfor %}
+              </select>
+            </div>
+            {% endif %}
+
+            <div class="space-y-4">
+              <div>
+                <label for="shipping_name" class="text-xs tracking-wider uppercase text-neutral-500 block mb-2">Full Name</label>
+                <input type="text" id="shipping_name" name="shipping_name" required
+                       value="{{ user_full_name }}"
+                       placeholder="John Doe"
+                       class="w-full px-4 py-3 border border-black text-sm focus:outline-none focus:ring-1 focus:ring-black" />
+              </div>
+
+              <div>
+                <label for="shipping_line1" class="text-xs tracking-wider uppercase text-neutral-500 block mb-2">Address Line 1</label>
+                <input type="text" id="shipping_line1" name="shipping_line1" required
+                       placeholder="123 Main Street"
+                       class="w-full px-4 py-3 border border-black text-sm focus:outline-none focus:ring-1 focus:ring-black" />
+              </div>
+
+              <div>
+                <label for="shipping_line2" class="text-xs tracking-wider uppercase text-neutral-500 block mb-2">Address Line 2 (Optional)</label>
+                <input type="text" id="shipping_line2" name="shipping_line2"
+                       placeholder="Apt, Suite, Unit, etc."
+                       class="w-full px-4 py-3 border border-black text-sm focus:outline-none focus:ring-1 focus:ring-black" />
+              </div>
+
+              <div class="grid grid-cols-2 gap-4">
+                <div>
+                  <label for="shipping_city" class="text-xs tracking-wider uppercase text-neutral-500 block mb-2">City</label>
+                  <input type="text" id="shipping_city" name="shipping_city" required
+                         placeholder="New York"
+                         class="w-full px-4 py-3 border border-black text-sm focus:outline-none focus:ring-1 focus:ring-black" />
+                </div>
+
+                <div>
+                  <label for="shipping_region" class="text-xs tracking-wider uppercase text-neutral-500 block mb-2">State / Region</label>
+                  <input type="text" id="shipping_region" name="shipping_region" required
+                         placeholder="NY"
+                         class="w-full px-4 py-3 border border-black text-sm focus:outline-none focus:ring-1 focus:ring-black" />
+                </div>
+              </div>
+
+              <div class="grid grid-cols-2 gap-4">
+                <div>
+                  <label for="shipping_postal" class="text-xs tracking-wider uppercase text-neutral-500 block mb-2">Postal Code</label>
+                  <input type="text" id="shipping_postal" name="shipping_postal" required
+                         placeholder="10001"
+                         class="w-full px-4 py-3 border border-black text-sm focus:outline-none focus:ring-1 focus:ring-black" />
+                </div>
+
+                <div>
+                  <label for="shipping_country" class="text-xs tracking-wider uppercase text-neutral-500 block mb-2">Country</label>
+                  <select id="shipping_country" name="shipping_country" required
+                          class="w-full px-4 py-3 border border-black text-sm focus:outline-none focus:ring-1 focus:ring-black bg-white">
+                    <option value="US" selected>United States</option>
+                    <option value="CA">Canada</option>
+                    <option value="GB">United Kingdom</option>
+                    <option value="AU">Australia</option>
+                    <option value="DE">Germany</option>
+                    <option value="FR">France</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Shipping Method -->
+          <div class="p-6 lg:p-8 border-b border-black">
+            <h2 class="text-xs tracking-widest uppercase font-medium mb-6">"Shipping Method"</h2>
+
+            <div id="shipping-methods-container">
+              <div id="shipping-prompt" class="text-sm text-neutral-500 py-4">
+                Enter your shipping address above to see available shipping options.
+              </div>
+
+              <div id="shipping-loading" class="hidden py-4">
+                <div class="flex items-center gap-3">
+                  <svg class="animate-spin h-5 w-5 text-neutral-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                  </svg>
+                  <span class="text-sm text-neutral-500">Calculating shipping rates...</span>
+                </div>
+              </div>
+
+              <div id="shipping-options" class="hidden space-y-3">
+                <!-- Shipping options will be populated by JavaScript -->
+              </div>
+
+              <div id="shipping-error" class="hidden text-sm text-red-600 py-4">
+                Unable to calculate shipping. Please check your address.
+              </div>
+            </div>
+          </div>
+
+          <!-- Billing Address -->
+          <div class="p-6 lg:p-8">
+            <div class="flex items-center justify-between mb-6">
+              <h2 class="text-xs tracking-widest uppercase font-medium">"Billing Address"</h2>
+              <label class="flex items-center gap-2 cursor-pointer">
+                <input type="checkbox" id="same_as_shipping" name="same_as_shipping" checked
+                       class="w-4 h-4 border-black text-black focus:ring-black" />
+                <span class="text-xs text-neutral-600">Same as shipping</span>
+              </label>
+            </div>
+
+            <div id="billing_fields" class="space-y-4 hidden">
+              <div>
+                <label for="billing_name" class="text-xs tracking-wider uppercase text-neutral-500 block mb-2">Full Name</label>
+                <input type="text" id="billing_name" name="billing_name"
+                       value="{{ user_full_name }}"
+                       placeholder="John Doe"
+                       class="w-full px-4 py-3 border border-black text-sm focus:outline-none focus:ring-1 focus:ring-black" />
+              </div>
+
+              <div>
+                <label for="billing_line1" class="text-xs tracking-wider uppercase text-neutral-500 block mb-2">Address Line 1</label>
+                <input type="text" id="billing_line1" name="billing_line1"
+                       placeholder="123 Main Street"
+                       class="w-full px-4 py-3 border border-black text-sm focus:outline-none focus:ring-1 focus:ring-black" />
+              </div>
+
+              <div>
+                <label for="billing_line2" class="text-xs tracking-wider uppercase text-neutral-500 block mb-2">Address Line 2 (Optional)</label>
+                <input type="text" id="billing_line2" name="billing_line2"
+                       placeholder="Apt, Suite, Unit, etc."
+                       class="w-full px-4 py-3 border border-black text-sm focus:outline-none focus:ring-1 focus:ring-black" />
+              </div>
+
+              <div class="grid grid-cols-2 gap-4">
+                <div>
+                  <label for="billing_city" class="text-xs tracking-wider uppercase text-neutral-500 block mb-2">City</label>
+                  <input type="text" id="billing_city" name="billing_city"
+                         placeholder="New York"
+                         class="w-full px-4 py-3 border border-black text-sm focus:outline-none focus:ring-1 focus:ring-black" />
+                </div>
+
+                <div>
+                  <label for="billing_region" class="text-xs tracking-wider uppercase text-neutral-500 block mb-2">State / Region</label>
+                  <input type="text" id="billing_region" name="billing_region"
+                         placeholder="NY"
+                         class="w-full px-4 py-3 border border-black text-sm focus:outline-none focus:ring-1 focus:ring-black" />
+                </div>
+              </div>
+
+              <div class="grid grid-cols-2 gap-4">
+                <div>
+                  <label for="billing_postal" class="text-xs tracking-wider uppercase text-neutral-500 block mb-2">Postal Code</label>
+                  <input type="text" id="billing_postal" name="billing_postal"
+                         placeholder="10001"
+                         class="w-full px-4 py-3 border border-black text-sm focus:outline-none focus:ring-1 focus:ring-black" />
+                </div>
+
+                <div>
+                  <label for="billing_country" class="text-xs tracking-wider uppercase text-neutral-500 block mb-2">Country</label>
+                  <select id="billing_country" name="billing_country"
+                          class="w-full px-4 py-3 border border-black text-sm focus:outline-none focus:ring-1 focus:ring-black bg-white">
+                    <option value="US" selected>United States</option>
+                    <option value="CA">Canada</option>
+                    <option value="GB">United Kingdom</option>
+                    <option value="AU">Australia</option>
+                    <option value="DE">Germany</option>
+                    <option value="FR">France</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- Order Summary -->
+        <div class="lg:col-span-1 bg-neutral-50">
+          <div class="p-6 lg:p-8 sticky top-0">
+            <h2 class="text-xs tracking-widest uppercase font-medium mb-6">"Order Summary"</h2>
+
+            <!-- Cart Items -->
+            <div class="space-y-4 mb-6 max-h-64 overflow-y-auto">
+              {% for item in cart_items %}
+              <div class="flex gap-4">
+                <div class="w-16 h-20 bg-white border border-neutral-200 flex-shrink-0 overflow-hidden">
+                  {% if item.variant.images and item.variant.images.0 %}
+                  <img src="{{ item.variant.images.0 }}" alt="{{ item.variant.product.name }}" class="w-full h-full object-cover" />
+                  {% elif 'pants' in item.variant.product.slug|lower or 'bottom' in item.variant.product.name|lower %}
+                  <img src="{% static 'images/white_bg_bottom.webp' %}" alt="{{ item.variant.product.name }}" class="w-full h-full object-cover" />
+                  {% else %}
+                  <img src="{% static 'images/white_bg_top.webp' %}" alt="{{ item.variant.product.name }}" class="w-full h-full object-cover" />
+                  {% endif %}
+                </div>
+                <div class="flex-grow">
+                  <p class="text-sm font-medium">{{ item.variant.product.name }}</p>
+                  <p class="text-xs text-neutral-500">
+                    {% if item.variant.size %}{{ item.variant.size }}{% endif %}
+                    {% if item.variant.size and item.variant.color %} / {% endif %}
+                    {% if item.variant.color %}{{ item.variant.color }}{% endif %}
+                  </p>
+                  <p class="text-xs text-neutral-500">Qty: {{ item.quantity }}</p>
+                </div>
+                <p class="text-sm font-medium">${{ item.variant.price }}</p>
+              </div>
+              {% endfor %}
+            </div>
+
+            <!-- Totals -->
+            <div class="border-t border-neutral-200 pt-4 space-y-3">
+              <div class="flex justify-between text-sm">
+                <span class="text-neutral-600">Subtotal</span>
+                <span id="checkout-subtotal" class="font-medium">${{ subtotal }}</span>
+              </div>
+              <div class="flex justify-between text-sm">
+                <span class="text-neutral-600">Shipping</span>
+                <span id="checkout-shipping" class="font-medium text-neutral-400">Select method</span>
+              </div>
+              <div class="flex justify-between text-sm">
+                <span class="text-neutral-600">Tax</span>
+                <span id="checkout-tax" class="font-medium text-neutral-400">Calculated at checkout</span>
+              </div>
+              <div class="border-t border-black pt-4 flex justify-between">
+                <span class="text-xs tracking-widest uppercase font-medium">Total</span>
+                <span id="checkout-total" class="text-xl font-bold">${{ subtotal }}</span>
+              </div>
+            </div>
+            <input type="hidden" id="selected-shipping-rate" name="shipping_rate_id" value="">
+            <input type="hidden" id="selected-shipping-cost" name="shipping_cost" value="0">
+
+            <!-- Checkout Button -->
+            <button type="submit"
+                    class="w-full mt-6 px-4 py-4 bg-black text-white text-xs tracking-widest uppercase font-medium hover:bg-neutral-800 transition-colors flex items-center justify-center gap-2">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path>
+              </svg>
+              Proceed to Payment
+            </button>
+
+            <!-- Stripe Badge -->
+            <div class="flex items-center justify-center gap-2 mt-4">
+              <span class="text-xs text-neutral-400">Secured by</span>
+              <svg class="h-5 w-auto text-neutral-400" viewBox="0 0 60 25" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+                <path fill-rule="evenodd" clip-rule="evenodd" d="M59.64 14.28h-8.06c.19 1.93 1.6 2.55 3.2 2.55 1.64 0 2.96-.37 4.05-.95v3.32a10.5 10.5 0 0 1-4.56 1c-4.01 0-6.83-2.5-6.83-7.48 0-4.19 2.39-7.52 6.3-7.52 3.92 0 5.96 3.28 5.96 7.5 0 .4-.03 1.07-.06 1.58zm-6.03-5.73c-1.08 0-2.09.85-2.21 2.66h4.32c0-1.64-.81-2.66-2.11-2.66zM40.95 20.3c-1.44 0-2.32-.6-2.9-1.04l-.02 4.63-4.12.87V5.57h3.76l.1 1.03a4.32 4.32 0 0 1 3.08-1.25c2.85 0 5.62 2.58 5.62 7.4 0 5.23-2.7 7.55-5.52 7.55zM40 9.23c-.95 0-1.54.34-1.97.81l.02 5.76c.4.42.98.78 1.95.78 1.52 0 2.54-1.65 2.54-3.7 0-2.01-1.02-3.65-2.54-3.65zM28.24 5.57h4.13v14.44h-4.13V5.57zm0-5.13L32.37 0v3.45l-4.13.88V.44zm-4.32 9.35v10.22H19.8V5.57H23l.37 1.5a4.35 4.35 0 0 1 3.74-1.73v3.99c-.3-.05-.77-.06-1.2 0-.73.1-1.52.44-1.99.93v-.47zM13.03 6.98c0-.66.55-1.17 1.64-1.17 1.46 0 3.13.47 4.52 1.28V3.19a11.84 11.84 0 0 0-4.5-.82c-3.66 0-6.08 1.91-6.08 5.09 0 4.95 6.82 4.16 6.82 6.29 0 .79-.68 1.25-1.85 1.25-1.6 0-3.63-.66-5.24-1.55v3.96a12.28 12.28 0 0 0 5.24 1.16c3.77 0 6.34-1.86 6.34-5.08 0-5.33-6.89-4.39-6.89-6.51zM2.59 10.24l-.45 1.95h5.12v-3.5H.01l.02 3.85c0 4.74 2.32 7.76 7.1 7.76.9 0 1.62-.08 2.14-.22v-3.63c-.44.1-.98.16-1.54.16-2.02 0-3.06-1.03-3.12-2.78h4.52V5.57H2.61l-.02 4.67z"/>
+              </svg>
+            </div>
+
+            <!-- Back to Cart -->
+            <a href="{% url 'shop:cart' %}" class="block text-center mt-4 text-xs tracking-wider uppercase text-neutral-500 hover:text-black transition-colors">
+              Back to Cart
+            </a>
+          </div>
+        </div>
+
+      </div>
+    </form>
+  </div>
+</section>
+
+<!-- Trust Badges -->
+<div class="border-t border-black bg-white">
+  <div class="max-w-7xl mx-auto px-6 py-6">
+    <div class="flex flex-wrap justify-center gap-8 text-xs tracking-wider text-neutral-500 uppercase">
+      <div class="flex items-center gap-2">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path>
+        </svg>
+        <span>Secure Payment</span>
+      </div>
+      <div class="flex items-center gap-2">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"></path>
+        </svg>
+        <span>All Cards Accepted</span>
+      </div>
+      <div class="flex items-center gap-2">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"></path>
+        </svg>
+        <span>Free Returns</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+const csrfToken = '{{ csrf_token }}';
+const subtotal = {{ subtotal }};
+const shippingRatesUrl = '{% url "shop:get_shipping_rates" %}';
+
+// DOM elements
+const shippingPrompt = document.getElementById('shipping-prompt');
+const shippingLoading = document.getElementById('shipping-loading');
+const shippingOptions = document.getElementById('shipping-options');
+const shippingError = document.getElementById('shipping-error');
+const checkoutShipping = document.getElementById('checkout-shipping');
+const checkoutTotal = document.getElementById('checkout-total');
+const selectedShippingRate = document.getElementById('selected-shipping-rate');
+const selectedShippingCost = document.getElementById('selected-shipping-cost');
+const checkoutForm = document.getElementById('checkout-form');
+
+// Toggle billing address fields
+const sameAsShipping = document.getElementById('same_as_shipping');
+const billingFields = document.getElementById('billing_fields');
+
+sameAsShipping.addEventListener('change', function() {
+  billingFields.classList.toggle('hidden', this.checked);
+
+  const billingInputs = billingFields.querySelectorAll('input:not([type="checkbox"])');
+  billingInputs.forEach(input => {
+    if (this.checked) {
+      input.removeAttribute('required');
+    } else if (input.id !== 'billing_line2') {
+      input.setAttribute('required', '');
+    }
+  });
+});
+
+// Populate from saved address
+const savedAddressSelect = document.getElementById('saved_address');
+if (savedAddressSelect) {
+  savedAddressSelect.addEventListener('change', function() {
+    const option = this.options[this.selectedIndex];
+    if (option.value) {
+      document.getElementById('shipping_name').value = option.dataset.name || '';
+      document.getElementById('shipping_line1').value = option.dataset.line1 || '';
+      document.getElementById('shipping_line2').value = option.dataset.line2 || '';
+      document.getElementById('shipping_city').value = option.dataset.city || '';
+      document.getElementById('shipping_region').value = option.dataset.region || '';
+      document.getElementById('shipping_postal').value = option.dataset.postal || '';
+      document.getElementById('shipping_country').value = option.dataset.country || 'US';
+      // Trigger shipping rate fetch
+      fetchShippingRates();
+    }
+  });
+}
+
+// Address fields for shipping rate calculation
+const postalField = document.getElementById('shipping_postal');
+const cityField = document.getElementById('shipping_city');
+const stateField = document.getElementById('shipping_region');
+const countryField = document.getElementById('shipping_country');
+
+// Debounce function
+function debounce(func, wait) {
+  let timeout;
+  return function(...args) {
+    clearTimeout(timeout);
+    timeout = setTimeout(() => func.apply(this, args), wait);
+  };
+}
+
+// Fetch shipping rates when address changes
+const debouncedFetch = debounce(fetchShippingRates, 500);
+postalField.addEventListener('input', debouncedFetch);
+cityField.addEventListener('input', debouncedFetch);
+stateField.addEventListener('input', debouncedFetch);
+countryField.addEventListener('change', debouncedFetch);
+
+async function fetchShippingRates() {
+  const postal = postalField.value.trim();
+  const city = cityField.value.trim();
+  const state = stateField.value.trim();
+  const country = countryField.value;
+
+  // Need at least postal code
+  if (!postal || postal.length < 5) {
+    return;
+  }
+
+  // Show loading state
+  shippingPrompt.classList.add('hidden');
+  shippingOptions.classList.add('hidden');
+  shippingError.classList.add('hidden');
+  shippingLoading.classList.remove('hidden');
+
+  try {
+    const response = await fetch(shippingRatesUrl, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-CSRFToken': csrfToken
+      },
+      body: JSON.stringify({
+        postal_code: postal,
+        city: city,
+        state: state,
+        country: country
+      })
+    });
+
+    const data = await response.json();
+    shippingLoading.classList.add('hidden');
+
+    if (data.success && data.rates.length > 0) {
+      renderShippingOptions(data.rates, data.free_shipping);
+      shippingOptions.classList.remove('hidden');
+    } else {
+      shippingError.classList.remove('hidden');
+    }
+  } catch (error) {
+    console.error('Error fetching shipping rates:', error);
+    shippingLoading.classList.add('hidden');
+    shippingError.classList.remove('hidden');
+  }
+}
+
+function renderShippingOptions(rates, freeShipping) {
+  shippingOptions.innerHTML = rates.map((rate, index) => `
+    <label class="flex items-center justify-between p-4 border border-black cursor-pointer hover:bg-neutral-50 transition-colors ${index === 0 ? 'bg-neutral-50' : ''}">
+      <div class="flex items-center gap-3">
+        <input type="radio" name="shipping_method" value="${rate.id}"
+               data-rate="${rate.rate}" data-carrier="${rate.carrier}" data-service="${rate.service}"
+               ${index === 0 ? 'checked' : ''}
+               class="w-4 h-4 border-black text-black focus:ring-black"
+               onchange="selectShippingRate(this)">
+        <div>
+          <p class="text-sm font-medium">${rate.description}</p>
+          <p class="text-xs text-neutral-500">${rate.delivery_days} business days</p>
+        </div>
+      </div>
+      <span class="font-medium ${rate.rate === 0 ? 'text-green-600' : ''}">
+        ${rate.rate === 0 ? 'FREE' : '$' + rate.rate.toFixed(2)}
+      </span>
+    </label>
+  `).join('');
+
+  // Auto-select first option
+  if (rates.length > 0) {
+    const firstRate = rates[0];
+    selectedShippingRate.value = firstRate.id;
+    selectedShippingCost.value = firstRate.rate;
+    updateTotals(firstRate.rate);
+  }
+}
+
+function selectShippingRate(radio) {
+  // Update visual selection
+  document.querySelectorAll('#shipping-options label').forEach(label => {
+    label.classList.remove('bg-neutral-50');
+  });
+  radio.closest('label').classList.add('bg-neutral-50');
+
+  // Update hidden fields
+  selectedShippingRate.value = radio.value;
+  selectedShippingCost.value = radio.dataset.rate;
+
+  // Update totals
+  updateTotals(parseFloat(radio.dataset.rate));
+}
+
+function updateTotals(shippingCost) {
+  const total = subtotal + shippingCost;
+  checkoutShipping.textContent = shippingCost === 0 ? 'FREE' : '$' + shippingCost.toFixed(2);
+  checkoutShipping.classList.remove('text-neutral-400');
+  if (shippingCost === 0) {
+    checkoutShipping.classList.add('text-green-600');
+  } else {
+    checkoutShipping.classList.remove('text-green-600');
+  }
+  checkoutTotal.textContent = '$' + total.toFixed(2);
+}
+
+// Prevent form submission without shipping method
+checkoutForm.addEventListener('submit', function(e) {
+  if (!selectedShippingRate.value) {
+    e.preventDefault();
+    alert('Please select a shipping method');
+    document.getElementById('shipping-methods-container').scrollIntoView({ behavior: 'smooth' });
+  }
+});
+</script>
+{% endblock %}

@@ -3,9 +3,12 @@ Cart utility functions for managing shopping cart operations.
 Handles both authenticated and anonymous users.
 """
 
+import logging
 from decimal import Decimal
 
 from django.contrib.auth import get_user_model
+
+logger = logging.getLogger(__name__)
 
 from .models import Cart, CartItem, ProductVariant
 
@@ -44,6 +47,9 @@ def add_to_cart(request, variant_id, quantity=1):
 
     Returns:
         tuple: (cart_item, created) - The CartItem and whether it was newly created
+
+    Raises:
+        ValueError: If variant not found, inactive, or insufficient stock
     """
     cart = get_or_create_cart(request)
 
@@ -54,13 +60,22 @@ def add_to_cart(request, variant_id, quantity=1):
 
     # Check if item already in cart
     cart_item, created = CartItem.objects.get_or_create(
-        cart=cart, variant=variant, defaults={"quantity": quantity}
+        cart=cart, variant=variant, defaults={"quantity": 0}
     )
 
-    if not created:
-        # Item already exists, update quantity
-        cart_item.quantity += quantity
-        cart_item.save()
+    # Calculate new total quantity
+    new_quantity = cart_item.quantity + quantity
+
+    # Check stock availability
+    if new_quantity > variant.stock_quantity:
+        available = variant.stock_quantity - cart_item.quantity
+        if available <= 0:
+            raise ValueError(f"No more stock available. Maximum quantity already in cart.")
+        else:
+            raise ValueError(f"Only {available} more available. {variant.stock_quantity} total in stock.")
+
+    cart_item.quantity = new_quantity
+    cart_item.save()
 
     return cart_item, created
 
@@ -77,6 +92,9 @@ def update_cart_item_quantity(cart_item_id, quantity, user=None, session_key=Non
 
     Returns:
         CartItem or None if deleted
+
+    Raises:
+        ValueError: If cart item not found or quantity exceeds stock
     """
     try:
         # Build query filters
@@ -89,12 +107,17 @@ def update_cart_item_quantity(cart_item_id, quantity, user=None, session_key=Non
         else:
             raise ValueError("Must provide either user or session_key")
 
-        cart_item = CartItem.objects.get(**filters)
+        cart_item = CartItem.objects.select_related('variant').get(**filters)
 
         if quantity <= 0:
             cart_item.delete()
             return None
         else:
+            # Check stock availability
+            if quantity > cart_item.variant.stock_quantity:
+                raise ValueError(
+                    f"Only {cart_item.variant.stock_quantity} available in stock."
+                )
             cart_item.quantity = quantity
             cart_item.save()
             return cart_item
@@ -147,7 +170,8 @@ def get_cart_count(request):
     try:
         cart = get_or_create_cart(request)
         return sum(item.quantity for item in cart.items.all())
-    except:
+    except Exception as e:
+        logger.error(f"Error getting cart count: {e}")
         return 0
 
 

@@ -1,76 +1,184 @@
 {% load static %}
 
-<nav class="navbar bg-base-100 shadow-sm relative overflow-hidden">
-  <!-- Psychedelic gradient background -->
-  <div class="absolute inset-0 bg-gradient-to-r from-purple-950 via-black to-pink-950"></div>
+<nav class="bg-black border-b border-white/10">
+  <div class="max-w-7xl mx-auto px-6">
+    <div class="flex items-center justify-between h-16 relative">
 
-  <!-- Animated accent line at bottom -->
-  <div class="absolute bottom-0 left-0 right-0 h-0.5 bg-gradient-to-r from-yellow-400 via-amber-400 to-yellow-500 z-50"></div>
-
-  <!-- Subtle pattern overlay -->
-  <div class="absolute inset-0 opacity-10" style="background-image: radial-gradient(circle at 20% 50%, rgba(168, 85, 247, 0.3) 0%, transparent 50%), radial-gradient(circle at 80% 50%, rgba(236, 72, 153, 0.3) 0%, transparent 50%);"></div>
-
-  <!-- Left side (reserved for future menu) -->
-  <div class="navbar-start relative z-10">
-    <!-- TODO: Mobile dropdown menu for categories
-    <div class="dropdown">
-      <button tabindex="0" role="button" class="btn btn-ghost btn-circle">
-        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h7" />
-        </svg>
-      </button>
-      <ul tabindex="0" class="menu menu-md dropdown-content bg-base-100 rounded-box z-1 mt-3 w-52 p-2 shadow">
-        <li><a href="/tops">Tops</a></li>
-        <li><a href="/bottoms">Bottoms</a></li>
-        <li><a href="/accessories">Accessories</a></li>
-      </ul>
-    </div>
-    -->
-  </div>
-
-  <!-- Center - Logo -->
-  <div class="navbar-center relative z-10">
-    <a href="/" class="block group">
-      <div class="relative inline-block">
-        <!-- Colorful glow effect (bottom layer) -->
-        <div class="absolute inset-0 -m-3 bg-gradient-to-r from-purple-400 via-pink-400 to-rose-500 rounded-full blur-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-0"></div>
-        <div class="absolute inset-0 -m-5 bg-gradient-to-r from-purple-500 via-pink-500 to-rose-600 rounded-full blur-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-0"></div>
-        <div class="absolute inset-0 -m-8 bg-gradient-to-r from-purple-600 via-pink-600 to-rose-700 rounded-full blur-2xl opacity-0 group-hover:opacity-75 transition-opacity duration-300 z-0"></div>
-        <!-- Black glow ring (middle layer - transition) -->
-        <div class="absolute -inset-1 bg-black rounded-full blur-sm opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-[5]"></div>
-        <div class="absolute -inset-2 bg-black rounded-full blur-md opacity-0 group-hover:opacity-90 transition-opacity duration-300 z-[5]"></div>
-        <div class="absolute -inset-3 bg-black rounded-full blur-lg opacity-0 group-hover:opacity-70 transition-opacity duration-300 z-[5]"></div>
-        <div class="absolute -inset-4 bg-black rounded-full blur-xl opacity-0 group-hover:opacity-50 transition-opacity duration-300 z-[5]"></div>
-        <!-- Logo on top -->
-        <img src="{% static 'images/blueprint_b_circular.png' %}"
-             class="relative z-10 h-[50px] w-[50px] transition-transform duration-300 group-hover:scale-110"
-             alt="Blueprint Apparel Logo" />
-      </div>
-    </a>
-  </div>
-
-  <!-- Right side (reserved for future cart/profile) -->
-  <div class="navbar-end relative z-10">
-    <!-- TODO: Shopping cart dropdown
-    <div class="dropdown dropdown-end">
-      <button tabindex="0" role="button" class="btn btn-ghost btn-circle">
-        <div class="indicator">
-          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
+      <!-- Left - Hamburger Menu -->
+      <div id="menu-trigger" class="flex items-center">
+        <button id="menu-toggle" type="button" class="p-2 -ml-2 hover:opacity-70 transition-opacity" aria-label="Menu">
+          <svg class="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M4 6h16M4 12h16M4 18h16"></path>
           </svg>
-          <span class="badge badge-sm indicator-item">8</span>
-        </div>
-      </button>
-      <div tabindex="0" class="card card-compact dropdown-content bg-base-100 z-1 mt-3 w-52 shadow">
-        <div class="card-body">
-          <span class="text-lg font-bold">8 Items</span>
-          <span class="text-info">Subtotal: $999</span>
-          <div class="card-actions">
-            <button class="btn btn-neutral btn-block bg-black">View cart</button>
+        </button>
+      </div>
+
+      <!-- Center - Logo -->
+      <div class="absolute left-1/2 transform -translate-x-1/2">
+        <a href="{% url 'home' %}" class="block hover:opacity-70 transition-opacity">
+          <img src="{% static 'images/blueprint_b_circular.png' %}"
+               class="h-10 w-10"
+               alt="Blueprint" />
+        </a>
+      </div>
+
+      <!-- Right - Account & Cart Icons -->
+      <div class="flex items-center gap-2">
+        <div id="account-trigger" class="relative">
+          <button id="account-toggle" type="button" class="p-2 hover:opacity-70 transition-opacity" aria-label="Account">
+            <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2M12 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8z"></path>
+            </svg>
+          </button>
+          <!-- Account Dropdown Menu -->
+          <div id="account-menu" class="hidden absolute right-0 top-full mt-2 w-56 bg-black border border-white/10">
+            {% if user.is_authenticated %}
+            <a href="{% url 'shop:account' %}" class="group flex items-center px-6 py-3 text-white hover:text-white/70 transition-colors border-b border-white/10">
+              <span class="w-4 h-px bg-white/30 mr-3 group-hover:w-6 transition-all"></span>
+              <span class="text-sm tracking-wider uppercase">My Account</span>
+            </a>
+            <a href="{% url 'shop:account' %}#orders" class="group flex items-center px-6 py-3 text-white hover:text-white/70 transition-colors border-b border-white/10">
+              <span class="w-4 h-px bg-white/30 mr-3 group-hover:w-6 transition-all"></span>
+              <span class="text-sm tracking-wider uppercase">Orders</span>
+            </a>
+            <a href="{% url 'account_logout' %}" class="group flex items-center px-6 py-3 text-white hover:text-white/70 transition-colors">
+              <span class="w-4 h-px bg-white/30 mr-3 group-hover:w-6 transition-all"></span>
+              <span class="text-sm tracking-wider uppercase">Logout</span>
+            </a>
+            {% else %}
+            <button onclick="openLoginModal(); closeAccountMenu();" class="group flex items-center px-6 py-3 text-white hover:text-white/70 transition-colors border-b border-white/10 w-full text-left">
+              <span class="w-4 h-px bg-white/30 mr-3 group-hover:w-6 transition-all"></span>
+              <span class="text-sm tracking-wider uppercase">Sign In</span>
+            </button>
+            <a href="{% url 'account_signup' %}" class="group flex items-center px-6 py-3 text-white hover:text-white/70 transition-colors">
+              <span class="w-4 h-px bg-white/30 mr-3 group-hover:w-6 transition-all"></span>
+              <span class="text-sm tracking-wider uppercase">Create Account</span>
+            </a>
+            {% endif %}
           </div>
         </div>
+        <a href="{% url 'shop:cart' %}" class="p-2 -mr-2 hover:opacity-70 transition-opacity" aria-label="Cart">
+          <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"></path>
+          </svg>
+        </a>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Main Dropdown Menu -->
+  <div id="nav-menu" class="hidden bg-black border-t border-white/10">
+    <div class="max-w-7xl mx-auto px-6 py-4">
+      <div class="space-y-1">
+        <a href="{% url 'home' %}" class="group flex items-center py-3 text-white hover:text-white/70 transition-colors">
+          <span class="w-4 h-px bg-white/30 mr-3 group-hover:w-6 transition-all"></span>
+          <span class="text-sm tracking-wider uppercase">Home</span>
+        </a>
+        <a href="{% url 'shop:shop' %}" class="group flex items-center py-3 text-white hover:text-white/70 transition-colors">
+          <span class="w-4 h-px bg-white/30 mr-3 group-hover:w-6 transition-all"></span>
+          <span class="text-sm tracking-wider uppercase">Shop</span>
+        </a>
+        <a href="{% url 'shop:shop' %}?category=tops" class="group flex items-center py-3 text-white hover:text-white/70 transition-colors">
+          <span class="w-4 h-px bg-white/30 mr-3 group-hover:w-6 transition-all"></span>
+          <span class="text-sm tracking-wider uppercase">Tops</span>
+        </a>
+        <a href="{% url 'shop:shop' %}?category=bottoms" class="group flex items-center py-3 text-white hover:text-white/70 transition-colors">
+          <span class="w-4 h-px bg-white/30 mr-3 group-hover:w-6 transition-all"></span>
+          <span class="text-sm tracking-wider uppercase">Bottoms</span>
+        </a>
+        <a href="{% url 'shop:about' %}" class="group flex items-center py-3 text-white hover:text-white/70 transition-colors">
+          <span class="w-4 h-px bg-white/30 mr-3 group-hover:w-6 transition-all"></span>
+          <span class="text-sm tracking-wider uppercase">About</span>
+        </a>
       </div>
     </div>
-    -->
   </div>
+
 </nav>
+
+<script>
+(function() {
+  const menuTrigger = document.getElementById('menu-trigger');
+  const menuToggle = document.getElementById('menu-toggle');
+  const navMenu = document.getElementById('nav-menu');
+  const accountTrigger = document.getElementById('account-trigger');
+  const accountToggle = document.getElementById('account-toggle');
+  const accountMenu = document.getElementById('account-menu');
+
+  let menuTimeout;
+  let accountTimeout;
+
+  // Main menu - open on hover
+  menuTrigger.addEventListener('mouseenter', () => {
+    clearTimeout(menuTimeout);
+    navMenu.classList.remove('hidden');
+    accountMenu.classList.add('hidden');
+  });
+
+  navMenu.addEventListener('mouseenter', () => {
+    clearTimeout(menuTimeout);
+  });
+
+  menuTrigger.addEventListener('mouseleave', () => {
+    menuTimeout = setTimeout(() => {
+      navMenu.classList.add('hidden');
+    }, 150);
+  });
+
+  navMenu.addEventListener('mouseleave', () => {
+    menuTimeout = setTimeout(() => {
+      navMenu.classList.add('hidden');
+    }, 150);
+  });
+
+  // Account menu - open on hover
+  accountTrigger.addEventListener('mouseenter', () => {
+    clearTimeout(accountTimeout);
+    accountMenu.classList.remove('hidden');
+    navMenu.classList.add('hidden');
+  });
+
+  accountMenu.addEventListener('mouseenter', () => {
+    clearTimeout(accountTimeout);
+  });
+
+  accountTrigger.addEventListener('mouseleave', () => {
+    accountTimeout = setTimeout(() => {
+      accountMenu.classList.add('hidden');
+    }, 150);
+  });
+
+  accountMenu.addEventListener('mouseleave', () => {
+    accountTimeout = setTimeout(() => {
+      accountMenu.classList.add('hidden');
+    }, 150);
+  });
+
+  // Keep click functionality for mobile/accessibility
+  menuToggle.addEventListener('click', () => {
+    navMenu.classList.toggle('hidden');
+    accountMenu.classList.add('hidden');
+  });
+
+  accountToggle.addEventListener('click', () => {
+    accountMenu.classList.toggle('hidden');
+    navMenu.classList.add('hidden');
+  });
+
+  // Close menus when clicking outside
+  document.addEventListener('click', (e) => {
+    if (!menuTrigger.contains(e.target) && !navMenu.contains(e.target)) {
+      navMenu.classList.add('hidden');
+    }
+    if (!accountTrigger.contains(e.target) && !accountMenu.contains(e.target)) {
+      accountMenu.classList.add('hidden');
+    }
+  });
+
+  // Global function to close account menu (for use with login modal)
+  window.closeAccountMenu = function() {
+    accountMenu.classList.add('hidden');
+  };
+})();
+</script>

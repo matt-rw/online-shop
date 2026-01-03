@@ -612,14 +612,14 @@
             <td>
               <div style="display: flex; gap: 0.5rem;">
                 <button
-                  onclick="openEditModal({{ product.id }}, '{{ product.name|escapejs }}', '{{ product.slug }}', '{{ product.category_slug|escapejs }}', '{{ product.description|escapejs }}', '{{ product.base_price }}', {{ product.featured|lower }})"
+                  onclick="openEditModal({{ product.id }}, '{{ product.name|escapejs }}', '{{ product.slug }}', '{{ product.category_slug|escapejs }}', '{{ product.description|escapejs }}', '{{ product.base_price }}', {{ product.featured|lower }}, {{ product.available_for_purchase|lower }})"
                   class="btn btn-secondary btn-sm"
                 >
                   <i class="fa-solid fa-edit"></i>
                   Edit
                 </button>
                 <button
-                  onclick="openVariantsModal({{ product.id }}, '{{ product.name|escapejs }}')"
+                  onclick="openVariantsModal({{ product.id }}, '{{ product.name|escapejs }}', '{{ product.base_price }}')"
                   class="btn btn-secondary btn-sm"
                   title="Manage size/color variants"
                 >
@@ -686,6 +686,14 @@
               <input type="checkbox" id="edit_featured" style="width: auto;">
               <span>Feature on homepage</span>
             </label>
+          </div>
+
+          <div class="form-group">
+            <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+              <input type="checkbox" id="edit_available" style="width: auto;" checked>
+              <span>Available for purchase</span>
+            </label>
+            <p style="font-size: 0.75rem; color: #64748b; margin-top: 0.25rem; margin-left: 1.5rem;">If unchecked, product shows "Not Available" instead of Add to Cart</p>
           </div>
         </form>
       </div>
@@ -785,12 +793,8 @@
       <div class="modal-footer" id="edit_modal_footer">
         <button class="btn btn-secondary" id="btn_cancel" onclick="closeEditModal()">Cancel</button>
         <div style="margin-left: auto; display: flex; gap: 0.5rem;">
-          <button class="btn btn-secondary" id="btn_back_to_edit" onclick="closePreview()" style="display: none;">
-            <i class="fa-solid fa-arrow-left"></i>
-            Back to Edit
-          </button>
-          <button class="btn btn-secondary" id="btn_preview" onclick="previewProduct()">
-            <i class="fa-solid fa-eye"></i>
+          <button class="btn btn-secondary" id="btn_preview" onclick="openProductPreview()">
+            <i class="fa-solid fa-external-link-alt"></i>
             Preview
           </button>
           <button class="btn btn-primary" id="btn_save" onclick="saveProduct()">
@@ -815,6 +819,7 @@
       </div>
       <div class="modal-body" style="max-height: calc(95vh - 180px); overflow-y: auto; background: #f8fafc;">
         <input type="hidden" id="variants_product_id">
+        <input type="hidden" id="variants_base_price">
 
         <!-- Summary Stats -->
         <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 1.25rem; margin-bottom: 2rem;">
@@ -1053,7 +1058,7 @@
       });
     }
 
-    function openEditModal(id, name, slug, category, description, price, featured) {
+    function openEditModal(id, name, slug, category, description, price, featured, available) {
       document.getElementById('edit_product_id').value = id;
       document.getElementById('edit_name').value = name;
       document.getElementById('edit_slug').value = slug;
@@ -1061,6 +1066,7 @@
       document.getElementById('edit_description').value = description;
       document.getElementById('edit_base_price').value = price;
       document.getElementById('edit_featured').checked = featured;
+      document.getElementById('edit_available').checked = available !== false;
 
       document.getElementById('editModal').classList.add('active');
     }
@@ -1087,6 +1093,7 @@
       formData.append('description', document.getElementById('edit_description').value);
       formData.append('base_price', document.getElementById('edit_base_price').value);
       formData.append('featured', document.getElementById('edit_featured').checked ? 'true' : 'false');
+      formData.append('available_for_purchase', document.getElementById('edit_available').checked ? 'true' : 'false');
 
       console.log('Saving product with data:', {
         action: 'update_product',
@@ -1139,102 +1146,15 @@
       }
     });
 
-    function previewProduct() {
-      console.log('previewProduct() called - v3.0');
-
-      // Get values from edit form
-      const name = document.getElementById('edit_name').value || 'Product Name';
-      const category = document.getElementById('edit_category').value || 'Uncategorized';
-      const description = document.getElementById('edit_description').value || 'This is a high-quality product made with premium materials. Perfect for everyday wear and built to last.';
-      const price = parseFloat(document.getElementById('edit_base_price').value || 0).toFixed(2);
-      const featured = document.getElementById('edit_featured').checked;
-
-      // Hide all modal-body elements first
-      const modalBodies = document.querySelectorAll('#editModal .modal-body');
-      modalBodies.forEach(body => body.style.display = 'none');
-
-      // Show preview body
-      document.getElementById('preview_body').style.display = 'block';
-
-      // Update modal title
-      document.querySelector('#edit_modal_title').innerHTML = '<i class="fa-solid fa-eye"></i> Product Preview';
-
-      // Update modal width for preview
-      document.querySelector('#editModal .modal-content').style.maxWidth = '950px';
-
-      // Populate preview data
-      document.getElementById('preview_name').textContent = name;
-      document.getElementById('preview_category').textContent = category;
-      document.getElementById('preview_description').textContent = description;
-      document.getElementById('preview_price').textContent = price;
-
-      // Generate random animal images
-      const animalImages = [
-        'photo-1574158622682-e40e69881006', // Cat
-        'photo-1583337130417-3346a1be7dee', // Dog
-        'photo-1437622368342-7a3d73a34c8f', // Owl
-        'photo-1598386993441-06c0c1a6b7c3', // Fox
-        'photo-1484406566174-9da000fda645', // Panda
-        'photo-1535591273668-578e31182c4f', // Koala
-        'photo-1530595467537-0b5996c41f2d', // Red Panda
-        'photo-1425082661705-1834bfd09dca', // Penguin
-        'photo-1602491453631-e2a5ad90a131', // Tiger
-        'photo-1564349683136-77e08dba1ef7', // Elephant
-      ];
-
-      // Pick 3 random images
-      const shuffled = animalImages.sort(() => 0.5 - Math.random());
-      const selectedImages = shuffled.slice(0, 3);
-
-      // Set main image (first selected)
-      const mainImageUrl = `https://images.unsplash.com/${selectedImages[0]}?w=600&h=600&fit=crop&q=90`;
-      document.getElementById('preview_main_img').src = mainImageUrl;
-      document.getElementById('preview_main_img').alt = name;
-
-      // Generate thumbnails
-      const thumbsContainer = document.getElementById('preview_thumbs_container');
-      thumbsContainer.innerHTML = '';
-      selectedImages.forEach((imageId, index) => {
-        const thumb = document.createElement('div');
-        thumb.className = 'preview_thumb';
-        thumb.onclick = function() { changePreviewImage(this); };
-        thumb.style.cssText = `width: 70px; height: 70px; background: white; border-radius: 8px; overflow: hidden; cursor: pointer; border: 2px solid ${index === 0 ? '#667eea' : 'transparent'}; transition: all 0.2s; box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);`;
-
-        const img = document.createElement('img');
-        img.src = `https://images.unsplash.com/${imageId}?w=150&h=150&fit=crop&q=80`;
-        img.style.cssText = 'width: 100%; height: 100%; object-fit: cover;';
-
-        thumb.appendChild(img);
-        thumbsContainer.appendChild(thumb);
-      });
-
-      // Update featured badge
-      const featuredBadge = document.getElementById('preview_featured_badge');
-      featuredBadge.style.display = featured ? 'inline-block' : 'none';
-
-      // Hide Preview button, show Back to Edit button
-      console.log('Attempting to toggle buttons...');
-      const btnCancel = document.getElementById('btn_cancel');
-      const btnPreview = document.getElementById('btn_preview');
-      const btnBackToEdit = document.getElementById('btn_back_to_edit');
-      const btnSave = document.getElementById('btn_save');
-
-      console.log('Buttons found:', {
-        btnCancel: !!btnCancel,
-        btnPreview: !!btnPreview,
-        btnBackToEdit: !!btnBackToEdit,
-        btnSave: !!btnSave
-      });
-
-      if (btnCancel) btnCancel.style.display = 'none';
-      if (btnPreview) btnPreview.style.display = 'none';
-      if (btnBackToEdit) {
-        btnBackToEdit.style.display = 'inline-flex';
-        console.log('Back to Edit button should now be visible');
+    function openProductPreview() {
+      // Get product slug from the edit form
+      const slug = document.getElementById('edit_slug').value;
+      if (slug) {
+        // Open actual product page in new tab
+        window.open(`/shop/product/${slug}/`, '_blank');
+      } else {
+        alert('Please save the product first to preview it.');
       }
-      if (btnSave) btnSave.style.display = 'inline-flex';
-
-      console.log('Button toggle complete');
     }
 
     function changePreviewImage(thumbElement) {
@@ -1281,8 +1201,9 @@
     let customFieldsData = {};
 
     // Variants Modal Functions
-    function openVariantsModal(productId, productName) {
+    function openVariantsModal(productId, productName, basePrice) {
       document.getElementById('variants_product_id').value = productId;
+      document.getElementById('variants_base_price').value = basePrice || '';
       document.getElementById('variants_modal_title').innerHTML = `<i class="fa-solid fa-shapes"></i> Variants: ${productName}`;
       document.getElementById('variantsModal').classList.add('active');
 
@@ -1307,7 +1228,8 @@
       // Reset form fields
       document.getElementById('variant_sku').value = '';
       document.getElementById('variant_stock').value = '0';
-      document.getElementById('variant_price').value = '';
+      // Default price to product's base price
+      document.getElementById('variant_price').value = document.getElementById('variants_base_price').value || '';
 
       // Clear images and custom fields
       variantImages = [];
@@ -1779,12 +1701,12 @@
       const variant = allVariants.find(v => v.id === variantId);
       if (!variant) return;
 
-      // Populate form
+      // Store variant to populate after form loads
+      window.pendingVariantEdit = variant;
+
+      // Set basic form fields first
       document.getElementById('edit_variant_id').value = variant.id;
       document.getElementById('variant_form_title').textContent = 'Edit Variant';
-      document.getElementById('variant_size').value = variant.size_id;
-      document.getElementById('variant_color').value = variant.color_id;
-      document.getElementById('variant_material').value = variant.material_id || '';
       document.getElementById('variant_sku').value = variant.sku;
       document.getElementById('variant_stock').value = variant.stock_quantity;
       document.getElementById('variant_price').value = variant.price;
@@ -1819,9 +1741,130 @@
         container.innerHTML = '<p style="color: #64748b; font-size: 0.875rem; font-style: italic;">No custom fields added yet.</p>';
       }
 
-      // Load form dropdowns and open modal
-      loadFormDropdowns();
+      // Load variant attributes (which creates form fields), then load dropdowns and set values
+      loadVariantAttributesForEdit(variant);
       document.getElementById('variantFormModal').classList.add('active');
+    }
+
+    function loadVariantAttributesForEdit(variant) {
+      const productId = document.getElementById('variants_product_id').value;
+      const csrftoken = getCookie('csrftoken');
+
+      fetch(window.location.pathname, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded',
+          'X-CSRFToken': csrftoken,
+        },
+        body: new URLSearchParams({
+          'action': 'get_product_category_attributes',
+          'product_id': productId
+        })
+      })
+      .then(response => response.json())
+      .then(data => {
+        if (!data.success) return;
+
+        // Build form fields
+        const container = document.getElementById('variant_attributes_container');
+        let fieldsHTML = '';
+
+        if (data.uses_size) {
+          fieldsHTML += `
+            <div class="form-group">
+              <label for="variant_size">Size *</label>
+              <select id="variant_size" required>
+                <option value="">Select size...</option>
+              </select>
+            </div>
+          `;
+        }
+
+        if (data.uses_color) {
+          fieldsHTML += `
+            <div class="form-group">
+              <label for="variant_color">Color *</label>
+              <select id="variant_color" required>
+                <option value="">Select color...</option>
+              </select>
+            </div>
+          `;
+        }
+
+        if (data.uses_material) {
+          fieldsHTML += `
+            <div class="form-group">
+              <label for="variant_material">Material</label>
+              <select id="variant_material">
+                <option value="">Select material...</option>
+              </select>
+            </div>
+          `;
+        }
+
+        container.innerHTML = fieldsHTML;
+
+        // Now load dropdowns and set values
+        loadFormDropdownsAndSetValues(variant);
+      });
+    }
+
+    function loadFormDropdownsAndSetValues(variant) {
+      const csrftoken = getCookie('csrftoken');
+
+      fetch(window.location.pathname, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded',
+          'X-CSRFToken': csrftoken,
+        },
+        body: new URLSearchParams({
+          'action': 'get_sizes_colors_materials'
+        })
+      })
+      .then(response => response.json())
+      .then(data => {
+        if (data.success) {
+          // Populate Size dropdown
+          const sizeSelect = document.getElementById('variant_size');
+          if (sizeSelect) {
+            sizeSelect.innerHTML = '<option value="">Select size...</option>';
+            data.sizes.forEach(size => {
+              const option = document.createElement('option');
+              option.value = size.id;
+              option.textContent = size.label;
+              sizeSelect.appendChild(option);
+            });
+            sizeSelect.value = variant.size_id;
+          }
+
+          // Populate Color dropdown
+          const colorSelect = document.getElementById('variant_color');
+          if (colorSelect) {
+            colorSelect.innerHTML = '<option value="">Select color...</option>';
+            data.colors.forEach(color => {
+              const option = document.createElement('option');
+              option.value = color.id;
+              option.textContent = color.name;
+              colorSelect.appendChild(option);
+            });
+            colorSelect.value = variant.color_id;
+          }
+
+          // Populate Material dropdown
+          const materialSelect = document.getElementById('variant_material');
+          if (materialSelect && data.materials) {
+            materialSelect.innerHTML = '<option value="">Select material...</option>';
+            data.materials.forEach(material => {
+              const option = document.createElement('option');
+              option.value = material.id;
+              option.textContent = material.name;
+              materialSelect.appendChild(option);
+            });
+            materialSelect.value = variant.material_id || '';
+          }
+        }
+      });
     }
 
     function addVariant() {
@@ -1980,10 +2023,12 @@
       container.innerHTML = '';
 
       variantImages.forEach((img, index) => {
+        // Add /static/ prefix if needed
+        const imgSrc = img.startsWith('/') || img.startsWith('http') ? img : `/static/${img}`;
         const imgDiv = document.createElement('div');
         imgDiv.style.cssText = 'position: relative; width: 100px; height: 100px; border-radius: 8px; overflow: hidden; border: 2px solid #e2e8f0;';
         imgDiv.innerHTML = `
-          <img src="${img}" style="width: 100%; height: 100%; object-fit: cover;">
+          <img src="${imgSrc}" style="width: 100%; height: 100%; object-fit: cover;" onerror="this.src='/static/images/white_bg_top.webp'">
           <button onclick="removeVariantImage(${index})" style="position: absolute; top: 4px; right: 4px; background: rgba(239, 68, 68, 0.9); color: white; border: none; border-radius: 4px; width: 24px; height: 24px; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 0.75rem;">
             <i class="fa-solid fa-times"></i>
           </button>

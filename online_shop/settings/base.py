@@ -230,7 +230,7 @@ AUTHENTICATION_BACKENDS = [
 ACCOUNT_LOGIN_METHODS = {"email", "username"}  # Allow login with username or email
 ACCOUNT_SIGNUP_FIELDS = ["username*", "email*", "password1*", "password2*"]  # Required signup fields
 ACCOUNT_UNIQUE_EMAIL = True
-ACCOUNT_EMAIL_VERIFICATION = "mandatory"  # Require email verification
+ACCOUNT_EMAIL_VERIFICATION = "none"  # Skip email verification (change to "mandatory" for production)
 ACCOUNT_LOGIN_ON_EMAIL_CONFIRMATION = True
 ACCOUNT_CONFIRM_EMAIL_ON_GET = True
 ACCOUNT_EMAIL_CONFIRMATION_EXPIRE_DAYS = 3
@@ -246,6 +246,10 @@ ACCOUNT_SIGNUP_REDIRECT_URL = "/"
 
 # Session settings
 ACCOUNT_SESSION_REMEMBER = True  # Remember me by default
+
+# Allauth settings (updated for django-allauth 0.60+)
+ACCOUNT_LOGIN_METHODS = {"email"}  # Login via email only
+ACCOUNT_SIGNUP_FIELDS = ["email*", "password1*", "password2*"]  # Email required, no username
 
 # GEOIP SETTINGS
 # Path to GeoLite2 database for visitor location tracking

@@ -1,0 +1,427 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Account - Blueprint Apparel{% endblock %}
+
+{% block content %}
+
+<!-- Breadcrumb -->
+<div class="border-b border-black">
+  <div class="max-w-7xl mx-auto px-6 py-3">
+    <nav class="flex items-center text-xs tracking-wider">
+      <a href="{% url 'home' %}" class="text-neutral-500 hover:text-black transition-colors uppercase">Home</a>
+      <span class="mx-3 text-neutral-300">/</span>
+      <span class="text-black uppercase">Account</span>
+    </nav>
+  </div>
+</div>
+
+{% if user.is_authenticated %}
+<!-- Account Header -->
+<section class="bg-white border-b border-black">
+  <div class="max-w-7xl mx-auto px-6 py-8">
+    <div class="flex items-center justify-between">
+      <div>
+        <p class="text-xs text-neutral-500 uppercase tracking-wider mb-2">Welcome back{% if user.first_name %}, {{ user.first_name }}{% endif %}</p>
+        <h1 class="text-2xl md:text-3xl font-bold tracking-tight">MY ACCOUNT</h1>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Messages -->
+{% if messages %}
+<div class="max-w-7xl mx-auto px-6 pt-4">
+  {% for message in messages %}
+    <div class="px-4 py-3 text-sm border mb-2 {% if message.tags == 'error' %}bg-red-50 text-red-800 border-red-200{% elif message.tags == 'success' %}bg-green-50 text-green-800 border-green-200{% else %}bg-neutral-50 text-neutral-800 border-neutral-200{% endif %}">
+      {{ message }}
+    </div>
+  {% endfor %}
+</div>
+{% endif %}
+
+<!-- Account Content -->
+<section class="bg-white">
+  <div class="max-w-7xl mx-auto">
+    <div class="grid grid-cols-1 lg:grid-cols-3">
+
+      <!-- Left Sidebar - Navigation -->
+      <div class="border-r border-black p-6 lg:p-8">
+        <nav class="space-y-1" id="account-nav">
+          <a href="#orders" class="account-nav-link group flex items-center py-3 text-black border-b border-black/10" data-section="orders">
+            <span class="nav-indicator w-4 h-px bg-black mr-3 group-hover:w-6 transition-all"></span>
+            <span class="text-sm tracking-wider uppercase font-medium">Orders</span>
+          </a>
+          <a href="#details" class="account-nav-link group flex items-center py-3 text-neutral-500 hover:text-black transition-colors border-b border-black/10" data-section="details">
+            <span class="nav-indicator w-4 h-px bg-neutral-300 mr-3 group-hover:w-6 group-hover:bg-black transition-all"></span>
+            <span class="text-sm tracking-wider uppercase">Account Details</span>
+          </a>
+          <a href="#password" class="account-nav-link group flex items-center py-3 text-neutral-500 hover:text-black transition-colors border-b border-black/10" data-section="password">
+            <span class="nav-indicator w-4 h-px bg-neutral-300 mr-3 group-hover:w-6 group-hover:bg-black transition-all"></span>
+            <span class="text-sm tracking-wider uppercase">Password</span>
+          </a>
+          <a href="#addresses" class="account-nav-link group flex items-center py-3 text-neutral-500 hover:text-black transition-colors border-b border-black/10" data-section="addresses">
+            <span class="nav-indicator w-4 h-px bg-neutral-300 mr-3 group-hover:w-6 group-hover:bg-black transition-all"></span>
+            <span class="text-sm tracking-wider uppercase">Addresses</span>
+          </a>
+          <a href="{% url 'account_logout' %}" class="group flex items-center py-3 text-neutral-500 hover:text-black transition-colors">
+            <span class="w-4 h-px bg-neutral-300 mr-3 group-hover:w-6 group-hover:bg-black transition-all"></span>
+            <span class="text-sm tracking-wider uppercase">Logout</span>
+          </a>
+        </nav>
+      </div>
+
+      <!-- Main Content -->
+      <div class="lg:col-span-2 p-6 lg:p-8">
+
+        <!-- Orders Section -->
+        <div id="orders" class="account-section mb-12">
+          <div class="flex items-center justify-between mb-6">
+            <span class="text-xs tracking-widest uppercase font-medium">Recent Orders</span>
+            <span class="text-xs tracking-wider text-neutral-500">Last 30 days</span>
+          </div>
+
+          {% if orders %}
+            <div class="space-y-4">
+              {% for order in orders %}
+              <div class="border border-black p-4 hover:bg-neutral-50 transition-colors">
+                <div class="flex justify-between items-start mb-3">
+                  <div>
+                    <p class="text-sm font-medium">Order #{{ order.id }}</p>
+                    <p class="text-xs text-neutral-500">{{ order.created_at|date:"M d, Y" }}</p>
+                  </div>
+                  <span class="text-xs tracking-wider uppercase px-2 py-1 border border-black
+                    {% if order.status == 'DELIVERED' %}bg-green-50 border-green-600 text-green-700
+                    {% elif order.status == 'SHIPPED' %}bg-blue-50 border-blue-600 text-blue-700
+                    {% elif order.status == 'PROCESSING' %}bg-yellow-50 border-yellow-600 text-yellow-700
+                    {% else %}{% endif %}">{{ order.status }}</span>
+                </div>
+                <div class="flex justify-between items-center pt-3 border-t border-black/10">
+                  <span class="text-sm text-neutral-600">{{ order.items.count }} item{{ order.items.count|pluralize }}</span>
+                  <span class="text-sm font-medium">${{ order.total }}</span>
+                </div>
+              </div>
+              {% endfor %}
+            </div>
+          {% else %}
+            <div class="border border-black/20 p-8 text-center">
+              <div class="mb-4">
+                <svg class="w-12 h-12 mx-auto text-neutral-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"></path>
+                </svg>
+              </div>
+              <p class="text-neutral-500 text-sm mb-4">No orders yet</p>
+              <a href="{% url 'shop:shop' %}" class="inline-block px-6 py-3 bg-black text-white text-xs tracking-widest uppercase font-medium hover:bg-neutral-800 transition-colors">
+                Start Shopping
+              </a>
+            </div>
+          {% endif %}
+        </div>
+
+        <!-- Account Details Section -->
+        <div id="details" class="account-section mb-12">
+          <span class="text-xs tracking-widest uppercase font-medium block mb-6">Account Details</span>
+
+          <form method="POST" action="{% url 'shop:account' %}" class="space-y-4">
+            {% csrf_token %}
+            <input type="hidden" name="form_type" value="details">
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label class="text-xs tracking-wider uppercase text-neutral-500 block mb-2">First Name</label>
+                <input type="text" name="first_name" value="{{ user.first_name }}"
+                       class="w-full px-4 py-3 border border-black text-sm focus:outline-none focus:ring-1 focus:ring-black" />
+              </div>
+              <div>
+                <label class="text-xs tracking-wider uppercase text-neutral-500 block mb-2">Last Name</label>
+                <input type="text" name="last_name" value="{{ user.last_name }}"
+                       class="w-full px-4 py-3 border border-black text-sm focus:outline-none focus:ring-1 focus:ring-black" />
+              </div>
+            </div>
+
+            <div>
+              <label class="text-xs tracking-wider uppercase text-neutral-500 block mb-2">Email</label>
+              <input type="email" name="email" value="{{ user_email }}"
+                     class="w-full px-4 py-3 border border-black text-sm focus:outline-none focus:ring-1 focus:ring-black bg-neutral-50" readonly />
+              <p class="text-xs text-neutral-400 mt-1">Contact support to change your email</p>
+            </div>
+
+            <div>
+              <label class="text-xs tracking-wider uppercase text-neutral-500 block mb-2">Phone</label>
+              <input type="tel" name="phone" value="{{ profile.phone|default:'' }}" placeholder="+1 (555) 123-4567"
+                     class="w-full px-4 py-3 border border-black text-sm focus:outline-none focus:ring-1 focus:ring-black" />
+            </div>
+
+            <button type="submit"
+                    class="px-6 py-3 bg-black text-white text-xs tracking-widest uppercase font-medium hover:bg-neutral-800 transition-colors">
+              Save Changes
+            </button>
+          </form>
+        </div>
+
+        <!-- Password Section -->
+        <div id="password" class="account-section mb-12">
+          <span class="text-xs tracking-widest uppercase font-medium block mb-6">Change Password</span>
+
+          <form method="POST" action="{% url 'shop:account' %}" class="space-y-4">
+            {% csrf_token %}
+            <input type="hidden" name="form_type" value="password">
+
+            <div>
+              <label class="text-xs tracking-wider uppercase text-neutral-500 block mb-2">Current Password</label>
+              <input type="password" name="oldpassword" required
+                     class="w-full px-4 py-3 border border-black text-sm focus:outline-none focus:ring-1 focus:ring-black" />
+            </div>
+
+            <div>
+              <label class="text-xs tracking-wider uppercase text-neutral-500 block mb-2">New Password</label>
+              <input type="password" name="password1" required
+                     class="w-full px-4 py-3 border border-black text-sm focus:outline-none focus:ring-1 focus:ring-black" />
+            </div>
+
+            <div>
+              <label class="text-xs tracking-wider uppercase text-neutral-500 block mb-2">Confirm New Password</label>
+              <input type="password" name="password2" required
+                     class="w-full px-4 py-3 border border-black text-sm focus:outline-none focus:ring-1 focus:ring-black" />
+            </div>
+
+            <button type="submit"
+                    class="px-6 py-3 bg-black text-white text-xs tracking-widest uppercase font-medium hover:bg-neutral-800 transition-colors">
+              Update Password
+            </button>
+          </form>
+        </div>
+
+        <!-- Addresses Section -->
+        <div id="addresses" class="account-section">
+          <div class="flex items-center justify-between mb-6">
+            <span class="text-xs tracking-widest uppercase font-medium">Saved Addresses</span>
+            <button onclick="toggleAddressForm()" class="text-xs tracking-wider uppercase text-neutral-500 hover:text-black transition-colors">+ Add New</button>
+          </div>
+
+          <!-- Add Address Form (Hidden by default) -->
+          <div id="address-form" class="hidden mb-6 border border-black p-4">
+            <form method="POST" action="{% url 'shop:account' %}" class="space-y-4">
+              {% csrf_token %}
+              <input type="hidden" name="form_type" value="address">
+
+              <div>
+                <label class="text-xs tracking-wider uppercase text-neutral-500 block mb-2">Label</label>
+                <input type="text" name="label" placeholder="Home, Work, etc."
+                       class="w-full px-4 py-3 border border-black text-sm focus:outline-none focus:ring-1 focus:ring-black" />
+              </div>
+
+              <div>
+                <label class="text-xs tracking-wider uppercase text-neutral-500 block mb-2">Street Address</label>
+                <input type="text" name="street" required
+                       class="w-full px-4 py-3 border border-black text-sm focus:outline-none focus:ring-1 focus:ring-black" />
+              </div>
+
+              <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <div class="col-span-2">
+                  <label class="text-xs tracking-wider uppercase text-neutral-500 block mb-2">City</label>
+                  <input type="text" name="city" required
+                         class="w-full px-4 py-3 border border-black text-sm focus:outline-none focus:ring-1 focus:ring-black" />
+                </div>
+                <div>
+                  <label class="text-xs tracking-wider uppercase text-neutral-500 block mb-2">State</label>
+                  <input type="text" name="state" required maxlength="2" placeholder="IL"
+                         class="w-full px-4 py-3 border border-black text-sm focus:outline-none focus:ring-1 focus:ring-black" />
+                </div>
+                <div>
+                  <label class="text-xs tracking-wider uppercase text-neutral-500 block mb-2">ZIP</label>
+                  <input type="text" name="zip_code" required
+                         class="w-full px-4 py-3 border border-black text-sm focus:outline-none focus:ring-1 focus:ring-black" />
+                </div>
+              </div>
+
+              <div class="flex items-center gap-2">
+                <input type="checkbox" name="is_default" id="is_default" class="w-4 h-4 border-black">
+                <label for="is_default" class="text-xs tracking-wider uppercase text-neutral-500">Set as default address</label>
+              </div>
+
+              <div class="flex gap-3">
+                <button type="submit"
+                        class="px-6 py-3 bg-black text-white text-xs tracking-widest uppercase font-medium hover:bg-neutral-800 transition-colors">
+                  Save Address
+                </button>
+                <button type="button" onclick="toggleAddressForm()"
+                        class="px-6 py-3 border border-black text-xs tracking-widest uppercase font-medium hover:bg-neutral-100 transition-colors">
+                  Cancel
+                </button>
+              </div>
+            </form>
+          </div>
+
+          {% if addresses %}
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {% for address in addresses %}
+              <div class="border border-black p-4 relative group" data-address-id="{{ address.id }}">
+                <div class="flex justify-between items-start mb-2">
+                  <p class="text-sm font-medium">{{ address.label|default:"Address" }}</p>
+                  {% if address.is_default_shipping %}
+                  <span class="text-xs tracking-wider uppercase text-neutral-500 border border-neutral-300 px-2 py-0.5">Default</span>
+                  {% endif %}
+                </div>
+                <p class="text-sm text-neutral-600 leading-relaxed">
+                  {{ address.line1 }}<br>
+                  {{ address.city }}, {{ address.region }} {{ address.postal_code }}
+                </p>
+                <div class="mt-3 pt-3 border-t border-black/10 flex gap-4">
+                  <button type="button" onclick="editAddress({{ address.id }})" class="text-xs tracking-wider uppercase text-neutral-500 hover:text-black transition-colors">Edit</button>
+                  <form method="POST" action="{% url 'shop:account' %}" class="inline" onsubmit="return confirm('Delete this address?')">
+                    {% csrf_token %}
+                    <input type="hidden" name="form_type" value="delete_address">
+                    <input type="hidden" name="address_id" value="{{ address.id }}">
+                    <button type="submit" class="text-xs tracking-wider uppercase text-neutral-500 hover:text-red-600 transition-colors">Delete</button>
+                  </form>
+                </div>
+              </div>
+              {% endfor %}
+            </div>
+          {% else %}
+            <div class="border border-black/20 p-6 text-center">
+              <p class="text-neutral-500 text-sm">No saved addresses</p>
+            </div>
+          {% endif %}
+        </div>
+
+      </div>
+    </div>
+  </div>
+</section>
+
+{% else %}
+<!-- Not Logged In -->
+<section class="bg-white">
+  <div class="max-w-7xl mx-auto">
+    <div class="grid grid-cols-1 lg:grid-cols-2 min-h-[70vh]">
+
+      <!-- Login -->
+      <div class="border-r border-black p-6 lg:p-12 flex flex-col justify-center">
+        <span class="text-xs tracking-widest uppercase font-medium block mb-6">Sign In</span>
+
+        <form method="POST" action="{% url 'account_login' %}" class="space-y-4 max-w-sm">
+          {% csrf_token %}
+          <input type="hidden" name="next" value="{{ request.path }}">
+
+          <div>
+            <label class="text-xs tracking-wider uppercase text-neutral-500 block mb-2">Email</label>
+            <input type="email" name="login" required
+                   class="w-full px-4 py-3 border border-black text-sm focus:outline-none focus:ring-1 focus:ring-black" />
+          </div>
+
+          <div>
+            <label class="text-xs tracking-wider uppercase text-neutral-500 block mb-2">Password</label>
+            <input type="password" name="password" required
+                   class="w-full px-4 py-3 border border-black text-sm focus:outline-none focus:ring-1 focus:ring-black" />
+          </div>
+
+          <div class="flex items-center justify-between">
+            <label class="flex items-center gap-2 text-xs text-neutral-500">
+              <input type="checkbox" name="remember" class="w-4 h-4 border-black">
+              Remember me
+            </label>
+            <a href="{% url 'account_reset_password' %}" class="text-xs text-neutral-500 hover:text-black transition-colors underline">Forgot password?</a>
+          </div>
+
+          <button type="submit"
+                  class="w-full py-4 bg-black text-white text-xs tracking-widest uppercase font-medium hover:bg-neutral-800 transition-colors">
+            Sign In
+          </button>
+        </form>
+      </div>
+
+      <!-- Register -->
+      <div class="p-6 lg:p-12 flex flex-col justify-center bg-neutral-50">
+        <span class="text-xs tracking-widest uppercase font-medium block mb-6">Create Account</span>
+
+        <form method="POST" action="{% url 'account_signup' %}" class="space-y-4 max-w-sm">
+          {% csrf_token %}
+
+          <div>
+            <label class="text-xs tracking-wider uppercase text-neutral-500 block mb-2">Email</label>
+            <input type="email" name="email" required
+                   class="w-full px-4 py-3 border border-black text-sm focus:outline-none focus:ring-1 focus:ring-black bg-white" />
+          </div>
+
+          <div>
+            <label class="text-xs tracking-wider uppercase text-neutral-500 block mb-2">Password</label>
+            <input type="password" name="password1" required
+                   class="w-full px-4 py-3 border border-black text-sm focus:outline-none focus:ring-1 focus:ring-black bg-white" />
+          </div>
+
+          <div>
+            <label class="text-xs tracking-wider uppercase text-neutral-500 block mb-2">Confirm Password</label>
+            <input type="password" name="password2" required
+                   class="w-full px-4 py-3 border border-black text-sm focus:outline-none focus:ring-1 focus:ring-black bg-white" />
+          </div>
+
+          <button type="submit"
+                  class="w-full py-4 bg-black text-white text-xs tracking-widest uppercase font-medium hover:bg-neutral-800 transition-colors">
+            Create Account
+          </button>
+
+          <p class="text-xs text-neutral-500 leading-relaxed">
+            By creating an account, you agree to our
+            <a href="{% url 'shop:terms' %}" class="underline hover:text-black">Terms of Service</a> and
+            <a href="{% url 'shop:privacy' %}" class="underline hover:text-black">Privacy Policy</a>.
+          </p>
+        </form>
+      </div>
+
+    </div>
+  </div>
+</section>
+{% endif %}
+
+<!-- Section Divider -->
+<div class="border-t border-black">
+  <div class="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center">
+    <span class="text-xs tracking-wider text-neutral-500">Need help? Contact support</span>
+    <span class="text-xs tracking-widest uppercase font-medium">Blueprint Apparel</span>
+  </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  // Toggle address form visibility
+  function toggleAddressForm() {
+    const form = document.getElementById('address-form');
+    form.classList.toggle('hidden');
+  }
+
+  // Edit address (placeholder - would need edit form/modal)
+  function editAddress(addressId) {
+    alert('Edit functionality coming soon. For now, please delete and re-add the address.');
+  }
+
+  // Smooth scroll to sections and update active nav
+  document.querySelectorAll('.account-nav-link').forEach(link => {
+    link.addEventListener('click', function(e) {
+      e.preventDefault();
+      const targetId = this.getAttribute('href').substring(1);
+      const target = document.getElementById(targetId);
+
+      if (target) {
+        target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+
+        // Update active state
+        document.querySelectorAll('.account-nav-link').forEach(l => {
+          l.classList.remove('text-black');
+          l.classList.add('text-neutral-500');
+          l.querySelector('.nav-indicator').classList.remove('bg-black');
+          l.querySelector('.nav-indicator').classList.add('bg-neutral-300');
+        });
+
+        this.classList.remove('text-neutral-500');
+        this.classList.add('text-black');
+        this.querySelector('.nav-indicator').classList.remove('bg-neutral-300');
+        this.querySelector('.nav-indicator').classList.add('bg-black');
+      }
+    });
+  });
+</script>
+{% endblock %}

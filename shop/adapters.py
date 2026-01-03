@@ -12,3 +12,10 @@ class CustomAccountAdapter(DefaultAccountAdapter):
         if request.user.is_staff:
             return reverse('admin_home')
         return super().get_login_redirect_url(request)
+
+    def add_message(self, request, level, message_template, message_context=None, message_text=None):
+        """
+        Suppress allauth messages (e.g., "Successfully signed in").
+        """
+        # Don't add any messages - suppress all allauth notifications
+        pass

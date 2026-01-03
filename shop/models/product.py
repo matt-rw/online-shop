@@ -99,6 +99,9 @@ class Product(models.Model):
         max_digits=10, decimal_places=2, help_text="Starting/base price for this product"
     )
     is_active = models.BooleanField(default=True, db_index=True)
+    available_for_purchase = models.BooleanField(
+        default=True, help_text="If False, product is visible but shows 'Not Available' instead of Add to Cart"
+    )
     featured = models.BooleanField(
         default=False, help_text="Feature this product on homepage", db_index=True
     )

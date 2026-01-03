@@ -12,7 +12,7 @@ class SiteSettings(models.Model):
         upload_to="site/hero/", blank=True, null=True, help_text="Main hero image for the homepage"
     )
     hero_title = models.CharField(
-        max_length=200, default="Welcome to Blueprint", help_text="Main headline on homepage"
+        max_length=200, default="", blank=True, help_text="Main headline on homepage"
     )
     hero_subtitle = models.TextField(blank=True, help_text="Subheadline or description on homepage")
 

@@ -3,18 +3,21 @@ Stripe webhook handlers for processing payment events.
 """
 
 import logging
+from decimal import Decimal
 
 from django.conf import settings
+from django.contrib.auth import get_user_model
 from django.http import HttpResponse, JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_POST
 
 import stripe
 
-from .models import Order, OrderStatus
+from .models import Cart, Order, OrderItem, OrderStatus
 
 logger = logging.getLogger(__name__)
 stripe.api_key = settings.STRIPE_SECRET_KEY
+User = get_user_model()
 
 
 @csrf_exempt
@@ -72,26 +75,88 @@ def stripe_webhook(request):
 def handle_checkout_session_completed(event):
     """
     Handle successful checkout session completion.
-    Update order status and send confirmation email.
+    Create order from cart and metadata, then clear cart.
     """
     session = event["data"]["object"]
     checkout_session_id = session["id"]
     payment_intent_id = session.get("payment_intent")
+    metadata = session.get("metadata", {})
 
     try:
-        order = Order.objects.get(stripe_checkout_id=checkout_session_id)
+        # Check if order already exists (idempotency)
+        existing_order = Order.objects.filter(stripe_checkout_id=checkout_session_id).first()
+        if existing_order:
+            logger.info(f"Order {existing_order.id} already exists for session {checkout_session_id}")
+            if existing_order.status != OrderStatus.PAID:
+                existing_order.status = OrderStatus.PAID
+                existing_order.stripe_payment_intent_id = payment_intent_id
+                existing_order.save()
+            return
 
-        # Update order with payment info
-        order.status = OrderStatus.PAID
-        order.stripe_payment_intent_id = payment_intent_id
+        # Get cart
+        cart_id = metadata.get("cart_id")
+        if not cart_id:
+            logger.error(f"No cart_id in metadata for session: {checkout_session_id}")
+            return
 
-        # Get customer email from session if not already set
-        if not order.email and session.get("customer_details", {}).get("email"):
-            order.email = session["customer_details"]["email"]
+        try:
+            cart = Cart.objects.get(id=cart_id)
+        except Cart.DoesNotExist:
+            logger.error(f"Cart {cart_id} not found for session: {checkout_session_id}")
+            return
 
-        order.save()
+        cart_items = cart.items.select_related("variant__product").all()
+        if not cart_items.exists():
+            logger.error(f"Cart {cart_id} is empty for session: {checkout_session_id}")
+            return
 
-        logger.info(f"Order {order.id} marked as PAID (session: {checkout_session_id})")
+        # Get user if exists
+        user = None
+        user_id = metadata.get("user_id")
+        if user_id:
+            try:
+                user = User.objects.get(id=user_id)
+            except User.DoesNotExist:
+                pass
+
+        # Get customer email
+        customer_email = metadata.get("customer_email") or ""
+        if not customer_email and session.get("customer_details", {}).get("email"):
+            customer_email = session["customer_details"]["email"]
+
+        # Parse amounts from metadata
+        subtotal = Decimal(metadata.get("subtotal", "0"))
+        shipping_cost = Decimal(metadata.get("shipping_cost", "0"))
+
+        # Create the order
+        order = Order.objects.create(
+            user=user,
+            email=customer_email,
+            status=OrderStatus.PAID,
+            subtotal=subtotal,
+            shipping=shipping_cost,
+            tax=Decimal("0.00"),
+            total=subtotal + shipping_cost,
+            stripe_checkout_id=checkout_session_id,
+            stripe_payment_intent_id=payment_intent_id,
+        )
+
+        # Create order items from cart
+        for item in cart_items:
+            OrderItem.objects.create(
+                order=order,
+                variant=item.variant,
+                sku=str(item.variant.id),
+                quantity=item.quantity,
+                line_total=item.variant.price * item.quantity,
+            )
+
+        # Clear the cart
+        cart.items.all().delete()
+        cart.is_active = False
+        cart.save()
+
+        logger.info(f"Order {order.id} created and marked as PAID (session: {checkout_session_id})")
 
         # TODO: Send order confirmation email
         # send_order_confirmation_email(order)
@@ -99,8 +164,6 @@ def handle_checkout_session_completed(event):
         # TODO: Notify admin of new order
         # notify_admin_new_order(order)
 
-    except Order.DoesNotExist:
-        logger.error(f"Order not found for checkout session: {checkout_session_id}")
     except Exception as e:
         logger.error(f"Error handling checkout completion: {e}")
 

@@ -1,12 +1,23 @@
 from django.conf import settings
 from django.contrib import admin
+from django.shortcuts import render
 from django.urls import include, path
 
 from search import views as search_views
 from shop import admin_views, two_factor_views
 from home import views as home_views
 
-# from shop import urls as shop_urls
+
+def custom_404(request, exception):
+    return render(request, '404.html', status=404)
+
+
+def custom_500(request):
+    return render(request, '500.html', status=500)
+
+
+handler404 = custom_404
+handler500 = custom_500
 
 urlpatterns = [
     path("", home_views.home_page, name="home"),

@@ -21,16 +21,6 @@ def get_cache_config():
         "default": {
             "BACKEND": "django.core.cache.backends.redis.RedisCache",
             "LOCATION": redis_url,
-            "OPTIONS": {
-                "CLIENT_CLASS": "django_redis.client.DefaultClient",
-                "PARSER_CLASS": "redis.connection.HiredisParser",
-                "CONNECTION_POOL_KWARGS": {
-                    "max_connections": 50,
-                    "retry_on_timeout": True,
-                },
-                "SOCKET_CONNECT_TIMEOUT": 5,
-                "SOCKET_TIMEOUT": 5,
-            },
             "KEY_PREFIX": "blueprint",
             "TIMEOUT": 300,  # 5 minutes default
         },
@@ -38,10 +28,6 @@ def get_cache_config():
         "sessions": {
             "BACKEND": "django.core.cache.backends.redis.RedisCache",
             "LOCATION": redis_url,
-            "OPTIONS": {
-                "CLIENT_CLASS": "django_redis.client.DefaultClient",
-                "PARSER_CLASS": "redis.connection.HiredisParser",
-            },
             "KEY_PREFIX": "blueprint_session",
             "TIMEOUT": 86400,  # 24 hours
         },

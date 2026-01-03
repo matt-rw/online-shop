@@ -1,182 +1,41 @@
+{% extends 'base.html' %}
 {% load static %}
 
-<!DOCTYPE html>
-<html lang="en">
-  <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Verify Your Email - Blueprint Apparel</title>
-    <link rel="icon" type="image/svg+xml" href="{% static 'admin-favicon.svg' %}">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"
-          rel="stylesheet">
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
+{% block title %}Check Your Email - Blueprint Apparel{% endblock %}
 
-        body {
-            font-family: 'Inter', sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            min-height: 100vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 2rem;
-            position: relative;
-            overflow: hidden;
-        }
+{% block content %}
+<section class="bg-white min-h-[80vh] flex items-center justify-center">
+  <div class="max-w-md w-full mx-4 text-center">
 
-        body::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background:
-                radial-gradient(circle at 20% 50%, rgba(255, 255, 255, 0.1) 0%, transparent 50%),
-                radial-gradient(circle at 80% 80%, rgba(255, 255, 255, 0.08) 0%, transparent 50%);
-            pointer-events: none;
-        }
-
-        .container {
-            background: white;
-            border-radius: 24px;
-            padding: 3rem;
-            max-width: 520px;
-            width: 100%;
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
-            position: relative;
-            z-index: 1;
-            text-align: center;
-        }
-
-        .icon-wrapper {
-            width: 80px;
-            height: 80px;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            border-radius: 20px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            margin: 0 auto 1.5rem;
-            box-shadow: 0 8px 24px rgba(102, 126, 234, 0.3);
-        }
-
-        .icon-wrapper svg {
-            width: 40px;
-            height: 40px;
-            fill: white;
-        }
-
-        h1 {
-            color: #0f172a;
-            font-size: 1.75rem;
-            font-weight: 700;
-            margin-bottom: 1rem;
-            letter-spacing: -0.02em;
-        }
-
-        .email {
-            color: #667eea;
-            font-weight: 600;
-            font-size: 1.125rem;
-            margin-bottom: 1.5rem;
-        }
-
-        p {
-            color: #64748b;
-            font-size: 1rem;
-            line-height: 1.6;
-            margin-bottom: 2rem;
-        }
-
-        .btn {
-            width: 100%;
-            padding: 1rem 2rem;
-            border-radius: 12px;
-            font-weight: 600;
-            font-size: 1rem;
-            border: none;
-            cursor: pointer;
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            text-decoration: none;
-            display: inline-block;
-            text-align: center;
-        }
-
-        .btn-secondary {
-            background: #f1f5f9;
-            color: #475569;
-            border: 2px solid #e2e8f0;
-        }
-
-        .btn-secondary:hover {
-            background: #e2e8f0;
-            transform: translateY(-2px);
-        }
-
-        .logo {
-            font-size: 1.5rem;
-            font-weight: 800;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-            margin-bottom: 2rem;
-            letter-spacing: -0.02em;
-        }
-
-        .info-box {
-            background: #f8fafc;
-            border: 1px solid #e2e8f0;
-            border-radius: 12px;
-            padding: 1rem;
-            margin-bottom: 2rem;
-        }
-
-        .info-box p {
-            margin: 0;
-            font-size: 0.875rem;
-            color: #64748b;
-        }
-
-        @media (max-width: 640px) {
-            .container {
-                padding: 2rem;
-            }
-
-            h1 {
-                font-size: 1.5rem;
-            }
-        }
-    </style>
-  </head>
-  <body>
-    <div class="container">
-      <div class="logo">Blueprint Apparel</div>
-
-      <div class="icon-wrapper">
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
-          <path d="M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/>
-        </svg>
-      </div>
-
-      <h1>Check Your Email</h1>
-
-      <p class="email">{{ email }}</p>
-
-      <p>We've sent a verification email to confirm your address. Click the link in the email to complete your registration.</p>
-
-      <div class="info-box">
-        <p>Don't see the email? Check your spam folder or contact us if you need help.</p>
-      </div>
-
-      <a href="/" class="btn btn-secondary">
-        Back to Home
-      </a>
+    <!-- Icon -->
+    <div class="w-20 h-20 border border-black flex items-center justify-center mx-auto mb-8">
+      <svg class="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path>
+      </svg>
     </div>
-  </body>
-</html>
+
+    <!-- Header -->
+    <span class="text-xs tracking-widest uppercase text-neutral-400 block mb-4">Verification</span>
+    <h1 class="text-3xl font-bold tracking-tight mb-6">"CHECK YOUR EMAIL"</h1>
+
+    <!-- Message -->
+    <p class="text-neutral-600 leading-relaxed mb-8">
+      We've sent a verification link to your email address. Click the link to complete your registration and access your account.
+    </p>
+
+    <!-- Info Box -->
+    <div class="border border-black/20 p-4 mb-8">
+      <p class="text-sm text-neutral-500">
+        Don't see the email? Check your spam folder or wait a few minutes.
+      </p>
+    </div>
+
+    <!-- Back Button -->
+    <a href="{% url 'home' %}" class="inline-block px-8 py-4 border border-black text-xs tracking-widest uppercase font-medium hover:bg-black hover:text-white transition-colors">
+      Back to Home
+    </a>
+
+  </div>
+</section>
+
+{% endblock %}

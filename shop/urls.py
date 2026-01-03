@@ -8,8 +8,20 @@ urlpatterns = [
     # Health checks (for monitoring)
     path("health/", views.health_check, name="health"),
     path("health/detailed/", views.health_check_detailed, name="health_detailed"),
+    # Shop catalog
+    path("", views.shop, name="shop"),
     # Coming soon page
     path("coming-soon/", views.coming_soon, name="coming_soon"),
+    # About page
+    path("about/", views.about, name="about"),
+    # Privacy Policy
+    path("privacy/", views.privacy, name="privacy"),
+    # Terms of Service
+    path("terms/", views.terms, name="terms"),
+    # Product detail
+    path("product/<slug:slug>/", views.product_detail, name="product_detail"),
+    # Account
+    path("account/", views.account, name="account"),
     # Email subscription
     path("subscribe/", views.subscribe, name="subscribe"),
     # SMS subscription
@@ -21,6 +33,7 @@ urlpatterns = [
     path("cart/remove/<int:item_id>/", cart_views.remove_from_cart_view, name="remove_from_cart"),
     # Checkout
     path("checkout/", cart_views.checkout_view, name="checkout"),
+    path("checkout/shipping-rates/", cart_views.get_shipping_rates_view, name="get_shipping_rates"),
     path(
         "checkout/create-session/",
         cart_views.create_checkout_session,

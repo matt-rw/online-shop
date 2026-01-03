@@ -2,11 +2,11 @@
 
 Modern e-commerce website built with Django, Wagtail CMS, and Tailwind CSS.
 
-## 🏪 About
+## About
 
 Blueprint Apparel is a Chicago-based clothing brand focused on clean design, versatile pieces, and intentional style. Our debut FOUNDATION collection draws inspiration from Japanese gardens and Korean art, channeling balance and purpose into modern apparel.
 
-## 🚀 Quick Start
+## Quick Start
 
 ### Development
 ```bash
@@ -20,7 +20,7 @@ http://localhost:8000
 ### Deployment
 See **[docs/DEPLOYMENT.md](docs/DEPLOYMENT.md)** for complete deployment instructions.
 
-## 📚 Documentation
+## Documentation
 
 All documentation is located in the **[docs/](docs/)** directory:
 
@@ -28,7 +28,7 @@ All documentation is located in the **[docs/](docs/)** directory:
 - **[GoDaddy DNS Setup](docs/GODADDY_DNS_SETUP.md)** - Configure DNS (migrating from Shopify)
 - **[Deployment Checklist](docs/DEPLOYMENT_CHECKLIST.md)** - Pre-deployment checklist
 
-## 🛠️ Tech Stack
+## Tech Stack
 
 - **Backend**: Django 5.2, Wagtail 7.0
 - **Frontend**: Tailwind CSS, Alpine.js
@@ -37,32 +37,30 @@ All documentation is located in the **[docs/](docs/)** directory:
 - **Hosting**: Render
 - **Domain**: GoDaddy
 
-## 📁 Project Structure
+## Project Structure
 
 ```
 online-shop/
 ├── docs/                    # Documentation
 ├── home/                    # Home app (landing page)
-├── shop/                    # Shop app (products, cart)
+├── shop/                    # Shop app (products, cart, orders)
+├── search/                  # Search functionality
 ├── online_shop/             # Project settings
 │   └── settings/
 │       ├── base.py         # Base settings
 │       ├── dev.py          # Development settings
 │       └── production.py   # Production settings
 ├── templates/               # HTML templates
-│   ├── base.html           # Base template
-│   ├── home/               # Home page templates
-│   ├── shop/               # Shop templates
-│   └── partials/           # Reusable components
 ├── static/                  # Static files (images, fonts)
 ├── theme/                   # Tailwind CSS theme
+├── scripts/                 # Development scripts
+│   └── optimization/       # Image/video optimization tools
 ├── requirements.txt         # Python dependencies
-├── build.sh                # Production build script
 ├── dev.sh                  # Development server script
 └── render.yaml             # Render deployment config
 ```
 
-## 🔑 Environment Variables
+## Environment Variables
 
 Copy `.env` for local development:
 
@@ -81,24 +79,24 @@ EMAIL_HOST_PASSWORD=your-app-password
 
 See `docs/DEPLOYMENT.md` for production environment variables.
 
-## 🎨 Features
+## Features
 
-- ✅ Wagtail CMS for content management
-- ✅ Tailwind CSS for modern styling
-- ✅ Stripe payment integration (ready)
-- ✅ Email newsletter signup
-- ✅ Responsive design (mobile-first)
-- ✅ Smooth scroll animations (AOS)
-- ✅ Instagram integration
-- 🚧 Shopping cart (coming soon)
-- 🚧 Product variants (coming soon)
-- 🚧 User accounts (coming soon)
+- Wagtail CMS for content management
+- Tailwind CSS for modern styling
+- Stripe Checkout payment integration
+- Shopping cart with session persistence
+- Product variants (size, color)
+- User accounts with django-allauth
+- Real-time shipping rates (EasyPost)
+- Email newsletter signup
+- Admin dashboard for orders, inventory, campaigns
+- Responsive design (mobile-first)
 
-## 📝 License
+## License
 
 Proprietary - All rights reserved
 
-## 🔗 Links
+## Links
 
 - **Website**: https://blueprintapparel.store
 - **Instagram**: [@_blueprintapparel](https://instagram.com/_blueprintapparel)

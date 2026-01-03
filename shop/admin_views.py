@@ -2284,6 +2284,7 @@ def products_dashboard(request):
                 product.description = request.POST.get("description")
                 product.base_price = request.POST.get("base_price")
                 product.featured = request.POST.get("featured") == "true"
+                product.available_for_purchase = request.POST.get("available_for_purchase") == "true"
                 product.save()
                 return JsonResponse({"success": True})
             except Product.DoesNotExist:
@@ -2523,6 +2524,7 @@ def products_dashboard(request):
                 "price_range": price_range,
                 "is_active": product.is_active,
                 "featured": product.featured,
+                "available_for_purchase": product.available_for_purchase,
                 "variant_count": variant_count,
                 "total_stock": total_stock,
                 "active_variants": active_variants,
@@ -2571,8 +2573,23 @@ def product_preview(request, product_id):
     except Product.DoesNotExist:
         return HttpResponse("Product not found", status=404)
 
+    # Collect unique images from variants
+    images = []
+    seen_images = set()
+    for variant in product.variants.all():
+        if variant.images:
+            for img in variant.images:
+                if img and not img.startswith(("/", "http")):
+                    img_path = f"/static/{img}"
+                else:
+                    img_path = img
+                if img_path not in seen_images:
+                    images.append(img_path)
+                    seen_images.add(img_path)
+
     context = {
         "product": product,
+        "images": images,
     }
 
     return render(request, "admin/product_preview.html", context)
@@ -4252,11 +4269,42 @@ def finance_dashboard(request):
     from decimal import Decimal
 
     import pytz
+    import stripe
+    from django.conf import settings
     from django.contrib import messages
     from django.db.models import Count, Q, Sum
     from django.utils import timezone
 
     from shop.models import Expense, ExpenseCategory, Order, OrderStatus
+
+    # Handle Stripe connection test
+    stripe_status = None
+    if request.method == "POST" and request.POST.get("action") == "test_stripe":
+        try:
+            stripe.api_key = settings.STRIPE_SECRET_KEY
+            # Test the connection by retrieving account info
+            account = stripe.Account.retrieve()
+            stripe_status = {
+                "success": True,
+                "account_id": account.id,
+                "business_name": account.get("business_profile", {}).get("name", "N/A"),
+                "country": account.country,
+                "charges_enabled": account.charges_enabled,
+                "payouts_enabled": account.payouts_enabled,
+            }
+            messages.success(request, f"Stripe connection successful! Account: {account.id}")
+        except stripe.AuthenticationError:
+            stripe_status = {"success": False, "error": "Invalid API key"}
+            messages.error(request, "Stripe connection failed: Invalid API key")
+        except stripe.APIConnectionError:
+            stripe_status = {"success": False, "error": "Network error connecting to Stripe"}
+            messages.error(request, "Stripe connection failed: Network error")
+        except stripe.StripeError as e:
+            stripe_status = {"success": False, "error": str(e)}
+            messages.error(request, f"Stripe connection failed: {str(e)}")
+        except Exception as e:
+            stripe_status = {"success": False, "error": str(e)}
+            messages.error(request, f"Stripe connection failed: {str(e)}")
 
     # Ensure recurring expense categories exist
     recurring_category_names = [
@@ -4535,6 +4583,7 @@ def finance_dashboard(request):
         "recurring_expenses": recurring_list,
         "stripe_fees_by_month": stripe_fees_by_month,
         "stripe_fees_total_year": sum(m["fees"] for m in stripe_fees_by_month),
+        "stripe_status": stripe_status,
     }
 
     return render(request, "admin/finance_dashboard.html", context)

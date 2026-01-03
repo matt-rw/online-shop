@@ -1,0 +1,378 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ product.name }} - Blueprint Apparel{% endblock %}
+
+{% block extra_css %}
+<style>
+  /* Image gallery thumbnail active state */
+  .thumbnail-active {
+    border-color: black !important;
+  }
+
+  /* Size button states */
+  .size-btn {
+    transition: all 0.15s ease;
+  }
+  .size-btn:hover:not(.size-unavailable) {
+    background-color: black;
+    color: white;
+  }
+  .size-btn.size-selected {
+    background-color: black;
+    color: white;
+  }
+  .size-btn.size-unavailable {
+    color: #d1d5db;
+    cursor: not-allowed;
+    text-decoration: line-through;
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+
+<!-- Breadcrumb -->
+<div class="border-b border-black">
+  <div class="max-w-7xl mx-auto px-6 py-3">
+    <nav class="flex items-center text-xs tracking-wider">
+      <a href="{% url 'home' %}" class="text-neutral-500 hover:text-black transition-colors uppercase">Home</a>
+      <span class="mx-3 text-neutral-300">/</span>
+      <a href="{% url 'shop:shop' %}" class="text-neutral-500 hover:text-black transition-colors uppercase">Shop</a>
+      <span class="mx-3 text-neutral-300">/</span>
+      <span class="text-black uppercase">{{ product.name }}</span>
+    </nav>
+  </div>
+</div>
+
+<!-- Product Detail -->
+<section class="bg-white">
+  <div class="max-w-7xl mx-auto">
+    <div class="grid grid-cols-1 lg:grid-cols-2">
+
+      <!-- Left: Image Gallery -->
+      <div class="border-r border-black">
+        <!-- Main Image -->
+        <div class="relative" style="aspect-ratio: 4/5;">
+          <img id="main-image"
+               src="{{ main_image }}"
+               alt="{{ product.name }}"
+               class="w-full h-full object-cover" />
+          <!-- Image number indicator -->
+          <div class="absolute bottom-4 left-4 px-3 py-1 bg-white/90 backdrop-blur-sm border border-black">
+            <span id="image-counter" class="text-xs tracking-widest font-medium">001 / {{ images|length|default:1|stringformat:"03d" }}</span>
+          </div>
+        </div>
+
+        <!-- Thumbnail Gallery -->
+        <div class="border-t border-black p-4">
+          <div class="flex gap-3 overflow-x-auto">
+            {% for image in images %}
+            <button onclick="changeImage('{{ image }}', {{ forloop.counter }})"
+                    class="thumbnail-btn flex-shrink-0 w-20 h-24 border-2 border-transparent hover:border-black transition-all overflow-hidden {% if forloop.first %}thumbnail-active{% endif %}">
+              <img src="{{ image }}" alt="{{ product.name }}" class="w-full h-full object-cover" />
+            </button>
+            {% endfor %}
+          </div>
+        </div>
+      </div>
+
+      <!-- Right: Product Info -->
+      <div class="p-6 lg:p-12 flex flex-col">
+
+        <!-- Product Header -->
+        <div class="border-b border-black pb-6 mb-6">
+          <p class="text-xs text-neutral-500 uppercase tracking-wider mb-2">{{ product.category_legacy|default:"Foundation" }}</p>
+          <h1 class="text-2xl md:text-3xl font-bold tracking-tight mb-4">"{{ product.name|upper }}"</h1>
+          <div class="flex items-center gap-4">
+            <span class="text-2xl font-bold">${{ product.base_price }}</span>
+          </div>
+        </div>
+
+        <!-- Size Selection -->
+        {% if sizes %}
+        <div class="mb-6">
+          <div class="flex justify-between items-center mb-3">
+            <span class="text-xs tracking-widest uppercase font-medium">Size</span>
+            <a href="#" class="text-xs text-neutral-500 hover:text-black underline transition-colors">Size Guide</a>
+          </div>
+          <div class="flex flex-wrap gap-2">
+            {% for size in sizes %}
+            <button onclick="selectSize('{{ size.code }}')"
+                    class="size-btn w-14 h-10 border border-black text-sm font-medium uppercase tracking-wide
+                           {% if size.available %}{% else %}size-unavailable{% endif %}"
+                    {% if not size.available %}disabled{% endif %}
+                    data-size="{{ size.code }}">
+              {{ size.label|default:size.code }}
+            </button>
+            {% endfor %}
+          </div>
+          <input type="hidden" id="selected-size" name="size" value="">
+        </div>
+        {% endif %}
+
+        <!-- Color Selection -->
+        {% if colors %}
+        <div class="mb-6">
+          <span class="text-xs tracking-widest uppercase font-medium block mb-3">Color</span>
+          <div class="flex flex-wrap gap-3">
+            {% for color in colors %}
+            <button onclick="selectColor('{{ color.name }}')"
+                    class="color-btn w-8 h-8 rounded-full border-2 border-transparent hover:border-black transition-all"
+                    style="background-color: {{ color.hex|default:'#000' }};"
+                    data-color="{{ color.name }}"
+                    title="{{ color.name }}">
+            </button>
+            {% endfor %}
+          </div>
+          <input type="hidden" id="selected-color" name="color" value="">
+        </div>
+        {% endif %}
+
+        <!-- Quantity -->
+        <div class="mb-8" id="quantity-section" {% if total_stock == 0 or not product.available_for_purchase %}style="display: none;"{% endif %}>
+          <div class="flex items-center justify-between mb-3">
+            <span class="text-xs tracking-widest uppercase font-medium">Quantity</span>
+            <span id="stock-display" class="text-xs text-neutral-500">
+              {% if default_variant_stock > 0 %}
+                {{ default_variant_stock }} in stock
+              {% endif %}
+            </span>
+          </div>
+          <div class="flex items-center border border-black w-fit">
+            <button type="button" onclick="decrementQty()" class="px-4 py-2 hover:bg-black hover:text-white transition-colors">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 12H4"></path>
+              </svg>
+            </button>
+            <input type="number" id="quantity" name="quantity" value="1" min="1" max="{{ default_variant_stock|default:1 }}"
+                   class="w-12 text-center border-x border-black py-2 font-medium" readonly />
+            <button type="button" onclick="incrementQty()" class="px-4 py-2 hover:bg-black hover:text-white transition-colors">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+              </svg>
+            </button>
+          </div>
+        </div>
+
+        <!-- Add to Cart Button -->
+        <form action="{% url 'shop:add_to_cart' %}" method="POST" class="mb-8" id="add-to-cart-form">
+          {% csrf_token %}
+          <input type="hidden" name="product_id" value="{{ product.id }}">
+          <input type="hidden" name="variant_id" id="variant-id" value="{{ default_variant_id|default:'' }}">
+          <input type="hidden" name="quantity" id="form-quantity" value="1">
+          {% if not product.available_for_purchase %}
+          <button type="button" disabled
+                  class="w-full py-4 bg-neutral-300 text-neutral-500 font-bold uppercase tracking-widest text-sm cursor-not-allowed">
+            Not Available
+          </button>
+          {% elif total_stock == 0 %}
+          <button type="button" disabled
+                  class="w-full py-4 bg-neutral-300 text-neutral-500 font-bold uppercase tracking-widest text-sm cursor-not-allowed">
+            Out of Stock
+          </button>
+          {% else %}
+          <button type="submit" id="add-to-cart-btn"
+                  class="w-full py-4 bg-black text-white font-bold uppercase tracking-widest text-sm hover:bg-neutral-800 transition-colors">
+            Add to Cart
+          </button>
+          {% endif %}
+        </form>
+
+        <!-- Product Description -->
+        <div class="border-t border-black pt-6 space-y-4 mt-auto">
+          <div>
+            <span class="text-xs tracking-widest uppercase font-medium block mb-2">Description</span>
+            <p class="text-neutral-600 text-sm leading-relaxed">
+              {{ product.description|default:"Premium quality garment from our Foundation collection. Designed with intention, built for wherever life takes you." }}
+            </p>
+          </div>
+
+          <!-- Details Accordion -->
+          <details class="mt-8 group">
+            <summary class="flex justify-between items-center cursor-pointer text-xs tracking-widest uppercase font-medium mb-2">
+              Details
+              <svg class="w-4 h-4 transition-transform group-open:rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+              </svg>
+            </summary>
+            <ul class="space-y-2 text-sm text-neutral-600 leading-relaxed">
+              <li>100% Premium Cotton</li>
+              <li>Relaxed fit</li>
+              <li>Machine washable</li>
+              <li>Designed in Chicago</li>
+            </ul>
+          </details>
+
+          <!-- Shipping Info Accordion -->
+          <details class="mt-8 group">
+            <summary class="flex justify-between items-center cursor-pointer text-xs tracking-widest uppercase font-medium mb-2">
+              Shipping & Returns
+              <svg class="w-4 h-4 transition-transform group-open:rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+              </svg>
+            </summary>
+            <ul class="space-y-2 text-sm text-neutral-600 leading-relaxed">
+              <li>Free shipping on orders over $100</li>
+              <li>Standard shipping: 5-7 business days</li>
+              <li>Returns accepted within 30 days</li>
+            </ul>
+          </details>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Section Divider -->
+<div class="border-t border-black">
+  <div class="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center">
+    <span class="text-xs tracking-wider text-neutral-500">SKU: {{ product.slug|upper }}</span>
+    <span class="text-xs tracking-widest uppercase font-medium">Foundation Collection</span>
+  </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  // Variant data from server
+  const variantData = {{ variant_data_json|safe }};
+  let currentStock = {{ default_variant_stock|default:0 }};
+  let selectedSize = '';
+  let selectedColor = '{{ colors.0.name|default:"default" }}';
+
+  // Image gallery
+  let currentImage = 1;
+  const totalImages = {{ images|length|default:1 }};
+
+  function changeImage(src, index) {
+    document.getElementById('main-image').src = src;
+    currentImage = index;
+    document.getElementById('image-counter').textContent =
+      String(index).padStart(3, '0') + ' / ' + String(totalImages).padStart(3, '0');
+
+    // Update thumbnail active state
+    document.querySelectorAll('.thumbnail-btn').forEach((btn, i) => {
+      if (i + 1 === index) {
+        btn.classList.add('thumbnail-active');
+      } else {
+        btn.classList.remove('thumbnail-active');
+      }
+    });
+  }
+
+  // Size selection
+  function selectSize(size) {
+    selectedSize = size;
+    document.getElementById('selected-size').value = size;
+
+    // Update button states
+    document.querySelectorAll('.size-btn').forEach(btn => {
+      if (btn.dataset.size === size) {
+        btn.classList.add('size-selected');
+      } else {
+        btn.classList.remove('size-selected');
+      }
+    });
+
+    updateVariant();
+  }
+
+  // Color selection
+  function selectColor(color) {
+    selectedColor = color;
+    document.getElementById('selected-color').value = color;
+
+    // Update button states
+    document.querySelectorAll('.color-btn').forEach(btn => {
+      if (btn.dataset.color === color) {
+        btn.classList.add('border-black');
+      } else {
+        btn.classList.remove('border-black');
+      }
+    });
+
+    updateVariant();
+  }
+
+  // Update variant ID and stock based on selections
+  function updateVariant() {
+    const sizeCode = selectedSize || 'one-size';
+    const colorName = selectedColor || 'default';
+    const key = `${sizeCode}_${colorName}`;
+
+    const variant = variantData[key];
+
+    if (variant) {
+      // Update variant ID
+      document.getElementById('variant-id').value = variant.id;
+
+      // Update stock
+      currentStock = variant.stock;
+      updateStockDisplay();
+    }
+  }
+
+  // Update stock display and button state
+  function updateStockDisplay() {
+    const stockDisplay = document.getElementById('stock-display');
+    const quantitySection = document.getElementById('quantity-section');
+    const addToCartBtn = document.getElementById('add-to-cart-btn');
+    const quantityInput = document.getElementById('quantity');
+
+    if (currentStock > 0) {
+      // In stock
+      stockDisplay.textContent = `${currentStock} in stock`;
+      quantitySection.style.display = '';
+      quantityInput.max = currentStock;
+
+      // Reset quantity if it exceeds new stock
+      if (parseInt(quantityInput.value) > currentStock) {
+        quantityInput.value = currentStock;
+        document.getElementById('form-quantity').value = currentStock;
+      }
+
+      // Update button
+      if (addToCartBtn) {
+        addToCartBtn.disabled = false;
+        addToCartBtn.textContent = 'Add to Cart';
+        addToCartBtn.className = 'w-full py-4 bg-black text-white font-bold uppercase tracking-widest text-sm hover:bg-neutral-800 transition-colors';
+      }
+    } else {
+      // Out of stock
+      stockDisplay.textContent = 'Out of stock';
+      quantitySection.style.display = 'none';
+
+      // Update button to show out of stock
+      if (addToCartBtn) {
+        addToCartBtn.disabled = true;
+        addToCartBtn.textContent = 'Out of Stock';
+        addToCartBtn.className = 'w-full py-4 bg-neutral-300 text-neutral-500 font-bold uppercase tracking-widest text-sm cursor-not-allowed';
+      }
+    }
+  }
+
+  // Quantity controls with stock limits
+  function incrementQty() {
+    const input = document.getElementById('quantity');
+    const formInput = document.getElementById('form-quantity');
+    const currentVal = parseInt(input.value);
+
+    if (currentVal < currentStock) {
+      input.value = currentVal + 1;
+      formInput.value = input.value;
+    }
+  }
+
+  function decrementQty() {
+    const input = document.getElementById('quantity');
+    const formInput = document.getElementById('form-quantity');
+    if (parseInt(input.value) > 1) {
+      input.value = parseInt(input.value) - 1;
+      formInput.value = input.value;
+    }
+  }
+</script>
+{% endblock %}
