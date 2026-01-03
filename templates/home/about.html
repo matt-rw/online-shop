@@ -227,7 +227,7 @@
     <div class="px-8 lg:px-16 py-16 lg:py-24 order-2 lg:order-1 flex flex-col justify-center">
       <!-- Our Story - centered in column -->
       <div class="max-w-md mx-auto">
-        <span class="text-xs tracking-widest uppercase text-neutral-400 block mb-6">Est. 2024</span>
+        <span class="text-xs tracking-widest uppercase text-neutral-400 block mb-6">Est. 2025</span>
         <h1 class="text-3xl md:text-4xl font-bold tracking-tight leading-none mb-10">OUR STORY</h1>
 
         <div class="space-y-6 text-neutral-700 leading-relaxed text-base">
@@ -245,7 +245,7 @@
 
         <!-- Newsletter -->
         <div class="pt-12 mt-16 border-t border-neutral-200">
-          <h3 class="text-sm tracking-widest uppercase font-medium mb-4">"Join the Community"</h3>
+          <h3 class="text-sm tracking-widest uppercase font-medium mb-4">Join the Community</h3>
 
           <ul class="text-neutral-600 text-sm space-y-3 mb-6">
             <li class="flex items-start gap-3">
@@ -270,6 +270,7 @@
 
           <form id="about-smart-form" method="POST" onsubmit="return handleAboutSmartSubmit(event)" class="flex gap-2">
             {% csrf_token %}
+            <input type="hidden" name="next" value="{% url 'shop:about' %}">
             <input type="text"
                    id="about-contact-input"
                    name="contact"

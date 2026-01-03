@@ -19,6 +19,11 @@ logger = logging.getLogger(__name__)
 
 @ratelimit(key="ip", rate="10/h", method="POST")
 def subscribe(request):
+    # Get redirect URL from form or default to home
+    redirect_url = request.POST.get("next", "/#subscribe")
+    if not redirect_url:
+        redirect_url = "/#subscribe"
+
     if request.method == "POST":
         form = SubscribeForm(request.POST)
 
@@ -46,17 +51,17 @@ def subscribe(request):
                 #     fail_silently=False
                 # )
 
-                return redirect("/#subscribe")
+                return redirect(redirect_url)
 
             except Exception as e:
                 logger.error(f"Error creating subscription: {e}")
                 messages.error(request, "Something went wrong. Please try again.")
-                return redirect("/#subscribe")
+                return redirect(redirect_url)
 
         else:
             logger.warning(f"Invalid subscription form submission: {form.errors}")
             messages.error(request, "Please enter a valid email address.")
-            return redirect("/#subscribe")
+            return redirect(redirect_url)
 
     # GET request
     form = SubscribeForm()
@@ -66,12 +71,17 @@ def subscribe(request):
 @ratelimit(key="ip", rate="5/h", method="POST")
 def subscribe_sms(request):
     """Handle SMS subscription sign-ups"""
+    # Get redirect URL from form or default to home
+    redirect_url = request.POST.get("next", "/#subscribe")
+    if not redirect_url:
+        redirect_url = "/#subscribe"
+
     if request.method == "POST":
         phone_number = request.POST.get("phone_number", "").strip()
 
         if not phone_number:
             messages.error(request, "Please enter a phone number.")
-            return redirect("/#subscribe")
+            return redirect(redirect_url)
 
         # Validate and format phone number using phonenumbers library
         is_valid, formatted_number, error_message = validate_and_format_phone_number(phone_number)
@@ -79,7 +89,7 @@ def subscribe_sms(request):
         if not is_valid:
             messages.error(request, f"Invalid phone number: {error_message}")
             logger.warning(f"Invalid phone number submission: {phone_number}")
-            return redirect("/#subscribe")
+            return redirect(redirect_url)
 
         phone_number = formatted_number
 
@@ -113,14 +123,14 @@ def subscribe_sms(request):
                         request, "Welcome back! You're now resubscribed to SMS updates."
                     )
 
-            return redirect("/#subscribe")
+            return redirect(redirect_url)
 
         except Exception as e:
             logger.error(f"Error creating SMS subscription: {e}")
             messages.error(request, "Something went wrong. Please try again.")
-            return redirect("/#subscribe")
+            return redirect(redirect_url)
 
-    return redirect("/#subscribe")
+    return redirect(redirect_url)
 
 
 # ============================================
@@ -426,11 +436,21 @@ def product_detail(request, slug):
             })
             seen_colors.add(variant.color.name)
 
-    # Collect all images from variants
+    # Collect unique images from variants
     images = []
+    seen_images = set()
     for variant in variants:
         if variant.images:
-            images.extend(variant.images)
+            for img in variant.images:
+                # Ensure image has proper static prefix
+                if img and not img.startswith(("/", "http")):
+                    img_path = f"/static/{img}"
+                else:
+                    img_path = img
+                # Only add if not already seen
+                if img_path not in seen_images:
+                    images.append(img_path)
+                    seen_images.add(img_path)
 
     # If no variant images, use placeholder based on product category
     if not images:
@@ -516,6 +536,9 @@ def shop(request):
         first_variant = product.active_variants[0] if product.active_variants else None
         if first_variant and first_variant.images:
             image = first_variant.images[0]
+            # Ensure image has proper static prefix
+            if image and not image.startswith(("/", "http")):
+                image = f"/static/{image}"
         elif "pants" in product.slug.lower() or "bottom" in product.name.lower():
             image = "/static/images/white_bg_bottom.webp"
         else:

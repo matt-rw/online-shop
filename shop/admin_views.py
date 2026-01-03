@@ -2284,6 +2284,7 @@ def products_dashboard(request):
                 product.description = request.POST.get("description")
                 product.base_price = request.POST.get("base_price")
                 product.featured = request.POST.get("featured") == "true"
+                product.available_for_purchase = request.POST.get("available_for_purchase") == "true"
                 product.save()
                 return JsonResponse({"success": True})
             except Product.DoesNotExist:
@@ -2523,6 +2524,7 @@ def products_dashboard(request):
                 "price_range": price_range,
                 "is_active": product.is_active,
                 "featured": product.featured,
+                "available_for_purchase": product.available_for_purchase,
                 "variant_count": variant_count,
                 "total_stock": total_stock,
                 "active_variants": active_variants,
@@ -2571,8 +2573,23 @@ def product_preview(request, product_id):
     except Product.DoesNotExist:
         return HttpResponse("Product not found", status=404)
 
+    # Collect unique images from variants
+    images = []
+    seen_images = set()
+    for variant in product.variants.all():
+        if variant.images:
+            for img in variant.images:
+                if img and not img.startswith(("/", "http")):
+                    img_path = f"/static/{img}"
+                else:
+                    img_path = img
+                if img_path not in seen_images:
+                    images.append(img_path)
+                    seen_images.add(img_path)
+
     context = {
         "product": product,
+        "images": images,
     }
 
     return render(request, "admin/product_preview.html", context)

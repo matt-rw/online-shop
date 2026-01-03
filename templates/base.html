@@ -94,6 +94,39 @@
 
     <!-- Main Content -->
     <main class="pt-16 flex-grow">
+      <!-- Django Messages -->
+      {% if messages %}
+      <div id="message-container" class="fixed top-20 left-1/2 transform -translate-x-1/2 z-50 w-full max-w-md px-4">
+        {% for message in messages %}
+        <div class="message-alert mb-2 px-4 py-3 rounded-lg text-sm font-medium shadow-lg transition-opacity duration-300
+                    {% if message.tags == 'success' %}
+                      bg-green-50 text-green-900 border border-green-200
+                    {% elif message.tags == 'error' %}
+                      bg-red-50 text-red-900 border border-red-200
+                    {% elif message.tags == 'warning' %}
+                      bg-yellow-50 text-yellow-900 border border-yellow-200
+                    {% else %}
+                      bg-blue-50 text-blue-900 border border-blue-200
+                    {% endif %}">
+          {{ message }}
+        </div>
+        {% endfor %}
+      </div>
+      <script>
+        // Auto-hide messages after 4 seconds
+        setTimeout(function() {
+          const container = document.getElementById('message-container');
+          if (container) {
+            container.querySelectorAll('.message-alert').forEach(function(msg) {
+              msg.style.opacity = '0';
+            });
+            setTimeout(function() {
+              container.style.display = 'none';
+            }, 300);
+          }
+        }, 4000);
+      </script>
+      {% endif %}
 
       {% block content %}{% endblock %}
     </main>

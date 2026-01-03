@@ -278,17 +278,20 @@
         <div class="w-full md:w-[30%]" style="background-image: url('{% static 'images/nature_shots/full-top-forward.jpeg' %}'); background-size: cover; background-position: 10% center; background-repeat: no-repeat;"></div>
       </div>
     </div>
-    <div class="absolute inset-0 hero-slide hero-slide-2 film-camera film-vignette film-warm" style="background-image: url('{% static 'images/nature_shots/pants-bottom-low.jpeg' %}'); background-size: cover; background-position: center center; background-repeat: no-repeat; opacity: 0; z-index: 1; transition: opacity 0.45s ease-out;"></div>
+    <div class="absolute inset-0 hero-slide hero-slide-2 film-camera film-vignette film-warm" style="background-image: url('{% static 'images/hollywood_shots/cream-tee-back-centered.jpeg' %}'); background-size: cover; background-position: center 30%; background-repeat: no-repeat; opacity: 0; z-index: 1; transition: opacity 0.45s ease-out;"></div>
+    <div class="absolute inset-0 hero-slide hero-slide-3 film-camera film-vignette film-warm" style="background-image: url('{% static 'images/nature_shots/pants-bottom-low.jpeg' %}'); background-size: cover; background-position: center center; background-repeat: no-repeat; opacity: 0; z-index: 1; transition: opacity 0.45s ease-out;"></div>
+    <div class="absolute inset-0 hero-slide hero-slide-4 film-camera film-vignette film-warm" style="background-image: url('{% static 'images/hollywood_shots/black-tee-vitruvian-back.jpeg' %}'); background-size: cover; background-position: center 25%; background-repeat: no-repeat; opacity: 0; z-index: 1; transition: opacity 0.45s ease-out;"></div>
 
     <!-- Nav bar gradient overlay (matching nav bar exactly) -->
     <div class="absolute inset-0" style="background: linear-gradient(to right, rgba(88, 28, 135, 0.1) 0%, transparent 12%, transparent 88%, rgba(159, 18, 57, 0.1) 100%);"></div>
 
 
     <!-- Slideshow navigation -->
-    <div class="absolute bottom-8 left-1/2 transform -translate-x-1/2 z-30 flex items-center gap-3 px-4 py-2 border border-white/30 bg-black/20 backdrop-blur-sm">
-      <button onclick="changeHeroSlide(1)" class="hero-dot hero-dot-1 text-xs tracking-widest uppercase text-white font-medium transition-all duration-300 hover:opacity-70 cursor-pointer">001</button>
-      <span class="w-6 h-px bg-white/50"></span>
-      <button onclick="changeHeroSlide(2)" class="hero-dot hero-dot-2 text-xs tracking-widest uppercase text-white/50 font-medium transition-all duration-300 hover:opacity-70 cursor-pointer">002</button>
+    <div class="absolute bottom-8 left-1/2 transform -translate-x-1/2 z-30 flex items-center gap-4">
+      <button onclick="changeHeroSlide(1)" class="hero-dot hero-dot-1 w-4 h-4 rounded-full bg-white transition-all duration-300 hover:scale-125 cursor-pointer shadow-lg"></button>
+      <button onclick="changeHeroSlide(2)" class="hero-dot hero-dot-2 w-4 h-4 rounded-full bg-white/50 transition-all duration-300 hover:scale-125 cursor-pointer shadow-lg"></button>
+      <button onclick="changeHeroSlide(3)" class="hero-dot hero-dot-3 w-4 h-4 rounded-full bg-white/50 transition-all duration-300 hover:scale-125 cursor-pointer shadow-lg"></button>
+      <button onclick="changeHeroSlide(4)" class="hero-dot hero-dot-4 w-4 h-4 rounded-full bg-white/50 transition-all duration-300 hover:scale-125 cursor-pointer shadow-lg"></button>
     </div>
 
     <!-- Blueprint Technical Grid Pattern -->
@@ -355,7 +358,7 @@
           <div class="w-3 h-3 border-2 border-yellow-400 rounded-full"></div>
         </div>
         <div class="flex items-center gap-2">
-          <span>2024</span>
+          <span>2025</span>
           <div class="w-16 h-px bg-yellow-400"></div>
           <div class="w-3 h-3 border-2 border-yellow-400"></div>
         </div>
@@ -409,16 +412,12 @@
 
     <div class="relative z-10 flex flex-col items-center justify-center h-full text-white">
       <a href="{% url 'home' %}" class="block group">
-        <div class="relative">
-          <!-- Yellow glow around logo -->
-          <div class="absolute -inset-8 bg-gradient-to-r from-yellow-400 via-amber-400 to-yellow-500 rounded-full blur-3xl opacity-40 group-hover:opacity-55 transition-opacity duration-500"></div>
-          <img src="{% static 'images/font.webp' %}?v=2"
-               class="relative h-24 sm:h-48 md:h-48 lg:h-64 w-auto transition-all duration-300 group-hover:scale-105"
-               style="filter: drop-shadow(0 0 10px rgba(0,0,0,0.8)) drop-shadow(0 0 30px rgba(0,0,0,0.6));"
-               alt="Blueprint Apparel"
-               width="400"
-               height="100" />
-        </div>
+        <img src="{% static 'images/font.webp' %}?v=2"
+             class="h-24 sm:h-48 md:h-48 lg:h-64 w-auto transition-all duration-300 group-hover:scale-105"
+             style="filter: drop-shadow(0 0 10px rgba(0,0,0,0.8)) drop-shadow(0 0 30px rgba(0,0,0,0.6));"
+             alt="Blueprint Apparel"
+             width="400"
+             height="100" />
       </a>
       {% if site_settings.hero_title or site_settings.hero_subtitle %}
         <div class="text-center mt-8 px-4">
@@ -544,11 +543,11 @@
 
     <!-- Product Grid -->
     <div class="max-w-7xl mx-auto">
-      <div style="display: grid; grid-template-columns: repeat({{ featured_products|length|default:2 }}, 1fr);">
+      <div style="display: grid; grid-template-columns: repeat({% if featured_products|length == 1 %}2{% else %}{{ featured_products|length|default:2 }}{% endif %}, 1fr);">
 
         {% for product in featured_products %}
         <a href="{% url 'shop:product_detail' slug=product.slug %}" class="group block {% if not forloop.last %}border-r border-black{% endif %}">
-          <div class="overflow-hidden" style="aspect-ratio: 4/5;">
+          <div class="overflow-hidden mx-auto" style="aspect-ratio: 4/5; max-height: 65vh; width: 100%; max-width: calc(65vh * 0.8);">
             {% with first_variant=product.variants.first %}
             {% if first_variant and first_variant.images %}
             <img src="{% static first_variant.images.0 %}"
@@ -580,8 +579,7 @@
 
     <!-- Section Footer -->
     <div class="border-t border-black">
-      <div class="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center">
-        <span class="text-xs tracking-wider text-neutral-500">COMING SOON</span>
+      <div class="max-w-7xl mx-auto px-6 py-4 flex justify-end items-center">
         <a href="{% url 'shop:shop' %}" class="text-xs tracking-widest uppercase font-medium hover:opacity-70 transition-opacity">View All →</a>
       </div>
     </div>
@@ -592,6 +590,9 @@
   <!-- ============================================ -->
   <section class="w-full bg-white py-12 md:py-20">
     <div class="max-w-3xl mx-auto px-6">
+      <img src="{% static 'images/hollywood_shots/black-tee-front-closeup.jpeg' %}"
+           alt="Blueprint Apparel - Hollywood Collection"
+           class="w-full h-auto mb-24" />
       <img src="{% static 'images/nature_shots/full-top-side.jpeg' %}"
            alt="Blueprint Apparel - Foundation Collection"
            class="w-full h-auto" />
@@ -612,7 +613,7 @@
     <div class="border-b border-white/10">
       <div class="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center">
         <span class="text-xs tracking-widest uppercase font-medium">Blueprint</span>
-        <span class="text-xs tracking-wider text-white/50">EST. 2024</span>
+        <span class="text-xs tracking-wider text-white/50">EST. 2025</span>
       </div>
     </div>
 
@@ -968,7 +969,7 @@
       // HERO SLIDESHOW CONTROLS
       // ============================================
       let currentHeroSlide = 1;
-      const totalSlides = 2;
+      const totalSlides = 4;
 
       function changeHeroSlide(slideNum) {
           if (slideNum === currentHeroSlide) return;
@@ -991,20 +992,20 @@
 
           // Update navigation immediately
           document.querySelectorAll('.hero-dot').forEach(dot => {
-              dot.classList.remove('text-white');
-              dot.classList.add('text-white/50');
+              dot.classList.remove('bg-white');
+              dot.classList.add('bg-white/50');
           });
 
           const selectedDot = document.querySelector('.hero-dot-' + slideNum);
-          selectedDot.classList.remove('text-white/50');
-          selectedDot.classList.add('text-white');
+          selectedDot.classList.remove('bg-white/50');
+          selectedDot.classList.add('bg-white');
 
           currentHeroSlide = slideNum;
       }
 
       // Auto-advance slideshow every 8 seconds
       let slideInterval = setInterval(() => {
-          const nextSlide = currentHeroSlide === 1 ? 2 : 1;
+          const nextSlide = currentHeroSlide < totalSlides ? currentHeroSlide + 1 : 1;
           changeHeroSlide(nextSlide);
       }, 8000);
 

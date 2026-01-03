@@ -93,7 +93,7 @@
         {% if sizes %}
         <div class="mb-6">
           <div class="flex justify-between items-center mb-3">
-            <span class="text-xs tracking-widest uppercase font-medium">"Size"</span>
+            <span class="text-xs tracking-widest uppercase font-medium">Size</span>
             <a href="#" class="text-xs text-neutral-500 hover:text-black underline transition-colors">Size Guide</a>
           </div>
           <div class="flex flex-wrap gap-2">
@@ -114,7 +114,7 @@
         <!-- Color Selection -->
         {% if colors %}
         <div class="mb-6">
-          <span class="text-xs tracking-widest uppercase font-medium block mb-3">"Color"</span>
+          <span class="text-xs tracking-widest uppercase font-medium block mb-3">Color</span>
           <div class="flex flex-wrap gap-3">
             {% for color in colors %}
             <button onclick="selectColor('{{ color.name }}')"
@@ -130,9 +130,9 @@
         {% endif %}
 
         <!-- Quantity -->
-        <div class="mb-8" id="quantity-section" {% if total_stock == 0 %}style="display: none;"{% endif %}>
+        <div class="mb-8" id="quantity-section" {% if total_stock == 0 or not product.available_for_purchase %}style="display: none;"{% endif %}>
           <div class="flex items-center justify-between mb-3">
-            <span class="text-xs tracking-widest uppercase font-medium">"Quantity"</span>
+            <span class="text-xs tracking-widest uppercase font-medium">Quantity</span>
             <span id="stock-display" class="text-xs text-neutral-500">
               {% if default_variant_stock > 0 %}
                 {{ default_variant_stock }} in stock
@@ -161,7 +161,12 @@
           <input type="hidden" name="product_id" value="{{ product.id }}">
           <input type="hidden" name="variant_id" id="variant-id" value="{{ default_variant_id|default:'' }}">
           <input type="hidden" name="quantity" id="form-quantity" value="1">
-          {% if total_stock == 0 %}
+          {% if not product.available_for_purchase %}
+          <button type="button" disabled
+                  class="w-full py-4 bg-neutral-300 text-neutral-500 font-bold uppercase tracking-widest text-sm cursor-not-allowed">
+            Not Available
+          </button>
+          {% elif total_stock == 0 %}
           <button type="button" disabled
                   class="w-full py-4 bg-neutral-300 text-neutral-500 font-bold uppercase tracking-widest text-sm cursor-not-allowed">
             Out of Stock
@@ -177,7 +182,7 @@
         <!-- Product Description -->
         <div class="border-t border-black pt-6 space-y-4 mt-auto">
           <div>
-            <span class="text-xs tracking-widest uppercase font-medium block mb-2">"Description"</span>
+            <span class="text-xs tracking-widest uppercase font-medium block mb-2">Description</span>
             <p class="text-neutral-600 text-sm leading-relaxed">
               {{ product.description|default:"Premium quality garment from our Foundation collection. Designed with intention, built for wherever life takes you." }}
             </p>
@@ -186,7 +191,7 @@
           <!-- Details Accordion -->
           <details class="mt-8 group">
             <summary class="flex justify-between items-center cursor-pointer text-xs tracking-widest uppercase font-medium mb-2">
-              "Details"
+              Details
               <svg class="w-4 h-4 transition-transform group-open:rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
               </svg>
@@ -202,7 +207,7 @@
           <!-- Shipping Info Accordion -->
           <details class="mt-8 group">
             <summary class="flex justify-between items-center cursor-pointer text-xs tracking-widest uppercase font-medium mb-2">
-              "Shipping & Returns"
+              Shipping & Returns
               <svg class="w-4 h-4 transition-transform group-open:rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
               </svg>

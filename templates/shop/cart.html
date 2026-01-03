@@ -22,7 +22,7 @@
     <div class="flex items-center justify-between">
       <div>
         <p class="text-xs text-neutral-500 uppercase tracking-wider mb-2">Shopping</p>
-        <h1 class="text-2xl md:text-3xl font-bold tracking-tight">"YOUR CART"</h1>
+        <h1 class="text-2xl md:text-3xl font-bold tracking-tight">YOUR CART</h1>
       </div>
       <span id="cart-count" class="text-xs tracking-widest text-neutral-500">{{ cart_items|length }} ITEM{{ cart_items|length|pluralize:"S" }}</span>
     </div>
@@ -39,16 +39,16 @@
       <div class="lg:col-span-2 border-r border-black" id="cart-items"
            data-update-url="{% url 'shop:update_cart_item' 0 %}"
            data-remove-url="{% url 'shop:remove_from_cart' 0 %}">
-        {% for item in cart_items %}
-        <div class="cart-item flex gap-6 p-6 border-b border-black" data-item-id="{{ item.id }}" data-price="{{ item.variant.price }}">
+        {% for cart_item in cart_items %}
+        <div class="cart-item flex gap-6 p-6 border-b border-black" data-item-id="{{ cart_item.item.id }}" data-price="{{ cart_item.item.variant.price }}">
           <!-- Product Image -->
           <div class="w-28 h-36 bg-neutral-100 flex-shrink-0 border border-black overflow-hidden">
-            {% if item.variant.images and item.variant.images.0 %}
-            <img src="{{ item.variant.images.0 }}" alt="{{ item.variant.product.name }}" class="w-full h-full object-cover" />
-            {% elif 'pants' in item.variant.product.slug|lower or 'bottom' in item.variant.product.name|lower %}
-            <img src="{% static 'images/white_bg_bottom.webp' %}" alt="{{ item.variant.product.name }}" class="w-full h-full object-cover" />
+            {% if cart_item.image %}
+            <img src="{{ cart_item.image }}" alt="{{ cart_item.item.variant.product.name }}" class="w-full h-full object-cover" />
+            {% elif 'pants' in cart_item.item.variant.product.slug|lower or 'bottom' in cart_item.item.variant.product.name|lower %}
+            <img src="{% static 'images/white_bg_bottom.webp' %}" alt="{{ cart_item.item.variant.product.name }}" class="w-full h-full object-cover" />
             {% else %}
-            <img src="{% static 'images/white_bg_top.webp' %}" alt="{{ item.variant.product.name }}" class="w-full h-full object-cover" />
+            <img src="{% static 'images/white_bg_top.webp' %}" alt="{{ cart_item.item.variant.product.name }}" class="w-full h-full object-cover" />
             {% endif %}
           </div>
 
@@ -56,20 +56,20 @@
           <div class="flex-grow flex flex-col justify-between">
             <div>
               <p class="text-xs text-neutral-500 uppercase tracking-wider mb-1">Foundation</p>
-              <h3 class="font-bold tracking-tight">"{{ item.variant.product.name|upper }}"</h3>
+              <h3 class="font-bold tracking-tight">"{{ cart_item.item.variant.product.name|upper }}"</h3>
               <p class="text-sm text-neutral-600 mt-1">
-                {% if item.variant.size %}Size: {{ item.variant.size }}{% endif %}
-                {% if item.variant.size and item.variant.color %} | {% endif %}
-                {% if item.variant.color %}Color: {{ item.variant.color }}{% endif %}
+                {% if cart_item.item.variant.size %}Size: {{ cart_item.item.variant.size }}{% endif %}
+                {% if cart_item.item.variant.size and cart_item.item.variant.color %} | {% endif %}
+                {% if cart_item.item.variant.color %}Color: {{ cart_item.item.variant.color }}{% endif %}
               </p>
             </div>
-            <p class="text-lg font-bold">${{ item.variant.price }}</p>
+            <p class="text-lg font-bold">${{ cart_item.item.variant.price }}</p>
           </div>
 
           <!-- Quantity & Remove -->
           <div class="flex flex-col items-end justify-between">
             <!-- Remove Button -->
-            <button type="button" onclick="removeItem({{ item.id }})" class="text-neutral-400 hover:text-black transition-colors">
+            <button type="button" onclick="removeItem({{ cart_item.item.id }})" class="text-neutral-400 hover:text-black transition-colors">
               <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M6 18L18 6M6 6l12 12" />
               </svg>
@@ -77,15 +77,15 @@
 
             <!-- Quantity Controls -->
             <div class="flex items-center border border-black">
-              <button type="button" class="qty-btn minus px-3 py-2 hover:bg-black hover:text-white transition-colors" data-item-id="{{ item.id }}">
+              <button type="button" class="qty-btn minus px-3 py-2 hover:bg-black hover:text-white transition-colors" data-item-id="{{ cart_item.item.id }}">
                 <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 12H4"></path>
                 </svg>
               </button>
 
-              <span class="item-quantity px-4 py-2 border-x border-black text-sm font-medium">{{ item.quantity }}</span>
+              <span class="item-quantity px-4 py-2 border-x border-black text-sm font-medium">{{ cart_item.item.quantity }}</span>
 
-              <button type="button" class="qty-btn plus px-3 py-2 hover:bg-black hover:text-white transition-colors" data-item-id="{{ item.id }}">
+              <button type="button" class="qty-btn plus px-3 py-2 hover:bg-black hover:text-white transition-colors" data-item-id="{{ cart_item.item.id }}">
                 <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
                 </svg>
@@ -99,7 +99,7 @@
       <!-- Order Summary -->
       <div class="lg:col-span-1 p-6 lg:p-8">
         <div class="sticky top-8">
-          <span class="text-xs tracking-widest uppercase font-medium block mb-6">"Order Summary"</span>
+          <span class="text-xs tracking-widest uppercase font-medium block mb-6">Order Summary</span>
 
           <div class="space-y-4 mb-8">
             <div class="flex justify-between text-sm">

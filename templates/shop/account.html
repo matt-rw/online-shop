@@ -23,7 +23,7 @@
     <div class="flex items-center justify-between">
       <div>
         <p class="text-xs text-neutral-500 uppercase tracking-wider mb-2">Welcome back{% if user.first_name %}, {{ user.first_name }}{% endif %}</p>
-        <h1 class="text-2xl md:text-3xl font-bold tracking-tight">"MY ACCOUNT"</h1>
+        <h1 class="text-2xl md:text-3xl font-bold tracking-tight">MY ACCOUNT</h1>
       </div>
     </div>
   </div>
@@ -77,7 +77,7 @@
         <!-- Orders Section -->
         <div id="orders" class="account-section mb-12">
           <div class="flex items-center justify-between mb-6">
-            <span class="text-xs tracking-widest uppercase font-medium">"Recent Orders"</span>
+            <span class="text-xs tracking-widest uppercase font-medium">Recent Orders</span>
             <span class="text-xs tracking-wider text-neutral-500">Last 30 days</span>
           </div>
 
@@ -120,7 +120,7 @@
 
         <!-- Account Details Section -->
         <div id="details" class="account-section mb-12">
-          <span class="text-xs tracking-widest uppercase font-medium block mb-6">"Account Details"</span>
+          <span class="text-xs tracking-widest uppercase font-medium block mb-6">Account Details</span>
 
           <form method="POST" action="{% url 'shop:account' %}" class="space-y-4">
             {% csrf_token %}
@@ -161,7 +161,7 @@
 
         <!-- Password Section -->
         <div id="password" class="account-section mb-12">
-          <span class="text-xs tracking-widest uppercase font-medium block mb-6">"Change Password"</span>
+          <span class="text-xs tracking-widest uppercase font-medium block mb-6">Change Password</span>
 
           <form method="POST" action="{% url 'shop:account' %}" class="space-y-4">
             {% csrf_token %}
@@ -195,7 +195,7 @@
         <!-- Addresses Section -->
         <div id="addresses" class="account-section">
           <div class="flex items-center justify-between mb-6">
-            <span class="text-xs tracking-widest uppercase font-medium">"Saved Addresses"</span>
+            <span class="text-xs tracking-widest uppercase font-medium">Saved Addresses</span>
             <button onclick="toggleAddressForm()" class="text-xs tracking-wider uppercase text-neutral-500 hover:text-black transition-colors">+ Add New</button>
           </div>
 
@@ -299,7 +299,7 @@
 
       <!-- Login -->
       <div class="border-r border-black p-6 lg:p-12 flex flex-col justify-center">
-        <span class="text-xs tracking-widest uppercase font-medium block mb-6">"Sign In"</span>
+        <span class="text-xs tracking-widest uppercase font-medium block mb-6">Sign In</span>
 
         <form method="POST" action="{% url 'account_login' %}" class="space-y-4 max-w-sm">
           {% csrf_token %}
@@ -334,7 +334,7 @@
 
       <!-- Register -->
       <div class="p-6 lg:p-12 flex flex-col justify-center bg-neutral-50">
-        <span class="text-xs tracking-widest uppercase font-medium block mb-6">"Create Account"</span>
+        <span class="text-xs tracking-widest uppercase font-medium block mb-6">Create Account</span>
 
         <form method="POST" action="{% url 'account_signup' %}" class="space-y-4 max-w-sm">
           {% csrf_token %}
