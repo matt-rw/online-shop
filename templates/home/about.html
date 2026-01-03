@@ -308,22 +308,15 @@
 
 <!-- ============================================ -->
 <!-- FOUNDATION LINE SECTION - ULTRA Psychedelic/MoMA -->
+<!-- Desktop only - hidden on mobile for performance -->
 <!-- ============================================ -->
-<section class="bg-black">
+<section class="bg-black hidden lg:block">
   <!-- Video with text overlay - full width, wider aspect -->
   <div class="relative overflow-hidden" style="aspect-ratio: 21/9;">
     <!-- Video with INTENSE psychedelic hue shift + pulse -->
-    <!-- Desktop: Video, Mobile: Static image for faster loading -->
     <div class="absolute inset-0 overflow-hidden">
-      <!-- Mobile: Static image (hidden on lg+) -->
-      <img src="{% static 'images/hollywood_shots/black-tee-full-body.jpeg' %}"
-           alt="Foundation Collection"
-           class="lg:hidden w-full h-full object-cover video-psychedelic"
-           style="object-position: center top;"
-           loading="lazy" />
-      <!-- Desktop: Video (hidden on mobile) -->
       <video id="foundation-video" autoplay muted loop playsinline
-             class="hidden lg:block video-psychedelic w-full h-full object-cover"
+             class="video-psychedelic w-full h-full object-cover"
              style="object-position: center top;"
              preload="metadata">
         <source src="{% static 'images/screen_recording_desktop.mp4' %}" type="video/mp4">
