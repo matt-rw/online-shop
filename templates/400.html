@@ -1,7 +1,7 @@
 {% extends 'base.html' %}
 {% load static %}
 
-{% block title %}404 - Page Not Found{% endblock %}
+{% block title %}400 - Bad Request{% endblock %}
 
 {% block content %}
 <section class="bg-white min-h-[80vh] flex items-center justify-center py-16">
@@ -9,19 +9,19 @@
 
     <!-- Header -->
     <div class="text-center mb-10">
-      <span class="text-xs tracking-widest uppercase text-neutral-400 block mb-4">Page Not Found</span>
-      <h1 class="text-3xl font-bold tracking-tight">ERROR 404</h1>
+      <span class="text-xs tracking-widest uppercase text-neutral-400 block mb-4">Bad Request</span>
+      <h1 class="text-3xl font-bold tracking-tight">ERROR 400</h1>
     </div>
 
-    <!-- 404 Card -->
+    <!-- 400 Card -->
     <div class="border border-neutral-200 p-6 mb-8">
       <div class="flex items-center gap-4">
         <div class="w-12 h-12 bg-black text-white flex items-center justify-center text-xs font-bold tracking-wider">
-          404
+          400
         </div>
         <div class="text-left">
-          <p class="text-sm font-medium">This page doesn't exist</p>
-          <p class="text-xs text-neutral-400 mt-0.5">It may have been moved or deleted</p>
+          <p class="text-sm font-medium">Invalid request</p>
+          <p class="text-xs text-neutral-400 mt-0.5">Please check and try again</p>
         </div>
       </div>
     </div>
@@ -44,15 +44,6 @@
        class="block w-full py-4 border border-black text-xs tracking-widest uppercase font-medium hover:bg-black hover:text-white transition-colors text-center">
       Browse Shop
     </a>
-
-    <!-- Quick Links -->
-    <div class="text-center mt-8">
-      <div class="flex justify-center gap-6">
-        <a href="{% url 'shop:shop' %}?category=tops" class="text-xs tracking-wider uppercase text-neutral-500 hover:text-black transition-colors">Tops</a>
-        <a href="{% url 'shop:shop' %}?category=bottoms" class="text-xs tracking-wider uppercase text-neutral-500 hover:text-black transition-colors">Bottoms</a>
-        <a href="{% url 'shop:about' %}" class="text-xs tracking-wider uppercase text-neutral-500 hover:text-black transition-colors">About</a>
-      </div>
-    </div>
 
   </div>
 </section>
