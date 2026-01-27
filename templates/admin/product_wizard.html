@@ -1,0 +1,1579 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="csrf-token" content="{{ csrf_token }}">
+  <title>Create Product - Blueprint Apparel</title>
+  <link rel="icon" type="image/svg+xml" href="{% static 'admin-favicon.svg' %}">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <style>
+    {% include "admin/partials/dark_mode_styles.html" %}
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background: #f1f5f9;
+      min-height: 100vh;
+    }
+
+    .nav-links {
+      background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+      padding: 1rem 2rem;
+    }
+
+    .nav-link {
+      background: rgba(255, 255, 255, 0.15);
+      color: white;
+      padding: 0.5rem 1rem;
+      border-radius: 8px;
+      text-decoration: none;
+      font-size: 0.875rem;
+      font-weight: 500;
+      transition: all 0.2s;
+    }
+
+    .nav-link:hover {
+      background: rgba(255, 255, 255, 0.25);
+    }
+
+    .wizard-container {
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 2rem;
+    }
+
+    .wizard-header {
+      text-align: center;
+      margin-bottom: 2rem;
+    }
+
+    .wizard-header h1 {
+      font-size: 2rem;
+      font-weight: 800;
+      color: #1e293b;
+      margin-bottom: 0.5rem;
+    }
+
+    /* Progress Steps */
+    .progress-steps {
+      display: flex;
+      justify-content: center;
+      gap: 0;
+      margin-bottom: 2.5rem;
+    }
+
+    .step {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .step-number {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      background: #e2e8f0;
+      color: #64748b;
+      font-weight: 700;
+      font-size: 0.875rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.3s;
+    }
+
+    .step.active .step-number {
+      background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+      color: white;
+      box-shadow: 0 4px 12px rgba(16, 185, 129, 0.4);
+    }
+
+    .step.completed .step-number {
+      background: #10b981;
+      color: white;
+    }
+
+    .step-label {
+      font-size: 0.875rem;
+      font-weight: 600;
+      color: #94a3b8;
+      transition: color 0.3s;
+    }
+
+    .step.active .step-label,
+    .step.completed .step-label {
+      color: #1e293b;
+    }
+
+    .step-connector {
+      width: 60px;
+      height: 2px;
+      background: #e2e8f0;
+      margin: 0 0.75rem;
+    }
+
+    .step.completed + .step-connector,
+    .step-connector.completed {
+      background: #10b981;
+    }
+
+    /* Wizard Card */
+    .wizard-card {
+      background: white;
+      border-radius: 20px;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+      overflow: hidden;
+    }
+
+    .wizard-step {
+      display: none;
+      padding: 2.5rem;
+    }
+
+    .wizard-step.active {
+      display: block;
+    }
+
+    .step-title {
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: #1e293b;
+      margin-bottom: 0.5rem;
+    }
+
+    .step-subtitle {
+      color: #64748b;
+      margin-bottom: 2rem;
+    }
+
+    /* Form Styles */
+    .form-group {
+      margin-bottom: 1.5rem;
+    }
+
+    .form-label {
+      display: block;
+      font-size: 0.875rem;
+      font-weight: 600;
+      color: #374151;
+      margin-bottom: 0.5rem;
+    }
+
+    .form-input {
+      width: 100%;
+      padding: 0.875rem 1rem;
+      border: 2px solid #e2e8f0;
+      border-radius: 10px;
+      font-size: 1rem;
+      transition: all 0.2s;
+    }
+
+    .form-input:focus {
+      outline: none;
+      border-color: #10b981;
+      box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1);
+    }
+
+    .form-textarea {
+      min-height: 100px;
+      resize: vertical;
+    }
+
+    .form-hint {
+      font-size: 0.75rem;
+      color: #94a3b8;
+      margin-top: 0.375rem;
+    }
+
+    .form-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1.5rem;
+    }
+
+    /* Category Cards */
+    .category-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+      gap: 1rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .category-card {
+      background: #f8fafc;
+      border: 2px solid #e2e8f0;
+      border-radius: 12px;
+      padding: 1.25rem 1rem;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .category-card:hover {
+      border-color: #10b981;
+      background: #f0fdf4;
+    }
+
+    .category-card.selected {
+      border-color: #10b981;
+      background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);
+      box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1);
+    }
+
+    .category-card .cat-name {
+      font-weight: 600;
+      color: #1e293b;
+      font-size: 0.9375rem;
+    }
+
+    /* Attribute Toggles */
+    .attribute-section {
+      background: #f8fafc;
+      border-radius: 12px;
+      padding: 1.5rem;
+      margin-top: 1.5rem;
+    }
+
+    .attribute-section h3 {
+      font-size: 1rem;
+      font-weight: 600;
+      color: #1e293b;
+      margin-bottom: 1rem;
+    }
+
+    .attribute-toggles {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.75rem;
+    }
+
+    .attribute-toggle {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      background: white;
+      border: 2px solid #e2e8f0;
+      border-radius: 8px;
+      padding: 0.625rem 1rem;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .attribute-toggle:hover {
+      border-color: #10b981;
+    }
+
+    .attribute-toggle.selected {
+      border-color: #10b981;
+      background: #f0fdf4;
+    }
+
+    .attribute-toggle input {
+      display: none;
+    }
+
+    .attribute-toggle .toggle-check {
+      width: 20px;
+      height: 20px;
+      border: 2px solid #d1d5db;
+      border-radius: 4px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.2s;
+    }
+
+    .attribute-toggle.selected .toggle-check {
+      background: #10b981;
+      border-color: #10b981;
+      color: white;
+    }
+
+    .attribute-toggle .toggle-label {
+      font-weight: 500;
+      color: #374151;
+    }
+
+    /* Matrix Builder */
+    .matrix-section {
+      margin-bottom: 2rem;
+    }
+
+    .matrix-section h3 {
+      font-size: 1rem;
+      font-weight: 600;
+      color: #1e293b;
+      margin-bottom: 0.75rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .matrix-section h3 i {
+      color: #10b981;
+    }
+
+    .value-chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+    }
+
+    .value-chip {
+      background: #f1f5f9;
+      border: 2px solid #e2e8f0;
+      border-radius: 8px;
+      padding: 0.5rem 1rem;
+      font-size: 0.875rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .value-chip:hover {
+      border-color: #10b981;
+    }
+
+    .value-chip.selected {
+      background: #10b981;
+      border-color: #10b981;
+      color: white;
+    }
+
+    .select-actions {
+      margin-top: 0.75rem;
+    }
+
+    .select-actions button {
+      background: none;
+      border: none;
+      color: #10b981;
+      font-size: 0.75rem;
+      font-weight: 600;
+      cursor: pointer;
+      padding: 0.25rem 0.5rem;
+    }
+
+    .select-actions button:hover {
+      text-decoration: underline;
+    }
+
+    /* Variant Preview */
+    .variant-preview {
+      background: #f8fafc;
+      border-radius: 12px;
+      padding: 1.5rem;
+      margin-top: 1.5rem;
+    }
+
+    .variant-preview h3 {
+      font-size: 1rem;
+      font-weight: 600;
+      color: #1e293b;
+      margin-bottom: 1rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .variant-count {
+      background: #10b981;
+      color: white;
+      padding: 0.25rem 0.75rem;
+      border-radius: 20px;
+      font-size: 0.875rem;
+    }
+
+    .variant-list {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+      gap: 0.5rem;
+      max-height: 300px;
+      overflow-y: auto;
+    }
+
+    .variant-item {
+      background: white;
+      border: 2px solid #10b981;
+      border-radius: 8px;
+      padding: 0.625rem 1rem;
+      font-size: 0.8125rem;
+      color: #475569;
+      cursor: pointer;
+      transition: all 0.2s;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .variant-item:hover {
+      background: #f0fdf4;
+    }
+
+    .variant-item .variant-check {
+      width: 18px;
+      height: 18px;
+      border-radius: 4px;
+      background: #10b981;
+      color: white;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.7rem;
+      flex-shrink: 0;
+    }
+
+    .variant-item.excluded {
+      border-color: #e2e8f0;
+      background: #f8fafc;
+      opacity: 0.6;
+    }
+
+    .variant-item.excluded .variant-check {
+      background: #e2e8f0;
+      color: transparent;
+    }
+
+    .variant-item.excluded .variant-label {
+      text-decoration: line-through;
+      color: #94a3b8;
+    }
+
+    /* Photo Upload */
+    .photo-section {
+      background: #f8fafc;
+      border-radius: 12px;
+      padding: 1.5rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .photo-section h3 {
+      font-size: 1rem;
+      font-weight: 600;
+      color: #1e293b;
+      margin-bottom: 0.5rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .photo-section p {
+      font-size: 0.8125rem;
+      color: #64748b;
+      margin-bottom: 1rem;
+    }
+
+    .photo-dropzone {
+      border: 2px dashed #d1d5db;
+      border-radius: 10px;
+      padding: 2rem;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.2s;
+      background: white;
+    }
+
+    .photo-dropzone:hover {
+      border-color: #10b981;
+      background: #f0fdf4;
+    }
+
+    .photo-dropzone.dragover {
+      border-color: #10b981;
+      background: #dcfce7;
+    }
+
+    .photo-dropzone i {
+      font-size: 2rem;
+      color: #94a3b8;
+      margin-bottom: 0.5rem;
+    }
+
+    .photo-dropzone span {
+      display: block;
+      color: #64748b;
+      font-size: 0.875rem;
+    }
+
+    .photo-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+      gap: 0.75rem;
+      margin-top: 1rem;
+    }
+
+    .photo-thumb {
+      position: relative;
+      aspect-ratio: 1;
+      border-radius: 8px;
+      overflow: hidden;
+      background: #e2e8f0;
+    }
+
+    .photo-thumb img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .photo-thumb .remove-btn {
+      position: absolute;
+      top: 4px;
+      right: 4px;
+      width: 22px;
+      height: 22px;
+      border-radius: 50%;
+      background: rgba(239, 68, 68, 0.9);
+      color: white;
+      border: none;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.7rem;
+      opacity: 0;
+      transition: opacity 0.2s;
+    }
+
+    .photo-thumb:hover .remove-btn {
+      opacity: 1;
+    }
+
+    .variant-photos-section {
+      margin-top: 1.5rem;
+    }
+
+    .variant-photo-row {
+      display: flex;
+      align-items: flex-start;
+      gap: 1rem;
+      padding: 1rem;
+      background: white;
+      border: 1px solid #e2e8f0;
+      border-radius: 10px;
+      margin-bottom: 0.75rem;
+    }
+
+    .variant-photo-row .variant-name {
+      min-width: 120px;
+      font-weight: 500;
+      color: #374151;
+      padding-top: 0.5rem;
+    }
+
+    .variant-photo-row .photo-area {
+      flex: 1;
+    }
+
+    .variant-photo-row .photo-dropzone {
+      padding: 1rem;
+    }
+
+    .variant-photo-row .photo-dropzone i {
+      font-size: 1.25rem;
+    }
+
+    .variant-photo-row .photo-grid {
+      grid-template-columns: repeat(auto-fill, minmax(60px, 1fr));
+    }
+
+    /* Navigation */
+    .wizard-nav {
+      display: flex;
+      justify-content: space-between;
+      padding: 1.5rem 2.5rem;
+      border-top: 1px solid #e2e8f0;
+      background: #f8fafc;
+    }
+
+    .btn {
+      padding: 0.875rem 1.75rem;
+      border-radius: 10px;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      border: none;
+    }
+
+    .btn-secondary {
+      background: white;
+      color: #64748b;
+      border: 2px solid #e2e8f0;
+    }
+
+    .btn-secondary:hover {
+      background: #f1f5f9;
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+      color: white;
+    }
+
+    .btn-primary:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(16, 185, 129, 0.4);
+    }
+
+    .btn-primary:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+      transform: none;
+      box-shadow: none;
+    }
+
+    /* Toast */
+    .toast {
+      position: fixed;
+      bottom: 2rem;
+      right: 2rem;
+      padding: 1rem 1.5rem;
+      border-radius: 10px;
+      font-weight: 500;
+      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+      z-index: 2000;
+      transform: translateY(100px);
+      opacity: 0;
+      transition: all 0.3s;
+    }
+
+    .toast.show {
+      transform: translateY(0);
+      opacity: 1;
+    }
+
+    .toast.success {
+      background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+      color: white;
+    }
+
+    .toast.error {
+      background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+      color: white;
+    }
+
+    /* Empty state for attributes */
+    .empty-attributes {
+      text-align: center;
+      padding: 2rem;
+      color: #94a3b8;
+    }
+
+    .empty-attributes i {
+      font-size: 2rem;
+      margin-bottom: 0.5rem;
+    }
+
+    @media (max-width: 640px) {
+      .form-row {
+        grid-template-columns: 1fr;
+      }
+      .progress-steps {
+        flex-wrap: wrap;
+        gap: 0.5rem;
+      }
+      .step-connector {
+        display: none;
+      }
+    }
+  </style>
+  {% include "admin/partials/dark_mode_apply.html" %}
+</head>
+<body>
+  <div class="nav-links">
+    <a href="{% url 'admin_products' %}" class="nav-link"><i class="fa-solid fa-arrow-left"></i> Back to Products</a>
+  </div>
+
+  <div class="wizard-container">
+    <div class="wizard-header">
+      <h1>Create New Product</h1>
+    </div>
+
+    <!-- Progress Steps -->
+    <div class="progress-steps">
+      <div class="step active" data-step="1">
+        <div class="step-number">1</div>
+        <span class="step-label">Basics</span>
+      </div>
+      <div class="step-connector"></div>
+      <div class="step" data-step="2">
+        <div class="step-number">2</div>
+        <span class="step-label">Attributes</span>
+      </div>
+      <div class="step-connector"></div>
+      <div class="step" data-step="3">
+        <div class="step-number">3</div>
+        <span class="step-label">Variants</span>
+      </div>
+      <div class="step-connector"></div>
+      <div class="step" data-step="4">
+        <div class="step-number">4</div>
+        <span class="step-label">Photos</span>
+      </div>
+    </div>
+
+    <div class="wizard-card">
+      <!-- Step 1: Basics -->
+      <div class="wizard-step active" data-step="1">
+        <h2 class="step-title">Product Basics</h2>
+        <p class="step-subtitle">Enter the core product information</p>
+
+        <div class="form-group">
+          <label class="form-label">Product Name *</label>
+          <input type="text" id="productName" class="form-input" placeholder="e.g., Classic Zen Tee">
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Base Price *</label>
+            <input type="number" id="basePrice" class="form-input" placeholder="0.00" step="0.01" min="0">
+            <p class="form-hint">Starting price (variants can adjust)</p>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Category</label>
+            <select id="categorySelect" class="form-input">
+              <option value="">Select a category...</option>
+              {% for cat in categories %}
+              <option value="{{ cat.slug }}"
+                      data-uses-size="{{ cat.uses_size|yesno:'true,false' }}"
+                      data-uses-color="{{ cat.uses_color|yesno:'true,false' }}"
+                      data-uses-material="{{ cat.uses_material|yesno:'true,false' }}">
+                {{ cat.name }}
+              </option>
+              {% endfor %}
+            </select>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Description</label>
+          <textarea id="productDescription" class="form-input form-textarea" placeholder="Describe your product..."></textarea>
+        </div>
+      </div>
+
+      <!-- Step 2: Attributes -->
+      <div class="wizard-step" data-step="2">
+        <h2 class="step-title">Select Attributes</h2>
+        <p class="step-subtitle">Choose which attributes apply to this product</p>
+
+        <div class="attribute-section">
+          <h3><i class="fa-solid fa-sliders"></i> Built-in Attributes</h3>
+          <div class="attribute-toggles" id="builtinAttributes">
+            <label class="attribute-toggle" data-attr="size">
+              <input type="checkbox" id="useSize">
+              <span class="toggle-check"><i class="fa-solid fa-check" style="font-size: 0.75rem;"></i></span>
+              <span class="toggle-label">Size</span>
+            </label>
+            <label class="attribute-toggle" data-attr="color">
+              <input type="checkbox" id="useColor">
+              <span class="toggle-check"><i class="fa-solid fa-check" style="font-size: 0.75rem;"></i></span>
+              <span class="toggle-label">Color</span>
+            </label>
+            <label class="attribute-toggle" data-attr="material">
+              <input type="checkbox" id="useMaterial">
+              <span class="toggle-check"><i class="fa-solid fa-check" style="font-size: 0.75rem;"></i></span>
+              <span class="toggle-label">Material</span>
+            </label>
+          </div>
+        </div>
+
+        {% if custom_attributes %}
+        <div class="attribute-section" style="margin-top: 1rem;">
+          <h3><i class="fa-solid fa-tags"></i> Custom Attributes</h3>
+          <div class="attribute-toggles" id="customAttributes">
+            {% for attr in custom_attributes %}
+            <label class="attribute-toggle" data-attr="custom_{{ attr.id }}">
+              <input type="checkbox" id="useCustom_{{ attr.id }}" data-attr-id="{{ attr.id }}" data-attr-name="{{ attr.name }}">
+              <span class="toggle-check"><i class="fa-solid fa-check" style="font-size: 0.75rem;"></i></span>
+              <span class="toggle-label">{{ attr.name }}</span>
+            </label>
+            {% endfor %}
+          </div>
+        </div>
+        {% endif %}
+
+        <p style="color: #94a3b8; font-size: 0.875rem; margin-top: 1.5rem;">
+          <i class="fa-solid fa-lightbulb"></i>
+          Only select attributes that create different inventory items (SKUs)
+        </p>
+      </div>
+
+      <!-- Step 3: Variants -->
+      <div class="wizard-step" data-step="3">
+        <h2 class="step-title">Build Variants</h2>
+        <p class="step-subtitle">Select the values for each attribute to generate variants</p>
+
+        <div id="variantBuilder">
+          <!-- Size Section -->
+          <div class="matrix-section" id="sizeSection" style="display: none;">
+            <h3><i class="fa-solid fa-ruler"></i> Sizes</h3>
+            <div class="value-chips" id="sizeChips">
+              {% for size in sizes %}
+              <div class="value-chip" data-type="size" data-id="{{ size.id }}" data-value="{{ size.code }}">
+                {{ size.code }}{% if size.label and size.label != size.code %} ({{ size.label }}){% endif %}
+              </div>
+              {% endfor %}
+            </div>
+            <div class="select-actions">
+              <button type="button" onclick="selectAll('size')">Select All</button>
+              <button type="button" onclick="selectNone('size')">Clear</button>
+            </div>
+          </div>
+
+          <!-- Color Section -->
+          <div class="matrix-section" id="colorSection" style="display: none;">
+            <h3><i class="fa-solid fa-palette"></i> Colors</h3>
+            <div class="value-chips" id="colorChips">
+              {% for color in colors %}
+              <div class="value-chip" data-type="color" data-id="{{ color.id }}" data-value="{{ color.name }}">
+                {{ color.name }}
+              </div>
+              {% endfor %}
+            </div>
+            <div class="select-actions">
+              <button type="button" onclick="selectAll('color')">Select All</button>
+              <button type="button" onclick="selectNone('color')">Clear</button>
+            </div>
+          </div>
+
+          <!-- Material Section -->
+          <div class="matrix-section" id="materialSection" style="display: none;">
+            <h3><i class="fa-solid fa-layer-group"></i> Materials</h3>
+            <div class="value-chips" id="materialChips">
+              {% for material in materials %}
+              <div class="value-chip" data-type="material" data-id="{{ material.id }}" data-value="{{ material.name }}">
+                {{ material.name }}
+              </div>
+              {% endfor %}
+            </div>
+            <div class="select-actions">
+              <button type="button" onclick="selectAll('material')">Select All</button>
+              <button type="button" onclick="selectNone('material')">Clear</button>
+            </div>
+          </div>
+
+          <!-- Custom Attribute Sections -->
+          {% for attr in custom_attributes %}
+          <div class="matrix-section custom-attr-section" id="customSection_{{ attr.id }}" style="display: none;" data-attr-id="{{ attr.id }}">
+            <h3><i class="fa-solid fa-tag"></i> {{ attr.name }}</h3>
+            <div class="value-chips" id="customChips_{{ attr.id }}">
+              {% for value in attr.values %}
+              <div class="value-chip" data-type="custom_{{ attr.id }}" data-id="{{ value.id }}" data-value="{{ value.value }}">
+                {{ value.value }}
+              </div>
+              {% endfor %}
+            </div>
+            <div class="select-actions">
+              <button type="button" onclick="selectAll('custom_{{ attr.id }}')">Select All</button>
+              <button type="button" onclick="selectNone('custom_{{ attr.id }}')">Clear</button>
+            </div>
+          </div>
+          {% endfor %}
+
+          <div id="noAttributesMessage" class="empty-attributes">
+            <i class="fa-solid fa-cube"></i>
+            <p>No attributes selected. Go back to select attributes, or continue to create a simple product.</p>
+          </div>
+        </div>
+
+        <!-- Variant Preview -->
+        <div class="variant-preview" id="variantPreview" style="display: none;">
+          <h3>
+            <span>Variants to Create</span>
+            <span class="variant-count" id="variantCount">0</span>
+          </h3>
+          <p style="font-size: 0.8125rem; color: #64748b; margin-bottom: 0.75rem;">
+            <i class="fa-solid fa-hand-pointer"></i> Click any variant to exclude it
+          </p>
+          <div class="variant-list" id="variantList"></div>
+        </div>
+      </div>
+
+      <!-- Step 4: Photos -->
+      <div class="wizard-step" data-step="4">
+        <h2 class="step-title">Product Photos</h2>
+        <p class="step-subtitle">Add photos for your product and variants</p>
+
+        <!-- Shared Photos -->
+        <div class="photo-section">
+          <h3><i class="fa-solid fa-images"></i> Shared Photos</h3>
+          <p>These photos will be used for all variants (main product images)</p>
+          <div class="photo-dropzone" id="sharedPhotoDropzone" onclick="document.getElementById('sharedPhotoInput').click()">
+            <i class="fa-solid fa-cloud-arrow-up"></i>
+            <span>Drop images here or click to upload</span>
+          </div>
+          <input type="file" id="sharedPhotoInput" multiple accept="image/*" style="display: none;" onchange="handleSharedPhotos(this.files)">
+          <div class="photo-grid" id="sharedPhotoGrid"></div>
+        </div>
+
+        <!-- Variant-Specific Photos -->
+        <div class="photo-section variant-photos-section" id="variantPhotosSection" style="display: none;">
+          <h3><i class="fa-solid fa-images"></i> Variant-Specific Photos</h3>
+          <p>Add unique photos for specific variants (optional)</p>
+          <div id="variantPhotoRows"></div>
+        </div>
+
+        <p style="color: #94a3b8; font-size: 0.875rem; margin-top: 1rem;">
+          <i class="fa-solid fa-lightbulb"></i>
+          Photos are optional. You can add them later from the product editor.
+        </p>
+      </div>
+
+      <!-- Navigation -->
+      <div class="wizard-nav">
+        <button type="button" class="btn btn-secondary" id="prevBtn" onclick="prevStep()" style="visibility: hidden;">
+          <i class="fa-solid fa-arrow-left"></i> Back
+        </button>
+        <button type="button" class="btn btn-primary" id="nextBtn" onclick="nextStep()">
+          Next <i class="fa-solid fa-arrow-right"></i>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <div id="toast" class="toast"></div>
+
+  <script>
+    let currentStep = 1;
+    const totalSteps = 4;
+
+    // Data storage
+    let productData = {
+      name: '',
+      basePrice: 0,
+      category: '',
+      description: '',
+      attributes: {
+        size: false,
+        color: false,
+        material: false,
+        custom: []
+      },
+      selectedValues: {
+        sizes: [],
+        colors: [],
+        materials: [],
+        custom: {}
+      },
+      excludedVariants: new Set(), // Track excluded variant keys like "S-Blue"
+      sharedPhotos: [], // Array of {file, preview} for shared product photos
+      variantPhotos: {} // Object keyed by variant key, each value is array of {file, preview}
+    };
+
+    function showToast(message, type = 'success') {
+      const toast = document.getElementById('toast');
+      toast.textContent = message;
+      toast.className = 'toast ' + type;
+      toast.classList.add('show');
+      setTimeout(() => toast.classList.remove('show'), 3000);
+    }
+
+    function updateProgressSteps() {
+      document.querySelectorAll('.step').forEach((step, index) => {
+        const stepNum = index + 1;
+        step.classList.remove('active', 'completed');
+        if (stepNum === currentStep) {
+          step.classList.add('active');
+        } else if (stepNum < currentStep) {
+          step.classList.add('completed');
+        }
+      });
+
+      document.querySelectorAll('.step-connector').forEach((conn, index) => {
+        if (index < currentStep - 1) {
+          conn.classList.add('completed');
+        } else {
+          conn.classList.remove('completed');
+        }
+      });
+    }
+
+    function showStep(step) {
+      document.querySelectorAll('.wizard-step').forEach(s => s.classList.remove('active'));
+      document.querySelector(`.wizard-step[data-step="${step}"]`).classList.add('active');
+
+      // Update navigation buttons
+      document.getElementById('prevBtn').style.visibility = step === 1 ? 'hidden' : 'visible';
+
+      if (step === totalSteps) {
+        document.getElementById('nextBtn').innerHTML = '<i class="fa-solid fa-check"></i> Create Product';
+      } else {
+        document.getElementById('nextBtn').innerHTML = 'Next <i class="fa-solid fa-arrow-right"></i>';
+      }
+
+      updateProgressSteps();
+
+      // Step-specific logic
+      if (step === 2) {
+        applyDefaultAttributes();
+      } else if (step === 3) {
+        updateVariantBuilder();
+        generateVariantPreview();
+      } else if (step === 4) {
+        buildVariantPhotoRows();
+      }
+    }
+
+    function nextStep() {
+      if (currentStep === 1) {
+        // Validate step 1
+        const name = document.getElementById('productName').value.trim();
+        const price = document.getElementById('basePrice').value;
+
+        if (!name) {
+          showToast('Please enter a product name', 'error');
+          return;
+        }
+        if (!price || parseFloat(price) < 0) {
+          showToast('Please enter a valid price', 'error');
+          return;
+        }
+
+        productData.name = name;
+        productData.basePrice = parseFloat(price);
+        productData.category = document.getElementById('categorySelect').value;
+        productData.description = document.getElementById('productDescription').value;
+      }
+
+      if (currentStep === 2) {
+        // Save attribute selections
+        productData.attributes.size = document.getElementById('useSize').checked;
+        productData.attributes.color = document.getElementById('useColor').checked;
+        productData.attributes.material = document.getElementById('useMaterial').checked;
+
+        productData.attributes.custom = [];
+        document.querySelectorAll('#customAttributes input:checked').forEach(input => {
+          productData.attributes.custom.push({
+            id: input.dataset.attrId,
+            name: input.dataset.attrName
+          });
+        });
+      }
+
+      if (currentStep === totalSteps) {
+        createProduct();
+        return;
+      }
+
+      currentStep++;
+      showStep(currentStep);
+    }
+
+    function prevStep() {
+      if (currentStep > 1) {
+        currentStep--;
+        showStep(currentStep);
+      }
+    }
+
+    function applyDefaultAttributes() {
+      const categorySelect = document.getElementById('categorySelect');
+      const selectedOption = categorySelect.options[categorySelect.selectedIndex];
+
+      if (selectedOption && selectedOption.value) {
+        const usesSize = selectedOption.dataset.usesSize === 'true';
+        const usesColor = selectedOption.dataset.usesColor === 'true';
+        const usesMaterial = selectedOption.dataset.usesMaterial === 'true';
+
+        document.getElementById('useSize').checked = usesSize;
+        document.getElementById('useColor').checked = usesColor;
+        document.getElementById('useMaterial').checked = usesMaterial;
+
+        updateAttributeToggles();
+      }
+    }
+
+    function updateAttributeToggles() {
+      document.querySelectorAll('.attribute-toggle').forEach(toggle => {
+        const input = toggle.querySelector('input');
+        if (input.checked) {
+          toggle.classList.add('selected');
+        } else {
+          toggle.classList.remove('selected');
+        }
+      });
+    }
+
+    function initAttributeToggles() {
+      // Attribute toggle click handler
+      document.querySelectorAll('.attribute-toggle').forEach(toggle => {
+        toggle.addEventListener('click', function(e) {
+          e.preventDefault();
+          const input = this.querySelector('input');
+          input.checked = !input.checked;
+          updateAttributeToggles();
+        });
+      });
+    }
+
+    function updateVariantBuilder() {
+      const useSize = document.getElementById('useSize').checked;
+      const useColor = document.getElementById('useColor').checked;
+      const useMaterial = document.getElementById('useMaterial').checked;
+
+      document.getElementById('sizeSection').style.display = useSize ? 'block' : 'none';
+      document.getElementById('colorSection').style.display = useColor ? 'block' : 'none';
+      document.getElementById('materialSection').style.display = useMaterial ? 'block' : 'none';
+
+      // Custom attributes
+      document.querySelectorAll('.custom-attr-section').forEach(section => {
+        section.style.display = 'none';
+      });
+
+      productData.attributes.custom.forEach(attr => {
+        const section = document.getElementById('customSection_' + attr.id);
+        if (section) section.style.display = 'block';
+      });
+
+      // Show/hide no attributes message
+      const hasAttributes = useSize || useColor || useMaterial || productData.attributes.custom.length > 0;
+      document.getElementById('noAttributesMessage').style.display = hasAttributes ? 'none' : 'block';
+    }
+
+    function initValueChips() {
+      // Value chip click handler
+      document.querySelectorAll('.value-chip').forEach(chip => {
+        chip.addEventListener('click', function() {
+          this.classList.toggle('selected');
+          generateVariantPreview();
+        });
+      });
+    }
+
+    function selectAll(type) {
+      document.querySelectorAll(`.value-chip[data-type="${type}"]`).forEach(chip => {
+        chip.classList.add('selected');
+      });
+      generateVariantPreview();
+    }
+
+    function selectNone(type) {
+      document.querySelectorAll(`.value-chip[data-type="${type}"]`).forEach(chip => {
+        chip.classList.remove('selected');
+      });
+      generateVariantPreview();
+    }
+
+    function generateVariantPreview() {
+      const selectedSizes = Array.from(document.querySelectorAll('.value-chip[data-type="size"].selected')).map(c => c.dataset.value);
+      const selectedColors = Array.from(document.querySelectorAll('.value-chip[data-type="color"].selected')).map(c => c.dataset.value);
+      const selectedMaterials = Array.from(document.querySelectorAll('.value-chip[data-type="material"].selected')).map(c => c.dataset.value);
+
+      // Build arrays for combination
+      const arrays = [];
+      if (selectedSizes.length > 0) arrays.push(selectedSizes.map(s => ({ type: 'size', value: s })));
+      if (selectedColors.length > 0) arrays.push(selectedColors.map(c => ({ type: 'color', value: c })));
+      if (selectedMaterials.length > 0) arrays.push(selectedMaterials.map(m => ({ type: 'material', value: m })));
+
+      // Custom attributes
+      productData.attributes.custom.forEach(attr => {
+        const selected = Array.from(document.querySelectorAll(`.value-chip[data-type="custom_${attr.id}"].selected`)).map(c => c.dataset.value);
+        if (selected.length > 0) {
+          arrays.push(selected.map(v => ({ type: attr.name, value: v })));
+        }
+      });
+
+      // Generate combinations
+      let variants = [];
+      if (arrays.length === 0) {
+        variants = [{ label: 'Default (no variants)', key: 'default' }];
+      } else {
+        variants = cartesianProduct(arrays).map(combo => {
+          const parts = combo.map(c => c.value);
+          const key = parts.join('-');
+          return { label: parts.join(' / '), key, combo };
+        });
+      }
+
+      // Clean up excludedVariants - remove any that no longer exist
+      const validKeys = new Set(variants.map(v => v.key));
+      productData.excludedVariants = new Set(
+        [...productData.excludedVariants].filter(k => validKeys.has(k))
+      );
+
+      // Update preview
+      const preview = document.getElementById('variantPreview');
+      const list = document.getElementById('variantList');
+      const count = document.getElementById('variantCount');
+
+      if (variants.length > 0 && arrays.length > 0) {
+        preview.style.display = 'block';
+        const includedCount = variants.filter(v => !productData.excludedVariants.has(v.key)).length;
+        count.textContent = includedCount;
+        list.innerHTML = variants.map(v => {
+          const excluded = productData.excludedVariants.has(v.key);
+          return `<div class="variant-item ${excluded ? 'excluded' : ''}" data-key="${v.key}" onclick="toggleVariant('${v.key}')">
+            <span class="variant-check"><i class="fa-solid fa-check"></i></span>
+            <span class="variant-label">${v.label}</span>
+          </div>`;
+        }).join('');
+      } else if (arrays.length === 0) {
+        preview.style.display = 'block';
+        count.textContent = '1';
+        list.innerHTML = '<div class="variant-item"><span class="variant-check"><i class="fa-solid fa-check"></i></span><span class="variant-label">Single product (no variants)</span></div>';
+      } else {
+        preview.style.display = 'none';
+      }
+
+      // Store for submission
+      productData.selectedValues = {
+        sizes: Array.from(document.querySelectorAll('.value-chip[data-type="size"].selected')).map(c => ({ id: c.dataset.id, value: c.dataset.value })),
+        colors: Array.from(document.querySelectorAll('.value-chip[data-type="color"].selected')).map(c => ({ id: c.dataset.id, value: c.dataset.value })),
+        materials: Array.from(document.querySelectorAll('.value-chip[data-type="material"].selected')).map(c => ({ id: c.dataset.id, value: c.dataset.value })),
+        custom: {}
+      };
+
+      productData.attributes.custom.forEach(attr => {
+        productData.selectedValues.custom[attr.id] = Array.from(document.querySelectorAll(`.value-chip[data-type="custom_${attr.id}"].selected`)).map(c => ({ id: c.dataset.id, value: c.dataset.value }));
+      });
+    }
+
+    function cartesianProduct(arrays) {
+      if (arrays.length === 0) return [[]];
+      return arrays.reduce((acc, arr) => {
+        const result = [];
+        acc.forEach(x => arr.forEach(y => result.push([...x, y])));
+        return result;
+      }, [[]]);
+    }
+
+    function toggleVariant(key) {
+      if (productData.excludedVariants.has(key)) {
+        productData.excludedVariants.delete(key);
+      } else {
+        productData.excludedVariants.add(key);
+      }
+      // Update UI without regenerating (just toggle class and update count)
+      const item = document.querySelector(`.variant-item[data-key="${key}"]`);
+      if (item) {
+        item.classList.toggle('excluded');
+      }
+      // Update count
+      const allItems = document.querySelectorAll('.variant-item[data-key]');
+      const includedCount = [...allItems].filter(i => !i.classList.contains('excluded')).length;
+      document.getElementById('variantCount').textContent = includedCount;
+    }
+
+    // Photo handling functions
+    function handleSharedPhotos(files) {
+      for (const file of files) {
+        if (!file.type.startsWith('image/')) continue;
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          productData.sharedPhotos.push({ file, preview: e.target.result });
+          renderSharedPhotos();
+        };
+        reader.readAsDataURL(file);
+      }
+    }
+
+    function renderSharedPhotos() {
+      const grid = document.getElementById('sharedPhotoGrid');
+      grid.innerHTML = productData.sharedPhotos.map((photo, index) => `
+        <div class="photo-thumb">
+          <img src="${photo.preview}" alt="Product photo">
+          <button type="button" class="remove-btn" onclick="removeSharedPhoto(${index})">
+            <i class="fa-solid fa-times"></i>
+          </button>
+        </div>
+      `).join('');
+    }
+
+    function removeSharedPhoto(index) {
+      productData.sharedPhotos.splice(index, 1);
+      renderSharedPhotos();
+    }
+
+    function buildVariantPhotoRows() {
+      const container = document.getElementById('variantPhotoRows');
+      const section = document.getElementById('variantPhotosSection');
+
+      // Get included variants
+      const variants = getIncludedVariants();
+
+      if (variants.length === 0) {
+        section.style.display = 'none';
+        return;
+      }
+
+      section.style.display = 'block';
+
+      container.innerHTML = variants.map(v => {
+        const safeKey = v.key.replace(/[^a-zA-Z0-9-]/g, '_');
+        return `
+          <div class="variant-photo-row" data-variant-key="${v.key}">
+            <div class="variant-name">${v.label}</div>
+            <div class="photo-area">
+              <div class="photo-dropzone" onclick="document.getElementById('variantPhotoInput_${safeKey}').click()">
+                <i class="fa-solid fa-plus"></i>
+                <span>Add photos</span>
+              </div>
+              <input type="file" id="variantPhotoInput_${safeKey}" multiple accept="image/*"
+                     style="display: none;" onchange="handleVariantPhotos('${v.key}', this.files)">
+              <div class="photo-grid" id="variantPhotoGrid_${safeKey}"></div>
+            </div>
+          </div>
+        `;
+      }).join('');
+
+      // Render existing photos
+      variants.forEach(v => renderVariantPhotos(v.key));
+
+      // Init drag and drop for new dropzones
+      initDropzones();
+    }
+
+    function getIncludedVariants() {
+      const sizes = productData.selectedValues.sizes;
+      const colors = productData.selectedValues.colors;
+      const materials = productData.selectedValues.materials;
+
+      const arrays = [];
+      if (sizes.length > 0) arrays.push(sizes.map(s => ({ type: 'size', value: s.value })));
+      if (colors.length > 0) arrays.push(colors.map(c => ({ type: 'color', value: c.value })));
+      if (materials.length > 0) arrays.push(materials.map(m => ({ type: 'material', value: m.value })));
+
+      if (arrays.length === 0) return [];
+
+      const allCombos = cartesianProduct(arrays);
+      return allCombos.map(combo => {
+        const parts = combo.map(c => c.value);
+        const key = parts.join('-');
+        return { key, label: parts.join(' / ') };
+      }).filter(v => !productData.excludedVariants.has(v.key));
+    }
+
+    function handleVariantPhotos(variantKey, files) {
+      if (!productData.variantPhotos[variantKey]) {
+        productData.variantPhotos[variantKey] = [];
+      }
+
+      for (const file of files) {
+        if (!file.type.startsWith('image/')) continue;
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          productData.variantPhotos[variantKey].push({ file, preview: e.target.result });
+          renderVariantPhotos(variantKey);
+        };
+        reader.readAsDataURL(file);
+      }
+    }
+
+    function renderVariantPhotos(variantKey) {
+      const safeKey = variantKey.replace(/[^a-zA-Z0-9-]/g, '_');
+      const grid = document.getElementById('variantPhotoGrid_' + safeKey);
+      if (!grid) return;
+
+      const photos = productData.variantPhotos[variantKey] || [];
+      grid.innerHTML = photos.map((photo, index) => `
+        <div class="photo-thumb">
+          <img src="${photo.preview}" alt="Variant photo">
+          <button type="button" class="remove-btn" onclick="removeVariantPhoto('${variantKey}', ${index})">
+            <i class="fa-solid fa-times"></i>
+          </button>
+        </div>
+      `).join('');
+    }
+
+    function removeVariantPhoto(variantKey, index) {
+      if (productData.variantPhotos[variantKey]) {
+        productData.variantPhotos[variantKey].splice(index, 1);
+        renderVariantPhotos(variantKey);
+      }
+    }
+
+    // Drag and drop support
+    function initDropzones() {
+      const dropzones = document.querySelectorAll('.photo-dropzone');
+      dropzones.forEach(zone => {
+        zone.addEventListener('dragover', (e) => {
+          e.preventDefault();
+          zone.classList.add('dragover');
+        });
+        zone.addEventListener('dragleave', () => {
+          zone.classList.remove('dragover');
+        });
+        zone.addEventListener('drop', (e) => {
+          e.preventDefault();
+          zone.classList.remove('dragover');
+          const files = e.dataTransfer.files;
+          if (zone.id === 'sharedPhotoDropzone') {
+            handleSharedPhotos(files);
+          } else {
+            // Find variant key from parent
+            const row = zone.closest('.variant-photo-row');
+            if (row) {
+              const variantKey = row.dataset.variantKey;
+              handleVariantPhotos(variantKey, files);
+            }
+          }
+        });
+      });
+    }
+
+    async function createProduct() {
+      const btn = document.getElementById('nextBtn');
+      btn.disabled = true;
+      btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Creating...';
+
+      try {
+        // Step 1: Create the product
+        const csrfToken = document.querySelector('meta[name="csrf-token"]').content;
+        console.log('CSRF Token:', csrfToken ? 'Found' : 'MISSING');
+        console.log('Product data:', productData);
+
+        const productFormData = new FormData();
+        productFormData.append('csrfmiddlewaretoken', csrfToken);
+        productFormData.append('action', 'create_product');
+        productFormData.append('name', productData.name);
+        productFormData.append('base_price', productData.basePrice);
+        productFormData.append('category', productData.category);
+        productFormData.append('description', productData.description);
+        productFormData.append('is_active', 'true');
+
+        const productResponse = await fetch('{% url "admin_products" %}', {
+          method: 'POST',
+          body: productFormData,
+          headers: {
+            'X-Requested-With': 'XMLHttpRequest'
+          }
+        });
+
+        // Check if response is OK
+        if (!productResponse.ok) {
+          const text = await productResponse.text();
+          console.error('Server error:', productResponse.status, text.substring(0, 500));
+          throw new Error(`Server error (${productResponse.status}). Check console for details.`);
+        }
+
+        // Check if response is JSON
+        const contentType = productResponse.headers.get('content-type');
+        if (!contentType || !contentType.includes('application/json')) {
+          const text = await productResponse.text();
+          console.error('Non-JSON response:', text.substring(0, 500));
+          // Check if it's a login redirect
+          if (text.includes('login') || text.includes('Login')) {
+            throw new Error('Session expired. Please refresh the page and try again.');
+          }
+          throw new Error('Server returned an unexpected response. Check console for details.');
+        }
+
+        const productResult = await productResponse.json();
+
+        if (!productResult.success) {
+          throw new Error(productResult.error || 'Failed to create product');
+        }
+
+        const productId = productResult.product_id;
+
+        // Step 2: Create variants in parallel (much faster than sequential)
+        const variants = generateVariantCombinations();
+        const hasRealVariants = variants.some(v => v.size_id || v.color_id || v.material_id);
+        let variantCount = 0;
+
+        if (hasRealVariants) {
+          // Filter to only valid variants
+          const validVariants = variants.filter(v => v.size_id || v.color_id || v.material_id);
+
+          // Create all variants in parallel
+          const variantPromises = validVariants.map(variant => {
+            const variantFormData = new FormData();
+            variantFormData.append('csrfmiddlewaretoken', csrfToken);
+            variantFormData.append('action', 'add_variant');
+            variantFormData.append('product_id', productId);
+            variantFormData.append('price', productData.basePrice);
+            variantFormData.append('stock_quantity', 0);
+
+            if (variant.size_id) variantFormData.append('size_id', variant.size_id);
+            if (variant.color_id) variantFormData.append('color_id', variant.color_id);
+            if (variant.material_id) variantFormData.append('material_id', variant.material_id);
+
+            return fetch('{% url "admin_products" %}', {
+              method: 'POST',
+              body: variantFormData,
+              headers: { 'X-Requested-With': 'XMLHttpRequest' }
+            }).then(r => r.json());
+          });
+
+          const results = await Promise.all(variantPromises);
+          variantCount = results.filter(r => r.success).length;
+        }
+
+        // TODO: Upload photos to server
+        // For now, photos are captured but need backend image upload endpoint
+        const photoCount = productData.sharedPhotos.length +
+          Object.values(productData.variantPhotos).reduce((sum, arr) => sum + arr.length, 0);
+        console.log('Photos to upload:', {
+          shared: productData.sharedPhotos.length,
+          variants: Object.keys(productData.variantPhotos).length + ' variants with photos'
+        });
+
+        let message = `Product "${productData.name}" created`;
+        if (variantCount > 0) message += ` with ${variantCount} variant(s)`;
+        if (photoCount > 0) message += ` (${photoCount} photos pending upload)`;
+        message += '!';
+        showToast(message);
+
+        // Redirect to products page after short delay
+        setTimeout(() => {
+          window.location.href = '{% url "admin_products" %}';
+        }, 1500);
+
+      } catch (error) {
+        showToast(error.message, 'error');
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fa-solid fa-check"></i> Create Product';
+      }
+    }
+
+    function generateVariantCombinations() {
+      const sizes = productData.selectedValues.sizes;
+      const colors = productData.selectedValues.colors;
+      const materials = productData.selectedValues.materials;
+
+      // Build arrays for cartesian product (include value for key generation)
+      const arrays = [];
+      if (sizes.length > 0) arrays.push(sizes.map(s => ({ size_id: s.id, size_value: s.value })));
+      if (colors.length > 0) arrays.push(colors.map(c => ({ color_id: c.id, color_value: c.value })));
+      if (materials.length > 0) arrays.push(materials.map(m => ({ material_id: m.id, material_value: m.value })));
+
+      if (arrays.length === 0) {
+        return [{}]; // Single default variant
+      }
+
+      // Generate all combinations
+      const allCombinations = arrays.reduce((acc, arr) => {
+        const result = [];
+        acc.forEach(x => arr.forEach(y => result.push({ ...x, ...y })));
+        return result;
+      }, [{}]);
+
+      // Filter out excluded variants
+      return allCombinations.filter(combo => {
+        // Build key from values (same format as preview)
+        const parts = [];
+        if (combo.size_value) parts.push(combo.size_value);
+        if (combo.color_value) parts.push(combo.color_value);
+        if (combo.material_value) parts.push(combo.material_value);
+        const key = parts.join('-');
+        return !productData.excludedVariants.has(key);
+      });
+    }
+
+    // Initialize
+    document.addEventListener('DOMContentLoaded', function() {
+      initAttributeToggles();
+      initValueChips();
+      initDropzones();
+      showStep(1);
+    });
+  </script>
+</body>
+</html>

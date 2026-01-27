@@ -1750,16 +1750,33 @@ def visitors_dashboard(request):
     last_30d = now - timedelta(days=30)
     last_30min = now - timedelta(minutes=30)
 
+    # Check if we should hide bots
+    hide_bots = request.GET.get("hide_bots", "false") == "true"
+
+    # Base querysets - optionally exclude bots
+    if hide_bots:
+        session_qs = VisitorSession.objects.exclude(device_type="bot")
+        pageview_qs = PageView.objects.exclude(device_type="bot")
+    else:
+        session_qs = VisitorSession.objects.all()
+        pageview_qs = PageView.objects.all()
+
+    # Bot counts for display
+    bot_stats = {
+        "total_bots_30d": VisitorSession.objects.filter(first_seen__gte=last_30d, device_type="bot").count(),
+        "bot_pageviews_30d": PageView.objects.filter(viewed_at__gte=last_30d, device_type="bot").count(),
+    }
+
     # Quick stats
     stats = {
-        "visits_today": VisitorSession.objects.filter(first_seen__gte=today_start).count(),
-        "page_views_today": PageView.objects.filter(viewed_at__gte=today_start).count(),
-        "active_sessions": VisitorSession.objects.filter(last_seen__gte=last_30min).count(),
-        "visits_30d": VisitorSession.objects.filter(first_seen__gte=last_30d).count(),
+        "visits_today": session_qs.filter(first_seen__gte=today_start).count(),
+        "page_views_today": pageview_qs.filter(viewed_at__gte=today_start).count(),
+        "active_sessions": session_qs.filter(last_seen__gte=last_30min).count(),
+        "visits_30d": session_qs.filter(first_seen__gte=last_30d).count(),
     }
 
     # Average pages per session
-    avg_pages = VisitorSession.objects.filter(first_seen__gte=last_30d).aggregate(
+    avg_pages = session_qs.filter(first_seen__gte=last_30d).aggregate(
         avg=Avg("page_views")
     )
     stats["avg_pages_per_session"] = avg_pages["avg"] or 0
@@ -1767,7 +1784,7 @@ def visitors_dashboard(request):
     # Mobile percentage
     total_visits_30d = stats["visits_30d"]
     if total_visits_30d > 0:
-        mobile_visits = VisitorSession.objects.filter(
+        mobile_visits = session_qs.filter(
             first_seen__gte=last_30d, device_type__in=["mobile", "tablet"]
         ).count()
         stats["mobile_percent"] = (mobile_visits / total_visits_30d) * 100
@@ -1782,7 +1799,7 @@ def visitors_dashboard(request):
             day = now - timedelta(days=i)
             day_start = day.replace(hour=0, minute=0, second=0, microsecond=0)
             day_end = day_start + timedelta(days=1)
-            count = PageView.objects.filter(viewed_at__gte=day_start, viewed_at__lt=day_end).count()
+            count = pageview_qs.filter(viewed_at__gte=day_start, viewed_at__lt=day_end).count()
             # Format date based on timeframe
             if days <= 7:
                 date_str = day.strftime("%b %d")
@@ -1799,7 +1816,7 @@ def visitors_dashboard(request):
 
     # Top countries
     top_countries = (
-        VisitorSession.objects.filter(first_seen__gte=last_30d)
+        session_qs.filter(first_seen__gte=last_30d)
         .exclude(country="")
         .values("country", "country_name")
         .annotate(count=Count("id"))
@@ -1808,7 +1825,7 @@ def visitors_dashboard(request):
 
     # Top cities
     top_cities = (
-        VisitorSession.objects.filter(first_seen__gte=last_30d)
+        session_qs.filter(first_seen__gte=last_30d)
         .exclude(city="")
         .values("city", "region", "country")
         .annotate(count=Count("id"))
@@ -1818,7 +1835,7 @@ def visitors_dashboard(request):
     # Location data for globe visualization
     # Get individual visitor sessions with coordinates from last 30 days
     globe_locations = []
-    visitor_sessions = VisitorSession.objects.filter(
+    visitor_sessions = session_qs.filter(
         first_seen__gte=last_30d, latitude__isnull=False, longitude__isnull=False
     ).values("latitude", "longitude", "city", "country_name", "ip_address")[
         :100
@@ -1837,7 +1854,7 @@ def visitors_dashboard(request):
 
     # Top referrers
     top_referrers = (
-        PageView.objects.filter(viewed_at__gte=last_30d)
+        pageview_qs.filter(viewed_at__gte=last_30d)
         .values("referrer_domain")
         .annotate(count=Count("id"))
         .order_by("-count")[:10]
@@ -1845,7 +1862,7 @@ def visitors_dashboard(request):
 
     # Device breakdown
     device_stats = (
-        VisitorSession.objects.filter(first_seen__gte=last_30d)
+        session_qs.filter(first_seen__gte=last_30d)
         .values("device_type")
         .annotate(count=Count("id"))
         .order_by("-count")
@@ -1858,7 +1875,7 @@ def visitors_dashboard(request):
 
     # Top pages
     top_pages = (
-        PageView.objects.filter(viewed_at__gte=last_30d)
+        pageview_qs.filter(viewed_at__gte=last_30d)
         .values("path")
         .annotate(
             views=Count("id"),
@@ -1869,11 +1886,11 @@ def visitors_dashboard(request):
     )
 
     # Recent visitors
-    recent_views = PageView.objects.all()[:20]
+    recent_views = pageview_qs.all()[:20]
 
     # Session statistics
     from urllib.parse import urlparse
-    all_sessions = VisitorSession.objects.filter(first_seen__gte=last_30d)
+    all_sessions = session_qs.filter(first_seen__gte=last_30d)
     total_sessions = all_sessions.count()
 
     # Average session duration
@@ -1907,7 +1924,7 @@ def visitors_dashboard(request):
     }
 
     # Recent sessions with page journeys
-    recent_sessions = VisitorSession.objects.all().order_by("-first_seen")[:20]
+    recent_sessions = session_qs.all().order_by("-first_seen")[:20]
     sessions_data = []
 
     for session in recent_sessions:
@@ -1947,6 +1964,8 @@ def visitors_dashboard(request):
 
     context = {
         "stats": stats,
+        "bot_stats": bot_stats,
+        "hide_bots": hide_bots,
         "page_views_7d": page_views_7d,
         "page_views_30d": page_views_30d,
         "page_views_90d": page_views_90d,
@@ -2232,6 +2251,10 @@ def products_dashboard(request):
                 base_price = 0
 
             try:
+                # available_for_purchase defaults to True if not specified or if "on" (checkbox value)
+                available = request.POST.get("available_for_purchase", "true")
+                available_for_purchase = available in ("true", "on", True)
+
                 product = Product.objects.create(
                     name=name,
                     slug=slug,
@@ -2239,7 +2262,8 @@ def products_dashboard(request):
                     base_price=base_price,
                     category_obj=category_obj,
                     is_active=request.POST.get("is_active") == "true",
-                    featured=request.POST.get("featured") == "true",
+                    featured=request.POST.get("featured") in ("true", "on"),
+                    available_for_purchase=available_for_purchase,
                 )
                 return JsonResponse({"success": True, "product_id": product.id, "slug": product.slug})
             except Exception as e:
@@ -2430,6 +2454,79 @@ def products_dashboard(request):
             except Exception as e:
                 return JsonResponse({"success": False, "error": str(e)})
 
+        elif action == "bulk_create_variants":
+            """
+            Create multiple variants at once by selecting multiple sizes and colors.
+            This creates all size×color combinations (matrix builder).
+            """
+            import json
+
+            from django.http import JsonResponse
+
+            product_id = request.POST.get("product_id")
+            size_ids = request.POST.getlist("size_ids[]") or json.loads(request.POST.get("size_ids", "[]"))
+            color_ids = request.POST.getlist("color_ids[]") or json.loads(request.POST.get("color_ids", "[]"))
+            material_id = request.POST.get("material_id")
+            price = request.POST.get("price")
+            stock_quantity = int(request.POST.get("stock_quantity", 0))
+
+            try:
+                from shop.models import Color, Material, Size
+
+                product = Product.objects.get(id=product_id)
+                material = Material.objects.get(id=material_id) if material_id else None
+
+                created_count = 0
+                skipped_count = 0
+                errors = []
+
+                for size_id in size_ids:
+                    for color_id in color_ids:
+                        try:
+                            size = Size.objects.get(id=size_id)
+                            color = Color.objects.get(id=color_id)
+
+                            # Check if variant already exists
+                            existing = ProductVariant.objects.filter(
+                                product=product, size=size, color=color, material=material
+                            ).first()
+
+                            if existing:
+                                skipped_count += 1
+                                continue
+
+                            # Create the variant
+                            ProductVariant.objects.create(
+                                product=product,
+                                size=size,
+                                color=color,
+                                material=material,
+                                stock_quantity=stock_quantity,
+                                price=price,
+                                images=[],
+                                custom_fields={},
+                                is_active=True,
+                            )
+                            created_count += 1
+                        except (Size.DoesNotExist, Color.DoesNotExist) as e:
+                            errors.append(str(e))
+                            continue
+
+                message = f"Created {created_count} variant(s)"
+                if skipped_count > 0:
+                    message += f", skipped {skipped_count} existing"
+
+                return JsonResponse({
+                    "success": True,
+                    "created": created_count,
+                    "skipped": skipped_count,
+                    "message": message
+                })
+            except Product.DoesNotExist:
+                return JsonResponse({"success": False, "error": "Product not found"})
+            except Exception as e:
+                return JsonResponse({"success": False, "error": str(e)})
+
         elif action == "update_variant_price":
             from django.http import JsonResponse
 
@@ -2473,11 +2570,86 @@ def products_dashboard(request):
             except Exception as e:
                 return JsonResponse({"success": False, "error": str(e)})
 
+        elif action == "bulk_update_stock":
+            """
+            Update stock for multiple variants at once.
+            Supports setting absolute value or incrementing/decrementing.
+            """
+            import json
+
+            from django.http import JsonResponse
+
+            product_id = request.POST.get("product_id")
+            update_mode = request.POST.get("update_mode", "set")  # 'set', 'add', 'subtract'
+            stock_value = int(request.POST.get("stock_value", 0))
+            variant_ids = request.POST.getlist("variant_ids[]") or json.loads(request.POST.get("variant_ids", "[]"))
+
+            try:
+                product = Product.objects.get(id=product_id)
+
+                if not variant_ids:
+                    # If no specific variants, update all variants of this product
+                    variants = product.variants.all()
+                else:
+                    variants = ProductVariant.objects.filter(id__in=variant_ids, product=product)
+
+                updated_count = 0
+                for variant in variants:
+                    if update_mode == "set":
+                        variant.stock_quantity = max(0, stock_value)
+                    elif update_mode == "add":
+                        variant.stock_quantity = variant.stock_quantity + stock_value
+                    elif update_mode == "subtract":
+                        variant.stock_quantity = max(0, variant.stock_quantity - stock_value)
+                    variant.save()
+                    updated_count += 1
+
+                return JsonResponse({
+                    "success": True,
+                    "updated": updated_count,
+                    "message": f"Updated stock for {updated_count} variant(s)"
+                })
+            except Product.DoesNotExist:
+                return JsonResponse({"success": False, "error": "Product not found"})
+            except Exception as e:
+                return JsonResponse({"success": False, "error": str(e)})
+
+        elif action == "delete_product":
+            from django.http import JsonResponse
+
+            product_id = request.POST.get("product_id")
+            try:
+                product = Product.objects.get(id=product_id)
+                product_name = product.name
+                # Delete all variants first (cascades automatically, but being explicit)
+                product.variants.all().delete()
+                product.delete()
+                return JsonResponse({"success": True, "message": f'Product "{product_name}" deleted'})
+            except Product.DoesNotExist:
+                return JsonResponse({"success": False, "error": "Product not found"})
+            except Exception as e:
+                return JsonResponse({"success": False, "error": str(e)})
+
         # If we got here, the action was not recognized
         return JsonResponse({"success": False, "error": f"Unknown action: {action}"})
 
+    # Get sort parameter
+    sort_by = request.GET.get("sort", "newest")
+
     # Get all products with variant counts
-    products = Product.objects.all().order_by("-is_active", "name")
+    products = Product.objects.all()
+
+    # Apply sorting
+    if sort_by == "newest":
+        products = products.order_by("-created_at")
+    elif sort_by == "name":
+        products = products.order_by("name")
+    elif sort_by == "category":
+        products = products.order_by("category_obj__name", "name")
+    elif sort_by == "status":
+        products = products.order_by("-is_active", "name")
+    else:
+        products = products.order_by("-created_at")
 
     # Enrich products with variant data
     products_data = []
@@ -2555,10 +2727,50 @@ def products_dashboard(request):
         "total_stock": total_stock,
         "low_stock_count": low_stock_count,
         "out_of_stock_count": out_of_stock_count,
+        "sort_by": sort_by,
         "cst_time": timezone.now().astimezone(pytz.timezone("America/Chicago")),
     }
 
     return render(request, "admin/products_dashboard.html", context)
+
+
+@staff_member_required
+def product_wizard(request):
+    """
+    Step-by-step product creation wizard.
+    Provides a simpler flow for creating products with variants.
+    """
+    from shop.models import Category, Color, CustomAttribute, Material, Size
+
+    # Get all categories
+    categories = Category.objects.all().order_by("name")
+
+    # Get all standard attribute values
+    sizes = Size.objects.all().order_by("code")
+    colors = Color.objects.all().order_by("name")
+    materials = Material.objects.all().order_by("name")
+
+    # Get custom attributes with their values
+    custom_attributes = CustomAttribute.objects.filter(is_active=True).prefetch_related("values").order_by("name")
+    custom_attrs_data = []
+    for attr in custom_attributes:
+        custom_attrs_data.append({
+            "id": attr.id,
+            "name": attr.name,
+            "slug": attr.slug,
+            "values": list(attr.values.filter(is_active=True).order_by("display_order", "value").values("id", "value"))
+        })
+
+    context = {
+        "categories": categories,
+        "sizes": sizes,
+        "colors": colors,
+        "materials": materials,
+        "custom_attributes": custom_attrs_data,
+        "cst_time": timezone.now().astimezone(pytz.timezone("America/Chicago")),
+    }
+
+    return render(request, "admin/product_wizard.html", context)
 
 
 @staff_member_required
@@ -2796,6 +3008,313 @@ def promotions_dashboard(request):
     }
 
     return render(request, "admin/discounts_dashboard.html", context)
+
+
+@staff_member_required
+def attributes_dashboard(request):
+    """
+    Manage product attributes: Sizes, Colors, Materials, and Custom Attributes.
+    These are used to create product variants.
+    """
+    from django.http import JsonResponse
+    from django.utils.text import slugify
+
+    from shop.models import Color, CustomAttribute, CustomAttributeValue, Material, Size
+
+    # Handle AJAX actions
+    if request.method == "POST":
+        action = request.POST.get("action")
+
+        # SIZE ACTIONS
+        if action == "create_size":
+            try:
+                code = request.POST.get("code", "").strip().upper()
+                label = request.POST.get("label", "").strip()
+                if not code:
+                    return JsonResponse({"success": False, "error": "Size code is required"})
+                if Size.objects.filter(code=code).exists():
+                    return JsonResponse({"success": False, "error": f"Size '{code}' already exists"})
+                size = Size.objects.create(code=code, label=label or code)
+                return JsonResponse({"success": True, "id": size.id, "code": size.code, "label": size.label})
+            except Exception as e:
+                return JsonResponse({"success": False, "error": str(e)})
+
+        elif action == "update_size":
+            try:
+                size_id = request.POST.get("size_id")
+                code = request.POST.get("code", "").strip().upper()
+                label = request.POST.get("label", "").strip()
+                size = Size.objects.get(id=size_id)
+                if code and code != size.code:
+                    if Size.objects.filter(code=code).exclude(id=size_id).exists():
+                        return JsonResponse({"success": False, "error": f"Size '{code}' already exists"})
+                    size.code = code
+                size.label = label or code
+                size.save()
+                return JsonResponse({"success": True})
+            except Size.DoesNotExist:
+                return JsonResponse({"success": False, "error": "Size not found"})
+            except Exception as e:
+                return JsonResponse({"success": False, "error": str(e)})
+
+        elif action == "delete_size":
+            try:
+                size_id = request.POST.get("size_id")
+                size = Size.objects.get(id=size_id)
+                # Check if size is in use
+                variant_count = size.productvariant_set.count()
+                if variant_count > 0:
+                    return JsonResponse({
+                        "success": False,
+                        "error": f"Cannot delete: {variant_count} variant(s) are using this size"
+                    })
+                size.delete()
+                return JsonResponse({"success": True})
+            except Size.DoesNotExist:
+                return JsonResponse({"success": False, "error": "Size not found"})
+            except Exception as e:
+                return JsonResponse({"success": False, "error": str(e)})
+
+        # COLOR ACTIONS
+        elif action == "create_color":
+            try:
+                name = request.POST.get("name", "").strip()
+                if not name:
+                    return JsonResponse({"success": False, "error": "Color name is required"})
+                if Color.objects.filter(name__iexact=name).exists():
+                    return JsonResponse({"success": False, "error": f"Color '{name}' already exists"})
+                color = Color.objects.create(name=name)
+                return JsonResponse({"success": True, "id": color.id, "name": color.name})
+            except Exception as e:
+                return JsonResponse({"success": False, "error": str(e)})
+
+        elif action == "update_color":
+            try:
+                color_id = request.POST.get("color_id")
+                name = request.POST.get("name", "").strip()
+                color = Color.objects.get(id=color_id)
+                if name and name.lower() != color.name.lower():
+                    if Color.objects.filter(name__iexact=name).exclude(id=color_id).exists():
+                        return JsonResponse({"success": False, "error": f"Color '{name}' already exists"})
+                    color.name = name
+                    color.save()
+                return JsonResponse({"success": True})
+            except Color.DoesNotExist:
+                return JsonResponse({"success": False, "error": "Color not found"})
+            except Exception as e:
+                return JsonResponse({"success": False, "error": str(e)})
+
+        elif action == "delete_color":
+            try:
+                color_id = request.POST.get("color_id")
+                color = Color.objects.get(id=color_id)
+                variant_count = color.productvariant_set.count()
+                if variant_count > 0:
+                    return JsonResponse({
+                        "success": False,
+                        "error": f"Cannot delete: {variant_count} variant(s) are using this color"
+                    })
+                color.delete()
+                return JsonResponse({"success": True})
+            except Color.DoesNotExist:
+                return JsonResponse({"success": False, "error": "Color not found"})
+            except Exception as e:
+                return JsonResponse({"success": False, "error": str(e)})
+
+        # MATERIAL ACTIONS
+        elif action == "create_material":
+            try:
+                name = request.POST.get("name", "").strip()
+                description = request.POST.get("description", "").strip()
+                if not name:
+                    return JsonResponse({"success": False, "error": "Material name is required"})
+                if Material.objects.filter(name__iexact=name).exists():
+                    return JsonResponse({"success": False, "error": f"Material '{name}' already exists"})
+                material = Material.objects.create(name=name, description=description)
+                return JsonResponse({"success": True, "id": material.id, "name": material.name})
+            except Exception as e:
+                return JsonResponse({"success": False, "error": str(e)})
+
+        elif action == "update_material":
+            try:
+                material_id = request.POST.get("material_id")
+                name = request.POST.get("name", "").strip()
+                description = request.POST.get("description", "").strip()
+                material = Material.objects.get(id=material_id)
+                if name and name.lower() != material.name.lower():
+                    if Material.objects.filter(name__iexact=name).exclude(id=material_id).exists():
+                        return JsonResponse({"success": False, "error": f"Material '{name}' already exists"})
+                    material.name = name
+                material.description = description
+                material.save()
+                return JsonResponse({"success": True})
+            except Material.DoesNotExist:
+                return JsonResponse({"success": False, "error": "Material not found"})
+            except Exception as e:
+                return JsonResponse({"success": False, "error": str(e)})
+
+        elif action == "delete_material":
+            try:
+                material_id = request.POST.get("material_id")
+                material = Material.objects.get(id=material_id)
+                variant_count = material.productvariant_set.count()
+                if variant_count > 0:
+                    return JsonResponse({
+                        "success": False,
+                        "error": f"Cannot delete: {variant_count} variant(s) are using this material"
+                    })
+                material.delete()
+                return JsonResponse({"success": True})
+            except Material.DoesNotExist:
+                return JsonResponse({"success": False, "error": "Material not found"})
+            except Exception as e:
+                return JsonResponse({"success": False, "error": str(e)})
+
+        # CUSTOM ATTRIBUTE ACTIONS
+        elif action == "create_custom_attribute":
+            try:
+                name = request.POST.get("name", "").strip()
+                description = request.POST.get("description", "").strip()
+                if not name:
+                    return JsonResponse({"success": False, "error": "Attribute name is required"})
+                slug = slugify(name)
+                if CustomAttribute.objects.filter(slug=slug).exists():
+                    return JsonResponse({"success": False, "error": f"Attribute '{name}' already exists"})
+                attr = CustomAttribute.objects.create(name=name, slug=slug, description=description)
+                return JsonResponse({"success": True, "id": attr.id, "name": attr.name, "slug": attr.slug})
+            except Exception as e:
+                return JsonResponse({"success": False, "error": str(e)})
+
+        elif action == "update_custom_attribute":
+            try:
+                attr_id = request.POST.get("attribute_id")
+                name = request.POST.get("name", "").strip()
+                description = request.POST.get("description", "").strip()
+                attr = CustomAttribute.objects.get(id=attr_id)
+                if name and name != attr.name:
+                    new_slug = slugify(name)
+                    if CustomAttribute.objects.filter(slug=new_slug).exclude(id=attr_id).exists():
+                        return JsonResponse({"success": False, "error": f"Attribute '{name}' already exists"})
+                    attr.name = name
+                    attr.slug = new_slug
+                attr.description = description
+                attr.save()
+                return JsonResponse({"success": True})
+            except CustomAttribute.DoesNotExist:
+                return JsonResponse({"success": False, "error": "Attribute not found"})
+            except Exception as e:
+                return JsonResponse({"success": False, "error": str(e)})
+
+        elif action == "delete_custom_attribute":
+            try:
+                attr_id = request.POST.get("attribute_id")
+                attr = CustomAttribute.objects.get(id=attr_id)
+                # Check if any values are in use (would need to check variant_attributes JSON)
+                value_count = attr.values.count()
+                attr.delete()
+                return JsonResponse({"success": True, "values_deleted": value_count})
+            except CustomAttribute.DoesNotExist:
+                return JsonResponse({"success": False, "error": "Attribute not found"})
+            except Exception as e:
+                return JsonResponse({"success": False, "error": str(e)})
+
+        # CUSTOM ATTRIBUTE VALUE ACTIONS
+        elif action == "add_attribute_value":
+            try:
+                attr_id = request.POST.get("attribute_id")
+                value = request.POST.get("value", "").strip()
+                if not value:
+                    return JsonResponse({"success": False, "error": "Value is required"})
+                attr = CustomAttribute.objects.get(id=attr_id)
+                if attr.values.filter(value__iexact=value).exists():
+                    return JsonResponse({"success": False, "error": f"Value '{value}' already exists"})
+                # Get next display order
+                max_order = attr.values.aggregate(models.Max("display_order"))["display_order__max"] or 0
+                attr_value = CustomAttributeValue.objects.create(
+                    attribute=attr, value=value, display_order=max_order + 1
+                )
+                return JsonResponse({"success": True, "id": attr_value.id, "value": attr_value.value})
+            except CustomAttribute.DoesNotExist:
+                return JsonResponse({"success": False, "error": "Attribute not found"})
+            except Exception as e:
+                return JsonResponse({"success": False, "error": str(e)})
+
+        elif action == "delete_attribute_value":
+            try:
+                value_id = request.POST.get("value_id")
+                attr_value = CustomAttributeValue.objects.get(id=value_id)
+                attr_value.delete()
+                return JsonResponse({"success": True})
+            except CustomAttributeValue.DoesNotExist:
+                return JsonResponse({"success": False, "error": "Value not found"})
+            except Exception as e:
+                return JsonResponse({"success": False, "error": str(e)})
+
+    # GET request - render dashboard
+    sizes = Size.objects.all().order_by("code")
+    colors = Color.objects.all().order_by("name")
+    materials = Material.objects.all().order_by("name")
+
+    # Get usage counts
+    sizes_data = []
+    for size in sizes:
+        variant_count = size.productvariant_set.count()
+        sizes_data.append({
+            "id": size.id,
+            "code": size.code,
+            "label": size.label,
+            "variant_count": variant_count,
+        })
+
+    colors_data = []
+    for color in colors:
+        variant_count = color.productvariant_set.count()
+        colors_data.append({
+            "id": color.id,
+            "name": color.name,
+            "variant_count": variant_count,
+        })
+
+    materials_data = []
+    for material in materials:
+        variant_count = material.productvariant_set.count()
+        materials_data.append({
+            "id": material.id,
+            "name": material.name,
+            "description": material.description,
+            "variant_count": variant_count,
+        })
+
+    # Get custom attributes with their values
+    custom_attributes = CustomAttribute.objects.prefetch_related("values").filter(is_active=True)
+    custom_attrs_data = []
+    for attr in custom_attributes:
+        values_data = [
+            {"id": v.id, "value": v.value, "display_order": v.display_order}
+            for v in attr.values.filter(is_active=True)
+        ]
+        custom_attrs_data.append({
+            "id": attr.id,
+            "name": attr.name,
+            "slug": attr.slug,
+            "description": attr.description,
+            "values": values_data,
+            "value_count": len(values_data),
+        })
+
+    context = {
+        "sizes": sizes_data,
+        "colors": colors_data,
+        "materials": materials_data,
+        "custom_attributes": custom_attrs_data,
+        "total_sizes": len(sizes_data),
+        "total_colors": len(colors_data),
+        "total_materials": len(materials_data),
+        "total_custom_attributes": len(custom_attrs_data),
+        "cst_time": timezone.now().astimezone(pytz.timezone("America/Chicago")),
+    }
+
+    return render(request, "admin/attributes_dashboard.html", context)
 
 
 @staff_member_required

@@ -1,0 +1,1290 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="csrf-token" content="{{ csrf_token }}">
+  <title>Product Attributes - Blueprint Apparel</title>
+  <link rel="icon" type="image/svg+xml" href="{% static 'admin-favicon.svg' %}">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <style>
+    {% include "admin/partials/dark_mode_styles.html" %}
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background: #f1f5f9;
+      min-height: 100vh;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
+
+    .nav-links {
+      background: linear-gradient(135deg, #8b5cf6 0%, #6366f1 100%);
+      padding: 1rem 2rem;
+      display: flex;
+      gap: 0.75rem;
+      align-items: center;
+    }
+
+    .nav-link {
+      background: rgba(255, 255, 255, 0.15);
+      backdrop-filter: blur(10px);
+      color: white;
+      padding: 0.5rem 1rem;
+      border-radius: 8px;
+      text-decoration: none;
+      font-size: 0.875rem;
+      font-weight: 500;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .nav-link:hover {
+      background: rgba(255, 255, 255, 0.25);
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    }
+
+    .top-bar {
+      background: linear-gradient(135deg, #8b5cf6 0%, #6366f1 100%);
+      padding: 2rem 0;
+      box-shadow: 0 4px 20px rgba(139, 92, 246, 0.15);
+      margin-bottom: 2rem;
+    }
+
+    .container {
+      max-width: 1600px;
+      margin: 0 auto;
+      padding: 0 2rem;
+    }
+
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1rem;
+    }
+
+    .header h1 {
+      color: white;
+      font-size: 2.5rem;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+    }
+
+    .header-subtitle {
+      color: rgba(255, 255, 255, 0.8);
+      font-size: 1rem;
+      margin-top: 0.25rem;
+    }
+
+    .main-content {
+      padding: 0 2rem 2rem 2rem;
+      max-width: 1600px;
+      margin: 0 auto;
+    }
+
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1.5rem;
+      margin-bottom: 3rem;
+      margin-top: -4rem;
+      position: relative;
+      z-index: 10;
+    }
+
+    .stat-card {
+      background: white;
+      border-radius: 16px;
+      padding: 1.75rem;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+      text-align: center;
+      border: 1px solid rgba(226, 232, 240, 0.8);
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .stat-card:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12);
+    }
+
+    .stat-icon {
+      font-size: 2rem;
+      margin-bottom: 0.75rem;
+    }
+
+    .stat-label {
+      color: #64748b;
+      font-size: 0.75rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      margin-bottom: 0.5rem;
+    }
+
+    .stat-value {
+      background: linear-gradient(135deg, #8b5cf6 0%, #6366f1 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      font-size: 2.5rem;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+    }
+
+    .attributes-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 2rem;
+    }
+
+    @media (max-width: 1200px) {
+      .attributes-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+    }
+
+    @media (max-width: 768px) {
+      .attributes-grid {
+        grid-template-columns: 1fr;
+      }
+      .stats-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .attribute-section {
+      background: white;
+      border-radius: 16px;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.06);
+      border: 1px solid #e2e8f0;
+      overflow: hidden;
+    }
+
+    .section-header {
+      background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+      padding: 1.25rem 1.5rem;
+      border-bottom: 1px solid #e2e8f0;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .section-title {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      font-size: 1.125rem;
+      font-weight: 700;
+      color: #1e293b;
+    }
+
+    .section-title i {
+      color: #8b5cf6;
+    }
+
+    .btn {
+      padding: 0.5rem 1rem;
+      border-radius: 8px;
+      font-size: 0.875rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+      border: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, #8b5cf6 0%, #6366f1 100%);
+      color: white;
+    }
+
+    .btn-primary:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(139, 92, 246, 0.4);
+    }
+
+    .btn-secondary {
+      background: #f1f5f9;
+      color: #475569;
+      border: 1px solid #e2e8f0;
+    }
+
+    .btn-secondary:hover {
+      background: #e2e8f0;
+    }
+
+    .btn-danger {
+      background: #fef2f2;
+      color: #dc2626;
+      border: 1px solid #fecaca;
+    }
+
+    .btn-danger:hover {
+      background: #fee2e2;
+    }
+
+    .attribute-list {
+      padding: 0.5rem;
+      max-height: 400px;
+      overflow-y: auto;
+    }
+
+    .attribute-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0.875rem 1rem;
+      border-radius: 8px;
+      margin-bottom: 0.25rem;
+      transition: all 0.2s;
+    }
+
+    .attribute-item:hover {
+      background: #f8fafc;
+    }
+
+    .attribute-info {
+      display: flex;
+      flex-direction: column;
+      gap: 0.25rem;
+    }
+
+    .attribute-name {
+      font-weight: 600;
+      color: #1e293b;
+      font-size: 0.9375rem;
+    }
+
+    .attribute-meta {
+      font-size: 0.75rem;
+      color: #64748b;
+    }
+
+    .attribute-actions {
+      display: flex;
+      gap: 0.5rem;
+      opacity: 0;
+      transition: opacity 0.2s;
+    }
+
+    .attribute-item:hover .attribute-actions {
+      opacity: 1;
+    }
+
+    .btn-icon {
+      width: 32px;
+      height: 32px;
+      padding: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 6px;
+      font-size: 0.875rem;
+    }
+
+    .empty-state {
+      text-align: center;
+      padding: 2rem;
+      color: #64748b;
+    }
+
+    .empty-state i {
+      font-size: 2.5rem;
+      margin-bottom: 0.75rem;
+      opacity: 0.5;
+    }
+
+    /* Modal Styles */
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.5);
+      backdrop-filter: blur(4px);
+      z-index: 1000;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .modal-overlay.active {
+      display: flex;
+    }
+
+    .modal-content {
+      background: white;
+      border-radius: 16px;
+      max-width: 500px;
+      width: 90%;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+    }
+
+    .modal-header {
+      padding: 1.5rem;
+      border-bottom: 1px solid #e2e8f0;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .modal-header h2 {
+      font-size: 1.25rem;
+      font-weight: 700;
+      color: #1e293b;
+    }
+
+    .modal-close {
+      background: none;
+      border: none;
+      font-size: 1.5rem;
+      color: #64748b;
+      cursor: pointer;
+      width: 36px;
+      height: 36px;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.2s;
+    }
+
+    .modal-close:hover {
+      background: #f1f5f9;
+      color: #1e293b;
+    }
+
+    .modal-body {
+      padding: 1.5rem;
+    }
+
+    .modal-footer {
+      padding: 1rem 1.5rem;
+      border-top: 1px solid #e2e8f0;
+      display: flex;
+      justify-content: flex-end;
+      gap: 0.75rem;
+    }
+
+    .form-group {
+      margin-bottom: 1.25rem;
+    }
+
+    .form-group:last-child {
+      margin-bottom: 0;
+    }
+
+    .form-label {
+      display: block;
+      font-size: 0.875rem;
+      font-weight: 600;
+      color: #374151;
+      margin-bottom: 0.5rem;
+    }
+
+    .form-input {
+      width: 100%;
+      padding: 0.75rem 1rem;
+      border: 1px solid #d1d5db;
+      border-radius: 8px;
+      font-size: 0.9375rem;
+      transition: all 0.2s;
+    }
+
+    .form-input:focus {
+      outline: none;
+      border-color: #8b5cf6;
+      box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.1);
+    }
+
+    .form-textarea {
+      min-height: 80px;
+      resize: vertical;
+    }
+
+    .form-hint {
+      font-size: 0.75rem;
+      color: #64748b;
+      margin-top: 0.375rem;
+    }
+
+    /* Toast notifications */
+    .toast {
+      position: fixed;
+      bottom: 2rem;
+      right: 2rem;
+      padding: 1rem 1.5rem;
+      border-radius: 10px;
+      font-weight: 500;
+      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+      z-index: 2000;
+      transform: translateY(100px);
+      opacity: 0;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .toast.show {
+      transform: translateY(0);
+      opacity: 1;
+    }
+
+    .toast.success {
+      background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+      color: white;
+    }
+
+    .toast.error {
+      background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+      color: white;
+    }
+
+    .usage-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.25rem;
+      padding: 0.25rem 0.5rem;
+      border-radius: 4px;
+      font-size: 0.6875rem;
+      font-weight: 600;
+      background: #f0fdf4;
+      color: #16a34a;
+    }
+
+    .usage-badge.unused {
+      background: #fef3c7;
+      color: #d97706;
+    }
+
+    .usage-badge.in-use {
+      background: #dbeafe;
+      color: #1d4ed8;
+    }
+
+    .btn-header-primary {
+      background: white;
+      color: #8b5cf6;
+      padding: 0.875rem 1.75rem;
+      border-radius: 12px;
+      font-weight: 700;
+      font-size: 1rem;
+      transition: all 0.3s;
+      border: none;
+      cursor: pointer;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .btn-header-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+    }
+
+  </style>
+  {% include "admin/partials/dark_mode_apply.html" %}
+</head>
+<body>
+  <div class="nav-links">
+    <a href="{% url 'admin_home' %}" class="nav-link"><i class="fa-solid fa-arrow-left"></i> Back</a>
+  </div>
+
+  <div class="top-bar">
+    <div class="container">
+      <div class="header">
+        <div>
+          <h1>Attributes</h1>
+        </div>
+        <button class="btn-header-primary" onclick="openAddAttributeModal()">
+          <i class="fa-solid fa-plus"></i> Add Attribute
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <div class="main-content">
+    <!-- Stats -->
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-icon"><i class="fa-solid fa-ruler"></i></div>
+        <div class="stat-label">Sizes</div>
+        <div class="stat-value">{{ total_sizes }}</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon"><i class="fa-solid fa-palette"></i></div>
+        <div class="stat-label">Colors</div>
+        <div class="stat-value">{{ total_colors }}</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon"><i class="fa-solid fa-layer-group"></i></div>
+        <div class="stat-label">Materials</div>
+        <div class="stat-value">{{ total_materials }}</div>
+      </div>
+    </div>
+
+    <!-- Attribute Sections -->
+    <div class="attributes-grid">
+      <!-- Sizes Section -->
+      <div class="attribute-section">
+        <div class="section-header">
+          <div class="section-title">
+            <i class="fa-solid fa-ruler"></i>
+            Sizes
+          </div>
+          <button class="btn btn-primary" onclick="openAddSizeModal()">
+            <i class="fa-solid fa-plus"></i> Add
+          </button>
+        </div>
+        <div class="attribute-list" id="sizes-list">
+          {% if sizes %}
+            {% for size in sizes %}
+            <div class="attribute-item" data-id="{{ size.id }}">
+              <div class="attribute-info">
+                <span class="attribute-name">{{ size.code }}{% if size.label and size.label != size.code %} - {{ size.label }}{% endif %}</span>
+                <div class="attribute-meta">
+                  {% if size.variant_count > 0 %}
+                  <span class="usage-badge in-use">
+                    <i class="fa-solid fa-link"></i> Used in {{ size.variant_count }} SKU{{ size.variant_count|pluralize }}
+                  </span>
+                  {% else %}
+                  <span class="usage-badge unused">
+                    <i class="fa-solid fa-circle-minus"></i> Not in use
+                  </span>
+                  {% endif %}
+                </div>
+              </div>
+              <div class="attribute-actions">
+                <button class="btn btn-icon btn-secondary" onclick="openEditSizeModal({{ size.id }}, '{{ size.code }}', '{{ size.label|escapejs }}')" title="Edit">
+                  <i class="fa-solid fa-pen"></i>
+                </button>
+                <button class="btn btn-icon btn-danger" onclick="deleteSize({{ size.id }}, '{{ size.code }}')" title="Delete">
+                  <i class="fa-solid fa-trash"></i>
+                </button>
+              </div>
+            </div>
+            {% endfor %}
+          {% else %}
+            <div class="empty-state">
+              <i class="fa-solid fa-ruler"></i>
+              <p>No sizes defined yet</p>
+            </div>
+          {% endif %}
+        </div>
+      </div>
+
+      <!-- Colors Section -->
+      <div class="attribute-section">
+        <div class="section-header">
+          <div class="section-title">
+            <i class="fa-solid fa-palette"></i>
+            Colors
+          </div>
+          <button class="btn btn-primary" onclick="openAddColorModal()">
+            <i class="fa-solid fa-plus"></i> Add
+          </button>
+        </div>
+        <div class="attribute-list" id="colors-list">
+          {% if colors %}
+            {% for color in colors %}
+            <div class="attribute-item" data-id="{{ color.id }}">
+              <div class="attribute-info">
+                <span class="attribute-name">{{ color.name }}</span>
+                <div class="attribute-meta">
+                  {% if color.variant_count > 0 %}
+                  <span class="usage-badge in-use">
+                    <i class="fa-solid fa-link"></i> Used in {{ color.variant_count }} SKU{{ color.variant_count|pluralize }}
+                  </span>
+                  {% else %}
+                  <span class="usage-badge unused">
+                    <i class="fa-solid fa-circle-minus"></i> Not in use
+                  </span>
+                  {% endif %}
+                </div>
+              </div>
+              <div class="attribute-actions">
+                <button class="btn btn-icon btn-secondary" onclick="openEditColorModal({{ color.id }}, '{{ color.name|escapejs }}')" title="Edit">
+                  <i class="fa-solid fa-pen"></i>
+                </button>
+                <button class="btn btn-icon btn-danger" onclick="deleteColor({{ color.id }}, '{{ color.name|escapejs }}')" title="Delete">
+                  <i class="fa-solid fa-trash"></i>
+                </button>
+              </div>
+            </div>
+            {% endfor %}
+          {% else %}
+            <div class="empty-state">
+              <i class="fa-solid fa-palette"></i>
+              <p>No colors defined yet</p>
+            </div>
+          {% endif %}
+        </div>
+      </div>
+
+      <!-- Materials Section -->
+      <div class="attribute-section">
+        <div class="section-header">
+          <div class="section-title">
+            <i class="fa-solid fa-layer-group"></i>
+            Materials
+          </div>
+          <button class="btn btn-primary" onclick="openAddMaterialModal()">
+            <i class="fa-solid fa-plus"></i> Add
+          </button>
+        </div>
+        <div class="attribute-list" id="materials-list">
+          {% if materials %}
+            {% for material in materials %}
+            <div class="attribute-item" data-id="{{ material.id }}">
+              <div class="attribute-info">
+                <span class="attribute-name">{{ material.name }}</span>
+                <div class="attribute-meta">
+                  {% if material.description %}<span style="display: block; margin-bottom: 0.25rem;">{{ material.description|truncatechars:40 }}</span>{% endif %}
+                  {% if material.variant_count > 0 %}
+                  <span class="usage-badge in-use">
+                    <i class="fa-solid fa-link"></i> Used in {{ material.variant_count }} SKU{{ material.variant_count|pluralize }}
+                  </span>
+                  {% else %}
+                  <span class="usage-badge unused">
+                    <i class="fa-solid fa-circle-minus"></i> Not in use
+                  </span>
+                  {% endif %}
+                </div>
+              </div>
+              <div class="attribute-actions">
+                <button class="btn btn-icon btn-secondary" onclick="openEditMaterialModal({{ material.id }}, '{{ material.name|escapejs }}', '{{ material.description|escapejs }}')" title="Edit">
+                  <i class="fa-solid fa-pen"></i>
+                </button>
+                <button class="btn btn-icon btn-danger" onclick="deleteMaterial({{ material.id }}, '{{ material.name|escapejs }}')" title="Delete">
+                  <i class="fa-solid fa-trash"></i>
+                </button>
+              </div>
+            </div>
+            {% endfor %}
+          {% else %}
+            <div class="empty-state">
+              <i class="fa-solid fa-layer-group"></i>
+              <p>No materials defined yet</p>
+            </div>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+
+    <!-- Custom Attributes Section -->
+    {% if custom_attributes %}
+    <div style="margin-top: 3rem;">
+      <h2 style="font-size: 1.5rem; font-weight: 700; color: #1e293b; margin-bottom: 1.5rem; display: flex; align-items: center; gap: 0.75rem;">
+        <i class="fa-solid fa-tags" style="color: #8b5cf6;"></i>
+        Custom Attributes
+      </h2>
+      <div class="attributes-grid">
+        {% for attr in custom_attributes %}
+        <div class="attribute-section">
+          <div class="section-header">
+            <div class="section-title">
+              <i class="fa-solid fa-tag"></i>
+              {{ attr.name }}
+            </div>
+            <div style="display: flex; gap: 0.5rem;">
+              <button class="btn btn-primary" onclick="openAddValueModal({{ attr.id }}, '{{ attr.name|escapejs }}')" style="padding: 0.375rem 0.75rem;">
+                <i class="fa-solid fa-plus"></i> Add
+              </button>
+              <button class="btn btn-icon btn-danger" onclick="deleteCustomAttribute({{ attr.id }}, '{{ attr.name|escapejs }}')" title="Delete Attribute">
+                <i class="fa-solid fa-trash"></i>
+              </button>
+            </div>
+          </div>
+          <div class="attribute-list">
+            {% if attr.values %}
+              {% for value in attr.values %}
+              <div class="attribute-item">
+                <div class="attribute-info">
+                  <span class="attribute-name">{{ value.value }}</span>
+                </div>
+                <div class="attribute-actions">
+                  <button class="btn btn-icon btn-danger" onclick="deleteAttributeValue({{ value.id }}, '{{ value.value|escapejs }}')" title="Delete">
+                    <i class="fa-solid fa-times"></i>
+                  </button>
+                </div>
+              </div>
+              {% endfor %}
+            {% else %}
+              <div class="empty-state">
+                <i class="fa-solid fa-tag"></i>
+                <p>No values yet. Click "Add" to add values.</p>
+              </div>
+            {% endif %}
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+    {% else %}
+    <div style="margin-top: 3rem; text-align: center; padding: 3rem; background: #f8fafc; border-radius: 16px; border: 2px dashed #e2e8f0;">
+      <i class="fa-solid fa-tags" style="font-size: 3rem; color: #cbd5e1; margin-bottom: 1rem; display: block;"></i>
+      <h3 style="font-size: 1.25rem; font-weight: 600; color: #64748b; margin-bottom: 0.5rem;">No Custom Attributes Yet</h3>
+      <p style="color: #94a3b8; margin-bottom: 1.5rem;">Create custom attributes like "Waist", "Inseam", or "Lens Color" for specialized products.</p>
+      <button class="btn btn-primary" onclick="openAddAttributeModal()">
+        <i class="fa-solid fa-plus"></i> Create Your First Attribute
+      </button>
+    </div>
+    {% endif %}
+  </div>
+
+  <!-- Size Modal -->
+  <div class="modal-overlay" id="sizeModal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2 id="sizeModalTitle">Add Size</h2>
+        <button class="modal-close" onclick="closeSizeModal()">&times;</button>
+      </div>
+      <div class="modal-body">
+        <input type="hidden" id="size_id">
+        <div class="form-group">
+          <label class="form-label">Size Code *</label>
+          <input type="text" id="size_code" class="form-input" placeholder="e.g., S, M, L, XL">
+          <p class="form-hint">Short code used in SKUs (will be uppercased)</p>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Display Label</label>
+          <input type="text" id="size_label" class="form-input" placeholder="e.g., Small, Medium, Large">
+          <p class="form-hint">Optional friendly name shown to customers</p>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" onclick="closeSizeModal()">Cancel</button>
+        <button class="btn btn-primary" onclick="saveSize()">Save Size</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Color Modal -->
+  <div class="modal-overlay" id="colorModal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2 id="colorModalTitle">Add Color</h2>
+        <button class="modal-close" onclick="closeColorModal()">&times;</button>
+      </div>
+      <div class="modal-body">
+        <input type="hidden" id="color_id">
+        <div class="form-group">
+          <label class="form-label">Color Name *</label>
+          <input type="text" id="color_name" class="form-input" placeholder="e.g., Black, White, Navy Blue">
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" onclick="closeColorModal()">Cancel</button>
+        <button class="btn btn-primary" onclick="saveColor()">Save Color</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Material Modal -->
+  <div class="modal-overlay" id="materialModal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2 id="materialModalTitle">Add Material</h2>
+        <button class="modal-close" onclick="closeMaterialModal()">&times;</button>
+      </div>
+      <div class="modal-body">
+        <input type="hidden" id="material_id">
+        <div class="form-group">
+          <label class="form-label">Material Name *</label>
+          <input type="text" id="material_name" class="form-input" placeholder="e.g., Cotton, Polyester, Linen">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Description</label>
+          <textarea id="material_description" class="form-input form-textarea" placeholder="Optional description of the material"></textarea>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" onclick="closeMaterialModal()">Cancel</button>
+        <button class="btn btn-primary" onclick="saveMaterial()">Save Material</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Add Attribute Modal (Create new attribute type) -->
+  <div class="modal-overlay" id="addAttributeModal">
+    <div class="modal-content" style="max-width: 500px;">
+      <div class="modal-header">
+        <h2>Create New Attribute</h2>
+        <button class="modal-close" onclick="closeAddAttributeModal()">&times;</button>
+      </div>
+      <div class="modal-body">
+        <p style="color: #64748b; font-size: 0.875rem; margin-bottom: 1.25rem;">
+          Create a new attribute type for product variants. You can add values to it after creation.
+        </p>
+        <div class="form-group">
+          <label class="form-label">Attribute Name *</label>
+          <input type="text" id="new_attr_name" class="form-input" placeholder="e.g., Waist, Inseam, Lens Color">
+          <p class="form-hint">This will be the attribute category name</p>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Description</label>
+          <textarea id="new_attr_description" class="form-input form-textarea" placeholder="Optional description of this attribute"></textarea>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" onclick="closeAddAttributeModal()">Cancel</button>
+        <button class="btn btn-primary" onclick="createCustomAttribute()">
+          <i class="fa-solid fa-plus"></i> Create Attribute
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Add Value Modal (Add value to custom attribute) -->
+  <div class="modal-overlay" id="addValueModal">
+    <div class="modal-content" style="max-width: 400px;">
+      <div class="modal-header">
+        <h2 id="addValueModalTitle">Add Value</h2>
+        <button class="modal-close" onclick="closeAddValueModal()">&times;</button>
+      </div>
+      <div class="modal-body">
+        <input type="hidden" id="addValueAttrId">
+        <div class="form-group">
+          <label class="form-label">Value *</label>
+          <input type="text" id="new_value" class="form-input" placeholder="e.g., 28, 30, 32">
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" onclick="closeAddValueModal()">Cancel</button>
+        <button class="btn btn-primary" onclick="addAttributeValue()">
+          <i class="fa-solid fa-plus"></i> Add Value
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast -->
+  <div id="toast" class="toast"></div>
+
+  <script>
+    function getCookie(name) {
+      let cookieValue = null;
+      if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+          const cookie = cookies[i].trim();
+          if (cookie.substring(0, name.length + 1) === (name + '=')) {
+            cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+            break;
+          }
+        }
+      }
+      if (!cookieValue && name === 'csrftoken') {
+        const metaTag = document.querySelector('meta[name="csrf-token"]');
+        if (metaTag) {
+          cookieValue = metaTag.getAttribute('content');
+        }
+      }
+      return cookieValue;
+    }
+
+    function showToast(message, type = 'success') {
+      const toast = document.getElementById('toast');
+      toast.textContent = message;
+      toast.className = 'toast ' + type;
+      toast.classList.add('show');
+      setTimeout(() => {
+        toast.classList.remove('show');
+      }, 3000);
+    }
+
+    // ADD ATTRIBUTE MODAL FUNCTIONS (Create new attribute type)
+    function openAddAttributeModal() {
+      document.getElementById('new_attr_name').value = '';
+      document.getElementById('new_attr_description').value = '';
+      document.getElementById('addAttributeModal').classList.add('active');
+    }
+
+    function closeAddAttributeModal() {
+      document.getElementById('addAttributeModal').classList.remove('active');
+    }
+
+    function createCustomAttribute() {
+      const name = document.getElementById('new_attr_name').value.trim();
+      const description = document.getElementById('new_attr_description').value.trim();
+
+      if (!name) {
+        showToast('Attribute name is required', 'error');
+        return;
+      }
+
+      const formData = new FormData();
+      formData.append('csrfmiddlewaretoken', getCookie('csrftoken'));
+      formData.append('action', 'create_custom_attribute');
+      formData.append('name', name);
+      formData.append('description', description);
+
+      fetch(window.location.pathname, {
+        method: 'POST',
+        body: formData
+      })
+      .then(response => response.json())
+      .then(data => {
+        if (data.success) {
+          showToast('Attribute "' + name + '" created successfully');
+          closeAddAttributeModal();
+          location.reload();
+        } else {
+          showToast(data.error || 'Failed to create attribute', 'error');
+        }
+      })
+      .catch(error => {
+        showToast('An error occurred', 'error');
+      });
+    }
+
+    function deleteCustomAttribute(id, name) {
+      if (!confirm(`Are you sure you want to delete the "${name}" attribute?\n\nThis will also delete all its values.`)) return;
+
+      const formData = new FormData();
+      formData.append('csrfmiddlewaretoken', getCookie('csrftoken'));
+      formData.append('action', 'delete_custom_attribute');
+      formData.append('attribute_id', id);
+
+      fetch(window.location.pathname, {
+        method: 'POST',
+        body: formData
+      })
+      .then(response => response.json())
+      .then(data => {
+        if (data.success) {
+          showToast('Attribute deleted successfully');
+          location.reload();
+        } else {
+          showToast(data.error || 'Failed to delete attribute', 'error');
+        }
+      });
+    }
+
+    // ADD VALUE MODAL FUNCTIONS
+    function openAddValueModal(attrId, attrName) {
+      document.getElementById('addValueAttrId').value = attrId;
+      document.getElementById('addValueModalTitle').textContent = 'Add ' + attrName + ' Value';
+      document.getElementById('new_value').value = '';
+      document.getElementById('addValueModal').classList.add('active');
+    }
+
+    function closeAddValueModal() {
+      document.getElementById('addValueModal').classList.remove('active');
+    }
+
+    function addAttributeValue() {
+      const attrId = document.getElementById('addValueAttrId').value;
+      const value = document.getElementById('new_value').value.trim();
+
+      if (!value) {
+        showToast('Value is required', 'error');
+        return;
+      }
+
+      const formData = new FormData();
+      formData.append('csrfmiddlewaretoken', getCookie('csrftoken'));
+      formData.append('action', 'add_attribute_value');
+      formData.append('attribute_id', attrId);
+      formData.append('value', value);
+
+      fetch(window.location.pathname, {
+        method: 'POST',
+        body: formData
+      })
+      .then(response => response.json())
+      .then(data => {
+        if (data.success) {
+          showToast('Value added successfully');
+          closeAddValueModal();
+          location.reload();
+        } else {
+          showToast(data.error || 'Failed to add value', 'error');
+        }
+      });
+    }
+
+    function deleteAttributeValue(valueId, valueName) {
+      if (!confirm(`Delete value "${valueName}"?`)) return;
+
+      const formData = new FormData();
+      formData.append('csrfmiddlewaretoken', getCookie('csrftoken'));
+      formData.append('action', 'delete_attribute_value');
+      formData.append('value_id', valueId);
+
+      fetch(window.location.pathname, {
+        method: 'POST',
+        body: formData
+      })
+      .then(response => response.json())
+      .then(data => {
+        if (data.success) {
+          showToast('Value deleted');
+          location.reload();
+        } else {
+          showToast(data.error || 'Failed to delete value', 'error');
+        }
+      });
+    }
+
+    // SIZE FUNCTIONS
+    function openAddSizeModal() {
+      document.getElementById('sizeModalTitle').textContent = 'Add Size';
+      document.getElementById('size_id').value = '';
+      document.getElementById('size_code').value = '';
+      document.getElementById('size_label').value = '';
+      document.getElementById('sizeModal').classList.add('active');
+    }
+
+    function openEditSizeModal(id, code, label) {
+      document.getElementById('sizeModalTitle').textContent = 'Edit Size';
+      document.getElementById('size_id').value = id;
+      document.getElementById('size_code').value = code;
+      document.getElementById('size_label').value = label;
+      document.getElementById('sizeModal').classList.add('active');
+    }
+
+    function closeSizeModal() {
+      document.getElementById('sizeModal').classList.remove('active');
+    }
+
+    function saveSize() {
+      const id = document.getElementById('size_id').value;
+      const code = document.getElementById('size_code').value;
+      const label = document.getElementById('size_label').value;
+
+      if (!code.trim()) {
+        showToast('Size code is required', 'error');
+        return;
+      }
+
+      const formData = new FormData();
+      formData.append('csrfmiddlewaretoken', getCookie('csrftoken'));
+      formData.append('action', id ? 'update_size' : 'create_size');
+      formData.append('code', code);
+      formData.append('label', label);
+      if (id) formData.append('size_id', id);
+
+      fetch(window.location.pathname, {
+        method: 'POST',
+        body: formData
+      })
+      .then(response => response.json())
+      .then(data => {
+        if (data.success) {
+          showToast(id ? 'Size updated successfully' : 'Size created successfully');
+          closeSizeModal();
+          location.reload();
+        } else {
+          showToast(data.error || 'Failed to save size', 'error');
+        }
+      })
+      .catch(error => {
+        showToast('An error occurred', 'error');
+      });
+    }
+
+    function deleteSize(id, code) {
+      if (!confirm(`Are you sure you want to delete size "${code}"?`)) return;
+
+      const formData = new FormData();
+      formData.append('csrfmiddlewaretoken', getCookie('csrftoken'));
+      formData.append('action', 'delete_size');
+      formData.append('size_id', id);
+
+      fetch(window.location.pathname, {
+        method: 'POST',
+        body: formData
+      })
+      .then(response => response.json())
+      .then(data => {
+        if (data.success) {
+          showToast('Size deleted successfully');
+          location.reload();
+        } else {
+          showToast(data.error || 'Failed to delete size', 'error');
+        }
+      });
+    }
+
+    // COLOR FUNCTIONS
+    function openAddColorModal() {
+      document.getElementById('colorModalTitle').textContent = 'Add Color';
+      document.getElementById('color_id').value = '';
+      document.getElementById('color_name').value = '';
+      document.getElementById('colorModal').classList.add('active');
+    }
+
+    function openEditColorModal(id, name) {
+      document.getElementById('colorModalTitle').textContent = 'Edit Color';
+      document.getElementById('color_id').value = id;
+      document.getElementById('color_name').value = name;
+      document.getElementById('colorModal').classList.add('active');
+    }
+
+    function closeColorModal() {
+      document.getElementById('colorModal').classList.remove('active');
+    }
+
+    function saveColor() {
+      const id = document.getElementById('color_id').value;
+      const name = document.getElementById('color_name').value;
+
+      if (!name.trim()) {
+        showToast('Color name is required', 'error');
+        return;
+      }
+
+      const formData = new FormData();
+      formData.append('csrfmiddlewaretoken', getCookie('csrftoken'));
+      formData.append('action', id ? 'update_color' : 'create_color');
+      formData.append('name', name);
+      if (id) formData.append('color_id', id);
+
+      fetch(window.location.pathname, {
+        method: 'POST',
+        body: formData
+      })
+      .then(response => response.json())
+      .then(data => {
+        if (data.success) {
+          showToast(id ? 'Color updated successfully' : 'Color created successfully');
+          closeColorModal();
+          location.reload();
+        } else {
+          showToast(data.error || 'Failed to save color', 'error');
+        }
+      });
+    }
+
+    function deleteColor(id, name) {
+      if (!confirm(`Are you sure you want to delete color "${name}"?`)) return;
+
+      const formData = new FormData();
+      formData.append('csrfmiddlewaretoken', getCookie('csrftoken'));
+      formData.append('action', 'delete_color');
+      formData.append('color_id', id);
+
+      fetch(window.location.pathname, {
+        method: 'POST',
+        body: formData
+      })
+      .then(response => response.json())
+      .then(data => {
+        if (data.success) {
+          showToast('Color deleted successfully');
+          location.reload();
+        } else {
+          showToast(data.error || 'Failed to delete color', 'error');
+        }
+      });
+    }
+
+    // MATERIAL FUNCTIONS
+    function openAddMaterialModal() {
+      document.getElementById('materialModalTitle').textContent = 'Add Material';
+      document.getElementById('material_id').value = '';
+      document.getElementById('material_name').value = '';
+      document.getElementById('material_description').value = '';
+      document.getElementById('materialModal').classList.add('active');
+    }
+
+    function openEditMaterialModal(id, name, description) {
+      document.getElementById('materialModalTitle').textContent = 'Edit Material';
+      document.getElementById('material_id').value = id;
+      document.getElementById('material_name').value = name;
+      document.getElementById('material_description').value = description || '';
+      document.getElementById('materialModal').classList.add('active');
+    }
+
+    function closeMaterialModal() {
+      document.getElementById('materialModal').classList.remove('active');
+    }
+
+    function saveMaterial() {
+      const id = document.getElementById('material_id').value;
+      const name = document.getElementById('material_name').value;
+      const description = document.getElementById('material_description').value;
+
+      if (!name.trim()) {
+        showToast('Material name is required', 'error');
+        return;
+      }
+
+      const formData = new FormData();
+      formData.append('csrfmiddlewaretoken', getCookie('csrftoken'));
+      formData.append('action', id ? 'update_material' : 'create_material');
+      formData.append('name', name);
+      formData.append('description', description);
+      if (id) formData.append('material_id', id);
+
+      fetch(window.location.pathname, {
+        method: 'POST',
+        body: formData
+      })
+      .then(response => response.json())
+      .then(data => {
+        if (data.success) {
+          showToast(id ? 'Material updated successfully' : 'Material created successfully');
+          closeMaterialModal();
+          location.reload();
+        } else {
+          showToast(data.error || 'Failed to save material', 'error');
+        }
+      });
+    }
+
+    function deleteMaterial(id, name) {
+      if (!confirm(`Are you sure you want to delete material "${name}"?`)) return;
+
+      const formData = new FormData();
+      formData.append('csrfmiddlewaretoken', getCookie('csrftoken'));
+      formData.append('action', 'delete_material');
+      formData.append('material_id', id);
+
+      fetch(window.location.pathname, {
+        method: 'POST',
+        body: formData
+      })
+      .then(response => response.json())
+      .then(data => {
+        if (data.success) {
+          showToast('Material deleted successfully');
+          location.reload();
+        } else {
+          showToast(data.error || 'Failed to delete material', 'error');
+        }
+      });
+    }
+
+    // Close modals on outside click
+    document.querySelectorAll('.modal-overlay').forEach(modal => {
+      modal.addEventListener('click', function(e) {
+        if (e.target === this) {
+          this.classList.remove('active');
+        }
+      });
+    });
+
+    // Close modals on Escape key
+    document.addEventListener('keydown', function(e) {
+      if (e.key === 'Escape') {
+        document.querySelectorAll('.modal-overlay.active').forEach(modal => {
+          modal.classList.remove('active');
+        });
+      }
+    });
+  </script>
+</body>
+</html>

@@ -1929,7 +1929,7 @@
     <div class="container">
       <div class="header">
         <h1>Campaigns</h1>
-        <a href="{% url 'admin_campaign_create' %}" class="btn-primary">+ Create Campaign</a>
+        <button type="button" class="btn-primary" onclick="openCreateCampaignPopup()">+ Create Campaign</button>
       </div>
     </div>
   </div>
@@ -2226,7 +2226,7 @@
       </div>
 
       <div style="margin-top: 2rem; text-align: center;">
-        <a href="{% url 'admin_campaign_create' %}" class="btn-primary">+ Create New Campaign</a>
+        <button type="button" class="btn-primary" onclick="openCreateCampaignPopup()">+ Create New Campaign</button>
       </div>
     </div>
 
@@ -2362,7 +2362,7 @@
       <div class="empty-state-icon">🎯</div>
       <h2>No Campaigns Yet</h2>
       <p>Create your first marketing campaign to start scheduling email and SMS messages to your subscribers.</p>
-      <a href="{% url 'admin_campaign_create' %}" class="btn-primary">+ Create Your First Campaign</a>
+      <button type="button" class="btn-primary" onclick="openCreateCampaignPopup()">+ Create Your First Campaign</button>
     </div>
     {% endif %}
   </div>
@@ -2696,6 +2696,87 @@
         <button type="submit" class="btn-popup-save" id="btn-save-message">Create Message</button>
       </div>
     </form>
+    </div>
+  </div>
+
+  <!-- Create Campaign Popup -->
+  <div class="popup-overlay" id="campaign-popup-overlay" onclick="closeCreateCampaignPopup()"></div>
+  <div class="message-type-selector" id="campaign-popup" style="max-width: 600px;">
+    <div class="popup-header" style="padding: 2rem; padding-bottom: 1rem; border-bottom: 2px solid #f1f5f9; flex-shrink: 0;">
+      <div style="display: flex; align-items: center; gap: 1rem; margin-bottom: 0.5rem;">
+        <div style="width: 48px; height: 48px; border-radius: 50%; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); display: flex; align-items: center; justify-content: center; color: white; font-size: 1.25rem;">
+          <i class="fa-solid fa-bullhorn"></i>
+        </div>
+        <div>
+          <h3 class="popup-title">Create New Campaign</h3>
+          <p class="popup-subtitle">Set up a marketing campaign with scheduled messages</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="popup-content-wrapper">
+      <form id="campaign-form" method="POST" action="{% url 'admin_campaigns_list' %}">
+        {% csrf_token %}
+        <input type="hidden" name="action" value="create_campaign">
+
+        <!-- Campaign Details Section -->
+        <div style="margin-bottom: 1.5rem;">
+          <div style="font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: #667eea; margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem;">
+            <i class="fa-solid fa-info-circle"></i> Campaign Details
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Campaign Name <span style="color: #ef4444;">*</span></label>
+            <input type="text" name="name" class="form-input" required placeholder="e.g., Fall Sale 2025">
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Description</label>
+            <textarea name="description" class="form-input" rows="3" placeholder="Describe the purpose and goals of this campaign..."></textarea>
+            <small style="color: #64748b; font-size: 0.75rem; margin-top: 0.375rem; display: block;">Help your team understand what this campaign is about</small>
+          </div>
+        </div>
+
+        <!-- Targeting Section -->
+        <div style="margin-bottom: 1.5rem;">
+          <div style="font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: #667eea; margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem;">
+            <i class="fa-solid fa-users"></i> Targeting
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Target Group</label>
+            <input type="text" name="target_group" class="form-input" placeholder="e.g., All Subscribers, VIP Customers, New Users">
+            <small style="color: #64748b; font-size: 0.75rem; margin-top: 0.375rem; display: block;">Define which audience segment this campaign targets</small>
+          </div>
+        </div>
+
+        <!-- Schedule Section -->
+        <div style="margin-bottom: 1.5rem;">
+          <div style="font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: #667eea; margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem;">
+            <i class="fa-solid fa-calendar"></i> Schedule
+          </div>
+
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+            <div class="form-group" style="margin-bottom: 0;">
+              <label class="form-label">Active From</label>
+              <input type="datetime-local" name="active_from" class="form-input">
+            </div>
+
+            <div class="form-group" style="margin-bottom: 0;">
+              <label class="form-label">Active Until</label>
+              <input type="datetime-local" name="active_until" class="form-input">
+            </div>
+          </div>
+          <small style="color: #64748b; font-size: 0.75rem; margin-top: 0.5rem; display: block;">Leave blank to start immediately and run indefinitely</small>
+        </div>
+
+        <div class="popup-actions" style="margin-top: 1.5rem; padding-top: 1.5rem; border-top: 2px solid #f1f5f9;">
+          <button type="button" class="btn-popup-cancel" onclick="closeCreateCampaignPopup()">Cancel</button>
+          <button type="submit" class="btn-popup-save">
+            <i class="fa-solid fa-plus"></i> Create Campaign
+          </button>
+        </div>
+      </form>
     </div>
   </div>
 
@@ -3787,6 +3868,22 @@
       document.getElementById('form-message-id').value = '';
 
       document.getElementById('message-form').reset();
+    }
+
+    // Create Campaign Popup Functions
+    function openCreateCampaignPopup() {
+      document.getElementById('campaign-popup-overlay').classList.add('active');
+      document.getElementById('campaign-popup').classList.add('active');
+      // Focus on the name input
+      setTimeout(() => {
+        document.querySelector('#campaign-popup input[name="name"]').focus();
+      }, 100);
+    }
+
+    function closeCreateCampaignPopup() {
+      document.getElementById('campaign-popup-overlay').classList.remove('active');
+      document.getElementById('campaign-popup').classList.remove('active');
+      document.getElementById('campaign-form').reset();
     }
 
     // Wait for DOM to be fully loaded

@@ -492,7 +492,12 @@
     <div class="container">
       <div class="header">
         <h1>Products</h1>
-        <button onclick="openAddProductPopup()" class="btn-primary">+ Add Product</button>
+        <div style="display: flex; gap: 0.75rem;">
+          <a href="{% url 'admin_product_wizard' %}" class="btn-primary" style="text-decoration: none; display: inline-flex; align-items: center; gap: 0.5rem;">
+            <i class="fa-solid fa-wand-magic-sparkles"></i> Create Product
+          </a>
+          <button onclick="openAddProductPopup()" class="btn-primary" style="background: white; color: #10b981; border: 2px solid #10b981;">+ Quick Add</button>
+        </div>
       </div>
     </div>
   </div>
@@ -542,6 +547,15 @@
           <p style="color: #64748b; font-size: 0.875rem; padding-left: 1rem;">
             Showing <strong>{{ total_products }} core products</strong>. Each product may have multiple size/color combinations.
           </p>
+        </div>
+        <div style="display: flex; align-items: center; gap: 0.5rem;">
+          <label style="font-size: 0.875rem; color: #64748b;">Sort by:</label>
+          <select id="sortSelect" onchange="applySort(this.value)" style="padding: 0.5rem 1rem; border: 1px solid #e2e8f0; border-radius: 8px; font-size: 0.875rem; background: white; cursor: pointer;">
+            <option value="newest" {% if sort_by == 'newest' %}selected{% endif %}>Newest First</option>
+            <option value="name" {% if sort_by == 'name' %}selected{% endif %}>Name (A-Z)</option>
+            <option value="category" {% if sort_by == 'category' %}selected{% endif %}>Category</option>
+            <option value="status" {% if sort_by == 'status' %}selected{% endif %}>Status</option>
+          </select>
         </div>
       </div>
       <table>
@@ -625,6 +639,14 @@
                 >
                   <i class="fa-solid fa-shapes"></i>
                   Variants
+                </button>
+                <button
+                  onclick="deleteProduct({{ product.id }}, '{{ product.name|escapejs }}')"
+                  class="btn btn-sm"
+                  style="background: #fef2f2; color: #dc2626; border: 1px solid #fecaca;"
+                  title="Delete product"
+                >
+                  <i class="fa-solid fa-trash"></i>
                 </button>
               </div>
             </td>
@@ -862,6 +884,12 @@
             onkeyup="filterVariants()"
             style="flex: 1; padding: 0.75rem 1rem; border: 1px solid #d1d5db; border-radius: 8px; font-size: 0.875rem;"
           >
+          <button onclick="openBulkStockModal()" class="btn btn-primary" style="background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); color: white; border: none; padding: 0.75rem 1.5rem; box-shadow: 0 2px 8px rgba(245, 158, 11, 0.3); white-space: nowrap; font-weight: 600;">
+            <i class="fa-solid fa-boxes-stacked"></i> Bulk Stock
+          </button>
+          <button onclick="openBulkVariantModal()" class="btn btn-primary" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white; border: none; padding: 0.75rem 1.5rem; box-shadow: 0 2px 8px rgba(16, 185, 129, 0.3); white-space: nowrap; font-weight: 600;">
+            <i class="fa-solid fa-grid"></i> Bulk Add
+          </button>
           <button onclick="openAddVariantForm()" class="btn btn-primary" style="background: white; color: #667eea; border: 2px solid #667eea; padding: 0.75rem 1.5rem; box-shadow: 0 2px 8px rgba(102, 126, 234, 0.15); white-space: nowrap; font-weight: 600;">
             <i class="fa-solid fa-plus"></i> Add Variant
           </button>
@@ -978,6 +1006,177 @@
     </div>
   </div>
 
+  <!-- Bulk Add Variants Modal -->
+  <div class="modal-overlay" id="bulkVariantModal">
+    <div class="modal-content" style="max-width: 700px; max-height: 95vh;">
+      <div class="modal-header" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); border-bottom: none;">
+        <h2 style="color: white; display: flex; align-items: center; gap: 0.75rem;">
+          <i class="fa-solid fa-grid"></i> Bulk Add Variants
+        </h2>
+        <button class="modal-close" onclick="closeBulkVariantModal()" style="color: white; background: rgba(255, 255, 255, 0.1);">
+          <i class="fa-solid fa-times"></i>
+        </button>
+      </div>
+      <div class="modal-body" style="max-height: calc(95vh - 180px); overflow-y: auto; background: #f8fafc;">
+        <!-- Info Banner -->
+        <div style="background: linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%); border: 1px solid #a7f3d0; border-radius: 12px; padding: 1rem 1.25rem; margin-bottom: 1.5rem; display: flex; align-items: flex-start; gap: 0.75rem;">
+          <i class="fa-solid fa-lightbulb" style="color: #10b981; margin-top: 0.125rem;"></i>
+          <div style="font-size: 0.875rem; color: #065f46;">
+            <strong>Matrix Builder:</strong> Select multiple sizes and colors below. All combinations will be created automatically. For example, selecting 3 sizes and 2 colors will create 6 variants.
+          </div>
+        </div>
+
+        <!-- Sizes Selection -->
+        <div style="background: white; border: 1px solid #e2e8f0; border-radius: 12px; padding: 1.5rem; margin-bottom: 1rem;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+            <h3 style="font-size: 0.9375rem; font-weight: 700; color: #1e293b; display: flex; align-items: center; gap: 0.5rem;">
+              <i class="fa-solid fa-ruler" style="color: #10b981;"></i> Select Sizes
+            </h3>
+            <div style="display: flex; gap: 0.5rem;">
+              <button type="button" onclick="selectAllSizes()" class="btn btn-secondary" style="padding: 0.375rem 0.75rem; font-size: 0.75rem;">Select All</button>
+              <button type="button" onclick="clearAllSizes()" class="btn btn-secondary" style="padding: 0.375rem 0.75rem; font-size: 0.75rem;">Clear</button>
+            </div>
+          </div>
+          <div id="bulk_sizes_container" style="display: flex; flex-wrap: wrap; gap: 0.5rem;">
+            <!-- Sizes will be loaded here -->
+          </div>
+        </div>
+
+        <!-- Colors Selection -->
+        <div style="background: white; border: 1px solid #e2e8f0; border-radius: 12px; padding: 1.5rem; margin-bottom: 1rem;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+            <h3 style="font-size: 0.9375rem; font-weight: 700; color: #1e293b; display: flex; align-items: center; gap: 0.5rem;">
+              <i class="fa-solid fa-palette" style="color: #10b981;"></i> Select Colors
+            </h3>
+            <div style="display: flex; gap: 0.5rem;">
+              <button type="button" onclick="selectAllColors()" class="btn btn-secondary" style="padding: 0.375rem 0.75rem; font-size: 0.75rem;">Select All</button>
+              <button type="button" onclick="clearAllColors()" class="btn btn-secondary" style="padding: 0.375rem 0.75rem; font-size: 0.75rem;">Clear</button>
+            </div>
+          </div>
+          <div id="bulk_colors_container" style="display: flex; flex-wrap: wrap; gap: 0.5rem;">
+            <!-- Colors will be loaded here -->
+          </div>
+        </div>
+
+        <!-- Material Selection (optional) -->
+        <div style="background: white; border: 1px solid #e2e8f0; border-radius: 12px; padding: 1.5rem; margin-bottom: 1rem;">
+          <h3 style="font-size: 0.9375rem; font-weight: 700; color: #1e293b; margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem;">
+            <i class="fa-solid fa-layer-group" style="color: #10b981;"></i> Material (Optional)
+          </h3>
+          <select id="bulk_material" style="width: 100%; padding: 0.75rem; border: 1px solid #d1d5db; border-radius: 8px; font-size: 0.9375rem;">
+            <option value="">No material</option>
+            <!-- Materials will be loaded here -->
+          </select>
+        </div>
+
+        <!-- Pricing & Stock -->
+        <div style="background: white; border: 1px solid #e2e8f0; border-radius: 12px; padding: 1.5rem;">
+          <h3 style="font-size: 0.9375rem; font-weight: 700; color: #1e293b; margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem;">
+            <i class="fa-solid fa-dollar-sign" style="color: #10b981;"></i> Pricing & Stock
+          </h3>
+          <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 1rem;">
+            <div class="form-group">
+              <label style="display: block; font-size: 0.875rem; font-weight: 600; color: #374151; margin-bottom: 0.5rem;">Price ($) *</label>
+              <input type="number" id="bulk_price" step="0.01" min="0" required style="width: 100%; padding: 0.75rem; border: 1px solid #d1d5db; border-radius: 8px; font-size: 0.9375rem;">
+            </div>
+            <div class="form-group">
+              <label style="display: block; font-size: 0.875rem; font-weight: 600; color: #374151; margin-bottom: 0.5rem;">Initial Stock</label>
+              <input type="number" id="bulk_stock" min="0" value="0" style="width: 100%; padding: 0.75rem; border: 1px solid #d1d5db; border-radius: 8px; font-size: 0.9375rem;">
+            </div>
+          </div>
+        </div>
+
+        <!-- Preview -->
+        <div style="background: #f1f5f9; border: 1px solid #e2e8f0; border-radius: 12px; padding: 1rem; margin-top: 1rem;">
+          <div style="display: flex; align-items: center; justify-content: space-between;">
+            <span style="font-size: 0.875rem; color: #64748b;">
+              <i class="fa-solid fa-calculator"></i> Variants to create:
+            </span>
+            <span id="bulk_variant_count" style="font-size: 1.25rem; font-weight: 700; color: #10b981;">0</span>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer" style="background: #f8fafc; border-top: 1px solid #e2e8f0; padding: 1.5rem 2rem; display: flex; gap: 1rem; justify-content: flex-end;">
+        <button class="btn btn-secondary" onclick="closeBulkVariantModal()" style="padding: 0.75rem 2rem;">
+          <i class="fa-solid fa-times"></i> Cancel
+        </button>
+        <button class="btn btn-primary" onclick="saveBulkVariants()" id="bulk_save_btn" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); border: none; padding: 0.75rem 2rem; box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);">
+          <i class="fa-solid fa-check"></i>
+          Create Variants
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Bulk Stock Update Modal -->
+  <div class="modal-overlay" id="bulkStockModal">
+    <div class="modal-content" style="max-width: 500px; max-height: 95vh;">
+      <div class="modal-header" style="background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); border-bottom: none;">
+        <h2 style="color: white; display: flex; align-items: center; gap: 0.75rem;">
+          <i class="fa-solid fa-boxes-stacked"></i> Bulk Update Stock
+        </h2>
+        <button class="modal-close" onclick="closeBulkStockModal()" style="color: white; background: rgba(255, 255, 255, 0.1);">
+          <i class="fa-solid fa-times"></i>
+        </button>
+      </div>
+      <div class="modal-body" style="background: #f8fafc;">
+        <!-- Info Banner -->
+        <div style="background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%); border: 1px solid #fbbf24; border-radius: 12px; padding: 1rem 1.25rem; margin-bottom: 1.5rem; display: flex; align-items: flex-start; gap: 0.75rem;">
+          <i class="fa-solid fa-info-circle" style="color: #d97706; margin-top: 0.125rem;"></i>
+          <div style="font-size: 0.875rem; color: #92400e;">
+            Update stock for all variants of this product at once. Choose to set an exact value, or add/subtract from current stock levels.
+          </div>
+        </div>
+
+        <!-- Update Mode -->
+        <div style="background: white; border: 1px solid #e2e8f0; border-radius: 12px; padding: 1.5rem; margin-bottom: 1rem;">
+          <h3 style="font-size: 0.9375rem; font-weight: 700; color: #1e293b; margin-bottom: 1rem;">Update Mode</h3>
+          <div style="display: flex; flex-direction: column; gap: 0.75rem;">
+            <label style="display: flex; align-items: center; gap: 0.75rem; padding: 0.75rem 1rem; background: #f1f5f9; border: 2px solid #e2e8f0; border-radius: 8px; cursor: pointer; transition: all 0.2s;" onclick="selectStockMode('set')">
+              <input type="radio" name="stock_mode" value="set" checked style="width: 18px; height: 18px; accent-color: #f59e0b;">
+              <div>
+                <span style="font-weight: 600; color: #374151;">Set to value</span>
+                <span style="display: block; font-size: 0.75rem; color: #64748b;">Set all variants to the specified stock level</span>
+              </div>
+            </label>
+            <label style="display: flex; align-items: center; gap: 0.75rem; padding: 0.75rem 1rem; background: #f1f5f9; border: 2px solid #e2e8f0; border-radius: 8px; cursor: pointer; transition: all 0.2s;" onclick="selectStockMode('add')">
+              <input type="radio" name="stock_mode" value="add" style="width: 18px; height: 18px; accent-color: #f59e0b;">
+              <div>
+                <span style="font-weight: 600; color: #374151;">Add to current</span>
+                <span style="display: block; font-size: 0.75rem; color: #64748b;">Add the specified amount to each variant's stock</span>
+              </div>
+            </label>
+            <label style="display: flex; align-items: center; gap: 0.75rem; padding: 0.75rem 1rem; background: #f1f5f9; border: 2px solid #e2e8f0; border-radius: 8px; cursor: pointer; transition: all 0.2s;" onclick="selectStockMode('subtract')">
+              <input type="radio" name="stock_mode" value="subtract" style="width: 18px; height: 18px; accent-color: #f59e0b;">
+              <div>
+                <span style="font-weight: 600; color: #374151;">Subtract from current</span>
+                <span style="display: block; font-size: 0.75rem; color: #64748b;">Subtract the specified amount from each variant's stock</span>
+              </div>
+            </label>
+          </div>
+        </div>
+
+        <!-- Stock Value -->
+        <div style="background: white; border: 1px solid #e2e8f0; border-radius: 12px; padding: 1.5rem;">
+          <h3 style="font-size: 0.9375rem; font-weight: 700; color: #1e293b; margin-bottom: 1rem;">Stock Value</h3>
+          <input type="number" id="bulk_stock_value" min="0" value="0" style="width: 100%; padding: 1rem; border: 2px solid #d1d5db; border-radius: 8px; font-size: 1.25rem; font-weight: 600; text-align: center;">
+          <p id="stock_preview_text" style="font-size: 0.875rem; color: #64748b; margin-top: 0.75rem; text-align: center;">
+            <span id="variant_count_text">All variants</span> will be set to <strong id="stock_value_preview">0</strong> units
+          </p>
+        </div>
+      </div>
+      <div class="modal-footer" style="background: #f8fafc; border-top: 1px solid #e2e8f0; padding: 1.5rem 2rem; display: flex; gap: 1rem; justify-content: flex-end;">
+        <button class="btn btn-secondary" onclick="closeBulkStockModal()" style="padding: 0.75rem 2rem;">
+          <i class="fa-solid fa-times"></i> Cancel
+        </button>
+        <button class="btn btn-primary" onclick="saveBulkStock()" id="bulk_stock_btn" style="background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); border: none; padding: 0.75rem 2rem; box-shadow: 0 4px 12px rgba(245, 158, 11, 0.3);">
+          <i class="fa-solid fa-check"></i>
+          Update Stock
+        </button>
+      </div>
+    </div>
+  </div>
+
   <script>
     // Product Preview Functions - v3.0 - BUTTON TOGGLE FIX
     console.log('Script loaded - v3.0');
@@ -1005,6 +1204,71 @@
       }
 
       return cookieValue;
+    }
+
+    function applySort(sortValue) {
+      const url = new URL(window.location.href);
+      url.searchParams.set('sort', sortValue);
+      window.location.href = url.toString();
+    }
+
+    function deleteProduct(productId, productName) {
+      if (!confirm(`Are you sure you want to delete "${productName}"?\n\nThis will also delete all variants and cannot be undone.`)) {
+        return;
+      }
+
+      const csrftoken = getCookie('csrftoken');
+      const formData = new FormData();
+      formData.append('action', 'delete_product');
+      formData.append('product_id', productId);
+      formData.append('csrfmiddlewaretoken', csrftoken);
+
+      fetch(window.location.pathname, {
+        method: 'POST',
+        body: formData,
+        headers: {
+          'X-Requested-With': 'XMLHttpRequest'
+        }
+      })
+      .then(response => response.json())
+      .then(data => {
+        if (data.success) {
+          // Remove the row from the table
+          const row = document.querySelector(`tr:has(button[onclick*="deleteProduct(${productId},"])`);
+          if (row) {
+            row.style.transition = 'opacity 0.3s';
+            row.style.opacity = '0';
+            setTimeout(() => row.remove(), 300);
+          }
+          showToast(data.message || 'Product deleted successfully');
+        } else {
+          showToast(data.error || 'Failed to delete product', 'error');
+        }
+      })
+      .catch(error => {
+        console.error('Error:', error);
+        showToast('Failed to delete product', 'error');
+      });
+    }
+
+    function showToast(message, type = 'success') {
+      // Check if toast exists, create if not
+      let toast = document.getElementById('toast');
+      if (!toast) {
+        toast = document.createElement('div');
+        toast.id = 'toast';
+        toast.style.cssText = 'position: fixed; bottom: 2rem; right: 2rem; padding: 1rem 1.5rem; border-radius: 10px; font-weight: 500; box-shadow: 0 10px 40px rgba(0,0,0,0.2); z-index: 2000; transform: translateY(100px); opacity: 0; transition: all 0.3s;';
+        document.body.appendChild(toast);
+      }
+      toast.textContent = message;
+      toast.style.background = type === 'error' ? 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)' : 'linear-gradient(135deg, #10b981 0%, #059669 100%)';
+      toast.style.color = 'white';
+      toast.style.transform = 'translateY(0)';
+      toast.style.opacity = '1';
+      setTimeout(() => {
+        toast.style.transform = 'translateY(100px)';
+        toast.style.opacity = '0';
+      }, 3000);
     }
 
     function toggleActive(element) {
@@ -1540,6 +1804,340 @@
             });
           }
         }
+      });
+    }
+
+    // ============================================
+    // BULK VARIANT FUNCTIONS
+    // ============================================
+    let bulkSizesData = [];
+    let bulkColorsData = [];
+    let selectedSizes = [];
+    let selectedColors = [];
+
+    function openBulkVariantModal() {
+      // Reset selections
+      selectedSizes = [];
+      selectedColors = [];
+
+      // Set default price from product's base price
+      document.getElementById('bulk_price').value = document.getElementById('variants_base_price').value || '';
+      document.getElementById('bulk_stock').value = '0';
+      document.getElementById('bulk_material').value = '';
+
+      // Load sizes and colors
+      loadBulkFormData();
+
+      document.getElementById('bulkVariantModal').classList.add('active');
+      updateBulkVariantCount();
+    }
+
+    function closeBulkVariantModal() {
+      document.getElementById('bulkVariantModal').classList.remove('active');
+    }
+
+    function loadBulkFormData() {
+      const csrftoken = getCookie('csrftoken');
+
+      fetch(window.location.pathname, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded',
+          'X-CSRFToken': csrftoken,
+        },
+        body: new URLSearchParams({
+          'action': 'get_sizes_colors_materials'
+        })
+      })
+      .then(response => response.json())
+      .then(data => {
+        if (data.success) {
+          bulkSizesData = data.sizes;
+          bulkColorsData = data.colors;
+
+          // Render size checkboxes
+          const sizesContainer = document.getElementById('bulk_sizes_container');
+          sizesContainer.innerHTML = data.sizes.map(size => `
+            <label class="bulk-checkbox" style="display: inline-flex; align-items: center; gap: 0.5rem; padding: 0.5rem 1rem; background: #f1f5f9; border: 2px solid #e2e8f0; border-radius: 8px; cursor: pointer; transition: all 0.2s; user-select: none;">
+              <input type="checkbox" value="${size.id}" onchange="toggleSize(${size.id})" style="width: 16px; height: 16px; accent-color: #10b981;">
+              <span style="font-weight: 600; color: #374151;">${size.label}</span>
+            </label>
+          `).join('');
+
+          // Render color checkboxes
+          const colorsContainer = document.getElementById('bulk_colors_container');
+          colorsContainer.innerHTML = data.colors.map(color => `
+            <label class="bulk-checkbox" style="display: inline-flex; align-items: center; gap: 0.5rem; padding: 0.5rem 1rem; background: #f1f5f9; border: 2px solid #e2e8f0; border-radius: 8px; cursor: pointer; transition: all 0.2s; user-select: none;">
+              <input type="checkbox" value="${color.id}" onchange="toggleColor(${color.id})" style="width: 16px; height: 16px; accent-color: #10b981;">
+              <span style="font-weight: 600; color: #374151;">${color.name}</span>
+            </label>
+          `).join('');
+
+          // Render material dropdown
+          const materialSelect = document.getElementById('bulk_material');
+          materialSelect.innerHTML = '<option value="">No material</option>';
+          if (data.materials) {
+            data.materials.forEach(material => {
+              const option = document.createElement('option');
+              option.value = material.id;
+              option.textContent = material.name;
+              materialSelect.appendChild(option);
+            });
+          }
+        }
+      });
+    }
+
+    function toggleSize(sizeId) {
+      const index = selectedSizes.indexOf(sizeId);
+      if (index > -1) {
+        selectedSizes.splice(index, 1);
+      } else {
+        selectedSizes.push(sizeId);
+      }
+      updateBulkVariantCount();
+      updateCheckboxStyles();
+    }
+
+    function toggleColor(colorId) {
+      const index = selectedColors.indexOf(colorId);
+      if (index > -1) {
+        selectedColors.splice(index, 1);
+      } else {
+        selectedColors.push(colorId);
+      }
+      updateBulkVariantCount();
+      updateCheckboxStyles();
+    }
+
+    function selectAllSizes() {
+      selectedSizes = bulkSizesData.map(s => s.id);
+      document.querySelectorAll('#bulk_sizes_container input[type="checkbox"]').forEach(cb => cb.checked = true);
+      updateBulkVariantCount();
+      updateCheckboxStyles();
+    }
+
+    function clearAllSizes() {
+      selectedSizes = [];
+      document.querySelectorAll('#bulk_sizes_container input[type="checkbox"]').forEach(cb => cb.checked = false);
+      updateBulkVariantCount();
+      updateCheckboxStyles();
+    }
+
+    function selectAllColors() {
+      selectedColors = bulkColorsData.map(c => c.id);
+      document.querySelectorAll('#bulk_colors_container input[type="checkbox"]').forEach(cb => cb.checked = true);
+      updateBulkVariantCount();
+      updateCheckboxStyles();
+    }
+
+    function clearAllColors() {
+      selectedColors = [];
+      document.querySelectorAll('#bulk_colors_container input[type="checkbox"]').forEach(cb => cb.checked = false);
+      updateBulkVariantCount();
+      updateCheckboxStyles();
+    }
+
+    function updateCheckboxStyles() {
+      // Update size checkbox styles
+      document.querySelectorAll('#bulk_sizes_container .bulk-checkbox').forEach(label => {
+        const checkbox = label.querySelector('input[type="checkbox"]');
+        if (checkbox.checked) {
+          label.style.background = 'linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%)';
+          label.style.borderColor = '#10b981';
+        } else {
+          label.style.background = '#f1f5f9';
+          label.style.borderColor = '#e2e8f0';
+        }
+      });
+
+      // Update color checkbox styles
+      document.querySelectorAll('#bulk_colors_container .bulk-checkbox').forEach(label => {
+        const checkbox = label.querySelector('input[type="checkbox"]');
+        if (checkbox.checked) {
+          label.style.background = 'linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%)';
+          label.style.borderColor = '#10b981';
+        } else {
+          label.style.background = '#f1f5f9';
+          label.style.borderColor = '#e2e8f0';
+        }
+      });
+    }
+
+    function updateBulkVariantCount() {
+      const count = selectedSizes.length * selectedColors.length;
+      document.getElementById('bulk_variant_count').textContent = count;
+
+      // Update button state
+      const btn = document.getElementById('bulk_save_btn');
+      if (count > 0) {
+        btn.disabled = false;
+        btn.style.opacity = '1';
+        btn.innerHTML = `<i class="fa-solid fa-check"></i> Create ${count} Variant${count > 1 ? 's' : ''}`;
+      } else {
+        btn.disabled = true;
+        btn.style.opacity = '0.5';
+        btn.innerHTML = '<i class="fa-solid fa-check"></i> Create Variants';
+      }
+    }
+
+    function saveBulkVariants() {
+      const productId = document.getElementById('variants_product_id').value;
+      const price = document.getElementById('bulk_price').value;
+      const stock = document.getElementById('bulk_stock').value || 0;
+      const materialId = document.getElementById('bulk_material').value;
+
+      if (selectedSizes.length === 0 || selectedColors.length === 0) {
+        alert('Please select at least one size and one color');
+        return;
+      }
+
+      if (!price) {
+        alert('Please enter a price');
+        return;
+      }
+
+      const csrftoken = getCookie('csrftoken');
+      const btn = document.getElementById('bulk_save_btn');
+      const originalHTML = btn.innerHTML;
+      btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Creating...';
+      btn.disabled = true;
+
+      const formData = new FormData();
+      formData.append('csrfmiddlewaretoken', csrftoken);
+      formData.append('action', 'bulk_create_variants');
+      formData.append('product_id', productId);
+      formData.append('size_ids', JSON.stringify(selectedSizes));
+      formData.append('color_ids', JSON.stringify(selectedColors));
+      formData.append('material_id', materialId);
+      formData.append('price', price);
+      formData.append('stock_quantity', stock);
+
+      fetch(window.location.pathname, {
+        method: 'POST',
+        body: formData
+      })
+      .then(response => response.json())
+      .then(data => {
+        if (data.success) {
+          alert(data.message);
+          closeBulkVariantModal();
+          // Reload variants list
+          loadVariants(productId);
+        } else {
+          alert('Error: ' + (data.error || 'Failed to create variants'));
+          btn.innerHTML = originalHTML;
+          btn.disabled = false;
+        }
+      })
+      .catch(error => {
+        alert('Error creating variants');
+        btn.innerHTML = originalHTML;
+        btn.disabled = false;
+      });
+    }
+
+    // ============================================
+    // BULK STOCK UPDATE FUNCTIONS
+    // ============================================
+    let currentStockMode = 'set';
+
+    function openBulkStockModal() {
+      // Reset form
+      currentStockMode = 'set';
+      document.querySelector('input[name="stock_mode"][value="set"]').checked = true;
+      document.getElementById('bulk_stock_value').value = '0';
+
+      // Update preview text
+      updateStockPreviewText();
+
+      // Show variant count
+      document.getElementById('variant_count_text').textContent = `${allVariants.length} variant${allVariants.length !== 1 ? 's' : ''}`;
+
+      document.getElementById('bulkStockModal').classList.add('active');
+
+      // Add input listener
+      document.getElementById('bulk_stock_value').addEventListener('input', updateStockPreviewText);
+    }
+
+    function closeBulkStockModal() {
+      document.getElementById('bulkStockModal').classList.remove('active');
+    }
+
+    function selectStockMode(mode) {
+      currentStockMode = mode;
+
+      // Update radio button styles
+      document.querySelectorAll('#bulkStockModal label').forEach(label => {
+        const radio = label.querySelector('input[type="radio"]');
+        if (radio && radio.checked) {
+          label.style.background = 'linear-gradient(135deg, #fef3c7 0%, #fde68a 100%)';
+          label.style.borderColor = '#f59e0b';
+        } else if (radio) {
+          label.style.background = '#f1f5f9';
+          label.style.borderColor = '#e2e8f0';
+        }
+      });
+
+      updateStockPreviewText();
+    }
+
+    function updateStockPreviewText() {
+      const value = document.getElementById('bulk_stock_value').value || 0;
+      const previewEl = document.getElementById('stock_value_preview');
+      const textEl = document.getElementById('stock_preview_text');
+
+      previewEl.textContent = value;
+
+      const variantCount = allVariants.length;
+      const modeDescriptions = {
+        'set': `${variantCount} variant${variantCount !== 1 ? 's' : ''} will be set to <strong>${value}</strong> units`,
+        'add': `<strong>${value}</strong> units will be added to each of ${variantCount} variant${variantCount !== 1 ? 's' : ''}`,
+        'subtract': `<strong>${value}</strong> units will be subtracted from each of ${variantCount} variant${variantCount !== 1 ? 's' : ''}`
+      };
+
+      textEl.innerHTML = modeDescriptions[currentStockMode] || modeDescriptions['set'];
+    }
+
+    function saveBulkStock() {
+      const productId = document.getElementById('variants_product_id').value;
+      const stockValue = document.getElementById('bulk_stock_value').value || 0;
+
+      const csrftoken = getCookie('csrftoken');
+      const btn = document.getElementById('bulk_stock_btn');
+      const originalHTML = btn.innerHTML;
+      btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Updating...';
+      btn.disabled = true;
+
+      const formData = new FormData();
+      formData.append('csrfmiddlewaretoken', csrftoken);
+      formData.append('action', 'bulk_update_stock');
+      formData.append('product_id', productId);
+      formData.append('update_mode', currentStockMode);
+      formData.append('stock_value', stockValue);
+      // Not passing variant_ids means update all variants
+
+      fetch(window.location.pathname, {
+        method: 'POST',
+        body: formData
+      })
+      .then(response => response.json())
+      .then(data => {
+        if (data.success) {
+          alert(data.message);
+          closeBulkStockModal();
+          // Reload variants list
+          loadVariants(productId);
+        } else {
+          alert('Error: ' + (data.error || 'Failed to update stock'));
+          btn.innerHTML = originalHTML;
+          btn.disabled = false;
+        }
+      })
+      .catch(error => {
+        alert('Error updating stock');
+        btn.innerHTML = originalHTML;
+        btn.disabled = false;
       });
     }
 
@@ -2287,6 +2885,14 @@
           <input type="checkbox" id="add_featured" name="featured" style="width: auto; cursor: pointer;">
           <span>Feature on homepage</span>
         </label>
+      </div>
+
+      <div class="form-group">
+        <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+          <input type="checkbox" id="add_available" name="available_for_purchase" style="width: auto; cursor: pointer;" checked>
+          <span>Available for purchase</span>
+        </label>
+        <p style="font-size: 0.75rem; color: #64748b; margin-top: 0.25rem; margin-left: 1.5rem;">If unchecked, product shows "Not Available" instead of Add to Cart</p>
       </div>
 
       <div style="display: flex; gap: 1rem; margin-top: 2rem; padding-top: 2rem; border-top: 2px solid #f1f5f9;">

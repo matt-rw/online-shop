@@ -56,7 +56,7 @@ class PageView(models.Model):
         if not self.referrer_domain:
             return False
         # Add your domain variations here
-        internal_domains = ["localhost", "127.0.0.1", "blueprintapparel.com"]
+        internal_domains = ["localhost", "127.0.0.1", "blueprnt.store"]
         return not any(domain in self.referrer_domain for domain in internal_domains)
 
 

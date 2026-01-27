@@ -216,11 +216,31 @@ def checkout_view(request):
     Checkout page where users enter shipping/billing information.
     """
     cart = get_or_create_cart(request)
-    cart_items = cart.items.select_related("variant__product").all()
+    cart_items = cart.items.select_related(
+        "variant__product", "variant__color", "variant__size"
+    ).all()
 
     if not cart_items.exists():
         messages.warning(request, "Your cart is empty.")
         return redirect("shop:cart")
+
+    # Build cart items with properly prefixed image URLs
+    cart_items_with_images = []
+    for item in cart_items:
+        image = None
+        if item.variant.images and item.variant.images[0]:
+            img = item.variant.images[0]
+            # Ensure image has proper static prefix
+            if not img.startswith(("/", "http")):
+                image = f"/static/{img}"
+            else:
+                image = img
+        cart_items_with_images.append({
+            "item": item,
+            "variant": item.variant,
+            "quantity": item.quantity,
+            "image": image,
+        })
 
     # Calculate totals
     subtotal = get_cart_total(cart)
@@ -247,7 +267,7 @@ def checkout_view(request):
 
     context = {
         "cart": cart,
-        "cart_items": cart_items,
+        "cart_items": cart_items_with_images,
         "subtotal": subtotal,
         "free_shipping": free_shipping,
         "saved_addresses": saved_addresses,

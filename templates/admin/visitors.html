@@ -375,6 +375,17 @@
         margin-top: -3rem;
       }
     }
+
+    /* Toggle switch styles */
+    .toggle-switch input:checked + span {
+      background-color: #10b981 !important;
+    }
+    .toggle-switch input:checked + span + span {
+      transform: translateX(20px) !important;
+    }
+    .toggle-switch input:focus + span {
+      box-shadow: 0 0 1px #10b981;
+    }
   </style>
   {% include "admin/partials/dark_mode_apply.html" %}
 </head>
@@ -387,6 +398,26 @@
     <div class="container">
       <div class="header">
         <h1>Visitors</h1>
+        <div style="display: flex; align-items: center; gap: 1rem;">
+          <!-- Bot Filter Toggle -->
+          <div style="display: flex; align-items: center; gap: 0.75rem; background: rgba(255,255,255,0.15); backdrop-filter: blur(10px); padding: 0.625rem 1rem; border-radius: 10px; border: 1px solid rgba(255,255,255,0.2);">
+            <label style="color: white; font-size: 0.875rem; font-weight: 500; cursor: pointer; display: flex; align-items: center; gap: 0.5rem;">
+              <i class="fa-solid fa-robot"></i>
+              Hide Bots
+            </label>
+            <label class="toggle-switch" style="position: relative; display: inline-block; width: 44px; height: 24px;">
+              <input type="checkbox" id="hideBots" {% if hide_bots %}checked{% endif %} onchange="toggleBotFilter(this.checked)" style="opacity: 0; width: 0; height: 0;">
+              <span style="position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: rgba(0,0,0,0.3); transition: .3s; border-radius: 24px;"></span>
+              <span style="position: absolute; content: ''; height: 18px; width: 18px; left: 3px; bottom: 3px; background-color: white; transition: .3s; border-radius: 50%; transform: {% if hide_bots %}translateX(20px){% else %}translateX(0){% endif %};"></span>
+            </label>
+          </div>
+          {% if bot_stats.total_bots_30d > 0 %}
+          <div style="background: rgba(255,255,255,0.1); padding: 0.5rem 0.75rem; border-radius: 8px; color: white; font-size: 0.75rem;">
+            <i class="fa-solid fa-shield-halved"></i>
+            <span style="font-weight: 600;">{{ bot_stats.total_bots_30d }}</span> bots blocked (30d)
+          </div>
+          {% endif %}
+        </div>
       </div>
     </div>
   </div>
@@ -884,6 +915,17 @@
     document.addEventListener('DOMContentLoaded', () => {
       initChart();
     });
+
+    // Bot filter toggle
+    function toggleBotFilter(hideBots) {
+      const url = new URL(window.location.href);
+      if (hideBots) {
+        url.searchParams.set('hide_bots', 'true');
+      } else {
+        url.searchParams.delete('hide_bots');
+      }
+      window.location.href = url.toString();
+    }
   </script>
 </body>
 </html>

@@ -75,8 +75,8 @@ class VisitorTrackingMiddleware:
             request.session.create()
             session_id = request.session.session_key
 
-        # Detect device type and browser
-        device_type = self._detect_device_type(user_agent)
+        # Detect device type and browser (pass path for bot detection)
+        device_type = self._detect_device_type(user_agent, request.path)
         browser = self._detect_browser(user_agent)
         os = self._detect_os(user_agent)
 
@@ -179,13 +179,38 @@ class VisitorTrackingMiddleware:
             ip = request.META.get("REMOTE_ADDR")
         return ip
 
-    def _detect_device_type(self, user_agent):
-        """Simple device type detection."""
+    def _detect_device_type(self, user_agent, path=None):
+        """Simple device type detection with enhanced bot detection."""
         ua_lower = user_agent.lower()
 
-        # Check for bots
-        bot_indicators = ["bot", "crawl", "spider", "scrape", "curl", "wget"]
+        # Check for bots by user agent
+        bot_indicators = [
+            "bot", "crawl", "spider", "scrape", "curl", "wget", "python",
+            "java", "perl", "ruby", "go-http", "node-fetch", "axios",
+            "httpie", "postman", "insomnia", "scanner", "probe", "masscan",
+            "nmap", "zgrab", "nikto", "sqlmap", "wpscan", "nuclei", "httpx"
+        ]
         if any(indicator in ua_lower for indicator in bot_indicators):
+            return "bot"
+
+        # Detect vulnerability scanners by suspicious paths (even with real user-agents)
+        if path:
+            suspicious_paths = [
+                ".env", ".git", ".svn", ".htaccess", ".htpasswd",
+                "wp-login", "wp-admin", "wp-config", "xmlrpc.php",
+                "phpmyadmin", "adminer", "phpinfo",
+                ".sql", ".bak", ".backup", ".old",
+                "admin.php", "login.php", "config.php",
+                "/etc/passwd", "/etc/shadow",
+                "shell.php", "cmd.php", "eval-stdin",
+                ".aws", ".ssh", "credentials",
+            ]
+            path_lower = path.lower()
+            if any(sus in path_lower for sus in suspicious_paths):
+                return "bot"
+
+        # Empty or very short user agents are suspicious
+        if len(user_agent.strip()) < 10:
             return "bot"
 
         # Check for mobile

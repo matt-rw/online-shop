@@ -272,17 +272,6 @@
       font-weight: 500;
       cursor: pointer;
     }
-    .attribute-item {
-      background: #f8fafc;
-      border: 1px solid #e2e8f0;
-      border-radius: 8px;
-      padding: 1rem;
-      margin-bottom: 0.75rem;
-    }
-    .attribute-item input,
-    .attribute-item select {
-      margin-bottom: 0.5rem;
-    }
     .btn-secondary {
       background: #f1f5f9;
       color: #64748b;
@@ -416,43 +405,25 @@
         </div>
 
         <div class="form-group">
-          <label style="margin-bottom: 0.75rem;">Standard Attributes</label>
-          <div class="checkbox-group">
+          <label style="margin-bottom: 0.75rem;">Built-in Variant Attributes</label>
+          <small style="color: #64748b; font-size: 0.75rem; display: block; margin-bottom: 0.75rem;">
+            These are standard attributes managed in the <a href="{% url 'admin_attributes' %}" style="color: #f59e0b;">Attributes dashboard</a>. Select which ones apply to this category.
+          </small>
+          <div class="checkbox-group" style="background: #f8fafc; padding: 0.75rem 1rem; border-radius: 8px; border: 1px solid #e2e8f0;">
             <input type="checkbox" id="usesSize">
-            <label for="usesSize">Size</label>
+            <label for="usesSize"><i class="fa-solid fa-ruler" style="color: #8b5cf6; margin-right: 0.25rem;"></i> Size</label>
+            <span style="margin-left: auto; font-size: 0.75rem; color: #64748b;">(XS, S, M, L, XL, etc.)</span>
           </div>
-          <div class="checkbox-group">
+          <div class="checkbox-group" style="background: #f8fafc; padding: 0.75rem 1rem; border-radius: 8px; border: 1px solid #e2e8f0;">
             <input type="checkbox" id="usesColor">
-            <label for="usesColor">Color</label>
+            <label for="usesColor"><i class="fa-solid fa-palette" style="color: #8b5cf6; margin-right: 0.25rem;"></i> Color</label>
+            <span style="margin-left: auto; font-size: 0.75rem; color: #64748b;">(Black, White, Navy, etc.)</span>
           </div>
-          <div class="checkbox-group">
+          <div class="checkbox-group" style="background: #f8fafc; padding: 0.75rem 1rem; border-radius: 8px; border: 1px solid #e2e8f0;">
             <input type="checkbox" id="usesMaterial">
-            <label for="usesMaterial">Material</label>
+            <label for="usesMaterial"><i class="fa-solid fa-layer-group" style="color: #8b5cf6; margin-right: 0.25rem;"></i> Material</label>
+            <span style="margin-left: auto; font-size: 0.75rem; color: #64748b;">(Cotton, Polyester, etc.)</span>
           </div>
-        </div>
-
-        <div class="form-group">
-          <label>Additional Variant Options</label>
-          <small style="color: #64748b; font-size: 0.75rem; display: block; margin-bottom: 0.75rem;">
-            <strong>What creates different SKUs/inventory items?</strong><br>
-            Example for Pants: "Waist Size (28, 30, 32...)" and "Inseam (28, 30, 32...)" - each combination is a separate item to sell
-          </small>
-          <div id="customAttributesContainer"></div>
-          <button type="button" class="btn btn-secondary btn-sm" onclick="addCustomAttribute()">
-            <i class="fa-solid fa-plus"></i> Add Variant Option
-          </button>
-        </div>
-
-        <div class="form-group">
-          <label>Product Information Fields</label>
-          <small style="color: #64748b; font-size: 0.75rem; display: block; margin-bottom: 0.75rem;">
-            <strong>What describes the product but doesn't create variants?</strong><br>
-            Example for Pants: "Fit (Slim/Regular)", "Rise (High/Mid/Low)", "Care Instructions" - same for all variants
-          </small>
-          <div id="commonFieldsContainer"></div>
-          <button type="button" class="btn btn-secondary btn-sm" onclick="addCommonField()">
-            <i class="fa-solid fa-plus"></i> Add Info Field
-          </button>
         </div>
 
         <div style="display: flex; gap: 1rem; margin-top: 2rem;">
@@ -468,18 +439,16 @@
   </div>
 
   <script>
-    let customAttrCount = 0;
-    let commonFieldCount = 0;
     let categoriesData = {{ categories_json|safe }};
 
     function openCreateCategoryModal() {
       document.getElementById('modalTitle').textContent = 'Create Category';
       document.getElementById('categoryForm').reset();
       document.getElementById('categoryId').value = '';
-      document.getElementById('customAttributesContainer').innerHTML = '';
-      document.getElementById('commonFieldsContainer').innerHTML = '';
-      customAttrCount = 0;
-      commonFieldCount = 0;
+      // Default Size, Color, Material to checked for new categories
+      document.getElementById('usesSize').checked = true;
+      document.getElementById('usesColor').checked = true;
+      document.getElementById('usesMaterial').checked = true;
       document.getElementById('categoryModal').classList.add('active');
     }
 
@@ -496,99 +465,11 @@
       document.getElementById('usesColor').checked = category.uses_color;
       document.getElementById('usesMaterial').checked = category.uses_material;
 
-      // Load custom attributes
-      document.getElementById('customAttributesContainer').innerHTML = '';
-      customAttrCount = 0;
-      if (category.custom_attributes && category.custom_attributes.length > 0) {
-        category.custom_attributes.forEach(attr => {
-          addCustomAttribute(attr);
-        });
-      }
-
-      // Load common fields
-      document.getElementById('commonFieldsContainer').innerHTML = '';
-      commonFieldCount = 0;
-      if (category.common_fields && category.common_fields.length > 0) {
-        category.common_fields.forEach(field => {
-          addCommonField(field);
-        });
-      }
-
       document.getElementById('categoryModal').classList.add('active');
     }
 
     function closeCategoryModal() {
       document.getElementById('categoryModal').classList.remove('active');
-    }
-
-    function addCustomAttribute(data = null) {
-      const container = document.getElementById('customAttributesContainer');
-      const id = customAttrCount++;
-
-      const div = document.createElement('div');
-      div.className = 'attribute-item';
-      div.id = `customAttr_${id}`;
-      div.innerHTML = `
-        <div style="display: flex; gap: 0.5rem; margin-bottom: 0.5rem;">
-          <input type="text" placeholder="Attribute Name (e.g., Waist Size)"
-                 id="customAttrName_${id}" value="${data?.name || ''}"
-                 style="flex: 1; padding: 0.5rem; border: 1px solid #e2e8f0; border-radius: 6px; font-size: 0.875rem;">
-          <select id="customAttrType_${id}"
-                  style="padding: 0.5rem; border: 1px solid #e2e8f0; border-radius: 6px; font-size: 0.875rem;">
-            <option value="text" ${data?.type === 'text' ? 'selected' : ''}>Text</option>
-            <option value="select" ${data?.type === 'select' ? 'selected' : ''}>Select</option>
-            <option value="number" ${data?.type === 'number' ? 'selected' : ''}>Number</option>
-          </select>
-          <button type="button" class="btn btn-danger btn-sm" onclick="removeElement('customAttr_${id}')">
-            <i class="fa-solid fa-trash"></i>
-          </button>
-        </div>
-        <div id="customAttrOptions_${id}" style="display: ${data?.type === 'select' ? 'block' : 'none'};">
-          <input type="text" placeholder="Options (comma-separated)"
-                 id="customAttrOptionsList_${id}"
-                 value="${data?.options ? data.options.join(', ') : ''}"
-                 style="width: 100%; padding: 0.5rem; border: 1px solid #e2e8f0; border-radius: 6px; font-size: 0.875rem;">
-        </div>
-      `;
-
-      container.appendChild(div);
-
-      // Add event listener for type change
-      document.getElementById(`customAttrType_${id}`).addEventListener('change', function() {
-        document.getElementById(`customAttrOptions_${id}`).style.display =
-          this.value === 'select' ? 'block' : 'none';
-      });
-    }
-
-    function addCommonField(data = null) {
-      const container = document.getElementById('commonFieldsContainer');
-      const id = commonFieldCount++;
-
-      const div = document.createElement('div');
-      div.className = 'attribute-item';
-      div.id = `commonField_${id}`;
-      div.innerHTML = `
-        <div style="display: flex; gap: 0.5rem;">
-          <input type="text" placeholder="Field Name (e.g., Fit)"
-                 id="commonFieldName_${id}" value="${data?.name || ''}"
-                 style="flex: 1; padding: 0.5rem; border: 1px solid #e2e8f0; border-radius: 6px; font-size: 0.875rem;">
-          <select id="commonFieldType_${id}"
-                  style="padding: 0.5rem; border: 1px solid #e2e8f0; border-radius: 6px; font-size: 0.875rem;">
-            <option value="text" ${data?.type === 'text' ? 'selected' : ''}>Text</option>
-            <option value="textarea" ${data?.type === 'textarea' ? 'selected' : ''}>Textarea</option>
-            <option value="number" ${data?.type === 'number' ? 'selected' : ''}>Number</option>
-          </select>
-          <button type="button" class="btn btn-danger btn-sm" onclick="removeElement('commonField_${id}')">
-            <i class="fa-solid fa-trash"></i>
-          </button>
-        </div>
-      `;
-
-      container.appendChild(div);
-    }
-
-    function removeElement(elementId) {
-      document.getElementById(elementId).remove();
     }
 
     document.getElementById('categoryForm').addEventListener('submit', async function(e) {
@@ -605,39 +486,6 @@
       formData.append('uses_size', document.getElementById('usesSize').checked);
       formData.append('uses_color', document.getElementById('usesColor').checked);
       formData.append('uses_material', document.getElementById('usesMaterial').checked);
-
-      // Collect custom attributes
-      const customAttributes = [];
-      const customAttrElements = document.querySelectorAll('[id^="customAttr_"]');
-      customAttrElements.forEach(elem => {
-        const id = elem.id.split('_')[1];
-        const name = document.getElementById(`customAttrName_${id}`)?.value;
-        const type = document.getElementById(`customAttrType_${id}`)?.value;
-
-        if (name) {
-          const attr = { name, type };
-          if (type === 'select') {
-            const optionsStr = document.getElementById(`customAttrOptionsList_${id}`)?.value || '';
-            attr.options = optionsStr.split(',').map(s => s.trim()).filter(s => s);
-          }
-          customAttributes.push(attr);
-        }
-      });
-      formData.append('custom_attributes', JSON.stringify(customAttributes));
-
-      // Collect common fields
-      const commonFields = [];
-      const commonFieldElements = document.querySelectorAll('[id^="commonField_"]');
-      commonFieldElements.forEach(elem => {
-        const id = elem.id.split('_')[1];
-        const name = document.getElementById(`commonFieldName_${id}`)?.value;
-        const type = document.getElementById(`commonFieldType_${id}`)?.value;
-
-        if (name) {
-          commonFields.push({ name, type });
-        }
-      });
-      formData.append('common_fields', JSON.stringify(commonFields));
 
       formData.append('csrfmiddlewaretoken', '{{ csrf_token }}');
 
