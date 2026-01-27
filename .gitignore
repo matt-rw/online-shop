@@ -2,6 +2,9 @@
 venv/
 .venv/
 env/
+bin/
+lib/
+pyvenv.cfg
 
 # Database
 db.sqlite3

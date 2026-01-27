@@ -4,211 +4,343 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="csrf-token" content="{{ csrf_token }}">
   <title>Create Campaign - Blueprint Apparel Admin</title>
   <link rel="icon" type="image/svg+xml" href="{% static 'admin-favicon.svg' %}">
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
   <style>
     {% include "admin/partials/dark_mode_styles.html" %}
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
     body {
       font-family: 'Inter', sans-serif;
-      background:
-        linear-gradient(135deg, rgba(102, 126, 234, 0.9) 0%, rgba(118, 75, 162, 0.9) 100%),
-        repeating-linear-gradient(0deg, transparent, transparent 35px, rgba(255,255,255,.03) 35px, rgba(255,255,255,.03) 36px),
-        repeating-linear-gradient(90deg, transparent, transparent 35px, rgba(255,255,255,.03) 35px, rgba(255,255,255,.03) 36px);
-      background-attachment: fixed;
+      background: #f1f5f9;
       min-height: 100vh;
-      padding: 2rem;
     }
-    .container {
-      max-width: 900px;
-      margin: 0 auto;
-    }
-    .nav-links {
+
+    .nav-header {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      padding: 1rem 2rem;
       display: flex;
+      align-items: center;
       gap: 1rem;
-      margin-bottom: 1rem;
     }
+
     .nav-link {
-      background: rgba(255, 255, 255, 0.2);
+      background: rgba(255, 255, 255, 0.15);
       color: white;
       padding: 0.5rem 1rem;
-      border-radius: 6px;
+      border-radius: 8px;
       text-decoration: none;
       font-size: 0.875rem;
-      transition: background 0.2s;
+      font-weight: 500;
+      transition: all 0.2s;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
     }
+
     .nav-link:hover {
-      background: rgba(255, 255, 255, 0.3);
+      background: rgba(255, 255, 255, 0.25);
     }
-    .header {
-      background: white;
-      border-radius: 12px;
+
+    .page-container {
+      max-width: 700px;
+      margin: 0 auto;
       padding: 2rem;
-      margin-bottom: 2rem;
-      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
     }
-    .header h1 {
-      color: #1a202c;
+
+    .page-header {
+      text-align: center;
+      margin-bottom: 2rem;
+    }
+
+    .page-header h1 {
       font-size: 2rem;
-      font-weight: 700;
+      font-weight: 800;
+      color: #1e293b;
       margin-bottom: 0.5rem;
     }
-    .header p {
-      color: #718096;
+
+    .page-header p {
+      color: #64748b;
       font-size: 1rem;
     }
-    .content-box {
+
+    .form-card {
       background: white;
-      border-radius: 12px;
-      padding: 2rem;
-      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+      border-radius: 20px;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+      overflow: hidden;
     }
+
+    .form-body {
+      padding: 2.5rem;
+    }
+
+    .form-section {
+      margin-bottom: 2rem;
+    }
+
+    .form-section:last-child {
+      margin-bottom: 0;
+    }
+
+    .section-title {
+      font-size: 0.75rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: #667eea;
+      margin-bottom: 1rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
     .form-group {
-      margin-bottom: 1.5rem;
+      margin-bottom: 1.25rem;
     }
-    label {
+
+    .form-label {
       display: block;
-      font-weight: 600;
-      color: #4a5568;
-      margin-bottom: 0.5rem;
       font-size: 0.875rem;
+      font-weight: 600;
+      color: #374151;
+      margin-bottom: 0.5rem;
     }
-    input[type="text"],
-    textarea,
-    select {
+
+    .form-label .required {
+      color: #ef4444;
+    }
+
+    .form-input {
       width: 100%;
-      padding: 0.75rem;
-      border: 1px solid #e2e8f0;
-      border-radius: 6px;
+      padding: 0.875rem 1rem;
+      border: 2px solid #e2e8f0;
+      border-radius: 10px;
       font-size: 1rem;
       font-family: 'Inter', sans-serif;
+      transition: all 0.2s;
+      background: #f8fafc;
     }
-    input[type="text"]:focus,
-    textarea:focus,
-    select:focus {
+
+    .form-input:focus {
       outline: none;
       border-color: #667eea;
-      box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+      background: white;
+      box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.1);
     }
-    textarea {
+
+    .form-input::placeholder {
+      color: #94a3b8;
+    }
+
+    textarea.form-input {
       min-height: 100px;
       resize: vertical;
     }
+
     .help-text {
-      font-size: 0.875rem;
-      color: #718096;
-      margin-top: 0.25rem;
+      font-size: 0.8125rem;
+      color: #64748b;
+      margin-top: 0.375rem;
     }
-    .btn {
-      background: #667eea;
-      color: white;
-      padding: 0.875rem 2rem;
-      border-radius: 8px;
-      text-decoration: none;
-      font-weight: 600;
-      transition: background 0.2s;
-      border: none;
-      cursor: pointer;
-      font-size: 1rem;
-    }
-    .btn:hover {
-      background: #5568d3;
-    }
-    .btn-success {
-      background: #48bb78;
-    }
-    .btn-success:hover {
-      background: #38a169;
-    }
-    .btn-secondary {
-      background: #e2e8f0;
-      color: #4a5568;
-    }
-    .btn-secondary:hover {
-      background: #cbd5e0;
-    }
-    .button-group {
-      display: flex;
+
+    .form-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
       gap: 1rem;
-      margin-top: 2rem;
     }
+
+    @media (max-width: 600px) {
+      .form-row {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .form-footer {
+      background: #f8fafc;
+      padding: 1.5rem 2.5rem;
+      border-top: 2px solid #f1f5f9;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 1rem;
+    }
+
+    .btn {
+      padding: 0.875rem 1.75rem;
+      border-radius: 10px;
+      font-size: 0.9375rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+      border: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      text-decoration: none;
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+    }
+
+    .btn-primary:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 6px 16px rgba(102, 126, 234, 0.5);
+    }
+
+    .btn-secondary {
+      background: white;
+      color: #64748b;
+      border: 2px solid #e2e8f0;
+    }
+
+    .btn-secondary:hover {
+      background: #f8fafc;
+      border-color: #cbd5e1;
+    }
+
     .messages {
-      margin-bottom: 1rem;
+      margin-bottom: 1.5rem;
     }
+
     .message {
-      padding: 1rem;
-      border-radius: 8px;
-      margin-bottom: 0.5rem;
+      padding: 1rem 1.25rem;
+      border-radius: 10px;
+      margin-bottom: 0.75rem;
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      font-weight: 500;
     }
+
     .message.success {
-      background: #c6f6d5;
-      color: #22543d;
+      background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%);
+      color: #065f46;
     }
+
     .message.error {
-      background: #fed7d7;
-      color: #742a2a;
+      background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%);
+      color: #991b1b;
+    }
+
+    .icon-circle {
+      width: 48px;
+      height: 48px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-size: 1.25rem;
+      margin: 0 auto 1.5rem;
     }
   </style>
   {% include "admin/partials/dark_mode_apply.html" %}
 </head>
 <body>
-  <div class="container">
-    <div class="nav-links">
-      <a href="{% url 'admin_home' %}" class="nav-link">← Admin Home</a>
-      <a href="{% url 'admin_campaigns_list' %}" class="nav-link">Campaigns</a>
-    </div>
+  <div class="nav-header">
+    <a href="{% url 'admin_home' %}" class="nav-link">
+      <i class="fa-solid fa-arrow-left"></i> Admin
+    </a>
+    <a href="{% url 'admin_campaigns_list' %}" class="nav-link">
+      <i class="fa-solid fa-bullhorn"></i> Campaigns
+    </a>
+  </div>
 
+  <div class="page-container">
     {% if messages %}
     <div class="messages">
       {% for message in messages %}
-      <div class="message {{ message.tags }}">{{ message }}</div>
+      <div class="message {{ message.tags }}">
+        {% if message.tags == 'success' %}
+        <i class="fa-solid fa-check-circle"></i>
+        {% else %}
+        <i class="fa-solid fa-exclamation-circle"></i>
+        {% endif %}
+        {{ message }}
+      </div>
       {% endfor %}
     </div>
     {% endif %}
 
-    <div class="header">
+    <div class="page-header">
+      <div class="icon-circle">
+        <i class="fa-solid fa-bullhorn"></i>
+      </div>
       <h1>Create New Campaign</h1>
-      <p>Create a marketing campaign containing multiple scheduled email and SMS messages</p>
+      <p>Set up a marketing campaign with scheduled emails and SMS messages</p>
     </div>
 
-    <div class="content-box">
+    <div class="form-card">
       <form method="POST">
         {% csrf_token %}
         <input type="hidden" name="action" value="create_campaign">
 
-        <div class="form-group">
-          <label for="name">Campaign Name *</label>
-          <input type="text" id="name" name="name" required placeholder="e.g., Fall Sale 2025">
+        <div class="form-body">
+          <div class="form-section">
+            <div class="section-title">
+              <i class="fa-solid fa-info-circle"></i> Campaign Details
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Campaign Name <span class="required">*</span></label>
+              <input type="text" name="name" class="form-input" required placeholder="e.g., Fall Sale 2025">
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Description</label>
+              <textarea name="description" class="form-input" placeholder="Describe the purpose and goals of this campaign..."></textarea>
+              <p class="help-text">Help your team understand what this campaign is about</p>
+            </div>
+          </div>
+
+          <div class="form-section">
+            <div class="section-title">
+              <i class="fa-solid fa-users"></i> Targeting
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Target Group</label>
+              <input type="text" name="target_group" class="form-input" placeholder="e.g., All Subscribers, VIP Customers, New Users">
+              <p class="help-text">Define which audience segment this campaign targets</p>
+            </div>
+          </div>
+
+          <div class="form-section">
+            <div class="section-title">
+              <i class="fa-solid fa-calendar"></i> Schedule
+            </div>
+
+            <div class="form-row">
+              <div class="form-group">
+                <label class="form-label">Active From</label>
+                <input type="datetime-local" name="active_from" class="form-input">
+              </div>
+
+              <div class="form-group">
+                <label class="form-label">Active Until</label>
+                <input type="datetime-local" name="active_until" class="form-input">
+              </div>
+            </div>
+            <p class="help-text">Leave blank to start immediately and run indefinitely</p>
+          </div>
         </div>
 
-        <div class="form-group">
-          <label for="description">Description</label>
-          <textarea id="description" name="description" placeholder="Describe the purpose of this campaign..."></textarea>
-        </div>
-
-        <div class="form-group">
-          <label for="target_group">Target Group</label>
-          <input type="text" id="target_group" name="target_group" placeholder="e.g., All Subscribers, VIP Customers, New Users">
-        </div>
-
-        <div class="form-group">
-          <label for="active_from">Active From</label>
-          <input type="datetime-local" id="active_from" name="active_from">
-        </div>
-
-        <div class="form-group">
-          <label for="active_until">Active Until</label>
-          <input type="datetime-local" id="active_until" name="active_until">
-        </div>
-
-        <div class="button-group">
-          <button type="submit" class="btn btn-success">Create Campaign</button>
-          <a href="{% url 'admin_campaigns_list' %}" class="btn btn-secondary">Cancel</a>
+        <div class="form-footer">
+          <a href="{% url 'admin_campaigns_list' %}" class="btn btn-secondary">
+            <i class="fa-solid fa-times"></i> Cancel
+          </a>
+          <button type="submit" class="btn btn-primary">
+            <i class="fa-solid fa-plus"></i> Create Campaign
+          </button>
         </div>
       </form>
     </div>

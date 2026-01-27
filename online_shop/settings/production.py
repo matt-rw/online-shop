@@ -29,7 +29,7 @@ if SENTRY_DSN:
 
 SECRET_KEY = get_env_variable("SECRET_KEY")
 
-ALLOWED_HOSTS = [".onrender.com", "blueprintapparel.store", "www.blueprintapparel.store"]
+ALLOWED_HOSTS = [".onrender.com", "blueprnt.store", "www.blueprnt.store"]
 
 # Security settings
 SECURE_SSL_REDIRECT = True
@@ -44,8 +44,8 @@ SECURE_HSTS_PRELOAD = True
 # CSRF trusted origins for your domains
 CSRF_TRUSTED_ORIGINS = [
     "https://*.onrender.com",
-    "https://blueprintapparel.store",
-    "https://www.blueprintapparel.store",
+    "https://blueprnt.store",
+    "https://www.blueprnt.store",
 ]
 
 # Static files - use WhiteNoise for efficient serving

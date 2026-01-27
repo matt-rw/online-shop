@@ -161,6 +161,53 @@ class Material(models.Model):
         return self.name
 
 
+class CustomAttribute(models.Model):
+    """
+    A custom attribute type that can be used for product variants.
+    Examples: Waist, Inseam, Lens Color, Screen Size, etc.
+    """
+    name = models.CharField(max_length=100, unique=True, help_text="Attribute name (e.g., Waist, Inseam)")
+    slug = models.SlugField(unique=True, help_text="URL-friendly identifier")
+    description = models.TextField(blank=True, help_text="Optional description of this attribute")
+    is_active = models.BooleanField(default=True, help_text="Whether this attribute is available for use")
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ["name"]
+        verbose_name = "Custom Attribute"
+        verbose_name_plural = "Custom Attributes"
+
+    def __str__(self):
+        return self.name
+
+
+class CustomAttributeValue(models.Model):
+    """
+    A value for a custom attribute.
+    Examples: For "Waist" attribute: 28, 30, 32, 34, etc.
+    """
+    attribute = models.ForeignKey(
+        CustomAttribute,
+        on_delete=models.CASCADE,
+        related_name="values",
+        help_text="The attribute this value belongs to"
+    )
+    value = models.CharField(max_length=100, help_text="The attribute value (e.g., 28, 30, 32)")
+    display_order = models.PositiveIntegerField(default=0, help_text="Order in which to display this value")
+    is_active = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["attribute", "display_order", "value"]
+        unique_together = ["attribute", "value"]
+        verbose_name = "Custom Attribute Value"
+        verbose_name_plural = "Custom Attribute Values"
+
+    def __str__(self):
+        return f"{self.attribute.name}: {self.value}"
+
+
 # GENDER?
 
 

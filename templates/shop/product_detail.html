@@ -27,6 +27,57 @@
     cursor: not-allowed;
     text-decoration: line-through;
   }
+
+  /* Gallery navigation arrows - desktop only */
+  .gallery-arrow {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 48px;
+    height: 48px;
+    background: rgba(255, 255, 255, 0.9);
+    border: 1px solid black;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    opacity: 0;
+    transition: opacity 0.2s ease;
+    z-index: 10;
+  }
+  .gallery-container:hover .gallery-arrow {
+    opacity: 1;
+  }
+  .gallery-arrow:hover {
+    background: black;
+    color: white;
+  }
+  .gallery-arrow.prev { left: 16px; }
+  .gallery-arrow.next { right: 16px; }
+
+  /* Hide arrows on mobile */
+  @media (max-width: 1023px) {
+    .gallery-arrow { display: none; }
+  }
+
+  /* Swipe hint for mobile */
+  .swipe-hint {
+    display: none;
+  }
+  @media (max-width: 1023px) {
+    .swipe-hint {
+      display: block;
+      position: absolute;
+      bottom: 16px;
+      right: 16px;
+      padding: 4px 12px;
+      background: rgba(255, 255, 255, 0.9);
+      border: 1px solid black;
+      font-size: 10px;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+    }
+  }
 </style>
 {% endblock %}
 
@@ -53,11 +104,30 @@
       <!-- Left: Image Gallery -->
       <div class="border-r border-black">
         <!-- Main Image -->
-        <div class="relative" style="aspect-ratio: 4/5;">
+        <div id="gallery-container" class="gallery-container relative" style="aspect-ratio: 4/5;">
           <img id="main-image"
                src="{{ main_image }}"
                alt="{{ product.name }}"
-               class="w-full h-full object-cover" />
+               class="w-full h-full object-cover select-none"
+               draggable="false" />
+
+          {% if images|length > 1 %}
+          <!-- Desktop: Arrow Navigation -->
+          <button type="button" class="gallery-arrow prev" onclick="prevImage()" aria-label="Previous image">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
+            </svg>
+          </button>
+          <button type="button" class="gallery-arrow next" onclick="nextImage()" aria-label="Next image">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+            </svg>
+          </button>
+
+          <!-- Mobile: Swipe hint (shows briefly) -->
+          <div id="swipe-hint" class="swipe-hint">Swipe</div>
+          {% endif %}
+
           <!-- Image number indicator -->
           <div class="absolute bottom-4 left-4 px-3 py-1 bg-white/90 backdrop-blur-sm border border-black">
             <span id="image-counter" class="text-xs tracking-widest font-medium">001 / {{ images|length|default:1|stringformat:"03d" }}</span>
@@ -246,6 +316,7 @@
   // Image gallery
   let currentImage = 1;
   const totalImages = {{ images|length|default:1 }};
+  const imageUrls = [{% for image in images %}'{{ image }}'{% if not forloop.last %}, {% endif %}{% endfor %}];
 
   function changeImage(src, index) {
     document.getElementById('main-image').src = src;
@@ -262,6 +333,62 @@
       }
     });
   }
+
+  // Arrow navigation
+  function nextImage() {
+    if (totalImages <= 1) return;
+    let nextIndex = currentImage + 1;
+    if (nextIndex > totalImages) nextIndex = 1;
+    changeImage(imageUrls[nextIndex - 1], nextIndex);
+  }
+
+  function prevImage() {
+    if (totalImages <= 1) return;
+    let prevIndex = currentImage - 1;
+    if (prevIndex < 1) prevIndex = totalImages;
+    changeImage(imageUrls[prevIndex - 1], prevIndex);
+  }
+
+  // Touch swipe support for mobile
+  (function() {
+    const gallery = document.getElementById('gallery-container');
+    if (!gallery || totalImages <= 1) return;
+
+    let touchStartX = 0;
+    let touchEndX = 0;
+    const minSwipeDistance = 50;
+
+    gallery.addEventListener('touchstart', function(e) {
+      touchStartX = e.changedTouches[0].screenX;
+    }, { passive: true });
+
+    gallery.addEventListener('touchend', function(e) {
+      touchEndX = e.changedTouches[0].screenX;
+      handleSwipe();
+    }, { passive: true });
+
+    function handleSwipe() {
+      const distance = touchEndX - touchStartX;
+      if (Math.abs(distance) < minSwipeDistance) return;
+
+      if (distance > 0) {
+        // Swiped right - go to previous
+        prevImage();
+      } else {
+        // Swiped left - go to next
+        nextImage();
+      }
+    }
+
+    // Hide swipe hint after first interaction or after 3 seconds
+    const swipeHint = document.getElementById('swipe-hint');
+    if (swipeHint) {
+      setTimeout(() => { swipeHint.style.opacity = '0'; }, 3000);
+      gallery.addEventListener('touchstart', () => {
+        swipeHint.style.opacity = '0';
+      }, { once: true });
+    }
+  })();
 
   // Size selection
   function selectSize(size) {
