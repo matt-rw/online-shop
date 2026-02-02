@@ -436,23 +436,34 @@ def product_detail(request, slug):
             })
             seen_colors.add(variant.color.name)
 
-    # Collect unique images from variants
+    # Collect unique images: product-level first, then variant-specific
     images = []
     seen_images = set()
+
+    # Add product-level shared images first
+    if product.images:
+        for img in product.images:
+            if img and not img.startswith(("/", "http", "data:")):
+                img_path = f"/static/{img}"
+            else:
+                img_path = img
+            if img_path not in seen_images:
+                images.append(img_path)
+                seen_images.add(img_path)
+
+    # Then add variant-specific images
     for variant in variants:
         if variant.images:
             for img in variant.images:
-                # Ensure image has proper static prefix
-                if img and not img.startswith(("/", "http")):
+                if img and not img.startswith(("/", "http", "data:")):
                     img_path = f"/static/{img}"
                 else:
                     img_path = img
-                # Only add if not already seen
                 if img_path not in seen_images:
                     images.append(img_path)
                     seen_images.add(img_path)
 
-    # If no variant images, use placeholder based on product category
+    # Fallback to placeholder if no images at all
     if not images:
         if product.category_legacy and "bottom" in product.category_legacy.lower():
             images = ["/static/images/white_bg_bottom.webp"]
@@ -532,12 +543,16 @@ def shop(request):
     # Build product data with images (no extra queries due to prefetch)
     product_list = []
     for product in products:
-        # Get first variant image or use placeholder
+        # Get first variant image, then product-level images, then placeholder
         first_variant = product.active_variants[0] if product.active_variants else None
         if first_variant and first_variant.images:
             image = first_variant.images[0]
             # Ensure image has proper static prefix
-            if image and not image.startswith(("/", "http")):
+            if image and not image.startswith(("/", "http", "data:")):
+                image = f"/static/{image}"
+        elif product.images:
+            image = product.images[0]
+            if image and not image.startswith(("/", "http", "data:")):
                 image = f"/static/{image}"
         elif "pants" in product.slug.lower() or "bottom" in product.name.lower():
             image = "/static/images/white_bg_bottom.webp"

@@ -626,7 +626,8 @@
             <td>
               <div style="display: flex; gap: 0.5rem;">
                 <button
-                  onclick="openEditModal({{ product.id }}, '{{ product.name|escapejs }}', '{{ product.slug }}', '{{ product.category_slug|escapejs }}', '{{ product.description|escapejs }}', '{{ product.base_price }}', {{ product.featured|lower }}, {{ product.available_for_purchase|lower }})"
+                  onclick="openEditModal({{ product.id }}, '{{ product.name|escapejs }}', '{{ product.slug }}', '{{ product.category_slug|escapejs }}', '{{ product.description|escapejs }}', '{{ product.base_price }}', {{ product.featured|lower }}, {{ product.available_for_purchase|lower }}, this)"
+                  data-images='{{ product.images|safe }}'
                   class="btn btn-secondary btn-sm"
                 >
                   <i class="fa-solid fa-edit"></i>
@@ -716,6 +717,23 @@
               <span>Available for purchase</span>
             </label>
             <p style="font-size: 0.75rem; color: #64748b; margin-top: 0.25rem; margin-left: 1.5rem;">If unchecked, product shows "Not Available" instead of Add to Cart</p>
+          </div>
+
+          <div class="form-group">
+            <label>Product Images</label>
+            <p style="font-size: 0.75rem; color: #64748b; margin-bottom: 0.5rem;">Shared images used across all variants</p>
+            <div id="edit_images_container" style="display: flex; gap: 0.75rem; flex-wrap: wrap; margin-bottom: 0.75rem;">
+              <!-- Image previews will appear here -->
+            </div>
+            <div style="display: flex; gap: 0.5rem;">
+              <input type="file" id="edit_image_upload" accept="image/*" multiple style="display: none;" onchange="handleProductImageUpload(event)">
+              <button type="button" onclick="document.getElementById('edit_image_upload').click()" class="btn btn-secondary" style="font-size: 0.8125rem; padding: 0.5rem 1rem;">
+                <i class="fa-solid fa-image"></i> Upload Images
+              </button>
+              <button type="button" onclick="addProductImageByURL()" class="btn btn-secondary" style="font-size: 0.8125rem; padding: 0.5rem 1rem;">
+                <i class="fa-solid fa-link"></i> Add URL
+              </button>
+            </div>
           </div>
         </form>
       </div>
@@ -998,7 +1016,7 @@
         <button class="btn btn-secondary" onclick="closeVariantForm()" style="padding: 0.75rem 2rem;">
           <i class="fa-solid fa-times"></i> Cancel
         </button>
-        <button class="btn btn-primary" onclick="saveVariant()" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border: none; padding: 0.75rem 2rem; box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);">
+        <button class="btn btn-primary" onclick="saveVariant()" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; padding: 0.75rem 2rem; box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);">
           <i class="fa-solid fa-save"></i>
           Save Variant
         </button>
@@ -1322,7 +1340,9 @@
       });
     }
 
-    function openEditModal(id, name, slug, category, description, price, featured, available) {
+    let productImages = [];
+
+    function openEditModal(id, name, slug, category, description, price, featured, available, btn) {
       document.getElementById('edit_product_id').value = id;
       document.getElementById('edit_name').value = name;
       document.getElementById('edit_slug').value = slug;
@@ -1332,7 +1352,64 @@
       document.getElementById('edit_featured').checked = featured;
       document.getElementById('edit_available').checked = available !== false;
 
+      // Load product images
+      try {
+        productImages = JSON.parse(btn.getAttribute('data-images') || '[]');
+      } catch (e) {
+        productImages = [];
+      }
+      displayProductImages();
+
       document.getElementById('editModal').classList.add('active');
+    }
+
+    function handleProductImageUpload(event) {
+      const files = event.target.files;
+      for (let file of files) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+          productImages.push(e.target.result);
+          displayProductImages();
+        };
+        reader.readAsDataURL(file);
+      }
+      event.target.value = '';
+    }
+
+    function addProductImageByURL() {
+      const url = prompt('Enter image URL:');
+      if (url) {
+        productImages.push(url);
+        displayProductImages();
+      }
+    }
+
+    function displayProductImages() {
+      const container = document.getElementById('edit_images_container');
+      container.innerHTML = '';
+
+      if (productImages.length === 0) {
+        container.innerHTML = '<p style="color: #94a3b8; font-size: 0.8125rem; font-style: italic;">No images added yet.</p>';
+        return;
+      }
+
+      productImages.forEach((img, index) => {
+        const imgSrc = img.startsWith('/') || img.startsWith('http') || img.startsWith('data:') ? img : `/static/${img}`;
+        const imgDiv = document.createElement('div');
+        imgDiv.style.cssText = 'position: relative; width: 100px; height: 100px; border-radius: 8px; overflow: hidden; border: 2px solid #e2e8f0;';
+        imgDiv.innerHTML = `
+          <img src="${imgSrc}" style="width: 100%; height: 100%; object-fit: cover;" onerror="this.src='/static/images/white_bg_top.webp'">
+          <button type="button" onclick="removeProductImage(${index})" style="position: absolute; top: 4px; right: 4px; background: rgba(239, 68, 68, 0.9); color: white; border: none; border-radius: 4px; width: 24px; height: 24px; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 0.75rem;">
+            <i class="fa-solid fa-times"></i>
+          </button>
+        `;
+        container.appendChild(imgDiv);
+      });
+    }
+
+    function removeProductImage(index) {
+      productImages.splice(index, 1);
+      displayProductImages();
     }
 
     function closeEditModal() {
@@ -1358,14 +1435,7 @@
       formData.append('base_price', document.getElementById('edit_base_price').value);
       formData.append('featured', document.getElementById('edit_featured').checked ? 'true' : 'false');
       formData.append('available_for_purchase', document.getElementById('edit_available').checked ? 'true' : 'false');
-
-      console.log('Saving product with data:', {
-        action: 'update_product',
-        product_id: productId,
-        name: document.getElementById('edit_name').value,
-        slug: document.getElementById('edit_slug').value,
-        category: document.getElementById('edit_category').value
-      });
+      formData.append('images', JSON.stringify(productImages));
 
       fetch(window.location.pathname, {
         method: 'POST',
@@ -2606,6 +2676,8 @@
         };
         reader.readAsDataURL(file);
       }
+      // Reset so the same file can be selected again
+      event.target.value = '';
     }
 
     function addImageByURL() {
@@ -2846,6 +2918,7 @@
     <form id="add-product-form" method="POST" style="padding: 2rem;">
       {% csrf_token %}
       <input type="hidden" name="action" value="create_product">
+      <input type="hidden" name="is_active" value="true">
 
       <div class="form-group">
         <label for="add_name">Product Name <span style="color: #ef4444;">*</span></label>

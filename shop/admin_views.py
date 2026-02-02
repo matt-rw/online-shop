@@ -2218,6 +2218,8 @@ def products_dashboard(request):
                 return JsonResponse({"success": False, "error": "Product not found"})
 
         elif action == "create_product":
+            import json
+
             from django.http import JsonResponse
             from django.utils.text import slugify
 
@@ -2250,6 +2252,13 @@ def products_dashboard(request):
             except (ValueError, TypeError):
                 base_price = 0
 
+            # Parse images
+            images_json = request.POST.get("images", "[]")
+            try:
+                images = json.loads(images_json)
+            except json.JSONDecodeError:
+                images = []
+
             try:
                 # available_for_purchase defaults to True if not specified or if "on" (checkbox value)
                 available = request.POST.get("available_for_purchase", "true")
@@ -2264,6 +2273,7 @@ def products_dashboard(request):
                     is_active=request.POST.get("is_active") == "true",
                     featured=request.POST.get("featured") in ("true", "on"),
                     available_for_purchase=available_for_purchase,
+                    images=images,
                 )
                 return JsonResponse({"success": True, "product_id": product.id, "slug": product.slug})
             except Exception as e:
@@ -2285,6 +2295,8 @@ def products_dashboard(request):
                 return JsonResponse({"success": False, "error": str(e)})
 
         elif action == "update_product":
+            import json
+
             from django.http import JsonResponse
 
             from shop.models import Category
@@ -2309,6 +2321,15 @@ def products_dashboard(request):
                 product.base_price = request.POST.get("base_price")
                 product.featured = request.POST.get("featured") == "true"
                 product.available_for_purchase = request.POST.get("available_for_purchase") == "true"
+
+                # Update images
+                images_json = request.POST.get("images")
+                if images_json is not None:
+                    try:
+                        product.images = json.loads(images_json)
+                    except json.JSONDecodeError:
+                        pass
+
                 product.save()
                 return JsonResponse({"success": True})
             except Product.DoesNotExist:
@@ -2447,6 +2468,69 @@ def products_dashboard(request):
                 return JsonResponse({"success": True})
             except Product.DoesNotExist:
                 return JsonResponse({"success": False, "error": "Product not found"})
+            except Size.DoesNotExist:
+                return JsonResponse({"success": False, "error": "Size not found"})
+            except Color.DoesNotExist:
+                return JsonResponse({"success": False, "error": "Color not found"})
+            except Exception as e:
+                return JsonResponse({"success": False, "error": str(e)})
+
+        elif action == "update_variant":
+            import json
+
+            from django.http import JsonResponse
+
+            variant_id = request.POST.get("variant_id")
+            size_id = request.POST.get("size_id")
+            color_id = request.POST.get("color_id")
+            material_id = request.POST.get("material_id")
+            sku = request.POST.get("sku", "")
+            stock_quantity = request.POST.get("stock_quantity", 0)
+            price = request.POST.get("price")
+            images_json = request.POST.get("images", "[]")
+            custom_fields_json = request.POST.get("custom_fields", "{}")
+
+            try:
+                from shop.models import Color, Material, Size
+
+                variant = ProductVariant.objects.get(id=variant_id)
+                size = Size.objects.get(id=size_id)
+                color = Color.objects.get(id=color_id)
+                material = Material.objects.get(id=material_id) if material_id else None
+
+                try:
+                    images = json.loads(images_json)
+                    custom_fields = json.loads(custom_fields_json)
+                except json.JSONDecodeError:
+                    images = []
+                    custom_fields = {}
+
+                # Check for duplicate (different variant with same size/color/material)
+                existing = ProductVariant.objects.filter(
+                    product=variant.product, size=size, color=color, material=material
+                ).exclude(id=variant_id).first()
+
+                if existing:
+                    parts = [str(size), str(color)]
+                    if material:
+                        parts.append(str(material))
+                    return JsonResponse(
+                        {"success": False, "error": f'Variant {" - ".join(parts)} already exists'}
+                    )
+
+                variant.size = size
+                variant.color = color
+                variant.material = material
+                variant.sku = sku or None
+                variant.stock_quantity = stock_quantity
+                variant.price = price
+                variant.images = images
+                variant.custom_fields = custom_fields
+                variant.save()
+
+                return JsonResponse({"success": True})
+            except ProductVariant.DoesNotExist:
+                return JsonResponse({"success": False, "error": "Variant not found"})
             except Size.DoesNotExist:
                 return JsonResponse({"success": False, "error": "Size not found"})
             except Color.DoesNotExist:
@@ -2700,6 +2784,7 @@ def products_dashboard(request):
                 "variant_count": variant_count,
                 "total_stock": total_stock,
                 "active_variants": active_variants,
+                "images": product.images or [],
             }
         )
 

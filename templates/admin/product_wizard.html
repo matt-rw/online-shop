@@ -1438,6 +1438,12 @@
         productFormData.append('description', productData.description);
         productFormData.append('is_active', 'true');
 
+        // Include shared product images
+        if (productData.sharedPhotos.length > 0) {
+          const sharedImageURLs = productData.sharedPhotos.map(p => p.preview);
+          productFormData.append('images', JSON.stringify(sharedImageURLs));
+        }
+
         const productResponse = await fetch('{% url "admin_products" %}', {
           method: 'POST',
           body: productFormData,
@@ -1495,6 +1501,14 @@
             if (variant.color_id) variantFormData.append('color_id', variant.color_id);
             if (variant.material_id) variantFormData.append('material_id', variant.material_id);
 
+            // Include variant-specific photos if any
+            const variantKey = [variant.size_value, variant.color_value, variant.material_value].filter(Boolean).join('-');
+            const variantPhotos = productData.variantPhotos[variantKey];
+            if (variantPhotos && variantPhotos.length > 0) {
+              const variantImageURLs = variantPhotos.map(p => p.preview);
+              variantFormData.append('images', JSON.stringify(variantImageURLs));
+            }
+
             return fetch('{% url "admin_products" %}', {
               method: 'POST',
               body: variantFormData,
@@ -1506,18 +1520,8 @@
           variantCount = results.filter(r => r.success).length;
         }
 
-        // TODO: Upload photos to server
-        // For now, photos are captured but need backend image upload endpoint
-        const photoCount = productData.sharedPhotos.length +
-          Object.values(productData.variantPhotos).reduce((sum, arr) => sum + arr.length, 0);
-        console.log('Photos to upload:', {
-          shared: productData.sharedPhotos.length,
-          variants: Object.keys(productData.variantPhotos).length + ' variants with photos'
-        });
-
         let message = `Product "${productData.name}" created`;
         if (variantCount > 0) message += ` with ${variantCount} variant(s)`;
-        if (photoCount > 0) message += ` (${photoCount} photos pending upload)`;
         message += '!';
         showToast(message);
 

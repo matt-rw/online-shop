@@ -93,8 +93,11 @@ class Product(models.Model):
         else:
             self.category_legacy = str(value) if value else ""
 
-    # Images will be handled by a separate ProductImage model for better management
-    # image_urls field removed in favor of file uploads
+    # Product-level images shared across all variants
+    images = models.JSONField(
+        default=list, blank=True, help_text="Shared product images (used for all variants)"
+    )
+
     base_price = models.DecimalField(
         max_digits=10, decimal_places=2, help_text="Starting/base price for this product"
     )
