@@ -626,15 +626,14 @@
             <td>
               <div style="display: flex; gap: 0.5rem;">
                 <button
-                  onclick="openEditModal({{ product.id }}, '{{ product.name|escapejs }}', '{{ product.slug }}', '{{ product.category_slug|escapejs }}', '{{ product.description|escapejs }}', '{{ product.base_price }}', {{ product.featured|lower }}, {{ product.available_for_purchase|lower }}, this)"
-                  data-images='{{ product.images|safe }}'
+                  onclick="openEditModal({{ product.id }}, '{{ product.name|escapejs }}', '{{ product.slug }}', '{{ product.category_slug|escapejs }}', '{{ product.description|escapejs }}', '{{ product.base_price }}', {{ product.featured|lower }}, {{ product.available_for_purchase|lower }}, {{ product.images|safe|default:"[]" }})"
                   class="btn btn-secondary btn-sm"
                 >
                   <i class="fa-solid fa-edit"></i>
                   Edit
                 </button>
                 <button
-                  onclick="openVariantsModal({{ product.id }}, '{{ product.name|escapejs }}', '{{ product.base_price }}')"
+                  onclick="openVariantsModal({{ product.id }}, '{{ product.name|escapejs }}', '{{ product.base_price }}', {{ product.images|safe|default:"[]" }})"
                   class="btn btn-secondary btn-sm"
                   title="Manage size/color variants"
                 >
@@ -973,15 +972,27 @@
           </div>
         </div>
 
-        <!-- Images -->
-        <div style="background: white; border: 1px solid #e2e8f0; border-radius: 12px; padding: 1.5rem; margin-bottom: 1.5rem; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);">
-          <h3 style="font-size: 0.9375rem; font-weight: 700; color: #1e293b; margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem;">
-            <i class="fa-solid fa-images" style="color: #667eea; font-size: 0.875rem;"></i> Images
+        <!-- Shared Product Images (read-only) -->
+        <div id="shared_images_section" style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 1.5rem; margin-bottom: 1.5rem; display: none;">
+          <h3 style="font-size: 0.9375rem; font-weight: 700; color: #64748b; margin-bottom: 0.5rem; display: flex; align-items: center; gap: 0.5rem;">
+            <i class="fa-solid fa-image" style="color: #94a3b8; font-size: 0.875rem;"></i> Shared Product Images
           </h3>
+          <p style="font-size: 0.75rem; color: #94a3b8; margin-bottom: 0.75rem;">These images are used for all variants unless overridden below.</p>
+          <div id="shared_images_container" style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+            <!-- Shared images will appear here -->
+          </div>
+        </div>
+
+        <!-- Variant-Specific Images -->
+        <div style="background: white; border: 1px solid #e2e8f0; border-radius: 12px; padding: 1.5rem; margin-bottom: 1.5rem; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);">
+          <h3 style="font-size: 0.9375rem; font-weight: 700; color: #1e293b; margin-bottom: 0.5rem; display: flex; align-items: center; gap: 0.5rem;">
+            <i class="fa-solid fa-images" style="color: #667eea; font-size: 0.875rem;"></i> Variant-Specific Images
+          </h3>
+          <p style="font-size: 0.75rem; color: #64748b; margin-bottom: 0.75rem;">Add images unique to this variant (optional). These will override shared images.</p>
           <div id="variant_images_container" style="display: flex; gap: 0.75rem; flex-wrap: wrap; margin-bottom: 1rem;">
             <!-- Image previews will appear here -->
           </div>
-          <div style="display: flex; gap: 0.5rem;">
+          <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
             <input type="file" id="variant_image_upload" accept="image/*" multiple style="display: none;" onchange="handleVariantImageUpload(event)">
             <button type="button" onclick="document.getElementById('variant_image_upload').click()" class="btn btn-secondary">
               <i class="fa-solid fa-image"></i>
@@ -990,6 +1001,10 @@
             <button type="button" onclick="addImageByURL()" class="btn btn-secondary">
               <i class="fa-solid fa-link"></i>
               Add from URL
+            </button>
+            <button type="button" onclick="copySharedImages()" class="btn btn-secondary" title="Copy shared product images to this variant">
+              <i class="fa-solid fa-copy"></i>
+              Copy from Shared
             </button>
           </div>
         </div>
@@ -1342,7 +1357,7 @@
 
     let productImages = [];
 
-    function openEditModal(id, name, slug, category, description, price, featured, available, btn) {
+    function openEditModal(id, name, slug, category, description, price, featured, available, images) {
       document.getElementById('edit_product_id').value = id;
       document.getElementById('edit_name').value = name;
       document.getElementById('edit_slug').value = slug;
@@ -1352,12 +1367,8 @@
       document.getElementById('edit_featured').checked = featured;
       document.getElementById('edit_available').checked = available !== false;
 
-      // Load product images
-      try {
-        productImages = JSON.parse(btn.getAttribute('data-images') || '[]');
-      } catch (e) {
-        productImages = [];
-      }
+      // Load product images (passed directly as array)
+      productImages = Array.isArray(images) ? [...images] : [];
       displayProductImages();
 
       document.getElementById('editModal').classList.add('active');
@@ -1384,6 +1395,8 @@
       }
     }
 
+    let draggedImageIndex = null;
+
     function displayProductImages() {
       const container = document.getElementById('edit_images_container');
       container.innerHTML = '';
@@ -1396,15 +1409,64 @@
       productImages.forEach((img, index) => {
         const imgSrc = img.startsWith('/') || img.startsWith('http') || img.startsWith('data:') ? img : `/static/${img}`;
         const imgDiv = document.createElement('div');
-        imgDiv.style.cssText = 'position: relative; width: 100px; height: 100px; border-radius: 8px; overflow: hidden; border: 2px solid #e2e8f0;';
+        imgDiv.draggable = true;
+        imgDiv.dataset.index = index;
+        imgDiv.style.cssText = 'position: relative; width: 100px; height: 100px; border-radius: 8px; overflow: hidden; border: 2px solid #e2e8f0; cursor: grab; transition: transform 0.15s, border-color 0.15s;';
+
+        // Drag events
+        imgDiv.ondragstart = (e) => {
+          draggedImageIndex = index;
+          imgDiv.style.opacity = '0.5';
+          e.dataTransfer.effectAllowed = 'move';
+        };
+        imgDiv.ondragend = () => {
+          imgDiv.style.opacity = '1';
+          draggedImageIndex = null;
+          // Remove all drag-over styles
+          container.querySelectorAll('[data-index]').forEach(el => {
+            el.style.borderColor = '#e2e8f0';
+            el.style.transform = 'none';
+          });
+        };
+        imgDiv.ondragover = (e) => {
+          e.preventDefault();
+          if (draggedImageIndex !== null && draggedImageIndex !== index) {
+            imgDiv.style.borderColor = '#667eea';
+            imgDiv.style.transform = 'scale(1.05)';
+          }
+        };
+        imgDiv.ondragleave = () => {
+          imgDiv.style.borderColor = '#e2e8f0';
+          imgDiv.style.transform = 'none';
+        };
+        imgDiv.ondrop = (e) => {
+          e.preventDefault();
+          if (draggedImageIndex !== null && draggedImageIndex !== index) {
+            // Reorder images
+            const draggedImg = productImages[draggedImageIndex];
+            productImages.splice(draggedImageIndex, 1);
+            productImages.splice(index, 0, draggedImg);
+            displayProductImages();
+          }
+        };
+
         imgDiv.innerHTML = `
-          <img src="${imgSrc}" style="width: 100%; height: 100%; object-fit: cover;" onerror="this.src='/static/images/white_bg_top.webp'">
-          <button type="button" onclick="removeProductImage(${index})" style="position: absolute; top: 4px; right: 4px; background: rgba(239, 68, 68, 0.9); color: white; border: none; border-radius: 4px; width: 24px; height: 24px; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 0.75rem;">
+          <img src="${imgSrc}" style="width: 100%; height: 100%; object-fit: cover; pointer-events: none;" onerror="this.src='/static/images/white_bg_top.webp'">
+          <div style="position: absolute; top: 4px; left: 4px; background: rgba(0,0,0,0.6); color: white; border-radius: 4px; width: 20px; height: 20px; font-size: 0.6875rem; display: flex; align-items: center; justify-content: center; font-weight: 600;">${index + 1}</div>
+          <button type="button" onclick="event.stopPropagation(); removeProductImage(${index})" style="position: absolute; top: 4px; right: 4px; background: rgba(239, 68, 68, 0.9); color: white; border: none; border-radius: 4px; width: 24px; height: 24px; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 0.75rem;">
             <i class="fa-solid fa-times"></i>
           </button>
         `;
         container.appendChild(imgDiv);
       });
+
+      // Add helper text if multiple images
+      if (productImages.length > 1) {
+        const helpText = document.createElement('p');
+        helpText.style.cssText = 'width: 100%; font-size: 0.75rem; color: #94a3b8; margin-top: 0.5rem;';
+        helpText.innerHTML = '<i class="fa-solid fa-arrows-up-down-left-right"></i> Drag to reorder. First image is the main product image.';
+        container.appendChild(helpText);
+      }
     }
 
     function removeProductImage(index) {
@@ -1533,13 +1595,17 @@
     let allVariants = [];
     let variantImages = [];
     let customFieldsData = {};
+    let sharedProductImages = [];
 
     // Variants Modal Functions
-    function openVariantsModal(productId, productName, basePrice) {
+    function openVariantsModal(productId, productName, basePrice, productImages) {
       document.getElementById('variants_product_id').value = productId;
       document.getElementById('variants_base_price').value = basePrice || '';
       document.getElementById('variants_modal_title').innerHTML = `<i class="fa-solid fa-shapes"></i> Variants: ${productName}`;
       document.getElementById('variantsModal').classList.add('active');
+
+      // Store shared product images for display in variant form
+      sharedProductImages = Array.isArray(productImages) ? productImages : [];
 
       // Load sizes, colors, and materials
       loadSizesColorsMaterials();
@@ -1568,7 +1634,8 @@
       // Clear images and custom fields
       variantImages = [];
       customFieldsData = {};
-      document.getElementById('variant_images_container').innerHTML = '';
+      displayVariantImages();
+      displaySharedImages();
       document.getElementById('custom_fields_container').innerHTML = '<p style="color: #64748b; font-size: 0.875rem; font-style: italic;">No custom fields added yet.</p>';
 
       // Load dynamic attributes based on category
@@ -2409,6 +2476,9 @@
         container.innerHTML = '<p style="color: #64748b; font-size: 0.875rem; font-style: italic;">No custom fields added yet.</p>';
       }
 
+      // Display shared product images
+      displaySharedImages();
+
       // Load variant attributes (which creates form fields), then load dropdowns and set values
       loadVariantAttributesForEdit(variant);
       document.getElementById('variantFormModal').classList.add('active');
@@ -2688,27 +2758,118 @@
       }
     }
 
+    let draggedVariantImageIndex = null;
+
     function displayVariantImages() {
       const container = document.getElementById('variant_images_container');
       container.innerHTML = '';
 
+      if (variantImages.length === 0) {
+        container.innerHTML = '<p style="color: #94a3b8; font-size: 0.8125rem; font-style: italic;">No variant-specific images. Will use shared product images.</p>';
+        return;
+      }
+
       variantImages.forEach((img, index) => {
         // Add /static/ prefix if needed
-        const imgSrc = img.startsWith('/') || img.startsWith('http') ? img : `/static/${img}`;
+        const imgSrc = img.startsWith('/') || img.startsWith('http') || img.startsWith('data:') ? img : `/static/${img}`;
         const imgDiv = document.createElement('div');
-        imgDiv.style.cssText = 'position: relative; width: 100px; height: 100px; border-radius: 8px; overflow: hidden; border: 2px solid #e2e8f0;';
+        imgDiv.draggable = true;
+        imgDiv.dataset.index = index;
+        imgDiv.style.cssText = 'position: relative; width: 100px; height: 100px; border-radius: 8px; overflow: hidden; border: 2px solid #e2e8f0; cursor: grab; transition: transform 0.15s, border-color 0.15s;';
+
+        // Drag events
+        imgDiv.ondragstart = (e) => {
+          draggedVariantImageIndex = index;
+          imgDiv.style.opacity = '0.5';
+          e.dataTransfer.effectAllowed = 'move';
+        };
+        imgDiv.ondragend = () => {
+          imgDiv.style.opacity = '1';
+          draggedVariantImageIndex = null;
+          container.querySelectorAll('[data-index]').forEach(el => {
+            el.style.borderColor = '#e2e8f0';
+            el.style.transform = 'none';
+          });
+        };
+        imgDiv.ondragover = (e) => {
+          e.preventDefault();
+          if (draggedVariantImageIndex !== null && draggedVariantImageIndex !== index) {
+            imgDiv.style.borderColor = '#667eea';
+            imgDiv.style.transform = 'scale(1.05)';
+          }
+        };
+        imgDiv.ondragleave = () => {
+          imgDiv.style.borderColor = '#e2e8f0';
+          imgDiv.style.transform = 'none';
+        };
+        imgDiv.ondrop = (e) => {
+          e.preventDefault();
+          if (draggedVariantImageIndex !== null && draggedVariantImageIndex !== index) {
+            const draggedImg = variantImages[draggedVariantImageIndex];
+            variantImages.splice(draggedVariantImageIndex, 1);
+            variantImages.splice(index, 0, draggedImg);
+            displayVariantImages();
+          }
+        };
+
         imgDiv.innerHTML = `
-          <img src="${imgSrc}" style="width: 100%; height: 100%; object-fit: cover;" onerror="this.src='/static/images/white_bg_top.webp'">
-          <button onclick="removeVariantImage(${index})" style="position: absolute; top: 4px; right: 4px; background: rgba(239, 68, 68, 0.9); color: white; border: none; border-radius: 4px; width: 24px; height: 24px; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 0.75rem;">
+          <img src="${imgSrc}" style="width: 100%; height: 100%; object-fit: cover; pointer-events: none;" onerror="this.src='/static/images/white_bg_top.webp'">
+          <div style="position: absolute; top: 4px; left: 4px; background: rgba(0,0,0,0.6); color: white; border-radius: 4px; width: 20px; height: 20px; font-size: 0.6875rem; display: flex; align-items: center; justify-content: center; font-weight: 600;">${index + 1}</div>
+          <button type="button" onclick="event.stopPropagation(); removeVariantImage(${index})" style="position: absolute; top: 4px; right: 4px; background: rgba(239, 68, 68, 0.9); color: white; border: none; border-radius: 4px; width: 24px; height: 24px; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 0.75rem;">
             <i class="fa-solid fa-times"></i>
           </button>
         `;
         container.appendChild(imgDiv);
       });
+
+      if (variantImages.length > 1) {
+        const helpText = document.createElement('p');
+        helpText.style.cssText = 'width: 100%; font-size: 0.75rem; color: #94a3b8; margin-top: 0.5rem;';
+        helpText.innerHTML = '<i class="fa-solid fa-arrows-up-down-left-right"></i> Drag to reorder.';
+        container.appendChild(helpText);
+      }
     }
 
     function removeVariantImage(index) {
       variantImages.splice(index, 1);
+      displayVariantImages();
+    }
+
+    function displaySharedImages() {
+      const section = document.getElementById('shared_images_section');
+      const container = document.getElementById('shared_images_container');
+
+      if (!sharedProductImages || sharedProductImages.length === 0) {
+        section.style.display = 'none';
+        return;
+      }
+
+      section.style.display = 'block';
+      container.innerHTML = '';
+
+      sharedProductImages.forEach((img, index) => {
+        const imgSrc = img.startsWith('/') || img.startsWith('http') || img.startsWith('data:') ? img : `/static/${img}`;
+        const imgDiv = document.createElement('div');
+        imgDiv.style.cssText = 'position: relative; width: 70px; height: 70px; border-radius: 6px; overflow: hidden; border: 2px solid #e2e8f0; opacity: 0.8;';
+        imgDiv.innerHTML = `
+          <img src="${imgSrc}" style="width: 100%; height: 100%; object-fit: cover;" onerror="this.src='/static/images/white_bg_top.webp'">
+          <div style="position: absolute; top: 2px; left: 2px; background: rgba(0,0,0,0.5); color: white; border-radius: 3px; width: 16px; height: 16px; font-size: 0.5625rem; display: flex; align-items: center; justify-content: center; font-weight: 600;">${index + 1}</div>
+        `;
+        container.appendChild(imgDiv);
+      });
+    }
+
+    function copySharedImages() {
+      if (!sharedProductImages || sharedProductImages.length === 0) {
+        alert('No shared product images to copy.');
+        return;
+      }
+      // Add shared images to variant images (avoiding duplicates)
+      sharedProductImages.forEach(img => {
+        if (!variantImages.includes(img)) {
+          variantImages.push(img);
+        }
+      });
       displayVariantImages();
     }
 

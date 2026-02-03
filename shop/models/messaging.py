@@ -1,5 +1,6 @@
 from django.contrib.auth.models import User
 from django.db import models
+from django.utils import timezone
 
 
 class QuickMessage(models.Model):
@@ -14,6 +15,7 @@ class QuickMessage(models.Model):
     ]
 
     STATUS_CHOICES = [
+        ("draft", "Draft"),
         ("sending", "Sending"),
         ("sent", "Sent"),
         ("partial", "Partially Sent"),
@@ -35,7 +37,9 @@ class QuickMessage(models.Model):
     failed_count = models.IntegerField(default=0)
 
     # Metadata
-    sent_at = models.DateTimeField(auto_now_add=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    sent_at = models.DateTimeField(null=True, blank=True)
     sent_by = models.ForeignKey(
         User, on_delete=models.SET_NULL, null=True, blank=True, related_name="quick_messages"
     )
@@ -44,10 +48,11 @@ class QuickMessage(models.Model):
     class Meta:
         verbose_name = "Quick Message"
         verbose_name_plural = "Quick Messages"
-        ordering = ["-sent_at"]
+        ordering = ["-created_at"]
         indexes = [
-            models.Index(fields=["-sent_at"], name="quickmsg_sent_idx"),
-            models.Index(fields=["message_type", "-sent_at"], name="quickmsg_type_idx"),
+            models.Index(fields=["-created_at"], name="quickmsg_created_idx"),
+            models.Index(fields=["status"], name="quickmsg_status_idx"),
+            models.Index(fields=["message_type", "-created_at"], name="quickmsg_type_idx"),
         ]
 
     def __str__(self):

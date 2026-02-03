@@ -552,6 +552,58 @@
     [data-theme='dark'] .admin-grid {
       color: #e5e5e5;
     }
+
+    /* Quick Send Widget */
+    .quick-send-widget {
+      background: white;
+      border-radius: 12px;
+      margin-bottom: 2rem;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+      border: 1px solid #e2e8f0;
+      overflow: hidden;
+      transition: all 0.3s ease;
+    }
+    .quick-send-widget.collapsed {
+      border-color: #f1f5f9;
+      box-shadow: none;
+    }
+    .quick-send-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      cursor: pointer;
+      padding: 0.875rem 1.25rem;
+      transition: all 0.2s ease;
+    }
+    .quick-send-header:hover {
+      background: #f8fafc;
+    }
+    .quick-send-chevron {
+      color: #94a3b8;
+      font-size: 0.625rem;
+      transition: transform 0.3s ease;
+      width: 20px;
+      height: 20px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .quick-send-widget.collapsed .quick-send-chevron {
+      transform: rotate(-90deg);
+    }
+    .quick-send-content {
+      padding: 0 1.25rem 1.25rem 1.25rem;
+      max-height: 1000px;
+      opacity: 1;
+      transition: all 0.3s ease;
+      overflow: hidden;
+    }
+    .quick-send-widget.collapsed .quick-send-content {
+      max-height: 0;
+      padding-top: 0;
+      padding-bottom: 0;
+      opacity: 0;
+    }
   </style>
 </head>
 <body>
@@ -606,27 +658,31 @@
     </div>
 
     <!-- Quick Send Widget -->
-    <div style="background: white; border-radius: 16px; padding: 2rem; margin-bottom: 2rem; box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06); border: 1px solid #e2e8f0;">
-      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
-        <div>
-          <h3 style="color: #1e293b; font-size: 1.25rem; font-weight: 700; margin: 0 0 0.25rem 0;">Quick Send</h3>
-          <p style="color: #64748b; font-size: 0.875rem; margin: 0;">Send a message to all subscribers instantly</p>
+    <div id="quickSendWidget" class="quick-send-widget">
+      <div class="quick-send-header" onclick="toggleQuickSendWidget()">
+        <div style="display: flex; align-items: center; gap: 0.5rem;">
+          <span id="quickSendToggleIcon" class="quick-send-chevron">
+            <i class="fa-solid fa-chevron-down"></i>
+          </span>
+          <h3 style="color: #1e293b; font-size: 0.9375rem; font-weight: 600; margin: 0;">Quick Send</h3>
+          <span id="quickSendSubtitle" style="color: #94a3b8; font-size: 0.75rem;">· to subscribers</span>
         </div>
-        <a href="{% url 'admin_messages' %}" style="color: #667eea; font-size: 0.875rem; font-weight: 600; text-decoration: none;">View All Messages →</a>
+        <a href="{% url 'admin_messages' %}" onclick="event.stopPropagation();" style="color: #667eea; font-size: 0.75rem; font-weight: 500; text-decoration: none;">History →</a>
       </div>
 
-      <form id="quickSendForm" onsubmit="sendQuickMessage(event)">
-        {% csrf_token %}
-        <!-- Message Type Toggle -->
-        <div style="display: flex; gap: 0.5rem; margin-bottom: 1rem;">
-          <button type="button" id="toggleEmail" onclick="setMessageType('email')" style="flex: 1; padding: 0.75rem 1rem; border: 2px solid #667eea; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border-radius: 8px; font-weight: 600; cursor: pointer; transition: all 0.2s;">
-            📧 Email <span style="opacity: 0.8; font-weight: 400;">({{ stats.total_email_subs }})</span>
-          </button>
-          <button type="button" id="toggleSMS" onclick="setMessageType('sms')" style="flex: 1; padding: 0.75rem 1rem; border: 2px solid #e2e8f0; background: white; color: #64748b; border-radius: 8px; font-weight: 600; cursor: pointer; transition: all 0.2s;">
-            💬 SMS <span style="opacity: 0.8; font-weight: 400;">({{ stats.total_sms_subs }})</span>
-          </button>
-        </div>
-        <input type="hidden" name="message_type" id="messageType" value="email">
+      <div id="quickSendContent" class="quick-send-content">
+        <form id="quickSendForm" onsubmit="sendQuickMessage(event)">
+          {% csrf_token %}
+          <!-- Message Type Toggle -->
+          <div style="display: inline-flex; gap: 0.25rem; margin-bottom: 0.75rem; background: #f1f5f9; padding: 0.25rem; border-radius: 6px;">
+            <button type="button" id="toggleEmail" onclick="setMessageType('email')" style="padding: 0.375rem 0.75rem; border: none; background: white; color: #1e293b; border-radius: 4px; font-size: 0.8125rem; font-weight: 500; cursor: pointer; transition: all 0.15s; box-shadow: 0 1px 2px rgba(0,0,0,0.05);">
+              📧 Email ({{ stats.total_email_subs }})
+            </button>
+            <button type="button" id="toggleSMS" onclick="setMessageType('sms')" style="padding: 0.375rem 0.75rem; border: none; background: transparent; color: #64748b; border-radius: 4px; font-size: 0.8125rem; font-weight: 500; cursor: pointer; transition: all 0.15s;">
+              💬 SMS ({{ stats.total_sms_subs }})
+            </button>
+          </div>
+          <input type="hidden" name="message_type" id="messageType" value="email">
 
         <!-- Test Mode Toggle -->
         <div style="margin-bottom: 1rem; display: flex; align-items: center; gap: 1rem;">
@@ -653,17 +709,25 @@
           <textarea name="content" id="quickContent" placeholder="Write your message here..." rows="3" style="width: 100%; padding: 0.75rem 1rem; border: 2px solid #e2e8f0; border-radius: 8px; font-size: 0.9375rem; resize: vertical; font-family: inherit; transition: border-color 0.2s;" onfocus="this.style.borderColor='#667eea'" onblur="this.style.borderColor='#e2e8f0'" required></textarea>
         </div>
 
+        <input type="hidden" name="draft_id" id="draftId" value="">
+
         <!-- Send Button -->
         <div style="display: flex; justify-content: space-between; align-items: center;">
           <span id="recipientCount" style="color: #64748b; font-size: 0.875rem;">
             Will send to <strong style="color: #667eea;">{{ stats.active_email_subs }}</strong> active email subscribers
           </span>
-          <button type="submit" id="sendBtn" class="btn-primary" style="padding: 0.75rem 2rem; display: flex; align-items: center; gap: 0.5rem;">
-            <span>Send Now</span>
-            <span>→</span>
-          </button>
+          <div style="display: flex; gap: 0.5rem; align-items: center;">
+            <button type="button" id="saveDraftBtn" onclick="saveDraft()" class="btn-secondary" style="padding: 0.625rem 1rem; font-size: 0.875rem;">
+              Save Draft
+            </button>
+            <button type="submit" id="sendBtn" class="btn-primary" style="padding: 0.75rem 2rem; display: flex; align-items: center; gap: 0.5rem;">
+              <span>Send Now</span>
+              <span>→</span>
+            </button>
+          </div>
         </div>
-      </form>
+        </form>
+      </div>
     </div>
 
     <!-- Products Section -->
@@ -713,6 +777,12 @@
         <div class="icon">🎯</div>
         <h3>Campaigns</h3>
         <p>Create and manage campaigns with scheduled email and SMS messages.</p>
+      </a>
+
+      <a href="{% url 'admin_messages' %}" class="admin-card">
+        <div class="icon">💬</div>
+        <h3>Messages</h3>
+        <p>View sent messages, manage drafts, and configure test settings.</p>
       </a>
 
       <a href="{% url 'admin_ab_testing' %}" class="admin-card">
@@ -848,6 +918,102 @@
       </div>
     </div>
   </div>
+
+  <!-- Confirmation Modal -->
+  <div id="confirmModal" class="modal-overlay" onclick="closeConfirmModal(false)">
+    <div class="modal-content" style="max-width: 420px;" onclick="event.stopPropagation()">
+      <div class="modal-header" style="padding: 1.25rem 1.5rem; border-bottom: none;">
+        <div style="display: flex; align-items: center; gap: 0.75rem;">
+          <span id="confirmModalIcon" style="font-size: 1.5rem;">📨</span>
+          <h2 id="confirmModalTitle" style="font-size: 1.125rem;">Confirm Send</h2>
+        </div>
+        <button class="modal-close" onclick="closeConfirmModal(false)" style="font-size: 1.5rem; width: 32px; height: 32px;">&times;</button>
+      </div>
+      <div class="modal-body" style="padding: 0 1.5rem 1.5rem;">
+        <p id="confirmModalMessage" style="color: #475569; font-size: 0.9375rem; margin: 0; line-height: 1.5;"></p>
+      </div>
+      <div class="modal-footer" style="padding: 1rem 1.5rem; background: #f8fafc;">
+        <button id="confirmModalCancel" class="btn-secondary" onclick="closeConfirmModal(false)" style="padding: 0.625rem 1.25rem;">Cancel</button>
+        <button id="confirmModalConfirm" class="btn-primary" onclick="closeConfirmModal(true)" style="padding: 0.625rem 1.25rem;"></button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Alert Modal -->
+  <div id="alertModal" class="modal-overlay" onclick="closeAlertModal()">
+    <div class="modal-content" style="max-width: 420px;" onclick="event.stopPropagation()">
+      <div class="modal-header" style="padding: 1.25rem 1.5rem; border-bottom: none;">
+        <div style="display: flex; align-items: center; gap: 0.75rem;">
+          <span id="alertModalIcon" style="font-size: 1.5rem;">✅</span>
+          <h2 id="alertModalTitle" style="font-size: 1.125rem;">Success</h2>
+        </div>
+        <button class="modal-close" onclick="closeAlertModal()" style="font-size: 1.5rem; width: 32px; height: 32px;">&times;</button>
+      </div>
+      <div class="modal-body" style="padding: 0 1.5rem 1.5rem;">
+        <p id="alertModalMessage" style="color: #475569; font-size: 0.9375rem; margin: 0; line-height: 1.5;"></p>
+      </div>
+      <div class="modal-footer" style="padding: 1rem 1.5rem; background: #f8fafc; justify-content: center;">
+        <button class="btn-primary" onclick="closeAlertModal()" style="padding: 0.625rem 2rem;">OK</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Modal Functions
+    let confirmResolve = null;
+
+    function showConfirm(message, options = {}) {
+      return new Promise((resolve) => {
+        confirmResolve = resolve;
+        const modal = document.getElementById('confirmModal');
+        document.getElementById('confirmModalMessage').textContent = message;
+        document.getElementById('confirmModalIcon').textContent = options.icon || '📨';
+        document.getElementById('confirmModalTitle').textContent = options.title || 'Confirm';
+        document.getElementById('confirmModalConfirm').textContent = options.confirmText || 'Confirm';
+
+        // Style confirm button based on type
+        const confirmBtn = document.getElementById('confirmModalConfirm');
+        if (options.type === 'danger') {
+          confirmBtn.style.background = 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)';
+        } else {
+          confirmBtn.style.background = 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)';
+        }
+
+        modal.classList.add('active');
+      });
+    }
+
+    function closeConfirmModal(result) {
+      document.getElementById('confirmModal').classList.remove('active');
+      if (confirmResolve) {
+        confirmResolve(result);
+        confirmResolve = null;
+      }
+    }
+
+    function showAlert(message, options = {}) {
+      return new Promise((resolve) => {
+        const modal = document.getElementById('alertModal');
+        document.getElementById('alertModalMessage').innerHTML = message;
+        document.getElementById('alertModalIcon').textContent = options.icon || '✅';
+        document.getElementById('alertModalTitle').textContent = options.title || 'Success';
+
+        // Store resolve for when modal closes
+        modal.dataset.resolve = 'pending';
+        modal._resolve = resolve;
+        modal.classList.add('active');
+      });
+    }
+
+    function closeAlertModal() {
+      const modal = document.getElementById('alertModal');
+      modal.classList.remove('active');
+      if (modal._resolve) {
+        modal._resolve();
+        modal._resolve = null;
+      }
+    }
+  </script>
 
   <script>
     // Widget Management System
@@ -1111,11 +1277,22 @@
     let testMode = false;
     const emailCount = {{ stats.active_email_subs|default:0 }};
     const smsCount = {{ stats.active_sms_subs|default:0 }};
+    const defaultTestEmail = '{{ default_test_email|default:"" }}';
+    const defaultTestPhone = '{{ default_test_phone|default:"" }}';
 
     function toggleTestMode() {
       testMode = document.getElementById('testModeToggle').checked;
       document.getElementById('testRecipientField').style.display = testMode ? 'block' : 'none';
       document.getElementById('testModeHint').style.display = testMode ? 'inline' : 'none';
+
+      // Load default test recipient if field is empty
+      if (testMode) {
+        const testRecipient = document.getElementById('testRecipient');
+        if (!testRecipient.value) {
+          const defaultValue = currentMessageType === 'email' ? defaultTestEmail : defaultTestPhone;
+          if (defaultValue) testRecipient.value = defaultValue;
+        }
+      }
       updateRecipientCount();
     }
 
@@ -1140,25 +1317,45 @@
       const testRecipient = document.getElementById('testRecipient');
 
       if (type === 'email') {
-        emailBtn.style.background = 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)';
-        emailBtn.style.color = 'white';
-        emailBtn.style.borderColor = '#667eea';
-        smsBtn.style.background = 'white';
+        emailBtn.style.background = 'white';
+        emailBtn.style.color = '#1e293b';
+        emailBtn.style.boxShadow = '0 1px 2px rgba(0,0,0,0.05)';
+        smsBtn.style.background = 'transparent';
         smsBtn.style.color = '#64748b';
-        smsBtn.style.borderColor = '#e2e8f0';
+        smsBtn.style.boxShadow = 'none';
         subjectField.style.display = 'block';
         testRecipient.placeholder = 'Enter email address';
+        // Load default test email if in test mode and field is empty
+        if (testMode && !testRecipient.value && defaultTestEmail) {
+          testRecipient.value = defaultTestEmail;
+        }
       } else {
-        smsBtn.style.background = 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)';
-        smsBtn.style.color = 'white';
-        smsBtn.style.borderColor = '#667eea';
-        emailBtn.style.background = 'white';
+        smsBtn.style.background = 'white';
+        smsBtn.style.color = '#1e293b';
+        smsBtn.style.boxShadow = '0 1px 2px rgba(0,0,0,0.05)';
+        emailBtn.style.background = 'transparent';
         emailBtn.style.color = '#64748b';
-        emailBtn.style.borderColor = '#e2e8f0';
+        emailBtn.style.boxShadow = 'none';
         subjectField.style.display = 'none';
         testRecipient.placeholder = 'Enter phone number (e.g., +1234567890)';
+        // Load default test phone if in test mode and field is empty
+        if (testMode && !testRecipient.value && defaultTestPhone) {
+          testRecipient.value = defaultTestPhone;
+        }
       }
       updateRecipientCount();
+    }
+
+    function toggleQuickSendWidget() {
+      const widget = document.getElementById('quickSendWidget');
+      const subtitle = document.getElementById('quickSendSubtitle');
+      widget.classList.toggle('collapsed');
+
+      if (widget.classList.contains('collapsed')) {
+        subtitle.textContent = '· click to expand';
+      } else {
+        subtitle.textContent = '· to subscribers';
+      }
     }
 
     async function sendQuickMessage(event) {
@@ -1171,29 +1368,39 @@
       const testRecipient = document.getElementById('testRecipient').value.trim();
 
       if (!content) {
-        alert('Please enter a message');
+        showAlert('Please enter a message', { icon: '⚠️', title: 'Missing Content' });
         return;
       }
 
       if (currentMessageType === 'email' && !subject) {
-        alert('Please enter a subject line');
+        showAlert('Please enter a subject line', { icon: '⚠️', title: 'Missing Subject' });
         return;
       }
 
       if (testMode && !testRecipient) {
-        alert('Please enter a test recipient');
+        showAlert('Please enter a test recipient', { icon: '⚠️', title: 'Missing Recipient' });
         return;
       }
 
       let confirmMsg;
+      let confirmTitle;
+      const icon = currentMessageType === 'email' ? '📧' : '💬';
       if (testMode) {
-        confirmMsg = `Send test ${currentMessageType} to ${testRecipient}?`;
+        confirmMsg = `Send a test ${currentMessageType} to ${testRecipient}?`;
+        confirmTitle = 'Send Test Message';
       } else {
         const count = currentMessageType === 'email' ? emailCount : smsCount;
-        confirmMsg = `Send this ${currentMessageType} to ${count} subscribers?`;
+        confirmMsg = `This will send your ${currentMessageType} to ${count} active subscriber${count !== 1 ? 's' : ''}.`;
+        confirmTitle = 'Confirm Send';
       }
 
-      if (!confirm(confirmMsg)) {
+      const confirmed = await showConfirm(confirmMsg, {
+        icon: icon,
+        title: confirmTitle,
+        confirmText: testMode ? 'Send Test' : 'Send Now'
+      });
+
+      if (!confirmed) {
         return;
       }
 
@@ -1215,19 +1422,300 @@
         const result = await response.json();
 
         if (result.success) {
-          alert(`Message sent successfully!\n${result.sent_count} sent, ${result.failed_count} failed`);
+          // Remove draft from list if it was a draft (before clearing the field)
+          const draftId = document.getElementById('draftId').value;
+          if (draftId) {
+            const draftItem = document.querySelector(`.draft-item[data-draft-id="${draftId}"]`);
+            if (draftItem) {
+              draftItem.remove();
+              // Update drafts count
+              const draftsSection = document.getElementById('draftsSection');
+              const draftsList = document.getElementById('draftsList');
+              if (draftsList && draftsList.children.length === 0 && draftsSection) {
+                draftsSection.style.display = 'none';
+              }
+            }
+          }
+
+          const successMsg = result.failed_count > 0
+            ? `<strong>${result.sent_count}</strong> message${result.sent_count !== 1 ? 's' : ''} sent successfully.<br><span style="color: #dc2626;">${result.failed_count} failed</span>`
+            : `<strong>${result.sent_count}</strong> message${result.sent_count !== 1 ? 's' : ''} sent successfully!`;
+          await showAlert(successMsg, { icon: '✅', title: 'Message Sent' });
+
+          // Clear form
           document.getElementById('quickContent').value = '';
           document.getElementById('quickSubject').value = '';
+          document.getElementById('draftId').value = '';
+          clearDraftSelection();
         } else {
-          alert('Error: ' + (result.error || 'Failed to send message'));
+          showAlert(result.error || 'Failed to send message', { icon: '❌', title: 'Error' });
         }
       } catch (error) {
-        alert('Error sending message: ' + error.message);
+        showAlert('Error sending message: ' + error.message, { icon: '❌', title: 'Error' });
       } finally {
         sendBtn.disabled = false;
         sendBtn.innerHTML = '<span>Send Now</span><span>→</span>';
       }
     }
+
+    function clearDraftSelection() {
+      document.querySelectorAll('.draft-item').forEach(item => {
+        item.style.borderColor = '#e2e8f0';
+        item.style.background = '#f8fafc';
+      });
+    }
+
+    function createDraftElement(id, messageType, subject, content) {
+      const div = document.createElement('div');
+      div.className = 'draft-item';
+      div.dataset.draftId = id;
+      div.style.cssText = 'display: inline-flex; align-items: center; gap: 0.5rem; padding: 0.375rem 0.75rem; background: #f0f4ff; border: 1px solid #667eea; border-radius: 6px; font-size: 0.8125rem; cursor: pointer; transition: all 0.15s;';
+      div.onclick = function() { loadDraft(id); };
+      div.onmouseover = function() { this.style.borderColor = '#667eea'; };
+      div.onmouseout = function() { if (document.getElementById('draftId').value != id) this.style.borderColor = '#e2e8f0'; };
+
+      const icon = document.createElement('span');
+      icon.style.color = '#64748b';
+      icon.textContent = messageType === 'email' ? '📧' : '💬';
+
+      const text = document.createElement('span');
+      text.style.cssText = 'color: #1e293b; max-width: 150px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;';
+      const preview = subject || content || 'Empty draft';
+      text.textContent = preview.length > 25 ? preview.substring(0, 22) + '...' : preview;
+
+      const deleteBtn = document.createElement('button');
+      deleteBtn.type = 'button';
+      deleteBtn.innerHTML = '&times;';
+      deleteBtn.style.cssText = 'background: none; border: none; color: #94a3b8; cursor: pointer; padding: 0; font-size: 1rem; line-height: 1;';
+      deleteBtn.onmouseover = function() { this.style.color = '#ef4444'; };
+      deleteBtn.onmouseout = function() { this.style.color = '#94a3b8'; };
+      deleteBtn.onclick = function(e) { e.stopPropagation(); deleteDraft(id); };
+
+      div.appendChild(icon);
+      div.appendChild(text);
+      div.appendChild(deleteBtn);
+      return div;
+    }
+
+    async function saveDraft() {
+      const content = document.getElementById('quickContent').value.trim();
+      const subject = document.getElementById('quickSubject').value.trim();
+      const draftId = document.getElementById('draftId').value;
+      const saveDraftBtn = document.getElementById('saveDraftBtn');
+
+      if (!content && !subject) {
+        showAlert('Please enter some content before saving', { icon: '⚠️', title: 'Empty Draft' });
+        return;
+      }
+
+      saveDraftBtn.disabled = true;
+      saveDraftBtn.textContent = 'Saving...';
+
+      try {
+        const formData = new FormData();
+        formData.append('action', 'save_draft');
+        formData.append('message_type', currentMessageType);
+        formData.append('subject', subject);
+        formData.append('content', content);
+        formData.append('csrfmiddlewaretoken', document.querySelector('[name=csrfmiddlewaretoken]').value);
+        if (draftId) formData.append('draft_id', draftId);
+
+        const response = await fetch('{% url "admin_home" %}', {
+          method: 'POST',
+          body: formData,
+          headers: { 'X-Requested-With': 'XMLHttpRequest' }
+        });
+
+        const result = await response.json();
+
+        if (result.success) {
+          document.getElementById('draftId').value = result.draft_id;
+
+          if (!draftId) {
+            // New draft - add to list dynamically
+            let draftsSection = document.getElementById('draftsSection');
+            let draftsList = document.getElementById('draftsList');
+
+            if (!draftsSection) {
+              // Create drafts section if it doesn't exist
+              const formContainer = document.getElementById('quickSendContent');
+              draftsSection = document.createElement('div');
+              draftsSection.id = 'draftsSection';
+              draftsSection.style.cssText = 'margin-top: 1rem; padding-top: 1rem; border-top: 1px solid #e2e8f0;';
+              draftsSection.innerHTML = `
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
+                  <span style="font-size: 0.8125rem; font-weight: 600; color: #64748b;">Drafts (<span id="draftsCount">1</span>)</span>
+                </div>
+                <div id="draftsList" style="display: flex; flex-wrap: wrap; gap: 0.5rem;"></div>
+              `;
+              formContainer.appendChild(draftsSection);
+              draftsList = document.getElementById('draftsList');
+            }
+
+            // Add new draft element at the beginning
+            const newDraft = createDraftElement(result.draft_id, currentMessageType, subject, content);
+            draftsList.insertBefore(newDraft, draftsList.firstChild);
+
+            // Update count
+            const countSpan = document.getElementById('draftsCount') || draftsSection.querySelector('span span');
+            if (countSpan) countSpan.textContent = draftsList.children.length;
+          } else {
+            // Existing draft - update its display
+            const existingItem = document.querySelector(`.draft-item[data-draft-id="${draftId}"]`);
+            if (existingItem) {
+              const textSpan = existingItem.querySelector('span:nth-child(2)');
+              const iconSpan = existingItem.querySelector('span:first-child');
+              if (textSpan) {
+                const preview = subject || content || 'Empty draft';
+                textSpan.textContent = preview.length > 25 ? preview.substring(0, 22) + '...' : preview;
+              }
+              if (iconSpan) {
+                iconSpan.textContent = currentMessageType === 'email' ? '📧' : '💬';
+              }
+            }
+          }
+
+          showAlert('Draft saved', { icon: '✅', title: 'Saved' });
+          updateNewButton();
+        } else {
+          showAlert(result.error || 'Failed to save draft', { icon: '❌', title: 'Error' });
+        }
+      } catch (error) {
+        showAlert('Error saving draft: ' + error.message, { icon: '❌', title: 'Error' });
+      } finally {
+        saveDraftBtn.disabled = false;
+        saveDraftBtn.textContent = 'Save Draft';
+      }
+    }
+
+    async function loadDraft(draftId) {
+      try {
+        const formData = new FormData();
+        formData.append('action', 'load_draft');
+        formData.append('draft_id', draftId);
+        formData.append('csrfmiddlewaretoken', document.querySelector('[name=csrfmiddlewaretoken]').value);
+
+        const response = await fetch('{% url "admin_home" %}', {
+          method: 'POST',
+          body: formData,
+          headers: { 'X-Requested-With': 'XMLHttpRequest' }
+        });
+
+        const result = await response.json();
+
+        if (result.success) {
+          const draft = result.draft;
+          document.getElementById('draftId').value = draft.id;
+          document.getElementById('quickSubject').value = draft.subject || '';
+          document.getElementById('quickContent').value = draft.content || '';
+          setMessageType(draft.message_type);
+
+          // Highlight loaded draft
+          clearDraftSelection();
+          const selectedItem = document.querySelector(`.draft-item[data-draft-id="${draftId}"]`);
+          if (selectedItem) {
+            selectedItem.style.borderColor = '#667eea';
+            selectedItem.style.background = '#f0f4ff';
+          }
+
+          // Show "New" button
+          updateNewButton();
+        } else {
+          showAlert(result.error || 'Failed to load draft', { icon: '❌', title: 'Error' });
+        }
+      } catch (error) {
+        showAlert('Error loading draft: ' + error.message, { icon: '❌', title: 'Error' });
+      }
+    }
+
+    function clearForm() {
+      document.getElementById('draftId').value = '';
+      document.getElementById('quickSubject').value = '';
+      document.getElementById('quickContent').value = '';
+      clearDraftSelection();
+      updateNewButton();
+    }
+
+    function updateNewButton() {
+      const draftId = document.getElementById('draftId').value;
+      const newBtn = document.getElementById('newMsgBtn');
+      if (newBtn) {
+        newBtn.style.display = draftId ? 'block' : 'none';
+      }
+    }
+
+    async function deleteDraft(draftId) {
+      const confirmed = await showConfirm('Delete this draft?', {
+        icon: '🗑️',
+        title: 'Delete Draft',
+        confirmText: 'Delete',
+        type: 'danger'
+      });
+
+      if (!confirmed) return;
+
+      try {
+        const formData = new FormData();
+        formData.append('action', 'delete_draft');
+        formData.append('draft_id', draftId);
+        formData.append('csrfmiddlewaretoken', document.querySelector('[name=csrfmiddlewaretoken]').value);
+
+        const response = await fetch('{% url "admin_home" %}', {
+          method: 'POST',
+          body: formData,
+          headers: { 'X-Requested-With': 'XMLHttpRequest' }
+        });
+
+        const result = await response.json();
+
+        if (result.success) {
+          // Remove from DOM
+          const draftItem = document.querySelector(`.draft-item[data-draft-id="${draftId}"]`);
+          if (draftItem) draftItem.remove();
+          // Clear form if this draft was loaded
+          if (document.getElementById('draftId').value == draftId) {
+            document.getElementById('draftId').value = '';
+            document.getElementById('quickSubject').value = '';
+            document.getElementById('quickContent').value = '';
+          }
+          // Hide drafts section if empty
+          const draftsList = document.getElementById('draftsList');
+          if (draftsList && draftsList.children.length === 0) {
+            document.getElementById('draftsSection').style.display = 'none';
+          }
+        } else {
+          showAlert(result.error || 'Failed to delete draft', { icon: '❌', title: 'Error' });
+        }
+      } catch (error) {
+        showAlert('Error deleting draft: ' + error.message, { icon: '❌', title: 'Error' });
+      }
+    }
+
+    // Auto-load draft from URL parameter
+    {% if load_draft %}
+    document.addEventListener('DOMContentLoaded', function() {
+      document.getElementById('draftId').value = '{{ load_draft.id }}';
+      document.getElementById('quickSubject').value = '{{ load_draft.subject|escapejs }}';
+      document.getElementById('quickContent').value = '{{ load_draft.content|escapejs }}';
+      setMessageType('{{ load_draft.message_type }}');
+      updateNewButton();
+      // Highlight the loaded draft
+      const selectedItem = document.querySelector('.draft-item[data-draft-id="{{ load_draft.id }}"]');
+      if (selectedItem) {
+        selectedItem.style.borderColor = '#667eea';
+        selectedItem.style.background = '#f0f4ff';
+      }
+      // Expand the Quick Send widget if collapsed
+      const widget = document.getElementById('quickSendWidget');
+      const subtitle = document.getElementById('quickSendSubtitle');
+      if (widget.classList.contains('collapsed')) {
+        widget.classList.remove('collapsed');
+        subtitle.textContent = '· to subscribers';
+      }
+      // Scroll to the Quick Send widget
+      widget.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    });
+    {% endif %}
   </script>
 
   <script>

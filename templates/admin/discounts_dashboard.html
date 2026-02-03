@@ -259,6 +259,10 @@
     }
 
     /* Modal Styles */
+    body.modal-open {
+      overflow: hidden;
+    }
+
     .modal {
       display: none;
       position: fixed;
@@ -272,6 +276,7 @@
       align-items: center;
       justify-content: center;
       padding: 2rem;
+      overflow-y: auto;
     }
 
     .modal.active {
@@ -283,10 +288,12 @@
       border-radius: 20px;
       max-width: 800px;
       width: 100%;
-      max-height: 90vh;
+      max-height: 85vh;
       display: flex;
       flex-direction: column;
       box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+      overflow: hidden;
+      margin: auto;
     }
 
     .modal-header {
@@ -295,6 +302,7 @@
       display: flex;
       justify-content: space-between;
       align-items: center;
+      flex-shrink: 0;
     }
 
     .modal-title {
@@ -322,6 +330,7 @@
       padding: 2rem;
       overflow-y: auto;
       flex: 1;
+      min-height: 0;
     }
 
     .modal-footer {
@@ -330,6 +339,15 @@
       display: flex;
       gap: 1rem;
       justify-content: flex-end;
+      flex-shrink: 0;
+    }
+
+    .modal-content form {
+      display: flex;
+      flex-direction: column;
+      flex: 1;
+      min-height: 0;
+      overflow: hidden;
     }
 
     .form-group {
@@ -450,7 +468,9 @@
             <th>Type & Value</th>
             <th>Valid Period</th>
             <th>Usage</th>
+            <th>Link</th>
             <th>Status</th>
+            <th>Actions</th>
           </tr>
         </thead>
         <tbody>
@@ -502,9 +522,35 @@
               {% endif %}
             </td>
             <td>
+              {% if discount.link_destination %}
+              <div style="font-size: 0.75rem;">
+                <a href="{{ discount.get_promo_link }}" target="_blank" style="color: #667eea; text-decoration: none;" title="Open promo link">
+                  <i class="fa-solid fa-external-link-alt"></i> Link
+                </a>
+                <button onclick="copyPromoLink('{{ request.get_host }}{{ discount.get_promo_link }}')" style="background: none; border: none; color: #64748b; cursor: pointer; padding: 0.25rem; margin-left: 0.25rem;" title="Copy link">
+                  <i class="fa-solid fa-copy"></i>
+                </button>
+              </div>
+              <div style="font-size: 0.75rem; color: #64748b; margin-top: 0.25rem;">
+                <i class="fa-solid fa-mouse-pointer"></i> {{ discount.link_clicks }} click{{ discount.link_clicks|pluralize }}
+              </div>
+              {% else %}
+              <span style="font-size: 0.75rem; color: #94a3b8;">No link</span>
+              {% endif %}
+            </td>
+            <td>
               <span class="badge {% if discount.is_active %}active{% else %}inactive{% endif %}">
                 {% if discount.is_active %}Active{% else %}Inactive{% endif %}
               </span>
+            </td>
+            <td>
+              <button
+                onclick="openEditModal({{ discount.id }}, '{{ discount.name|escapejs }}', '{{ discount.code|escapejs }}', '{{ discount.discount_type }}', '{{ discount.value }}', '{{ discount.valid_from|date:'Y-m-d\TH:i' }}', '{{ discount.valid_until|date:'Y-m-d\TH:i' }}', '{{ discount.min_purchase_amount|default:'' }}', '{{ discount.max_uses|default:'' }}', {{ discount.applies_to_all|yesno:'true,false' }}, {{ discount.is_active|yesno:'true,false' }}, '{{ discount.link_destination }}', '{{ discount.landing_url|escapejs }}')"
+                class="btn-secondary"
+                style="padding: 0.5rem 0.75rem; font-size: 0.75rem; display: inline-flex; align-items: center; gap: 0.375rem;"
+              >
+                <i class="fa-solid fa-edit"></i> Edit
+              </button>
             </td>
           </tr>
           {% endfor %}
@@ -529,7 +575,7 @@
       </div>
       <form method="POST" action="{% url 'promotions_dashboard' %}">
         {% csrf_token %}
-        <input type="hidden" name="action" value="create">
+        <input type="hidden" name="action" value="create_discount">
 
         <div class="modal-body">
           <!-- Name and Code -->
@@ -605,6 +651,30 @@
             <div class="form-help">Uncheck to limit to specific products (configure after creation)</div>
           </div>
 
+          <!-- Promotion Link (Optional) -->
+          <div class="form-group" style="margin-top: 1.5rem; padding-top: 1.5rem; border-top: 1px solid #e2e8f0;">
+            <label class="form-label" style="display: flex; align-items: center; gap: 0.5rem;">
+              <i class="fa-solid fa-link" style="color: #667eea;"></i> Promotion Link (Optional)
+            </label>
+            <div class="form-help" style="margin-bottom: 1rem;">Create a trackable link for this promotion</div>
+
+            <div class="form-group">
+              <label class="form-label" for="link_destination">Link Destination</label>
+              <select class="form-select" name="link_destination" id="link_destination" onchange="toggleCustomUrl()">
+                <option value="">No Link</option>
+                <option value="home">Home Page</option>
+                <option value="products">All Products</option>
+                <option value="custom">Custom URL</option>
+              </select>
+            </div>
+
+            <div class="form-group" id="customUrlGroup" style="display: none;">
+              <label class="form-label" for="landing_url">Custom URL</label>
+              <input type="url" class="form-input" name="landing_url" id="landing_url" placeholder="https://example.com/sale">
+              <div class="form-help">Full URL including https://</div>
+            </div>
+          </div>
+
           <!-- Active Status -->
           <div class="form-group">
             <div class="checkbox-group">
@@ -624,11 +694,141 @@
     </div>
   </div>
 
+  <!-- Edit Promotion Modal -->
+  <div class="modal" id="editModal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2 class="modal-title"><i class="fa-solid fa-edit"></i> Edit Promotion</h2>
+        <button class="modal-close" onclick="closeEditModal()">&times;</button>
+      </div>
+      <form method="POST" action="{% url 'promotions_dashboard' %}">
+        {% csrf_token %}
+        <input type="hidden" name="action" value="update_discount">
+        <input type="hidden" name="discount_id" id="edit_discount_id">
+
+        <div class="modal-body">
+          <!-- Name and Code -->
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label" for="edit_name">Promotion Name *</label>
+              <input type="text" class="form-input" name="name" id="edit_name" required placeholder="e.g., Summer Sale 2025">
+              <div class="form-help">Internal name for identification</div>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label" for="edit_code">Promo Code</label>
+              <input type="text" class="form-input" name="code" id="edit_code" placeholder="e.g., SUMMER20" style="text-transform: uppercase;">
+              <div class="form-help">Leave blank for auto-apply discount</div>
+            </div>
+          </div>
+
+          <!-- Discount Type and Value -->
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label" for="edit_discount_type">Discount Type *</label>
+              <select class="form-select" name="discount_type" id="edit_discount_type" required onchange="updateEditValuePlaceholder()">
+                <option value="percentage">Percentage Off</option>
+                <option value="fixed">Fixed Amount Off</option>
+                <option value="bogo">Buy One Get One</option>
+                <option value="free_shipping">Free Shipping</option>
+              </select>
+            </div>
+
+            <div class="form-group" id="editValueGroup">
+              <label class="form-label" for="edit_value">Value *</label>
+              <input type="number" class="form-input" name="value" id="edit_value" step="0.01" required placeholder="e.g., 20">
+              <div class="form-help" id="editValueHelp">Enter percentage (e.g., 20 for 20% off)</div>
+            </div>
+          </div>
+
+          <!-- Valid Period -->
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label" for="edit_valid_from">Valid From *</label>
+              <input type="datetime-local" class="form-input" name="valid_from" id="edit_valid_from" required>
+              <div class="form-help">When this promotion becomes active</div>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label" for="edit_valid_until">Valid Until</label>
+              <input type="datetime-local" class="form-input" name="valid_until" id="edit_valid_until">
+              <div class="form-help">Leave blank for no expiration</div>
+            </div>
+          </div>
+
+          <!-- Restrictions -->
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label" for="edit_min_purchase_amount">Minimum Purchase</label>
+              <input type="number" class="form-input" name="min_purchase_amount" id="edit_min_purchase_amount" step="0.01" placeholder="e.g., 50.00">
+              <div class="form-help">Minimum order amount to qualify</div>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label" for="edit_max_uses">Maximum Uses</label>
+              <input type="number" class="form-input" name="max_uses" id="edit_max_uses" placeholder="e.g., 100">
+              <div class="form-help">Total times this can be used (blank = unlimited)</div>
+            </div>
+          </div>
+
+          <!-- Product Targeting -->
+          <div class="form-group">
+            <div class="checkbox-group">
+              <input type="checkbox" name="applies_to_all" id="edit_applies_to_all" checked>
+              <label for="edit_applies_to_all">Apply to all products</label>
+            </div>
+            <div class="form-help">Uncheck to limit to specific products (configure after creation)</div>
+          </div>
+
+          <!-- Promotion Link (Optional) -->
+          <div class="form-group" style="margin-top: 1.5rem; padding-top: 1.5rem; border-top: 1px solid #e2e8f0;">
+            <label class="form-label" style="display: flex; align-items: center; gap: 0.5rem;">
+              <i class="fa-solid fa-link" style="color: #667eea;"></i> Promotion Link (Optional)
+            </label>
+            <div class="form-help" style="margin-bottom: 1rem;">Create a trackable link for this promotion</div>
+
+            <div class="form-group">
+              <label class="form-label" for="edit_link_destination">Link Destination</label>
+              <select class="form-select" name="link_destination" id="edit_link_destination" onchange="toggleEditCustomUrl()">
+                <option value="">No Link</option>
+                <option value="home">Home Page</option>
+                <option value="products">All Products</option>
+                <option value="custom">Custom URL</option>
+              </select>
+            </div>
+
+            <div class="form-group" id="editCustomUrlGroup" style="display: none;">
+              <label class="form-label" for="edit_landing_url">Custom URL</label>
+              <input type="url" class="form-input" name="landing_url" id="edit_landing_url" placeholder="https://example.com/sale">
+              <div class="form-help">Full URL including https://</div>
+            </div>
+          </div>
+
+          <!-- Active Status -->
+          <div class="form-group">
+            <div class="checkbox-group">
+              <input type="checkbox" name="is_active" id="edit_is_active" checked>
+              <label for="edit_is_active">Promotion is active</label>
+            </div>
+          </div>
+        </div>
+
+        <div class="modal-footer">
+          <button type="button" class="btn-secondary" onclick="closeEditModal()">Cancel</button>
+          <button type="submit" class="btn-primary">
+            <i class="fa-solid fa-check"></i> Save Changes
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
   <script>
     function openCreateModal() {
       const modal = document.getElementById('createModal');
       if (modal) {
         modal.classList.add('active');
+        document.body.classList.add('modal-open');
         // Set default valid_from to current date/time
         const now = new Date();
         now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
@@ -640,6 +840,7 @@
       const modal = document.getElementById('createModal');
       if (modal) {
         modal.classList.remove('active');
+        document.body.classList.remove('modal-open');
       }
     }
 
@@ -670,6 +871,17 @@
       }
     }
 
+    function toggleCustomUrl() {
+      const destination = document.getElementById('link_destination').value;
+      const customUrlGroup = document.getElementById('customUrlGroup');
+      if (destination === 'custom') {
+        customUrlGroup.style.display = 'block';
+      } else {
+        customUrlGroup.style.display = 'none';
+        document.getElementById('landing_url').value = '';
+      }
+    }
+
     // Convert code input to uppercase
     document.getElementById('code').addEventListener('input', function(e) {
       e.target.value = e.target.value.toUpperCase();
@@ -684,6 +896,99 @@
 
     // Initialize value field visibility
     updateValuePlaceholder();
+
+    // Edit Modal Functions
+    function openEditModal(id, name, code, discountType, value, validFrom, validUntil, minPurchase, maxUses, appliesToAll, isActive, linkDestination, landingUrl) {
+      document.getElementById('edit_discount_id').value = id;
+      document.getElementById('edit_name').value = name;
+      document.getElementById('edit_code').value = code || '';
+      document.getElementById('edit_discount_type').value = discountType;
+      document.getElementById('edit_value').value = value;
+      document.getElementById('edit_valid_from').value = validFrom;
+      document.getElementById('edit_valid_until').value = validUntil || '';
+      document.getElementById('edit_min_purchase_amount').value = minPurchase || '';
+      document.getElementById('edit_max_uses').value = maxUses || '';
+      document.getElementById('edit_applies_to_all').checked = appliesToAll;
+      document.getElementById('edit_is_active').checked = isActive;
+      document.getElementById('edit_link_destination').value = linkDestination || '';
+      document.getElementById('edit_landing_url').value = landingUrl || '';
+
+      // Update value field visibility based on discount type
+      updateEditValuePlaceholder();
+      // Update custom URL visibility
+      toggleEditCustomUrl();
+
+      document.getElementById('editModal').classList.add('active');
+      document.body.classList.add('modal-open');
+    }
+
+    function closeEditModal() {
+      document.getElementById('editModal').classList.remove('active');
+      document.body.classList.remove('modal-open');
+    }
+
+    function updateEditValuePlaceholder() {
+      const discountType = document.getElementById('edit_discount_type').value;
+      const valueGroup = document.getElementById('editValueGroup');
+      const valueInput = document.getElementById('edit_value');
+      const valueHelp = document.getElementById('editValueHelp');
+
+      if (discountType === 'percentage') {
+        valueInput.placeholder = 'e.g., 20';
+        valueInput.required = true;
+        valueHelp.textContent = 'Enter percentage (e.g., 20 for 20% off)';
+        valueGroup.style.display = 'block';
+      } else if (discountType === 'fixed') {
+        valueInput.placeholder = 'e.g., 10.00';
+        valueInput.required = true;
+        valueHelp.textContent = 'Enter dollar amount (e.g., 10.00 for $10 off)';
+        valueGroup.style.display = 'block';
+      } else if (discountType === 'bogo' || discountType === 'free_shipping') {
+        valueInput.required = false;
+        valueGroup.style.display = 'none';
+      }
+    }
+
+    function toggleEditCustomUrl() {
+      const destination = document.getElementById('edit_link_destination').value;
+      const customUrlGroup = document.getElementById('editCustomUrlGroup');
+      if (destination === 'custom') {
+        customUrlGroup.style.display = 'block';
+      } else {
+        customUrlGroup.style.display = 'none';
+      }
+    }
+
+    // Close edit modal on outside click
+    document.getElementById('editModal').addEventListener('click', function(e) {
+      if (e.target === this) {
+        closeEditModal();
+      }
+    });
+
+    // Convert edit code input to uppercase
+    document.getElementById('edit_code').addEventListener('input', function(e) {
+      e.target.value = e.target.value.toUpperCase();
+    });
+
+    function copyPromoLink(link) {
+      // Ensure full URL with protocol
+      const fullUrl = link.startsWith('http') ? link : 'https://' + link;
+      navigator.clipboard.writeText(fullUrl).then(() => {
+        // Show temporary feedback
+        const btn = event.target.closest('button');
+        const originalHtml = btn.innerHTML;
+        btn.innerHTML = '<i class="fa-solid fa-check"></i>';
+        btn.style.color = '#10b981';
+        setTimeout(() => {
+          btn.innerHTML = originalHtml;
+          btn.style.color = '#64748b';
+        }, 1500);
+      }).catch(err => {
+        console.error('Failed to copy:', err);
+        alert('Failed to copy link');
+      });
+    }
   </script>
 </body>
 </html>

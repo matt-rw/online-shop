@@ -16,52 +16,77 @@
       background: #f1f5f9;
       min-height: 100vh;
     }
-    .header {
+    .nav-links {
       background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-      padding: 2rem;
-      color: white;
+      padding: 1rem 2rem;
+      display: flex;
+      gap: 0.75rem;
+      align-items: center;
     }
-    .header-content {
-      max-width: 1400px;
-      margin: 0 auto;
+    .top-bar {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      padding: 2rem 0;
+      box-shadow: 0 4px 20px rgba(102, 126, 234, 0.15);
+      margin-bottom: 2rem;
+    }
+    .nav-link {
+      background: rgba(255, 255, 255, 0.15);
+      backdrop-filter: blur(10px);
+      color: white;
+      padding: 0.5rem 1rem;
+      border-radius: 8px;
+      text-decoration: none;
+      font-size: 0.875rem;
+      font-weight: 500;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+    .nav-link:hover {
+      background: rgba(255, 255, 255, 0.25);
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    }
+    .header {
       display: flex;
       justify-content: space-between;
       align-items: center;
+      margin-bottom: 1rem;
     }
     .header h1 {
-      font-size: 2rem;
+      color: white;
+      font-size: 2.5rem;
       font-weight: 800;
       letter-spacing: -0.02em;
     }
-    .header-actions {
-      display: flex;
-      gap: 0.75rem;
-    }
-    .btn {
-      padding: 0.75rem 1.5rem;
-      border-radius: 10px;
-      font-weight: 600;
-      font-size: 0.9375rem;
+    .btn-primary {
+      background: white;
+      color: #667eea;
+      padding: 0.875rem 1.75rem;
+      border-radius: 12px;
       text-decoration: none;
-      transition: all 0.2s;
+      font-weight: 700;
+      font-size: 1rem;
+      transition: all 0.3s;
       border: none;
       cursor: pointer;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
       display: inline-flex;
       align-items: center;
       gap: 0.5rem;
     }
-    .btn-secondary {
-      background: rgba(255,255,255,0.2);
-      color: white;
-      backdrop-filter: blur(10px);
-    }
-    .btn-secondary:hover {
-      background: rgba(255,255,255,0.3);
+    .btn-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 16px rgba(0, 0, 0, 0.15);
     }
     .container {
-      max-width: 1400px;
+      max-width: 1600px;
       margin: 0 auto;
-      padding: 2rem;
+      padding: 0 2rem;
+    }
+    .main-content {
+      max-width: 1600px;
+      margin: 0 auto;
+      padding: 0 2rem;
     }
     .stats-grid {
       display: grid;
@@ -69,6 +94,8 @@
       gap: 1.5rem;
       margin-bottom: 2rem;
       margin-top: -4rem;
+      position: relative;
+      z-index: 10;
     }
     .stat-card {
       background: white;
@@ -146,8 +173,11 @@
       color: #334155;
       font-size: 0.9375rem;
     }
-    .messages-table tr:hover {
-      background: #f8fafc;
+    .messages-table tbody tr {
+      transition: background 0.15s;
+    }
+    .messages-table tbody tr:hover {
+      background: #f0f4ff;
     }
     .badge {
       padding: 0.25rem 0.75rem;
@@ -192,20 +222,102 @@
       margin-bottom: 1rem;
       opacity: 0.5;
     }
+
+    /* Delete confirmation modal */
+    .delete-modal-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.5);
+      backdrop-filter: blur(4px);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+    }
+    .delete-modal-overlay.active {
+      display: flex;
+    }
+    .delete-modal {
+      background: white;
+      border-radius: 16px;
+      padding: 2rem;
+      max-width: 400px;
+      width: 90%;
+      text-align: center;
+      box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+    }
+    .delete-modal-icon {
+      width: 56px;
+      height: 56px;
+      border-radius: 50%;
+      background: #fee2e2;
+      color: #dc2626;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 1rem;
+      font-size: 1.25rem;
+    }
+    .delete-modal-title {
+      font-size: 1.125rem;
+      font-weight: 600;
+      color: #1e293b;
+      margin-bottom: 0.5rem;
+    }
+    .delete-modal-text {
+      color: #64748b;
+      font-size: 0.875rem;
+      margin-bottom: 1.5rem;
+      line-height: 1.5;
+    }
+    .delete-modal-buttons {
+      display: flex;
+      gap: 0.75rem;
+      justify-content: center;
+    }
+    .delete-modal-cancel {
+      padding: 0.625rem 1.25rem;
+      border: 1px solid #e2e8f0;
+      background: white;
+      color: #64748b;
+      border-radius: 8px;
+      font-weight: 500;
+      cursor: pointer;
+      font-size: 0.875rem;
+      transition: all 0.2s;
+    }
+    .delete-modal-cancel:hover {
+      background: #f8fafc;
+    }
+    .delete-modal-confirm {
+      padding: 0.625rem 1.25rem;
+      border: none;
+      background: #dc2626;
+      color: white;
+      border-radius: 8px;
+      font-weight: 500;
+      cursor: pointer;
+      font-size: 0.875rem;
+      transition: all 0.2s;
+    }
+    .delete-modal-confirm:hover {
+      background: #b91c1c;
+    }
   </style>
 </head>
 <body>
-  <div class="header">
-    <div class="header-content">
-      <div>
-        <a href="{% url 'admin_home' %}" style="color: rgba(255,255,255,0.8); text-decoration: none; font-size: 0.875rem; display: inline-flex; align-items: center; gap: 0.5rem; margin-bottom: 0.5rem;">
-          <i class="fa-solid fa-arrow-left"></i> Back to Dashboard
-        </a>
+  <div class="nav-links">
+    <a href="{% url 'admin_home' %}" class="nav-link">← Back</a>
+  </div>
+
+  <div class="top-bar">
+    <div class="container">
+      <div class="header">
         <h1>Messages</h1>
-        <p style="opacity: 0.9; margin-top: 0.25rem;">Quick messages sent from the admin dashboard</p>
-      </div>
-      <div class="header-actions">
-        <a href="{% url 'admin_home' %}" class="btn btn-secondary">
+        <a href="{% url 'admin_home' %}" class="btn-primary">
           <i class="fa-solid fa-paper-plane"></i> Send New
         </a>
       </div>
@@ -235,7 +347,68 @@
         <div class="number">{{ stats.total_failed }}</div>
         <div class="label">Failed</div>
       </div>
+      <div class="stat-card">
+        <div class="number">{{ stats.draft_count }}</div>
+        <div class="label">Drafts</div>
+      </div>
     </div>
+
+    <!-- Test Settings Panel (Collapsible) -->
+    <div id="testSettingsPanel" class="test-settings-panel collapsed" style="background: white; border-radius: 12px; margin-bottom: 1.5rem; box-shadow: 0 2px 12px rgba(0,0,0,0.06); overflow: hidden;">
+      <div onclick="toggleTestSettings()" style="display: flex; align-items: center; gap: 0.5rem; padding: 0.875rem 1.25rem; cursor: pointer; user-select: none;">
+        <i id="testSettingsChevron" class="fa-solid fa-chevron-right" style="color: #94a3b8; font-size: 0.75rem; transition: transform 0.2s;"></i>
+        <i class="fa-solid fa-flask" style="color: #667eea; font-size: 0.8125rem;"></i>
+        <span style="font-weight: 500; color: #64748b; font-size: 0.8125rem;">Test Defaults</span>
+        <span id="testSettingsHint" style="color: #94a3b8; font-size: 0.75rem;">· click to configure</span>
+      </div>
+      <div id="testSettingsContent" style="max-height: 0; opacity: 0; transition: max-height 0.3s ease, opacity 0.2s ease, padding 0.3s ease; padding: 0 1.25rem; overflow: hidden;">
+        <div style="display: flex; gap: 1rem; flex-wrap: wrap; padding-bottom: 1rem;">
+          <div style="display: flex; align-items: center; gap: 0.5rem; flex: 1; min-width: 200px;">
+            <label style="font-size: 0.75rem; font-weight: 500; color: #94a3b8; white-space: nowrap;">Email</label>
+            <input type="email" id="defaultTestEmail" placeholder="test@example.com" value="{{ default_test_email }}" style="flex: 1; padding: 0.5rem 0.75rem; border: 1px solid #e2e8f0; border-radius: 6px; font-size: 0.8125rem;">
+          </div>
+          <div style="display: flex; align-items: center; gap: 0.5rem; flex: 1; min-width: 200px;">
+            <label style="font-size: 0.75rem; font-weight: 500; color: #94a3b8; white-space: nowrap;">Phone</label>
+            <input type="tel" id="defaultTestPhone" placeholder="+1 555 123 4567" value="{{ default_test_phone }}" style="flex: 1; padding: 0.5rem 0.75rem; border: 1px solid #e2e8f0; border-radius: 6px; font-size: 0.8125rem;">
+          </div>
+          <button onclick="saveTestSettings()" style="padding: 0.5rem 1rem; background: #667eea; color: white; border: none; border-radius: 6px; font-size: 0.8125rem; font-weight: 500; cursor: pointer; transition: background 0.2s;" onmouseover="this.style.background='#5a67d8'" onmouseout="this.style.background='#667eea'">
+            Save
+          </button>
+          <span id="saveStatus" style="font-size: 0.75rem; color: #10b981; display: none; align-self: center;"><i class="fa-solid fa-check"></i> Saved</span>
+        </div>
+      </div>
+    </div>
+
+    {% if drafts %}
+    <!-- Drafts Section -->
+    <div class="drafts-section" style="background: white; border-radius: 12px; padding: 1.5rem; margin-bottom: 1.5rem; box-shadow: 0 2px 12px rgba(0,0,0,0.06);">
+      <h3 style="font-size: 1rem; font-weight: 600; color: #1e293b; margin: 0 0 1rem 0;">
+        <i class="fa-solid fa-file-pen" style="color: #667eea;"></i> Drafts
+      </h3>
+      <div style="display: flex; flex-wrap: wrap; gap: 0.75rem;">
+        {% for draft in drafts %}
+        <div class="draft-card" style="flex: 1; min-width: 250px; max-width: 350px; padding: 1rem; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px;">
+          <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 0.5rem;">
+            <span style="font-size: 0.75rem; padding: 0.25rem 0.5rem; background: {% if draft.message_type == 'email' %}#dbeafe{% else %}#dcfce7{% endif %}; color: {% if draft.message_type == 'email' %}#1e40af{% else %}#166534{% endif %}; border-radius: 4px; font-weight: 500;">
+              {% if draft.message_type == 'email' %}📧 Email{% else %}💬 SMS{% endif %}
+            </span>
+            <span style="font-size: 0.75rem; color: #94a3b8;">{{ draft.updated_at|timesince }} ago</span>
+          </div>
+          {% if draft.subject %}
+          <div style="font-weight: 600; color: #1e293b; font-size: 0.875rem; margin-bottom: 0.25rem;">{{ draft.subject|truncatechars:40 }}</div>
+          {% endif %}
+          <div style="color: #64748b; font-size: 0.8125rem; line-height: 1.4; margin-bottom: 0.75rem;">{{ draft.content|truncatechars:80 }}</div>
+          <div style="display: flex; justify-content: space-between; align-items: center;">
+            <a href="{% url 'admin_home' %}?load_draft={{ draft.id }}" style="font-size: 0.75rem; color: #667eea; text-decoration: none; font-weight: 500;">Edit & Send →</a>
+            <button onclick="deleteDraft({{ draft.id }})" style="font-size: 0.75rem; color: #94a3b8; background: none; border: none; cursor: pointer; padding: 0.25rem;" onmouseover="this.style.color='#ef4444'" onmouseout="this.style.color='#94a3b8'" title="Delete draft">
+              <i class="fa-solid fa-trash"></i>
+            </button>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+    {% endif %}
 
     <!-- Filters -->
     <div class="filters">
@@ -276,7 +449,7 @@
         </thead>
         <tbody>
           {% for msg in messages %}
-          <tr>
+          <tr style="cursor: pointer;" onclick="showMessageDetail({{ msg.id }}, '{{ msg.message_type }}', '{{ msg.subject|escapejs }}', '{{ msg.content|escapejs }}', {{ msg.recipient_count }}, {{ msg.sent_count }}, {{ msg.failed_count }}, '{{ msg.status }}', '{% timezone "America/Chicago" %}{{ msg.sent_at|date:"M j, Y g:i A" }}{% endtimezone %}', '{{ msg.sent_by.username|default:"System" }}')">
             <td>
               <span class="badge badge-{{ msg.message_type }}">
                 {% if msg.message_type == 'email' %}
@@ -288,8 +461,8 @@
               </span>
             </td>
             <td>
-              <div class="content-preview" title="{{ msg.content }}">
-                {% if msg.subject %}<strong>{{ msg.subject }}</strong> - {% endif %}{{ msg.content }}
+              <div class="content-preview">
+                {% if msg.subject %}<strong>{{ msg.subject }}</strong> - {% endif %}{{ msg.content|truncatechars:80 }}
               </div>
             </td>
             <td>{{ msg.recipient_count }}</td>
@@ -319,12 +492,206 @@
     </div>
   </div>
 
+  <!-- Message Detail Modal -->
+  <div id="messageModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); backdrop-filter: blur(4px); z-index: 1000; align-items: center; justify-content: center;" onclick="closeMessageModal()">
+    <div style="background: white; border-radius: 16px; max-width: 600px; width: 90%; max-height: 80vh; overflow: hidden; box-shadow: 0 20px 60px rgba(0,0,0,0.3);" onclick="event.stopPropagation()">
+      <div style="padding: 1.25rem 1.5rem; border-bottom: 1px solid #e2e8f0; display: flex; justify-content: space-between; align-items: center;">
+        <div style="display: flex; align-items: center; gap: 0.75rem;">
+          <span id="modalIcon" style="font-size: 1.5rem;">📧</span>
+          <h2 id="modalTitle" style="font-size: 1.125rem; font-weight: 700; color: #1e293b; margin: 0;">Message Details</h2>
+        </div>
+        <button onclick="closeMessageModal()" style="background: none; border: none; font-size: 1.5rem; color: #64748b; cursor: pointer; width: 32px; height: 32px; border-radius: 8px; display: flex; align-items: center; justify-content: center;" onmouseover="this.style.background='#f1f5f9'" onmouseout="this.style.background='none'">&times;</button>
+      </div>
+      <div style="padding: 1.5rem; overflow-y: auto; max-height: 60vh;">
+        <div id="modalSubject" style="display: none; margin-bottom: 1rem;">
+          <label style="font-size: 0.75rem; font-weight: 600; color: #64748b; text-transform: uppercase; letter-spacing: 0.05em;">Subject</label>
+          <p id="modalSubjectText" style="margin: 0.25rem 0 0 0; font-size: 1rem; font-weight: 600; color: #1e293b;"></p>
+        </div>
+        <div style="margin-bottom: 1rem;">
+          <label style="font-size: 0.75rem; font-weight: 600; color: #64748b; text-transform: uppercase; letter-spacing: 0.05em;">Content</label>
+          <div id="modalContent" style="margin: 0.25rem 0 0 0; font-size: 0.9375rem; color: #334155; line-height: 1.6; white-space: pre-wrap; background: #f8fafc; padding: 1rem; border-radius: 8px; border: 1px solid #e2e8f0;"></div>
+        </div>
+        <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 1rem;">
+          <div style="background: #f0fdf4; padding: 0.75rem; border-radius: 8px; text-align: center;">
+            <div id="modalSent" style="font-size: 1.25rem; font-weight: 700; color: #166534;">0</div>
+            <div style="font-size: 0.75rem; color: #166534;">Sent</div>
+          </div>
+          <div style="background: #fef2f2; padding: 0.75rem; border-radius: 8px; text-align: center;">
+            <div id="modalFailed" style="font-size: 1.25rem; font-weight: 700; color: #991b1b;">0</div>
+            <div style="font-size: 0.75rem; color: #991b1b;">Failed</div>
+          </div>
+        </div>
+        <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid #e2e8f0; display: flex; justify-content: space-between; font-size: 0.8125rem; color: #64748b;">
+          <span>Recipients: <strong id="modalRecipients">0</strong></span>
+          <span>Status: <strong id="modalStatus">sent</strong></span>
+          <span>Sent by: <strong id="modalSentBy">-</strong></span>
+        </div>
+        <div style="margin-top: 0.5rem; font-size: 0.8125rem; color: #94a3b8;">
+          <span id="modalDate"></span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Delete Draft Confirmation Modal -->
+  <div class="delete-modal-overlay" id="deleteDraftModal" onclick="if(event.target === this) closeDeleteDraftModal()">
+    <div class="delete-modal">
+      <div class="delete-modal-icon">
+        <i class="fa-solid fa-trash"></i>
+      </div>
+      <h3 class="delete-modal-title">Delete Draft?</h3>
+      <p class="delete-modal-text">Are you sure you want to delete this draft? This action cannot be undone.</p>
+      <div class="delete-modal-buttons">
+        <button type="button" class="delete-modal-cancel" onclick="closeDeleteDraftModal()">Cancel</button>
+        <button type="button" class="delete-modal-confirm" onclick="confirmDeleteDraft()">Delete</button>
+      </div>
+    </div>
+  </div>
+
   <script>
+    let pendingDeleteDraftId = null;
+
     function applyFilters() {
       const type = document.getElementById('typeFilter').value;
       const range = document.getElementById('rangeFilter').value;
       window.location.href = `?type=${type}&range=${range}`;
     }
+
+    // Test Settings Functions
+    function toggleTestSettings() {
+      const panel = document.getElementById('testSettingsPanel');
+      const content = document.getElementById('testSettingsContent');
+      const chevron = document.getElementById('testSettingsChevron');
+      const hint = document.getElementById('testSettingsHint');
+
+      panel.classList.toggle('collapsed');
+
+      if (panel.classList.contains('collapsed')) {
+        content.style.maxHeight = '0';
+        content.style.opacity = '0';
+        content.style.paddingTop = '0';
+        chevron.style.transform = 'rotate(0deg)';
+        hint.textContent = '· click to configure';
+      } else {
+        content.style.maxHeight = '100px';
+        content.style.opacity = '1';
+        content.style.paddingTop = '0.5rem';
+        chevron.style.transform = 'rotate(90deg)';
+        hint.textContent = '';
+      }
+    }
+
+    async function saveTestSettings() {
+      const email = document.getElementById('defaultTestEmail').value;
+      const phone = document.getElementById('defaultTestPhone').value;
+      const status = document.getElementById('saveStatus');
+
+      try {
+        const formData = new FormData();
+        formData.append('action', 'save_test_settings');
+        formData.append('test_email', email);
+        formData.append('test_phone', phone);
+
+        const response = await fetch('', {
+          method: 'POST',
+          body: formData,
+          headers: {
+            'X-CSRFToken': '{{ csrf_token }}'
+          }
+        });
+
+        const result = await response.json();
+        if (result.success) {
+          status.style.display = 'inline';
+          setTimeout(() => { status.style.display = 'none'; }, 2000);
+        } else {
+          alert('Failed to save: ' + (result.error || 'Unknown error'));
+        }
+      } catch (error) {
+        alert('Error saving settings: ' + error.message);
+      }
+    }
+
+    function showMessageDetail(id, type, subject, content, recipients, sent, failed, status, date, sentBy) {
+      document.getElementById('modalIcon').textContent = type === 'email' ? '📧' : '💬';
+      document.getElementById('modalTitle').textContent = type === 'email' ? 'Email Message' : 'SMS Message';
+
+      const subjectDiv = document.getElementById('modalSubject');
+      if (subject && type === 'email') {
+        document.getElementById('modalSubjectText').textContent = subject;
+        subjectDiv.style.display = 'block';
+      } else {
+        subjectDiv.style.display = 'none';
+      }
+
+      document.getElementById('modalContent').textContent = content;
+      document.getElementById('modalRecipients').textContent = recipients;
+      document.getElementById('modalSent').textContent = sent;
+      document.getElementById('modalFailed').textContent = failed;
+      document.getElementById('modalStatus').textContent = status;
+      document.getElementById('modalDate').textContent = date;
+      document.getElementById('modalSentBy').textContent = sentBy;
+
+      document.getElementById('messageModal').style.display = 'flex';
+    }
+
+    function closeMessageModal() {
+      document.getElementById('messageModal').style.display = 'none';
+    }
+
+    function deleteDraft(draftId) {
+      pendingDeleteDraftId = draftId;
+      document.getElementById('deleteDraftModal').classList.add('active');
+    }
+
+    function closeDeleteDraftModal() {
+      document.getElementById('deleteDraftModal').classList.remove('active');
+      pendingDeleteDraftId = null;
+    }
+
+    async function confirmDeleteDraft() {
+      if (!pendingDeleteDraftId) return;
+
+      const btn = document.querySelector('.delete-modal-confirm');
+      btn.textContent = 'Deleting...';
+      btn.disabled = true;
+
+      try {
+        const formData = new FormData();
+        formData.append('action', 'delete_draft');
+        formData.append('draft_id', pendingDeleteDraftId);
+
+        const response = await fetch('{% url "admin_home" %}', {
+          method: 'POST',
+          body: formData,
+          headers: {
+            'X-CSRFToken': '{{ csrf_token }}'
+          }
+        });
+
+        const result = await response.json();
+        if (result.success) {
+          window.location.reload();
+        } else {
+          alert(result.error || 'Failed to delete draft');
+          closeDeleteDraftModal();
+        }
+      } catch (error) {
+        alert('Error deleting draft: ' + error.message);
+        closeDeleteDraftModal();
+      } finally {
+        btn.textContent = 'Delete';
+        btn.disabled = false;
+      }
+    }
+
+    // Close modals on Escape key
+    document.addEventListener('keydown', function(e) {
+      if (e.key === 'Escape') {
+        closeMessageModal();
+        closeDeleteDraftModal();
+      }
+    });
   </script>
 </body>
 </html>
