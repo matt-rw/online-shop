@@ -14,26 +14,24 @@ def add_missing_columns(apps, schema_editor):
         """)
         existing_columns = {row[0] for row in cursor.fetchall()}
 
-        # Add link_destination if missing
-        if 'link_destination' not in existing_columns:
-            cursor.execute("""
-                ALTER TABLE shop_discount
-                ADD COLUMN link_destination VARCHAR(50) DEFAULT '' NOT NULL
-            """)
+        # Define all potentially missing columns with their SQL definitions
+        missing_columns = {
+            'link_destination': "VARCHAR(50) DEFAULT ''",
+            'link_clicks': "INTEGER DEFAULT 0 NOT NULL",
+            'landing_url': "VARCHAR(200) DEFAULT ''",
+            'utm_source': "VARCHAR(100) DEFAULT ''",
+            'utm_medium': "VARCHAR(100) DEFAULT ''",
+            'utm_campaign': "VARCHAR(100) DEFAULT ''",
+            'variant_name': "VARCHAR(100) DEFAULT ''",
+            'test_tags': "VARCHAR(500) DEFAULT ''",
+        }
 
-        # Add link_clicks if missing
-        if 'link_clicks' not in existing_columns:
-            cursor.execute("""
-                ALTER TABLE shop_discount
-                ADD COLUMN link_clicks INTEGER DEFAULT 0 NOT NULL
-            """)
-
-        # Add landing_url if missing
-        if 'landing_url' not in existing_columns:
-            cursor.execute("""
-                ALTER TABLE shop_discount
-                ADD COLUMN landing_url VARCHAR(200) DEFAULT '' NOT NULL
-            """)
+        for column_name, column_def in missing_columns.items():
+            if column_name not in existing_columns:
+                cursor.execute(f"""
+                    ALTER TABLE shop_discount
+                    ADD COLUMN {column_name} {column_def}
+                """)
 
 
 class Migration(migrations.Migration):
