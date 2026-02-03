@@ -181,6 +181,9 @@ class SMSLog(models.Model):
     template = models.ForeignKey(
         SMSTemplate, on_delete=models.SET_NULL, null=True, blank=True, related_name="logs"
     )
+    quick_message = models.ForeignKey(
+        "shop.QuickMessage", on_delete=models.SET_NULL, null=True, blank=True, related_name="sms_logs"
+    )
 
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default="queued")
     twilio_sid = models.CharField(max_length=34, blank=True)  # Twilio message SID

@@ -5,6 +5,7 @@ from django.contrib.auth.decorators import login_required
 from django.core.mail import send_mail
 from django.http import JsonResponse
 from django.shortcuts import redirect, render
+from django.urls import reverse
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_http_methods
 
@@ -699,3 +700,49 @@ def process_campaigns_webhook(request):
         'status': 'success',
         'results': results
     })
+
+
+def promo_redirect(request, promo_code):
+    """
+    Handle promotion link clicks - track the click and redirect to the destination.
+    """
+    from django.db.models import F
+    from .models import Discount
+
+    # Try to find the discount by code or ID
+    discount = None
+    try:
+        # First try by code
+        discount = Discount.objects.filter(code__iexact=promo_code).first()
+        if not discount:
+            # Try by ID
+            try:
+                discount = Discount.objects.get(id=int(promo_code))
+            except (ValueError, Discount.DoesNotExist):
+                pass
+    except Exception:
+        pass
+
+    if not discount:
+        # Discount not found, redirect to home
+        return redirect('home')
+
+    # Increment click count
+    Discount.objects.filter(id=discount.id).update(link_clicks=F('link_clicks') + 1)
+
+    # Determine redirect URL based on destination
+    if discount.link_destination == 'home':
+        redirect_url = reverse('home')  # Main home page
+    elif discount.link_destination == 'products':
+        redirect_url = reverse('shop:shop')  # Shop/products page
+    elif discount.link_destination == 'custom' and discount.landing_url:
+        redirect_url = discount.landing_url
+    else:
+        redirect_url = reverse('home')
+
+    # Add promo code to URL if it exists
+    if discount.code:
+        separator = '&' if '?' in redirect_url else '?'
+        redirect_url = f"{redirect_url}{separator}promo={discount.code}"
+
+    return redirect(redirect_url)

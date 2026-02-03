@@ -42,9 +42,217 @@ def admin_home(request):
     Central admin dashboard with quick access to all admin tools.
     Only accessible to admin/staff users.
     """
+    from django.http import JsonResponse
+
     from .models.analytics import PageView, VisitorSession
     from .models.cart import Order
+    from .models.messaging import QuickMessage
     from .models.product import ProductVariant
+
+    # Handle quick send POST requests
+    if request.method == "POST" and request.POST.get("action") == "quick_send":
+        message_type = request.POST.get("message_type", "email")
+        subject = request.POST.get("subject", "")
+        content = request.POST.get("content", "")
+        test_recipient = request.POST.get("test_recipient", "").strip()
+        draft_id = request.POST.get("draft_id", "").strip()
+
+        if not content:
+            return JsonResponse({"success": False, "error": "Message content is required"})
+
+        if message_type == "email" and not subject:
+            return JsonResponse({"success": False, "error": "Subject is required for emails"})
+
+        try:
+            sent_count = 0
+            failed_count = 0
+
+            if message_type == "email":
+                from .utils.email_helper import send_email
+
+                # Determine recipients
+                if test_recipient:
+                    # Test mode - send to single recipient
+                    recipients = [{"email": test_recipient, "subscription": None}]
+                    recipient_count = 1
+                else:
+                    # Production mode - send to all active subscribers
+                    subscribers = EmailSubscription.objects.filter(is_active=True, is_confirmed=True)
+                    recipients = [{"email": sub.email, "subscription": sub} for sub in subscribers]
+                    recipient_count = len(recipients)
+
+                # Use existing draft or create new QuickMessage record
+                if draft_id:
+                    try:
+                        quick_msg = QuickMessage.objects.get(id=draft_id, status="draft")
+                        quick_msg.message_type = "email"
+                        quick_msg.subject = subject
+                        quick_msg.content = content
+                        quick_msg.recipient_count = recipient_count
+                        quick_msg.sent_by = request.user
+                        quick_msg.status = "sending"
+                        quick_msg.notes = "Test send" if test_recipient else ""
+                        quick_msg.save()
+                    except QuickMessage.DoesNotExist:
+                        draft_id = None  # Fall through to create new
+
+                if not draft_id:
+                    quick_msg = QuickMessage.objects.create(
+                        message_type="email",
+                        subject=subject,
+                        content=content,
+                        recipient_count=recipient_count,
+                        sent_by=request.user,
+                        status="sending",
+                        notes="Test send" if test_recipient else "",
+                    )
+
+                # Wrap content in basic HTML
+                html_body = f"<html><body><p>{content.replace(chr(10), '<br>')}</p></body></html>"
+
+                for recipient in recipients:
+                    success, _ = send_email(
+                        email_address=recipient["email"],
+                        subject=subject,
+                        html_body=html_body,
+                        subscription=recipient["subscription"],
+                        quick_message=quick_msg,
+                    )
+                    if success:
+                        sent_count += 1
+                    else:
+                        failed_count += 1
+
+            else:  # SMS
+                from .utils.twilio_helper import send_sms
+
+                # Determine recipients
+                if test_recipient:
+                    # Test mode - send to single recipient
+                    recipients = [{"phone": test_recipient, "subscription": None}]
+                    recipient_count = 1
+                else:
+                    # Production mode - send to all active subscribers
+                    subscribers = SMSSubscription.objects.filter(is_active=True, is_confirmed=True)
+                    recipients = [{"phone": sub.phone_number, "subscription": sub} for sub in subscribers]
+                    recipient_count = len(recipients)
+
+                # Use existing draft or create new QuickMessage record
+                if draft_id:
+                    try:
+                        quick_msg = QuickMessage.objects.get(id=draft_id, status="draft")
+                        quick_msg.message_type = "sms"
+                        quick_msg.subject = ""
+                        quick_msg.content = content
+                        quick_msg.recipient_count = recipient_count
+                        quick_msg.sent_by = request.user
+                        quick_msg.status = "sending"
+                        quick_msg.notes = "Test send" if test_recipient else ""
+                        quick_msg.save()
+                    except QuickMessage.DoesNotExist:
+                        draft_id = None  # Fall through to create new
+
+                if not draft_id:
+                    quick_msg = QuickMessage.objects.create(
+                        message_type="sms",
+                        subject="",
+                        content=content,
+                        recipient_count=recipient_count,
+                        sent_by=request.user,
+                        status="sending",
+                        notes="Test send" if test_recipient else "",
+                    )
+
+                for recipient in recipients:
+                    success, _ = send_sms(
+                        phone_number=recipient["phone"],
+                        message=content,
+                        subscription=recipient["subscription"],
+                        quick_message=quick_msg,
+                    )
+                    if success:
+                        sent_count += 1
+                    else:
+                        failed_count += 1
+
+            # Update QuickMessage with results
+            quick_msg.sent_count = sent_count
+            quick_msg.failed_count = failed_count
+            quick_msg.status = "sent" if failed_count == 0 else ("partial" if sent_count > 0 else "failed")
+            quick_msg.sent_at = timezone.now()
+            quick_msg.save()
+
+            return JsonResponse({
+                "success": True,
+                "sent_count": sent_count,
+                "failed_count": failed_count,
+                "test_mode": bool(test_recipient),
+            })
+
+        except Exception as e:
+            return JsonResponse({"success": False, "error": str(e)})
+
+    # Handle save draft
+    if request.method == "POST" and request.POST.get("action") == "save_draft":
+        message_type = request.POST.get("message_type", "email")
+        subject = request.POST.get("subject", "")
+        content = request.POST.get("content", "")
+        draft_id = request.POST.get("draft_id")
+
+        try:
+            if draft_id:
+                # Update existing draft
+                draft = QuickMessage.objects.get(id=draft_id, status="draft")
+                draft.message_type = message_type
+                draft.subject = subject
+                draft.content = content
+                draft.save()
+            else:
+                # Create new draft
+                draft = QuickMessage.objects.create(
+                    message_type=message_type,
+                    subject=subject,
+                    content=content,
+                    status="draft",
+                    sent_by=request.user,
+                )
+            return JsonResponse({
+                "success": True,
+                "draft_id": draft.id,
+                "message": "Draft saved successfully",
+            })
+        except QuickMessage.DoesNotExist:
+            return JsonResponse({"success": False, "error": "Draft not found"})
+        except Exception as e:
+            return JsonResponse({"success": False, "error": str(e)})
+
+    # Handle load draft
+    if request.method == "POST" and request.POST.get("action") == "load_draft":
+        draft_id = request.POST.get("draft_id")
+        try:
+            draft = QuickMessage.objects.get(id=draft_id, status="draft")
+            return JsonResponse({
+                "success": True,
+                "draft": {
+                    "id": draft.id,
+                    "message_type": draft.message_type,
+                    "subject": draft.subject,
+                    "content": draft.content,
+                },
+            })
+        except QuickMessage.DoesNotExist:
+            return JsonResponse({"success": False, "error": "Draft not found"})
+
+    # Handle delete draft
+    if request.method == "POST" and request.POST.get("action") == "delete_draft":
+        draft_id = request.POST.get("draft_id")
+        try:
+            draft = QuickMessage.objects.get(id=draft_id, status="draft")
+            draft.delete()
+            return JsonResponse({"success": True, "message": "Draft deleted"})
+        except QuickMessage.DoesNotExist:
+            return JsonResponse({"success": False, "error": "Draft not found"})
+
     from decimal import Decimal
 
     now = timezone.now()
@@ -71,6 +279,8 @@ def admin_home(request):
         "total_users": User.objects.count(),
         "total_email_subs": EmailSubscription.objects.count(),
         "total_sms_subs": SMSSubscription.objects.count(),
+        "active_email_subs": EmailSubscription.objects.filter(is_active=True, is_confirmed=True).count(),
+        "active_sms_subs": SMSSubscription.objects.filter(is_active=True, is_confirmed=True).count(),
         "new_email_subs_24h": EmailSubscription.objects.filter(subscribed_at__gte=last_24h).count(),
         "new_sms_subs_24h": SMSSubscription.objects.filter(subscribed_at__gte=last_24h).count(),
 
@@ -99,9 +309,29 @@ def admin_home(request):
         "conversion_rate": round(conversion_rate, 2),
     }
 
+    # Get drafts for quick messages
+    drafts = QuickMessage.objects.filter(status="draft").order_by("-updated_at")[:5]
+
+    # Check if loading a specific draft from query param
+    load_draft_id = request.GET.get("load_draft")
+    load_draft = None
+    if load_draft_id:
+        try:
+            load_draft = QuickMessage.objects.get(id=load_draft_id, status="draft")
+        except QuickMessage.DoesNotExist:
+            pass
+
+    # Get test defaults from site settings
+    from .models.settings import SiteSettings
+    site_settings = SiteSettings.load()
+
     context = {
         "stats": stats,
         "cst_time": timezone.now().astimezone(pytz.timezone("America/Chicago")),
+        "drafts": drafts,
+        "load_draft": load_draft,
+        "default_test_email": site_settings.default_test_email,
+        "default_test_phone": site_settings.default_test_phone,
     }
 
     return render(request, "admin/admin_home.html", context)
@@ -3063,13 +3293,45 @@ def promotions_dashboard(request):
                     max_uses=request.POST.get("max_uses") or None,
                     valid_from=request.POST.get("valid_from"),
                     valid_until=request.POST.get("valid_until") or None,
-                    applies_to_all=request.POST.get("applies_to_all") == "true",
-                    is_active=True,
+                    applies_to_all=request.POST.get("applies_to_all") == "on",
+                    is_active=request.POST.get("is_active") == "on",
+                    link_destination=request.POST.get("link_destination", ""),
+                    landing_url=request.POST.get("landing_url", ""),
                 )
                 discount.save()
-                return JsonResponse({"success": True})
+                messages.success(request, f"Promotion '{discount.name}' created successfully!")
+                return redirect("promotions_dashboard")
             except Exception as e:
-                return JsonResponse({"success": False, "error": str(e)})
+                messages.error(request, f"Error creating promotion: {str(e)}")
+                return redirect("promotions_dashboard")
+
+        elif action == "update_discount":
+            try:
+                discount_id = request.POST.get("discount_id")
+                discount = Discount.objects.get(id=discount_id)
+
+                discount.name = request.POST.get("name")
+                discount.code = request.POST.get("code", "")
+                discount.discount_type = request.POST.get("discount_type")
+                discount.value = request.POST.get("value")
+                discount.valid_from = request.POST.get("valid_from")
+                discount.valid_until = request.POST.get("valid_until") or None
+                discount.min_purchase_amount = request.POST.get("min_purchase_amount") or None
+                discount.max_uses = request.POST.get("max_uses") or None
+                discount.applies_to_all = request.POST.get("applies_to_all") == "on"
+                discount.is_active = request.POST.get("is_active") == "on"
+                discount.link_destination = request.POST.get("link_destination", "")
+                discount.landing_url = request.POST.get("landing_url", "")
+
+                discount.save()
+                messages.success(request, f"Promotion '{discount.name}' updated successfully!")
+                return redirect("promotions_dashboard")
+            except Discount.DoesNotExist:
+                messages.error(request, "Promotion not found")
+                return redirect("promotions_dashboard")
+            except Exception as e:
+                messages.error(request, f"Error updating promotion: {str(e)}")
+                return redirect("promotions_dashboard")
 
     # Get all discounts
     discounts = Discount.objects.all().order_by("-created_at")
@@ -3400,6 +3662,82 @@ def attributes_dashboard(request):
     }
 
     return render(request, "admin/attributes_dashboard.html", context)
+
+
+@staff_member_required
+def messages_dashboard(request):
+    """
+    Dashboard showing all quick messages sent from the admin.
+    """
+    from .models.messaging import QuickMessage
+    from .models.settings import SiteSettings
+
+    # Handle POST request for saving test settings
+    if request.method == "POST" and request.POST.get("action") == "save_test_settings":
+        from django.http import JsonResponse
+
+        try:
+            settings = SiteSettings.load()
+            settings.default_test_email = request.POST.get("test_email", "").strip()
+            settings.default_test_phone = request.POST.get("test_phone", "").strip()
+            settings.save()
+            return JsonResponse({"success": True})
+        except Exception as e:
+            return JsonResponse({"success": False, "error": str(e)})
+
+    # Get filter parameters
+    message_type = request.GET.get("type", "all")
+    date_range = request.GET.get("range", "30")
+
+    # Base queryset - exclude drafts from main list
+    messages = QuickMessage.objects.exclude(status="draft").order_by("-created_at")
+
+    # Apply filters
+    if message_type in ["email", "sms"]:
+        messages = messages.filter(message_type=message_type)
+
+    if date_range != "all":
+        try:
+            days = int(date_range)
+            cutoff = timezone.now() - timedelta(days=days)
+            messages = messages.filter(created_at__gte=cutoff)
+        except ValueError:
+            pass
+
+    # Get drafts separately
+    drafts = QuickMessage.objects.filter(status="draft").order_by("-updated_at")
+
+    # Calculate stats (exclude drafts)
+    sent_messages = QuickMessage.objects.exclude(status="draft")
+    total_messages = sent_messages.count()
+    total_sent = sent_messages.aggregate(total=Sum("sent_count"))["total"] or 0
+    total_failed = sent_messages.aggregate(total=Sum("failed_count"))["total"] or 0
+    email_messages = sent_messages.filter(message_type="email").count()
+    sms_messages = sent_messages.filter(message_type="sms").count()
+    draft_count = drafts.count()
+
+    # Get site settings for test defaults
+    site_settings = SiteSettings.load()
+
+    context = {
+        "messages": messages[:100],  # Limit to 100 most recent
+        "drafts": drafts,
+        "message_type": message_type,
+        "date_range": date_range,
+        "stats": {
+            "total_messages": total_messages,
+            "total_sent": total_sent,
+            "total_failed": total_failed,
+            "email_messages": email_messages,
+            "sms_messages": sms_messages,
+            "draft_count": draft_count,
+        },
+        "default_test_email": site_settings.default_test_email,
+        "default_test_phone": site_settings.default_test_phone,
+        "cst_time": timezone.now().astimezone(pytz.timezone("America/Chicago")),
+    }
+
+    return render(request, "admin/messages_dashboard.html", context)
 
 
 @staff_member_required

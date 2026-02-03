@@ -1917,6 +1917,156 @@
         display: none;
       }
     }
+
+    .btn-delete-campaign {
+      width: 32px;
+      height: 32px;
+      border: none;
+      background: transparent;
+      color: #94a3b8;
+      cursor: pointer;
+      border-radius: 6px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.2s;
+    }
+
+    .btn-delete-campaign:hover {
+      background: #fee2e2;
+      color: #dc2626;
+    }
+
+    /* Campaign popup specific styles */
+    #campaign-popup {
+      display: none;
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background: white;
+      border-radius: 16px;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+      border: 2px solid #e2e8f0;
+      padding: 0;
+      z-index: 1001;
+      width: 90%;
+      max-width: 600px;
+      max-height: 85vh;
+      overflow: hidden;
+      flex-direction: column;
+    }
+
+    #campaign-popup.active {
+      display: flex;
+    }
+
+    #campaign-popup-overlay {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.25);
+      backdrop-filter: blur(4px);
+      -webkit-backdrop-filter: blur(4px);
+      z-index: 1000;
+    }
+
+    #campaign-popup-overlay.active {
+      display: block;
+    }
+
+    /* Delete confirmation modal */
+    .delete-modal-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.5);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+    }
+
+    .delete-modal-overlay.active {
+      display: flex;
+    }
+
+    .delete-modal {
+      background: white;
+      border-radius: 12px;
+      padding: 2rem;
+      max-width: 400px;
+      width: 90%;
+      text-align: center;
+      box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+    }
+
+    .delete-modal-icon {
+      width: 60px;
+      height: 60px;
+      border-radius: 50%;
+      background: #fee2e2;
+      color: #dc2626;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 1rem;
+      font-size: 1.5rem;
+    }
+
+    .delete-modal-title {
+      font-size: 1.25rem;
+      font-weight: 600;
+      color: #1e293b;
+      margin-bottom: 0.5rem;
+    }
+
+    .delete-modal-text {
+      color: #64748b;
+      font-size: 0.9375rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .delete-modal-buttons {
+      display: flex;
+      gap: 0.75rem;
+      justify-content: center;
+    }
+
+    .delete-modal-cancel {
+      padding: 0.75rem 1.5rem;
+      border: 1px solid #e2e8f0;
+      background: white;
+      color: #64748b;
+      border-radius: 8px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .delete-modal-cancel:hover {
+      background: #f8fafc;
+    }
+
+    .delete-modal-confirm {
+      padding: 0.75rem 1.5rem;
+      border: none;
+      background: #dc2626;
+      color: white;
+      border-radius: 8px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .delete-modal-confirm:hover {
+      background: #b91c1c;
+    }
   </style>
   {% include "admin/partials/dark_mode_apply.html" %}
 </head>
@@ -2039,6 +2189,7 @@
               <th>Messages</th>
               <th>Progress</th>
               <th>Created</th>
+              <th style="width: 60px;">Actions</th>
             </tr>
           </thead>
           <tbody>
@@ -2122,9 +2273,14 @@
               </div>
             </td>
             <td style="font-size: 0.875rem; color: #64748b;">{{ campaign.created_at|date:"M d, Y" }}</td>
+            <td onclick="event.stopPropagation()">
+              <button type="button" class="btn-delete-campaign" onclick="deleteCampaign({{ campaign.id }}, '{{ campaign.name|escapejs }}')" title="Delete campaign">
+                <i class="fa-solid fa-trash"></i>
+              </button>
+            </td>
           </tr>
           <tr class="timeline-row">
-            <td colspan="7">
+            <td colspan="8">
               <div class="message-timeline-container">
                 {% if campaign.message_sequence %}
                 <div class="timeline-header">
@@ -2701,7 +2857,7 @@
 
   <!-- Create Campaign Popup -->
   <div class="popup-overlay" id="campaign-popup-overlay" onclick="closeCreateCampaignPopup()"></div>
-  <div class="message-type-selector" id="campaign-popup" style="max-width: 600px;">
+  <div id="campaign-popup">
     <div class="popup-header" style="padding: 2rem; padding-bottom: 1rem; border-bottom: 2px solid #f1f5f9; flex-shrink: 0;">
       <div style="display: flex; align-items: center; gap: 1rem; margin-bottom: 0.5rem;">
         <div style="width: 48px; height: 48px; border-radius: 50%; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); display: flex; align-items: center; justify-content: center; color: white; font-size: 1.25rem;">
@@ -2715,7 +2871,7 @@
     </div>
 
     <div class="popup-content-wrapper">
-      <form id="campaign-form" method="POST" action="{% url 'admin_campaigns_list' %}">
+      <form id="campaign-form" method="POST" action="{% url 'admin_campaign_create' %}">
         {% csrf_token %}
         <input type="hidden" name="action" value="create_campaign">
 
@@ -2775,6 +2931,26 @@
           <button type="submit" class="btn-popup-save">
             <i class="fa-solid fa-plus"></i> Create Campaign
           </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Delete Campaign Confirmation Modal -->
+  <div class="delete-modal-overlay" id="delete-campaign-overlay">
+    <div class="delete-modal">
+      <div class="delete-modal-icon">
+        <i class="fa-solid fa-trash"></i>
+      </div>
+      <h3 class="delete-modal-title">Delete Campaign?</h3>
+      <p class="delete-modal-text">Are you sure you want to delete "<span id="delete-campaign-name"></span>"? This will also delete all messages in this campaign. This action cannot be undone.</p>
+      <form method="POST" id="delete-campaign-form">
+        {% csrf_token %}
+        <input type="hidden" name="action" value="delete">
+        <input type="hidden" name="campaign_id" id="delete-campaign-id">
+        <div class="delete-modal-buttons">
+          <button type="button" class="delete-modal-cancel" onclick="closeDeleteModal()">Cancel</button>
+          <button type="submit" class="delete-modal-confirm">Delete Campaign</button>
         </div>
       </form>
     </div>
@@ -3885,6 +4061,25 @@
       document.getElementById('campaign-popup').classList.remove('active');
       document.getElementById('campaign-form').reset();
     }
+
+    // Delete Campaign Functions
+    function deleteCampaign(campaignId, campaignName) {
+      document.getElementById('delete-campaign-name').textContent = campaignName;
+      document.getElementById('delete-campaign-id').value = campaignId;
+      document.getElementById('delete-campaign-overlay').classList.add('active');
+    }
+
+    function closeDeleteModal() {
+      document.getElementById('delete-campaign-overlay').classList.remove('active');
+    }
+
+    // Close delete modal on overlay click
+    document.addEventListener('click', function(e) {
+      const overlay = document.getElementById('delete-campaign-overlay');
+      if (e.target === overlay) {
+        closeDeleteModal();
+      }
+    });
 
     // Wait for DOM to be fully loaded
     document.addEventListener('DOMContentLoaded', function() {

@@ -4,7 +4,7 @@ from django.shortcuts import render
 from django.urls import include, path
 
 from search import views as search_views
-from shop import admin_views, two_factor_views
+from shop import admin_views, two_factor_views, views as shop_views
 from home import views as home_views
 
 
@@ -49,6 +49,7 @@ urlpatterns = [
     ),
     path("admin/returns/", admin_views.returns_dashboard, name="admin_returns"),
     path("admin/finance/", admin_views.finance_dashboard, name="admin_finance"),
+    path("admin/messages/", admin_views.messages_dashboard, name="admin_messages"),
     path("admin/campaigns/", admin_views.campaigns_list, name="admin_campaigns_list"),
     path("admin/campaigns/create/", admin_views.campaign_create, name="admin_campaign_create"),
     path(
@@ -74,6 +75,8 @@ urlpatterns = [
     path("accounts/", include("allauth.urls")),  # django-allauth URLs
     path("shop/", include("shop.urls")),
     path("search/", search_views.search, name="search"),
+    # Promo link tracking (short URL at root level)
+    path("promo/<str:promo_code>/", shop_views.promo_redirect, name="promo_redirect"),
 ]
 
 

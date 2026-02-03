@@ -199,17 +199,14 @@ STRIPE_SECRET_KEY = get_env_variable("STRIPE_SECRET_KEY")
 STRIPE_PUBLISHABLE_KEY = get_env_variable("STRIPE_PUBLISHABLE_KEY")
 STRIPE_WEBHOOK_SECRET = get_env_variable("STRIPE_WEBHOOK_SECRET", None)
 
-# EMAIL
-# These settings can be overridden in dev.py or production.py
+# EMAIL - Using Resend SMTP
 EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
-EMAIL_HOST = get_env_variable("EMAIL_HOST", "smtp.gmail.com")
-EMAIL_PORT = int(get_env_variable("EMAIL_PORT", 587))
-EMAIL_USE_TLS = get_env_variable("EMAIL_USE_TLS", "True") == "True"
-EMAIL_HOST_USER = get_env_variable("EMAIL_HOST_USER", "")
-EMAIL_HOST_PASSWORD = get_env_variable("EMAIL_HOST_PASSWORD", "")
-DEFAULT_FROM_EMAIL = get_env_variable(
-    "DEFAULT_FROM_EMAIL", EMAIL_HOST_USER or "noreply@example.com"
-)
+EMAIL_HOST = "smtp.resend.com"
+EMAIL_PORT = 587
+EMAIL_USE_TLS = True
+EMAIL_HOST_USER = "resend"
+EMAIL_HOST_PASSWORD = get_env_variable("RESEND_API_KEY", "")
+DEFAULT_FROM_EMAIL = "Blueprint Apparel <no-reply@blueprnt.store>"
 
 # TWILIO SMS
 TWILIO_ACCOUNT_SID = get_env_variable("TWILIO_ACCOUNT_SID", "")

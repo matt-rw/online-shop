@@ -219,6 +219,9 @@ class EmailLog(models.Model):
     template = models.ForeignKey(
         EmailTemplate, on_delete=models.SET_NULL, null=True, blank=True, related_name="logs"
     )
+    quick_message = models.ForeignKey(
+        "shop.QuickMessage", on_delete=models.SET_NULL, null=True, blank=True, related_name="email_logs"
+    )
 
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default="queued")
 

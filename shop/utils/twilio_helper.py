@@ -6,7 +6,7 @@ from django.utils import timezone
 logger = logging.getLogger(__name__)
 
 
-def send_sms(phone_number, message, subscription=None, campaign=None, template=None):
+def send_sms(phone_number, message, subscription=None, campaign=None, template=None, quick_message=None):
     """
     Send an SMS message using Twilio and log the result.
 
@@ -29,6 +29,7 @@ def send_sms(phone_number, message, subscription=None, campaign=None, template=N
         message_body=message,
         campaign=campaign,
         template=template,
+        quick_message=quick_message,
         status="queued",
     )
 

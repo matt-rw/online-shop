@@ -366,9 +366,25 @@ class Discount(models.Model):
     )
 
     # URL Tracking
+    link_destination = models.CharField(
+        max_length=50,
+        blank=True,
+        choices=[
+            ("", "No Link"),
+            ("home", "Home Page"),
+            ("products", "All Products"),
+            ("custom", "Custom URL"),
+        ],
+        default="",
+        help_text="Where the promotion link should go",
+    )
     landing_url = models.URLField(
         blank=True,
-        help_text="Landing page URL for this promo code (e.g., https://site.com/sale)",
+        help_text="Custom landing page URL (only used if destination is 'Custom URL')",
+    )
+    link_clicks = models.IntegerField(
+        default=0,
+        help_text="Number of times the promotion link has been clicked",
     )
     utm_source = models.CharField(
         max_length=100, blank=True, help_text="UTM Source (e.g., instagram, facebook, email)"
@@ -403,14 +419,27 @@ class Discount(models.Model):
     def __str__(self):
         return self.name
 
+    def get_promo_link(self):
+        """Generate the promotion tracking link."""
+        if not self.link_destination:
+            return ""
+        # Return a relative URL that will be handled by a tracking view
+        return f"/promo/{self.code or self.id}/"
+
     def get_tracking_url(self):
         """Generate a trackable URL with UTM parameters and promo code."""
-        if not self.landing_url:
+        if not self.landing_url and self.link_destination != "custom":
             return ""
 
         from urllib.parse import urlencode, urlparse, urlunparse, parse_qs
 
-        parsed = urlparse(self.landing_url)
+        # Determine base URL based on destination
+        if self.link_destination == "custom" and self.landing_url:
+            base_url = self.landing_url
+        else:
+            return ""
+
+        parsed = urlparse(base_url)
         params = parse_qs(parsed.query)
 
         # Add UTM parameters if specified

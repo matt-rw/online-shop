@@ -29,7 +29,7 @@ SECRET_KEY = get_env_variable("SECRET_KEY", "django-insecure-dev-fallback-key-ch
 # SECURITY WARNING: define the correct hosts in production!
 ALLOWED_HOSTS = ["*"]
 
-EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
+# EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"  # Uncomment to print emails to console instead of sending
 
 # DJANGO BROWSER RELOAD
 INSTALLED_APPS += ["django_browser_reload"]

@@ -35,6 +35,14 @@ class SiteSettings(models.Model):
         default=False, help_text="Enable to show maintenance page to non-staff users"
     )
 
+    # Test/Dev settings
+    default_test_email = models.EmailField(
+        blank=True, help_text="Default email address for test messages"
+    )
+    default_test_phone = models.CharField(
+        max_length=20, blank=True, help_text="Default phone number for test messages"
+    )
+
     updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:

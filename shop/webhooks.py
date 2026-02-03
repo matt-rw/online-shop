@@ -34,26 +34,37 @@ def stripe_webhook(request):
     payload = request.body
     sig_header = request.META.get("HTTP_STRIPE_SIGNATURE")
 
-    # Verify webhook signature (set STRIPE_WEBHOOK_SECRET in settings)
+    # Verify webhook signature (REQUIRED in production)
     webhook_secret = getattr(settings, "STRIPE_WEBHOOK_SECRET", None)
 
-    try:
-        if webhook_secret:
-            event = stripe.Webhook.construct_event(payload, sig_header, webhook_secret)
-        else:
-            # For development without webhook secret
+    # SECURITY: Webhook secret is required in production to prevent forged requests
+    if not webhook_secret:
+        if settings.DEBUG:
+            # Development only: allow unsigned webhooks with warning
             import json
-
-            event = json.loads(payload)
-
-    except ValueError as e:
-        # Invalid payload
-        logger.error(f"Invalid webhook payload: {e}")
-        return HttpResponse(status=400)
-    except Exception as e:
-        # Invalid signature or other errors
-        logger.error(f"Webhook error: {e}")
-        return HttpResponse(status=400)
+            logger.warning("STRIPE_WEBHOOK_SECRET not set - accepting unsigned webhook (DEV ONLY)")
+            try:
+                event = json.loads(payload)
+            except json.JSONDecodeError as e:
+                logger.error(f"Invalid webhook JSON: {e}")
+                return HttpResponse(status=400)
+        else:
+            # Production: reject unsigned webhooks
+            logger.error("STRIPE_WEBHOOK_SECRET not configured - rejecting webhook")
+            return HttpResponse("Webhook secret not configured", status=500)
+    else:
+        # Verify signature (production path)
+        try:
+            event = stripe.Webhook.construct_event(payload, sig_header, webhook_secret)
+        except stripe.SignatureVerificationError as e:
+            logger.error(f"Invalid webhook signature: {e}")
+            return HttpResponse(status=400)
+        except ValueError as e:
+            logger.error(f"Invalid webhook payload: {e}")
+            return HttpResponse(status=400)
+        except Exception as e:
+            logger.error(f"Webhook error: {e}")
+            return HttpResponse(status=400)
 
     # Handle the event
     event_type = event["type"]
