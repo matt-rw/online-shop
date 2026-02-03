@@ -42,9 +42,124 @@ def admin_home(request):
     Central admin dashboard with quick access to all admin tools.
     Only accessible to admin/staff users.
     """
+    from django.http import JsonResponse
+
     from .models.analytics import PageView, VisitorSession
     from .models.cart import Order
+    from .models.messaging import QuickMessage
     from .models.product import ProductVariant
+
+    # Handle quick send POST requests
+    if request.method == "POST" and request.POST.get("action") == "quick_send":
+        message_type = request.POST.get("message_type", "email")
+        subject = request.POST.get("subject", "")
+        content = request.POST.get("content", "")
+        test_recipient = request.POST.get("test_recipient", "").strip()
+
+        if not content:
+            return JsonResponse({"success": False, "error": "Message content is required"})
+
+        if message_type == "email" and not subject:
+            return JsonResponse({"success": False, "error": "Subject is required for emails"})
+
+        try:
+            sent_count = 0
+            failed_count = 0
+
+            if message_type == "email":
+                from .utils.email_helper import send_email
+
+                # Determine recipients
+                if test_recipient:
+                    # Test mode - send to single recipient
+                    recipients = [{"email": test_recipient, "subscription": None}]
+                    recipient_count = 1
+                else:
+                    # Production mode - send to all active subscribers
+                    subscribers = EmailSubscription.objects.filter(is_active=True, is_confirmed=True)
+                    recipients = [{"email": sub.email, "subscription": sub} for sub in subscribers]
+                    recipient_count = len(recipients)
+
+                # Create QuickMessage record
+                quick_msg = QuickMessage.objects.create(
+                    message_type="email",
+                    subject=subject,
+                    content=content,
+                    recipient_count=recipient_count,
+                    sent_by=request.user,
+                    status="sending",
+                    notes="Test send" if test_recipient else "",
+                )
+
+                # Wrap content in basic HTML
+                html_body = f"<html><body><p>{content.replace(chr(10), '<br>')}</p></body></html>"
+
+                for recipient in recipients:
+                    success, _ = send_email(
+                        email_address=recipient["email"],
+                        subject=subject,
+                        html_body=html_body,
+                        subscription=recipient["subscription"],
+                        quick_message=quick_msg,
+                    )
+                    if success:
+                        sent_count += 1
+                    else:
+                        failed_count += 1
+
+            else:  # SMS
+                from .utils.twilio_helper import send_sms
+
+                # Determine recipients
+                if test_recipient:
+                    # Test mode - send to single recipient
+                    recipients = [{"phone": test_recipient, "subscription": None}]
+                    recipient_count = 1
+                else:
+                    # Production mode - send to all active subscribers
+                    subscribers = SMSSubscription.objects.filter(is_active=True, is_confirmed=True)
+                    recipients = [{"phone": sub.phone_number, "subscription": sub} for sub in subscribers]
+                    recipient_count = len(recipients)
+
+                # Create QuickMessage record
+                quick_msg = QuickMessage.objects.create(
+                    message_type="sms",
+                    subject="",
+                    content=content,
+                    recipient_count=recipient_count,
+                    sent_by=request.user,
+                    status="sending",
+                    notes="Test send" if test_recipient else "",
+                )
+
+                for recipient in recipients:
+                    success, _ = send_sms(
+                        phone_number=recipient["phone"],
+                        message=content,
+                        subscription=recipient["subscription"],
+                        quick_message=quick_msg,
+                    )
+                    if success:
+                        sent_count += 1
+                    else:
+                        failed_count += 1
+
+            # Update QuickMessage with results
+            quick_msg.sent_count = sent_count
+            quick_msg.failed_count = failed_count
+            quick_msg.status = "sent" if failed_count == 0 else ("partial" if sent_count > 0 else "failed")
+            quick_msg.save()
+
+            return JsonResponse({
+                "success": True,
+                "sent_count": sent_count,
+                "failed_count": failed_count,
+                "test_mode": bool(test_recipient),
+            })
+
+        except Exception as e:
+            return JsonResponse({"success": False, "error": str(e)})
+
     from decimal import Decimal
 
     now = timezone.now()
@@ -71,6 +186,8 @@ def admin_home(request):
         "total_users": User.objects.count(),
         "total_email_subs": EmailSubscription.objects.count(),
         "total_sms_subs": SMSSubscription.objects.count(),
+        "active_email_subs": EmailSubscription.objects.filter(is_active=True, is_confirmed=True).count(),
+        "active_sms_subs": SMSSubscription.objects.filter(is_active=True, is_confirmed=True).count(),
         "new_email_subs_24h": EmailSubscription.objects.filter(subscribed_at__gte=last_24h).count(),
         "new_sms_subs_24h": SMSSubscription.objects.filter(subscribed_at__gte=last_24h).count(),
 
@@ -3400,6 +3517,56 @@ def attributes_dashboard(request):
     }
 
     return render(request, "admin/attributes_dashboard.html", context)
+
+
+@staff_member_required
+def messages_dashboard(request):
+    """
+    Dashboard showing all quick messages sent from the admin.
+    """
+    from .models.messaging import QuickMessage
+
+    # Get filter parameters
+    message_type = request.GET.get("type", "all")
+    date_range = request.GET.get("range", "30")
+
+    # Base queryset
+    messages = QuickMessage.objects.all().order_by("-sent_at")
+
+    # Apply filters
+    if message_type in ["email", "sms"]:
+        messages = messages.filter(message_type=message_type)
+
+    if date_range != "all":
+        try:
+            days = int(date_range)
+            cutoff = timezone.now() - timedelta(days=days)
+            messages = messages.filter(sent_at__gte=cutoff)
+        except ValueError:
+            pass
+
+    # Calculate stats
+    total_messages = QuickMessage.objects.count()
+    total_sent = QuickMessage.objects.aggregate(total=Sum("sent_count"))["total"] or 0
+    total_failed = QuickMessage.objects.aggregate(total=Sum("failed_count"))["total"] or 0
+    email_messages = QuickMessage.objects.filter(message_type="email").count()
+    sms_messages = QuickMessage.objects.filter(message_type="sms").count()
+
+    context = {
+        "messages": messages[:100],  # Limit to 100 most recent
+        "message_type": message_type,
+        "date_range": date_range,
+        "stats": {
+            "total_messages": total_messages,
+            "total_sent": total_sent,
+            "total_failed": total_failed,
+            "email_messages": email_messages,
+            "sms_messages": sms_messages,
+        },
+        "cst_time": timezone.now().astimezone(pytz.timezone("America/Chicago")),
+    }
+
+    return render(request, "admin/messages_dashboard.html", context)
 
 
 @staff_member_required

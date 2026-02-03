@@ -16,6 +16,7 @@ def send_email(
     subscription=None,
     campaign=None,
     template=None,
+    quick_message=None,
 ):
     """
     Send an email and log the result.
@@ -47,6 +48,7 @@ def send_email(
         text_body=text_body,
         campaign=campaign,
         template=template,
+        quick_message=quick_message,
         status="queued",
     )
 

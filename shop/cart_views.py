@@ -4,6 +4,7 @@ Views for cart and checkout functionality.
 
 import logging
 from decimal import Decimal
+from urllib.parse import urlparse
 
 from django.conf import settings
 from django.contrib import messages
@@ -26,6 +27,30 @@ from .models import Address, Cart, CartItem, Order, OrderItem, ProductVariant
 
 logger = logging.getLogger(__name__)
 stripe.api_key = settings.STRIPE_SECRET_KEY
+
+
+def _get_safe_referer(request, default="/"):
+    """
+    Get a safe redirect URL from the HTTP_REFERER header.
+    Only returns the referer if it's from the same host, otherwise returns default.
+    Prevents open redirect attacks via manipulated Referer headers.
+    """
+    referer = request.META.get("HTTP_REFERER")
+    if not referer:
+        return default
+
+    try:
+        parsed = urlparse(referer)
+        # Only allow same-host redirects
+        if parsed.netloc and parsed.netloc != request.get_host():
+            return default
+        # Return just the path (and query string) to avoid any scheme manipulation
+        safe_url = parsed.path
+        if parsed.query:
+            safe_url += f"?{parsed.query}"
+        return safe_url or default
+    except Exception:
+        return default
 
 
 @require_POST
@@ -59,11 +84,11 @@ def add_to_cart_view(request):
                 logger.info(f"Created default variant {variant_id} for product {product_id}")
         except Product.DoesNotExist:
             messages.error(request, "Product not found.")
-            return redirect(request.META.get("HTTP_REFERER", "/"))
+            return redirect(_get_safe_referer(request))
 
     if not variant_id:
         messages.error(request, "Please select a product.")
-        return redirect(request.META.get("HTTP_REFERER", "/"))
+        return redirect(_get_safe_referer(request))
 
     try:
         cart_item, created = add_to_cart(request, variant_id, quantity)
@@ -89,7 +114,7 @@ def add_to_cart_view(request):
     except ValueError as e:
         messages.error(request, str(e))
         logger.error(f"Error adding to cart: {e}")
-        return redirect(request.META.get("HTTP_REFERER", "/"))
+        return redirect(_get_safe_referer(request))
 
 
 def cart_view(request):

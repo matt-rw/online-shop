@@ -605,6 +605,67 @@
       <!-- Widgets will be loaded here -->
     </div>
 
+    <!-- Quick Send Widget -->
+    <div style="background: white; border-radius: 16px; padding: 2rem; margin-bottom: 2rem; box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06); border: 1px solid #e2e8f0;">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+        <div>
+          <h3 style="color: #1e293b; font-size: 1.25rem; font-weight: 700; margin: 0 0 0.25rem 0;">Quick Send</h3>
+          <p style="color: #64748b; font-size: 0.875rem; margin: 0;">Send a message to all subscribers instantly</p>
+        </div>
+        <a href="{% url 'admin_messages' %}" style="color: #667eea; font-size: 0.875rem; font-weight: 600; text-decoration: none;">View All Messages →</a>
+      </div>
+
+      <form id="quickSendForm" onsubmit="sendQuickMessage(event)">
+        {% csrf_token %}
+        <!-- Message Type Toggle -->
+        <div style="display: flex; gap: 0.5rem; margin-bottom: 1rem;">
+          <button type="button" id="toggleEmail" onclick="setMessageType('email')" style="flex: 1; padding: 0.75rem 1rem; border: 2px solid #667eea; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border-radius: 8px; font-weight: 600; cursor: pointer; transition: all 0.2s;">
+            📧 Email <span style="opacity: 0.8; font-weight: 400;">({{ stats.total_email_subs }})</span>
+          </button>
+          <button type="button" id="toggleSMS" onclick="setMessageType('sms')" style="flex: 1; padding: 0.75rem 1rem; border: 2px solid #e2e8f0; background: white; color: #64748b; border-radius: 8px; font-weight: 600; cursor: pointer; transition: all 0.2s;">
+            💬 SMS <span style="opacity: 0.8; font-weight: 400;">({{ stats.total_sms_subs }})</span>
+          </button>
+        </div>
+        <input type="hidden" name="message_type" id="messageType" value="email">
+
+        <!-- Test Mode Toggle -->
+        <div style="margin-bottom: 1rem; display: flex; align-items: center; gap: 1rem;">
+          <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer; user-select: none;">
+            <input type="checkbox" id="testModeToggle" onchange="toggleTestMode()" style="width: 18px; height: 18px; cursor: pointer; accent-color: #667eea;">
+            <span style="font-weight: 600; color: #475569;">Test Mode</span>
+          </label>
+          <span id="testModeHint" style="font-size: 0.8125rem; color: #64748b; display: none;">Send to a specific recipient for testing</span>
+        </div>
+
+        <!-- Test Recipient Input (hidden by default) -->
+        <div id="testRecipientField" style="margin-bottom: 1rem; display: none;">
+          <input type="text" name="test_recipient" id="testRecipient" placeholder="Enter email address or phone number" style="width: 100%; padding: 0.75rem 1rem; border: 2px solid #f59e0b; border-radius: 8px; font-size: 0.9375rem; background: #fffbeb;" onfocus="this.style.borderColor='#d97706'" onblur="this.style.borderColor='#f59e0b'">
+          <p style="font-size: 0.75rem; color: #92400e; margin-top: 0.25rem;"><i class="fa-solid fa-flask"></i> Test mode: Message will only be sent to this recipient</p>
+        </div>
+
+        <!-- Subject (email only) -->
+        <div id="subjectField" style="margin-bottom: 1rem;">
+          <input type="text" name="subject" id="quickSubject" placeholder="Subject line" style="width: 100%; padding: 0.75rem 1rem; border: 2px solid #e2e8f0; border-radius: 8px; font-size: 0.9375rem; transition: border-color 0.2s;" onfocus="this.style.borderColor='#667eea'" onblur="this.style.borderColor='#e2e8f0'">
+        </div>
+
+        <!-- Message Content -->
+        <div style="margin-bottom: 1rem;">
+          <textarea name="content" id="quickContent" placeholder="Write your message here..." rows="3" style="width: 100%; padding: 0.75rem 1rem; border: 2px solid #e2e8f0; border-radius: 8px; font-size: 0.9375rem; resize: vertical; font-family: inherit; transition: border-color 0.2s;" onfocus="this.style.borderColor='#667eea'" onblur="this.style.borderColor='#e2e8f0'" required></textarea>
+        </div>
+
+        <!-- Send Button -->
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+          <span id="recipientCount" style="color: #64748b; font-size: 0.875rem;">
+            Will send to <strong style="color: #667eea;">{{ stats.active_email_subs }}</strong> active email subscribers
+          </span>
+          <button type="submit" id="sendBtn" class="btn-primary" style="padding: 0.75rem 2rem; display: flex; align-items: center; gap: 0.5rem;">
+            <span>Send Now</span>
+            <span>→</span>
+          </button>
+        </div>
+      </form>
+    </div>
+
     <!-- Products Section -->
     <div class="section-header">
       <h2>🛍️ Products</h2>
@@ -1044,6 +1105,129 @@
 
     // Initialize widgets on page load
     document.addEventListener('DOMContentLoaded', renderWidgets);
+
+    // Quick Send functionality
+    let currentMessageType = 'email';
+    let testMode = false;
+    const emailCount = {{ stats.active_email_subs|default:0 }};
+    const smsCount = {{ stats.active_sms_subs|default:0 }};
+
+    function toggleTestMode() {
+      testMode = document.getElementById('testModeToggle').checked;
+      document.getElementById('testRecipientField').style.display = testMode ? 'block' : 'none';
+      document.getElementById('testModeHint').style.display = testMode ? 'inline' : 'none';
+      updateRecipientCount();
+    }
+
+    function updateRecipientCount() {
+      const recipientCount = document.getElementById('recipientCount');
+      if (testMode) {
+        recipientCount.innerHTML = `<span style="color: #f59e0b;"><i class="fa-solid fa-flask"></i> Test mode:</span> Will send to <strong style="color: #f59e0b;">1</strong> recipient`;
+      } else if (currentMessageType === 'email') {
+        recipientCount.innerHTML = `Will send to <strong style="color: #667eea;">${emailCount}</strong> active email subscribers`;
+      } else {
+        recipientCount.innerHTML = `Will send to <strong style="color: #667eea;">${smsCount}</strong> active SMS subscribers`;
+      }
+    }
+
+    function setMessageType(type) {
+      currentMessageType = type;
+      document.getElementById('messageType').value = type;
+
+      const emailBtn = document.getElementById('toggleEmail');
+      const smsBtn = document.getElementById('toggleSMS');
+      const subjectField = document.getElementById('subjectField');
+      const testRecipient = document.getElementById('testRecipient');
+
+      if (type === 'email') {
+        emailBtn.style.background = 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)';
+        emailBtn.style.color = 'white';
+        emailBtn.style.borderColor = '#667eea';
+        smsBtn.style.background = 'white';
+        smsBtn.style.color = '#64748b';
+        smsBtn.style.borderColor = '#e2e8f0';
+        subjectField.style.display = 'block';
+        testRecipient.placeholder = 'Enter email address';
+      } else {
+        smsBtn.style.background = 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)';
+        smsBtn.style.color = 'white';
+        smsBtn.style.borderColor = '#667eea';
+        emailBtn.style.background = 'white';
+        emailBtn.style.color = '#64748b';
+        emailBtn.style.borderColor = '#e2e8f0';
+        subjectField.style.display = 'none';
+        testRecipient.placeholder = 'Enter phone number (e.g., +1234567890)';
+      }
+      updateRecipientCount();
+    }
+
+    async function sendQuickMessage(event) {
+      event.preventDefault();
+
+      const form = document.getElementById('quickSendForm');
+      const sendBtn = document.getElementById('sendBtn');
+      const content = document.getElementById('quickContent').value.trim();
+      const subject = document.getElementById('quickSubject').value.trim();
+      const testRecipient = document.getElementById('testRecipient').value.trim();
+
+      if (!content) {
+        alert('Please enter a message');
+        return;
+      }
+
+      if (currentMessageType === 'email' && !subject) {
+        alert('Please enter a subject line');
+        return;
+      }
+
+      if (testMode && !testRecipient) {
+        alert('Please enter a test recipient');
+        return;
+      }
+
+      let confirmMsg;
+      if (testMode) {
+        confirmMsg = `Send test ${currentMessageType} to ${testRecipient}?`;
+      } else {
+        const count = currentMessageType === 'email' ? emailCount : smsCount;
+        confirmMsg = `Send this ${currentMessageType} to ${count} subscribers?`;
+      }
+
+      if (!confirm(confirmMsg)) {
+        return;
+      }
+
+      sendBtn.disabled = true;
+      sendBtn.innerHTML = '<span>Sending...</span>';
+
+      try {
+        const formData = new FormData(form);
+        formData.append('action', 'quick_send');
+
+        const response = await fetch('{% url "admin_home" %}', {
+          method: 'POST',
+          body: formData,
+          headers: {
+            'X-Requested-With': 'XMLHttpRequest'
+          }
+        });
+
+        const result = await response.json();
+
+        if (result.success) {
+          alert(`Message sent successfully!\n${result.sent_count} sent, ${result.failed_count} failed`);
+          document.getElementById('quickContent').value = '';
+          document.getElementById('quickSubject').value = '';
+        } else {
+          alert('Error: ' + (result.error || 'Failed to send message'));
+        }
+      } catch (error) {
+        alert('Error sending message: ' + error.message);
+      } finally {
+        sendBtn.disabled = false;
+        sendBtn.innerHTML = '<span>Send Now</span><span>→</span>';
+      }
+    }
   </script>
 
   <script>

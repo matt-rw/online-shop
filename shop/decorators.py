@@ -1,4 +1,5 @@
 from functools import wraps
+from urllib.parse import quote
 
 from django.conf import settings
 from django.shortcuts import redirect
@@ -30,7 +31,8 @@ def two_factor_required(view_func):
         # Check if 2FA is verified in this session
         if not request.session.get("2fa_verified"):
             # Redirect to 2FA verification with next parameter
-            next_url = request.get_full_path()
+            # URL-encode the path to prevent injection attacks
+            next_url = quote(request.get_full_path(), safe='')
             return redirect(f"/admin/2fa/verify/?next={next_url}")
 
         # User is authenticated and 2FA verified

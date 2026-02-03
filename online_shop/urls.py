@@ -49,6 +49,7 @@ urlpatterns = [
     ),
     path("admin/returns/", admin_views.returns_dashboard, name="admin_returns"),
     path("admin/finance/", admin_views.finance_dashboard, name="admin_finance"),
+    path("admin/messages/", admin_views.messages_dashboard, name="admin_messages"),
     path("admin/campaigns/", admin_views.campaigns_list, name="admin_campaigns_list"),
     path("admin/campaigns/create/", admin_views.campaign_create, name="admin_campaign_create"),
     path(

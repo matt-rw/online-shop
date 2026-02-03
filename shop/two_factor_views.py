@@ -4,12 +4,31 @@ from io import BytesIO
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import redirect, render
+from django.utils.http import url_has_allowed_host_and_scheme
 
 import qrcode
 import qrcode.image.svg
 from django_otp import user_has_device
 from django_otp.plugins.otp_totp.models import TOTPDevice
-from django_otp.util import random_hex
+
+
+def _get_safe_redirect_url(request, url, default="admin_home"):
+    """
+    Validate redirect URL to prevent open redirect attacks.
+    Only allows relative URLs or URLs to the same host.
+    """
+    if not url:
+        return default
+
+    # Check if URL is safe (relative or same host)
+    if url_has_allowed_host_and_scheme(
+        url,
+        allowed_hosts={request.get_host()},
+        require_https=request.is_secure(),
+    ):
+        return url
+
+    return default
 
 
 @login_required
@@ -74,7 +93,8 @@ def two_factor_verify(request):
 
     # Check if already verified in this session
     if request.session.get("2fa_verified"):
-        return redirect(request.GET.get("next", "admin_home"))
+        next_url = _get_safe_redirect_url(request, request.GET.get("next"))
+        return redirect(next_url)
 
     if request.method == "POST":
         token = request.POST.get("token", "").strip()
@@ -86,7 +106,7 @@ def two_factor_verify(request):
             # Mark session as 2FA verified
             request.session["2fa_verified"] = True
             messages.success(request, "Two-factor authentication successful!")
-            next_url = request.GET.get("next", "admin_home")
+            next_url = _get_safe_redirect_url(request, request.GET.get("next"))
             return redirect(next_url)
         else:
             messages.error(request, "Invalid verification code. Please try again.")
