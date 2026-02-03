@@ -77,7 +77,7 @@ def admin_home(request):
                     recipient_count = 1
                 else:
                     # Production mode - send to all active subscribers
-                    subscribers = EmailSubscription.objects.filter(is_active=True, is_confirmed=True)
+                    subscribers = EmailSubscription.objects.filter(is_active=True)
                     recipients = [{"email": sub.email, "subscription": sub} for sub in subscribers]
                     recipient_count = len(recipients)
 
@@ -133,7 +133,7 @@ def admin_home(request):
                     recipient_count = 1
                 else:
                     # Production mode - send to all active subscribers
-                    subscribers = SMSSubscription.objects.filter(is_active=True, is_confirmed=True)
+                    subscribers = SMSSubscription.objects.filter(is_active=True)
                     recipients = [{"phone": sub.phone_number, "subscription": sub} for sub in subscribers]
                     recipient_count = len(recipients)
 
@@ -279,8 +279,8 @@ def admin_home(request):
         "total_users": User.objects.count(),
         "total_email_subs": EmailSubscription.objects.count(),
         "total_sms_subs": SMSSubscription.objects.count(),
-        "active_email_subs": EmailSubscription.objects.filter(is_active=True, is_confirmed=True).count(),
-        "active_sms_subs": SMSSubscription.objects.filter(is_active=True, is_confirmed=True).count(),
+        "active_email_subs": EmailSubscription.objects.filter(is_active=True).count(),
+        "active_sms_subs": SMSSubscription.objects.filter(is_active=True).count(),
         "new_email_subs_24h": EmailSubscription.objects.filter(subscribed_at__gte=last_24h).count(),
         "new_sms_subs_24h": SMSSubscription.objects.filter(subscribed_at__gte=last_24h).count(),
 

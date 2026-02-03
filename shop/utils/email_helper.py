@@ -141,7 +141,7 @@ def send_campaign(campaign):
 
     # Get recipients
     if campaign.send_to_all_active:
-        recipients = EmailSubscription.objects.filter(is_active=True, is_confirmed=True)
+        recipients = EmailSubscription.objects.filter(is_active=True)
     else:
         recipients = EmailSubscription.objects.none()
 

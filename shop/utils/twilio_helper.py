@@ -127,7 +127,7 @@ def send_campaign(campaign):
 
     # Get recipients
     if campaign.send_to_all_active:
-        recipients = SMSSubscription.objects.filter(is_active=True, is_confirmed=True)
+        recipients = SMSSubscription.objects.filter(is_active=True)
     else:
         recipients = SMSSubscription.objects.none()
 
