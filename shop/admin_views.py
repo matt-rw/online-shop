@@ -2950,8 +2950,17 @@ def products_dashboard(request):
     # Get sort parameter
     sort_by = request.GET.get("sort", "newest")
 
-    # Get all products with variant counts
-    products = Product.objects.all()
+    # Import aggregation functions
+    from django.db.models import Max, Min
+
+    # Get all products with variant data in a single query (optimized)
+    products = Product.objects.select_related("category_obj").annotate(
+        variant_count=Count("variants"),
+        total_stock=Sum("variants__stock_quantity"),
+        active_variants=Count("variants", filter=Q(variants__is_active=True)),
+        min_price=Min("variants__price"),
+        max_price=Max("variants__price"),
+    )
 
     # Apply sorting
     if sort_by == "newest":
@@ -2965,21 +2974,12 @@ def products_dashboard(request):
     else:
         products = products.order_by("-created_at")
 
-    # Enrich products with variant data
+    # Build products data from annotated queryset
     products_data = []
     for product in products:
-        variant_count = product.variants.count()
-        total_stock = product.variants.aggregate(total=Sum("stock_quantity"))["total"] or 0
-        active_variants = product.variants.filter(is_active=True).count()
-
-        # Calculate price range from variants
-        from django.db.models import Max, Min
-
-        price_data = product.variants.aggregate(min_price=Min("price"), max_price=Max("price"))
-        min_price = price_data["min_price"]
-        max_price = price_data["max_price"]
-
         # Format price range
+        min_price = product.min_price
+        max_price = product.max_price
         if min_price is None or max_price is None:
             price_range = f"${product.base_price:.2f}"
         elif min_price == max_price:
@@ -3011,9 +3011,9 @@ def products_dashboard(request):
                 "is_active": product.is_active,
                 "featured": product.featured,
                 "available_for_purchase": product.available_for_purchase,
-                "variant_count": variant_count,
-                "total_stock": total_stock,
-                "active_variants": active_variants,
+                "variant_count": product.variant_count or 0,
+                "total_stock": product.total_stock or 0,
+                "active_variants": product.active_variants or 0,
                 "images": product.images or [],
             }
         )
