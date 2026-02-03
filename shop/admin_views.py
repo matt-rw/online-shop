@@ -5802,7 +5802,7 @@ def ab_testing_dashboard(request):
         messages_data.append({
             "id": msg.id,
             "name": msg.name,
-            "campaign": msg.campaign.name,
+            "campaign": msg.campaign.name if msg.campaign else "No Campaign",
             "message_type": msg.get_message_type_display(),
             "variant_name": msg.variant_name,
             "test_tags": msg.test_tags,
