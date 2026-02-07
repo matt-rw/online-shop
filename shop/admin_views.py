@@ -2955,9 +2955,9 @@ def products_dashboard(request):
 
     # Get all products with variant data in a single query (optimized)
     products = Product.objects.select_related("category_obj").annotate(
-        variant_count=Count("variants"),
-        total_stock=Sum("variants__stock_quantity"),
-        active_variants=Count("variants", filter=Q(variants__is_active=True)),
+        variants_count=Count("variants"),
+        stock_total=Sum("variants__stock_quantity"),
+        variants_active=Count("variants", filter=Q(variants__is_active=True)),
         min_price=Min("variants__price"),
         max_price=Max("variants__price"),
     )
@@ -3011,9 +3011,9 @@ def products_dashboard(request):
                 "is_active": product.is_active,
                 "featured": product.featured,
                 "available_for_purchase": product.available_for_purchase,
-                "variant_count": product.variant_count or 0,
-                "total_stock": product.total_stock or 0,
-                "active_variants": product.active_variants or 0,
+                "variant_count": product.variants_count or 0,
+                "total_stock": product.stock_total or 0,
+                "active_variants": product.variants_active or 0,
                 "images": product.images or [],
             }
         )
