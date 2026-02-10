@@ -1906,12 +1906,12 @@
           closeEditModal();
           location.reload();
         } else {
-          alert('Error: ' + (data.error || 'Failed to save product'));
+          showToast('Error: ' + (data.error || 'Failed to save product'), 'error');
         }
       })
       .catch(error => {
         console.error('Save error:', error);
-        alert('Error saving product: ' + error.message);
+        showToast('Error saving product: ' + error.message, 'error');
       });
     }
 
@@ -1936,7 +1936,7 @@
         // Open actual product page in new tab
         window.open(`/shop/product/${slug}/`, '_blank');
       } else {
-        alert('Please save the product first to preview it.');
+        showToast('Please save the product first to preview it.', 'error');
       }
     }
 
@@ -2076,7 +2076,7 @@
 
         if (!data.success) {
           console.error('Failed to load category attributes:', data.error);
-          alert('Error: ' + data.error);
+          showToast('Error: ' + data.error, 'error');
           return;
         }
 
@@ -2187,7 +2187,7 @@
           message: error.message,
           stack: error.stack
         });
-        alert('Error loading variant attributes: ' + error.message + '\n\nCheck the browser console for details.');
+        showToast('Error loading variant attributes', 'error');
       });
     }
 
@@ -2580,12 +2580,12 @@
       const materialId = document.getElementById('bulk_material').value;
 
       if (selectedSizes.length === 0 || selectedColors.length === 0) {
-        alert('Please select at least one size and one color');
+        showToast('Please select at least one size and one color', 'error');
         return;
       }
 
       if (!price) {
-        alert('Please enter a price');
+        showToast('Please enter a price', 'error');
         return;
       }
 
@@ -2612,18 +2612,18 @@
       .then(response => response.json())
       .then(data => {
         if (data.success) {
-          alert(data.message);
+          showToast(data.message, 'success');
           closeBulkVariantModal();
           // Reload variants list
           loadVariants(productId);
         } else {
-          alert('Error: ' + (data.error || 'Failed to create variants'));
+          showToast('Error: ' + (data.error || 'Failed to create variants'), 'error');
           btn.innerHTML = originalHTML;
           btn.disabled = false;
         }
       })
       .catch(error => {
-        alert('Error creating variants');
+        showToast('Error creating variants', 'error');
         btn.innerHTML = originalHTML;
         btn.disabled = false;
       });
@@ -2716,18 +2716,18 @@
       .then(response => response.json())
       .then(data => {
         if (data.success) {
-          alert(data.message);
+          showToast(data.message, 'success');
           closeBulkStockModal();
           // Reload variants list
           loadVariants(productId);
         } else {
-          alert('Error: ' + (data.error || 'Failed to update stock'));
+          showToast('Error: ' + (data.error || 'Failed to update stock'), 'error');
           btn.innerHTML = originalHTML;
           btn.disabled = false;
         }
       })
       .catch(error => {
-        alert('Error updating stock');
+        showToast('Error updating stock', 'error');
         btn.innerHTML = originalHTML;
         btn.disabled = false;
       });
@@ -3152,7 +3152,7 @@
           // Reload variants
           loadVariants(productId);
         } else {
-          alert('Error: ' + (data.error || 'Failed to add variant'));
+          showToast('Error: ' + (data.error || 'Failed to add variant'), 'error');
         }
       });
     }
@@ -3229,7 +3229,7 @@
           const productId = document.getElementById('variants_product_id').value;
           loadVariants(productId);
         } else {
-          alert('Error: ' + (data.error || 'Failed to delete variant'));
+          showToast('Error: ' + (data.error || 'Failed to delete variant'), 'error');
         }
       });
     }
@@ -3360,7 +3360,7 @@
 
     function copySharedImages() {
       if (!sharedProductImages || sharedProductImages.length === 0) {
-        alert('No shared product images to copy.');
+        showToast('No shared product images to copy.', 'error');
         return;
       }
       // Add shared images to variant images (avoiding duplicates)
@@ -3565,13 +3565,13 @@
           delete loadedVariants[productId];
           loadVariantsForProduct(productId);
         } else {
-          alert('Error: ' + (data.error || 'Failed to save variant'));
+          showToast('Error: ' + (data.error || 'Failed to save variant'), 'error');
           saveBtn.disabled = false;
           saveBtn.innerHTML = originalText;
         }
       })
       .catch(error => {
-        alert('Error saving variant: ' + error.message);
+        showToast('Error saving variant: ' + error.message, 'error');
         saveBtn.disabled = false;
         saveBtn.innerHTML = originalText;
       });

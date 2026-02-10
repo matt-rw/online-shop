@@ -4868,8 +4868,12 @@ def shipments_dashboard(request):
         action = request.POST.get("action")
 
         if action == "create_shipment":
+            import json as json_module
             import uuid
             from datetime import timedelta
+            from decimal import Decimal
+
+            from shop.models import ProductVariant, ShipmentItem
 
             try:
                 tracking_number = request.POST.get("tracking_number", "").strip()
@@ -4898,6 +4902,45 @@ def shipments_dashboard(request):
                     other_fees=request.POST.get("other_fees") or 0,
                     notes=request.POST.get("notes", ""),
                 )
+
+                # Create shipment items if provided
+                new_items_json = request.POST.get("new_items", "[]")
+                new_items = json_module.loads(new_items_json)
+
+                for item_data in new_items:
+                    variant_id = item_data.get("variant_id")
+                    quantity = int(item_data.get("quantity", 0))
+                    unit_cost = item_data.get("unit_cost")
+
+                    if quantity <= 0:
+                        continue
+
+                    variant = ProductVariant.objects.select_related("product").get(id=variant_id)
+
+                    # Use provided cost or auto-populate from variant/product
+                    if unit_cost is not None and str(unit_cost).strip():
+                        final_cost = Decimal(str(unit_cost))
+                    elif variant.cost is not None:
+                        final_cost = variant.cost
+                    else:
+                        final_cost = variant.product.base_cost or Decimal("0")
+
+                    # If shipment is delivered, set received_quantity = quantity
+                    received_qty = quantity if shipment.status == "delivered" else 0
+
+                    ShipmentItem.objects.create(
+                        shipment=shipment,
+                        variant=variant,
+                        quantity=quantity,
+                        received_quantity=received_qty,
+                        unit_cost=final_cost,
+                    )
+
+                    # If delivered, also update variant stock
+                    if shipment.status == "delivered" and received_qty > 0:
+                        variant.stock_quantity += received_qty
+                        variant.save(update_fields=["stock_quantity"])
+
                 return JsonResponse({
                     "success": True,
                     "shipment_id": shipment.id,
@@ -5027,24 +5070,28 @@ def shipments_dashboard(request):
                 ).first()
 
                 if existing_item:
-                    return JsonResponse(
-                        {
-                            "success": False,
-                            "error": "This variant is already in the shipment",
-                        }
+                    # Add to existing quantity instead of erroring
+                    existing_item.quantity += int(quantity)
+                    # Update cost if provided (use new cost for the additional quantity)
+                    if unit_cost:
+                        existing_item.unit_cost = unit_cost
+                    existing_item.save()
+                    item = existing_item
+                    was_updated = True
+                else:
+                    item = ShipmentItem.objects.create(
+                        shipment=shipment,
+                        variant=variant,
+                        quantity=quantity,
+                        received_quantity=0,
+                        unit_cost=unit_cost,
                     )
-
-                item = ShipmentItem.objects.create(
-                    shipment=shipment,
-                    variant=variant,
-                    quantity=quantity,
-                    received_quantity=0,
-                    unit_cost=unit_cost,
-                )
+                    was_updated = False
 
                 return JsonResponse(
                     {
                         "success": True,
+                        "updated": was_updated,
                         "item": {
                             "id": item.id,
                             "variant_id": variant.id,
@@ -5059,6 +5106,61 @@ def shipments_dashboard(request):
                 )
             except Shipment.DoesNotExist:
                 return JsonResponse({"success": False, "error": "Shipment not found"})
+            except ProductVariant.DoesNotExist:
+                return JsonResponse({"success": False, "error": "Variant not found"})
+            except Exception as e:
+                return JsonResponse({"success": False, "error": str(e)})
+
+        elif action == "bulk_add_shipment_items":
+            # Add multiple variants at once from matrix UI
+            try:
+                import json as json_module
+
+                from decimal import Decimal
+
+                from shop.models import ProductVariant, ShipmentItem
+
+                items_json = request.POST.get("items", "[]")
+                items_to_add = json_module.loads(items_json)
+
+                if not items_to_add:
+                    return JsonResponse({"success": False, "error": "No items to add"})
+
+                added_items = []
+                for item_data in items_to_add:
+                    variant_id = item_data.get("variant_id")
+                    quantity = int(item_data.get("quantity", 0))
+                    unit_cost = item_data.get("unit_cost")
+
+                    if quantity <= 0:
+                        continue
+
+                    variant = ProductVariant.objects.select_related("product").get(id=variant_id)
+
+                    # Auto-populate unit_cost from variant cost or product base_cost if not provided
+                    if unit_cost is not None and str(unit_cost).strip():
+                        final_cost = Decimal(str(unit_cost))
+                    elif variant.cost is not None:
+                        final_cost = variant.cost
+                    else:
+                        final_cost = variant.product.base_cost or Decimal("0")
+
+                    size_label = variant.size.label if variant.size else ""
+                    color_name = variant.color.name if variant.color else ""
+
+                    added_items.append({
+                        "id": None,
+                        "variant_id": variant.id,
+                        "variant_sku": variant.sku,
+                        "variant_name": f"{variant.product.name} - {size_label} {color_name}".strip(),
+                        "quantity": quantity,
+                        "received_quantity": 0,
+                        "unit_cost": float(final_cost),
+                        "total_cost": float(quantity * final_cost),
+                    })
+
+                return JsonResponse({"success": True, "items": added_items})
+
             except ProductVariant.DoesNotExist:
                 return JsonResponse({"success": False, "error": "Variant not found"})
             except Exception as e:
@@ -5159,6 +5261,8 @@ def shipments_dashboard(request):
                     "variant_name": f"{item.variant.product.name} - {item.variant.size.label if item.variant.size else ''} {item.variant.color.name if item.variant.color else ''}",
                     "quantity": item.quantity,
                     "received_quantity": item.received_quantity,
+                    "sold_quantity": item.sold_quantity,
+                    "available_quantity": item.available_quantity,
                     "unit_cost": float(item.unit_cost),
                     "total_cost": float(item.total_cost),
                     "current_stock": current_stock,
@@ -5194,7 +5298,7 @@ def shipments_dashboard(request):
         )
 
     # Get all product variants for the variant selector
-    from shop.models import ProductVariant
+    from shop.models import Product, ProductVariant
 
     all_variants = ProductVariant.objects.select_related(
         "product", "size", "color"
@@ -5212,10 +5316,47 @@ def shipments_dashboard(request):
                 "sku": variant.sku,
                 "display_name": variant_display,
                 "product_name": variant.product.name,
+                "product_id": variant.product.id,
                 "size": size_label,
                 "color": color_name,
+                "cost": float(variant.cost) if variant.cost else None,
             }
         )
+
+    # Get products with variants grouped for matrix view
+    products_for_matrix = []
+    all_products = Product.objects.prefetch_related(
+        "variants__size", "variants__color"
+    ).filter(variants__isnull=False).distinct()
+
+    for product in all_products:
+        # Get all sizes and colors for this product
+        sizes = set()
+        colors = set()
+        variants_map = {}
+
+        for variant in product.variants.all():
+            size_label = variant.size.label if variant.size else "One Size"
+            color_name = variant.color.name if variant.color else "Default"
+            sizes.add(size_label)
+            colors.add(color_name)
+            # Map (size, color) -> variant data
+            key = f"{size_label}|{color_name}"
+            variants_map[key] = {
+                "id": variant.id,
+                "sku": variant.sku,
+                "cost": float(variant.cost) if variant.cost else float(product.base_cost or 0),
+                "stock": variant.stock_quantity,
+            }
+
+        products_for_matrix.append({
+            "id": product.id,
+            "name": product.name,
+            "base_cost": float(product.base_cost or 0),
+            "sizes": sorted(list(sizes)),
+            "colors": sorted(list(colors)),
+            "variants": variants_map,
+        })
 
     # Get unique suppliers for autocomplete
     saved_suppliers = list(
@@ -5231,6 +5372,8 @@ def shipments_dashboard(request):
         "shipments_json": json.dumps(shipments_data, default=str),
         "variants": variants_data,
         "variants_json": json.dumps(variants_data, default=str),
+        "products_for_matrix": products_for_matrix,
+        "products_for_matrix_json": json.dumps(products_for_matrix, default=str),
         "saved_suppliers": saved_suppliers,
         "saved_suppliers_json": json.dumps(saved_suppliers),
         "stats": stats,
@@ -5268,6 +5411,41 @@ def orders_dashboard(request):
             except Exception as e:
                 return JsonResponse({"success": False, "error": str(e)})
 
+        elif action == "get_order_items":
+            try:
+                order_id = request.POST.get("order_id")
+                order = Order.objects.get(id=order_id)
+
+                items_data = []
+                for item in order.items.select_related("variant", "shipment_item__shipment"):
+                    shipment_info = None
+                    if item.shipment_item:
+                        shipment_info = {
+                            "id": item.shipment_item.shipment.id,
+                            "tracking": item.shipment_item.shipment.tracking_number,
+                            "name": item.shipment_item.shipment.name,
+                            "supplier": item.shipment_item.shipment.supplier,
+                            "date_received": item.shipment_item.shipment.date_received.isoformat() if item.shipment_item.shipment.date_received else None,
+                        }
+
+                    items_data.append({
+                        "id": item.id,
+                        "sku": item.sku,
+                        "variant_name": f"{item.variant.product.name} - {item.variant.size.label if item.variant and item.variant.size else ''} {item.variant.color.name if item.variant and item.variant.color else ''}" if item.variant else item.sku,
+                        "quantity": item.quantity,
+                        "line_total": float(item.line_total),
+                        "unit_cost": float(item.unit_cost) if item.unit_cost else None,
+                        "profit": float(item.profit) if item.profit is not None else None,
+                        "profit_margin": round(item.profit_margin, 1) if item.profit_margin is not None else None,
+                        "shipment": shipment_info,
+                    })
+
+                return JsonResponse({"success": True, "items": items_data})
+            except Order.DoesNotExist:
+                return JsonResponse({"success": False, "error": "Order not found"})
+            except Exception as e:
+                return JsonResponse({"success": False, "error": str(e)})
+
     # Get all orders
     orders = Order.objects.all().select_related("user").prefetch_related("items")
 
@@ -5290,6 +5468,17 @@ def orders_dashboard(request):
     orders_data = []
     for order in orders[:50]:  # Limit to 50 most recent
         user_name = f"{order.user.first_name} {order.user.last_name}" if order.user else "Guest"
+
+        # Calculate profit for this order
+        total_cost = 0
+        items_with_cost = 0
+        for item in order.items.all():
+            if item.unit_cost is not None:
+                total_cost += float(item.unit_cost) * item.quantity
+                items_with_cost += 1
+
+        profit = float(order.subtotal) - total_cost if items_with_cost > 0 else None
+
         orders_data.append(
             {
                 "id": order.id,
@@ -5301,6 +5490,9 @@ def orders_dashboard(request):
                 "tax": float(order.tax),
                 "shipping": float(order.shipping),
                 "total": float(order.total),
+                "cost": total_cost if items_with_cost > 0 else None,
+                "profit": profit,
+                "profit_margin": (profit / float(order.subtotal) * 100) if profit and order.subtotal > 0 else None,
                 "stripe_payment_intent": order.stripe_payment_intent_id,
                 "tracking_number": order.tracking_number,
                 "carrier": order.carrier,

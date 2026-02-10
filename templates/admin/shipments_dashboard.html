@@ -303,6 +303,16 @@
       box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
     }
 
+    @keyframes slideIn {
+      from { transform: translateX(100%); opacity: 0; }
+      to { transform: translateX(0); opacity: 1; }
+    }
+
+    @keyframes fadeOut {
+      from { opacity: 1; }
+      to { opacity: 0; }
+    }
+
     .form-group {
       margin-bottom: 1.5rem;
     }
@@ -624,8 +634,10 @@
                   <tr>
                     <th>SKU</th>
                     <th>Product</th>
-                    <th>Qty Ordered</th>
-                    <th>Qty Received</th>
+                    <th>Ordered</th>
+                    <th>Received</th>
+                    <th>Sold</th>
+                    <th>Available</th>
                     <th>Unit Cost</th>
                     <th>Total</th>
                   </tr>
@@ -637,6 +649,22 @@
                     <td style="font-weight: 500;">{{ item.variant_name }}</td>
                     <td>{{ item.quantity }}</td>
                     <td>{{ item.received_quantity }}</td>
+                    <td>
+                      {% if item.sold_quantity > 0 %}
+                      <span style="color: #10b981; font-weight: 600;">{{ item.sold_quantity }}</span>
+                      {% else %}
+                      <span style="color: #94a3b8;">0</span>
+                      {% endif %}
+                    </td>
+                    <td>
+                      {% if item.available_quantity > 0 %}
+                      <span style="color: #3b82f6; font-weight: 600;">{{ item.available_quantity }}</span>
+                      {% elif item.received_quantity > 0 %}
+                      <span style="color: #ef4444; font-weight: 500;">0</span>
+                      {% else %}
+                      <span style="color: #94a3b8;">—</span>
+                      {% endif %}
+                    </td>
                     <td>${{ item.unit_cost|floatformat:2 }}</td>
                     <td style="font-weight: 600;">${{ item.total_cost|floatformat:2 }}</td>
                   </tr>
@@ -666,7 +694,7 @@
 
   <!-- Shipment Modal -->
   <div class="modal-overlay" id="shipmentModal">
-    <div class="modal-content" style="max-width: 600px; max-height: 95vh; padding: 0; overflow: hidden;">
+    <div class="modal-content" style="max-width: 750px; max-height: 95vh; padding: 0; overflow: hidden;">
       <div class="modal-header" style="background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%); padding: 1.25rem 1.5rem; border-bottom: none; display: flex; justify-content: space-between; align-items: center;">
         <h2 id="modalTitle" style="color: white; font-size: 1.125rem; font-weight: 700; display: flex; align-items: center; gap: 0.5rem; margin: 0;">
           <i class="fa-solid fa-truck-fast"></i> New Order
@@ -733,56 +761,54 @@
               </button>
             </div>
 
-            <!-- Add Variant Row -->
+            <!-- Add Products Panel -->
             <div class="add-variant-row" id="addVariantRow" style="display: none; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 1rem; margin-bottom: 1rem;">
-              <!-- Product Selector -->
+              <!-- Step 1: Product Selector -->
               <div id="productSelectorView">
-                <select id="variantSelect" onchange="onProductSelect(this)" style="width: 100%; padding: 0.625rem; border: 1px solid #d1d5db; border-radius: 6px; font-size: 0.875rem; background: white; cursor: pointer;">
-                  <option value="">Select a product...</option>
-                  {% for variant in variants %}
-                  <option value="{{ variant.id }}" data-sku="{{ variant.sku }}" data-name="{{ variant.display_name }}">{{ variant.display_name }} ({{ variant.sku }})</option>
-                  {% endfor %}
+                <label style="font-size: 0.75rem; font-weight: 600; color: #64748b; margin-bottom: 0.5rem; display: block;">Select a product to add variants</label>
+                <select id="productSelect" onchange="onProductSelectForMatrix(this)" style="width: 100%; padding: 0.625rem; border: 1px solid #d1d5db; border-radius: 6px; font-size: 0.875rem; background: white; cursor: pointer;">
+                  <option value="">Choose a product...</option>
                 </select>
               </div>
 
-              <!-- Selected Product Display -->
-              <div id="selectedProductView" style="display: none;">
+              <!-- Step 2: Variant Matrix -->
+              <div id="matrixView" style="display: none;">
                 <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 1rem; padding: 0.75rem; background: white; border-radius: 6px; border: 1px solid #e2e8f0;">
                   <div style="width: 40px; height: 40px; background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%); border-radius: 8px; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
                     <i class="fa-solid fa-box" style="color: white; font-size: 1rem;"></i>
                   </div>
                   <div style="flex: 1; min-width: 0;">
-                    <div id="selectedProductName" style="font-weight: 600; color: #1e293b; font-size: 0.9375rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;"></div>
-                    <div id="selectedProductSku" style="font-size: 0.75rem; color: #64748b;"></div>
+                    <div id="matrixProductName" style="font-weight: 600; color: #1e293b; font-size: 0.9375rem;"></div>
+                    <div id="matrixProductCost" style="font-size: 0.75rem; color: #64748b;"></div>
                   </div>
-                  <button type="button" onclick="clearProductSelection()" style="background: none; border: none; color: #94a3b8; cursor: pointer; padding: 0.25rem;">
+                  <button type="button" onclick="clearMatrixSelection()" style="background: none; border: none; color: #94a3b8; cursor: pointer; padding: 0.25rem;">
                     <i class="fa-solid fa-times"></i>
                   </button>
                 </div>
 
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; margin-bottom: 0.75rem;">
-                  <div>
-                    <label style="font-size: 0.75rem; font-weight: 500; color: #64748b; margin-bottom: 0.25rem; display: block;">Quantity</label>
-                    <div style="display: flex; align-items: center; gap: 0.5rem;">
-                      <button type="button" onclick="adjustQty(-1)" style="background: #f1f5f9; border: 1px solid #e2e8f0; width: 32px; height: 32px; border-radius: 6px; cursor: pointer; font-size: 1rem; color: #64748b;">−</button>
-                      <input type="number" id="variantQuantity" min="1" value="1" style="flex: 1; padding: 0.5rem; border: 1px solid #d1d5db; border-radius: 6px; font-size: 0.875rem; text-align: center;">
-                      <button type="button" onclick="adjustQty(1)" style="background: #f1f5f9; border: 1px solid #e2e8f0; width: 32px; height: 32px; border-radius: 6px; cursor: pointer; font-size: 1rem; color: #64748b;">+</button>
-                    </div>
+                <!-- Cost Mode Selector -->
+                <div style="margin-bottom: 1rem; padding: 0.75rem; background: white; border-radius: 6px; border: 1px solid #e2e8f0;">
+                  <label style="font-size: 0.75rem; font-weight: 600; color: #64748b; margin-bottom: 0.5rem; display: block;">Unit Cost</label>
+                  <div style="display: flex; gap: 0.5rem; flex-wrap: wrap; align-items: center;">
+                    <button type="button" id="costModeBase" onclick="setCostMode('base')" class="cost-mode-btn active" style="padding: 0.375rem 0.75rem; border-radius: 6px; font-size: 0.75rem; font-weight: 500; cursor: pointer; border: 1px solid #e2e8f0; background: #3b82f6; color: white;">
+                      Base <span id="baseCostLabel">$0</span>
+                    </button>
+                    <button type="button" id="costModeVariant" onclick="setCostMode('variant')" class="cost-mode-btn" style="padding: 0.375rem 0.75rem; border-radius: 6px; font-size: 0.75rem; font-weight: 500; cursor: pointer; border: 1px solid #e2e8f0; background: #f8fafc; color: #374151;">
+                      Per-Variant
+                    </button>
+                    <button type="button" id="costModeCustom" onclick="setCostMode('custom')" class="cost-mode-btn" style="padding: 0.375rem 0.75rem; border-radius: 6px; font-size: 0.75rem; font-weight: 500; cursor: pointer; border: 1px solid #e2e8f0; background: #f8fafc; color: #374151;">
+                      Custom
+                    </button>
+                    <input type="number" id="customCostInput" step="0.01" min="0" placeholder="$0.00" style="display: none; width: 80px; padding: 0.375rem; border: 1px solid #d1d5db; border-radius: 6px; font-size: 0.75rem; text-align: center;">
                   </div>
-                  <div>
-                    <label style="font-size: 0.75rem; font-weight: 500; color: #64748b; margin-bottom: 0.25rem; display: block;">Unit Cost</label>
-                    <input type="number" id="variantUnitCost" step="0.01" min="0" placeholder="$0.00" style="width: 100%; padding: 0.5rem; border: 1px solid #d1d5db; border-radius: 6px; font-size: 0.875rem; text-align: center;">
-                  </div>
+                  <div id="costModeHint" style="font-size: 0.6875rem; color: #94a3b8; margin-top: 0.375rem;">Using product base cost for all variants</div>
                 </div>
-                <div style="display: flex; gap: 0.5rem; margin-bottom: 0.75rem; flex-wrap: wrap;">
-                  <button type="button" onclick="setPrice(5)" class="price-preset">$5</button>
-                  <button type="button" onclick="setPrice(10)" class="price-preset">$10</button>
-                  <button type="button" onclick="setPrice(15)" class="price-preset">$15</button>
-                  <button type="button" onclick="setPrice(20)" class="price-preset">$20</button>
-                  <button type="button" onclick="setPrice(25)" class="price-preset">$25</button>
-                  <button type="button" onclick="setPrice(50)" class="price-preset">$50</button>
-                </div>
-                <button type="button" onclick="addVariantToShipment()" style="width: 100%; background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white; border: none; padding: 0.625rem 1.25rem; border-radius: 6px; cursor: pointer; font-weight: 600; font-size: 0.875rem;">
+
+                <!-- Matrix Table Container -->
+                <div id="matrixTableContainer" style="overflow-x: auto; margin-bottom: 1rem;"></div>
+
+                <!-- Add button -->
+                <button type="button" onclick="addMatrixItemsToShipment()" style="width: 100%; background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white; border: none; padding: 0.625rem 1.25rem; border-radius: 6px; cursor: pointer; font-weight: 600; font-size: 0.875rem;">
                   <i class="fa-solid fa-check"></i> Add to Order
                 </button>
               </div>
@@ -805,10 +831,12 @@
                 <tr>
                   <th>Product</th>
                   <th>SKU</th>
-                  <th style="width: 70px;">Qty</th>
-                  <th id="receivedHeader" style="width: 70px; display: none;">Received</th>
-                  <th style="width: 80px;">Cost</th>
-                  <th style="width: 50px;"></th>
+                  <th style="width: 60px;">Qty</th>
+                  <th id="receivedHeader" style="width: 60px; display: none;">Recv</th>
+                  <th id="soldHeader" style="width: 50px; display: none;">Sold</th>
+                  <th id="availHeader" style="width: 50px; display: none;">Avail</th>
+                  <th style="width: 70px;">Cost</th>
+                  <th style="width: 40px;"></th>
                 </tr>
               </thead>
               <tbody id="variantsTableBody">
@@ -947,9 +975,12 @@
   <script>
     let shipmentsData = {{ shipments_json|safe }};
     let variantsData = {{ variants_json|safe }};
+    let productsForMatrix = {{ products_for_matrix_json|safe }};
     let savedSuppliers = {{ saved_suppliers_json|safe }};
     let currentShipmentItems = [];
     let currentEditingShipment = null;
+    let currentMatrixProduct = null;
+    let currentCostMode = 'base'; // 'base', 'variant', or 'custom'
 
     // Supplier selection functions
     function onSupplierSelect(selectEl) {
@@ -1185,12 +1216,11 @@
           location.reload();
         } else {
           closeDeleteConfirmation();
-          alert(data.error || 'Error deleting shipment');
+          showToast(data.error || 'Error deleting shipment', 'error');
         }
       } catch (error) {
-        console.error('Error:', error);
         closeDeleteConfirmation();
-        alert('Error deleting shipment');
+        showToast('Error deleting shipment', 'error');
       }
     }
 
@@ -1198,94 +1228,178 @@
       const row = document.getElementById('addVariantRow');
       if (row.style.display === 'none') {
         row.style.display = 'block';
-        clearProductSelection();
+        clearMatrixSelection();
+        populateProductSelector();
       } else {
         row.style.display = 'none';
       }
     }
 
-    function onProductSelect(selectEl) {
+    function populateProductSelector() {
+      const select = document.getElementById('productSelect');
+      select.innerHTML = '<option value="">Choose a product...</option>';
+
+      productsForMatrix.forEach(product => {
+        const option = document.createElement('option');
+        option.value = product.id;
+        option.textContent = product.name;
+        select.appendChild(option);
+      });
+    }
+
+    function onProductSelectForMatrix(selectEl) {
       if (!selectEl.value) return;
 
-      const option = selectEl.options[selectEl.selectedIndex];
-      const name = option.dataset.name;
-      const sku = option.dataset.sku;
+      const productId = parseInt(selectEl.value);
+      const product = productsForMatrix.find(p => p.id === productId);
+      if (!product) return;
 
-      document.getElementById('selectedProductName').textContent = name;
-      document.getElementById('selectedProductSku').textContent = sku;
+      currentMatrixProduct = product;
+      currentCostMode = 'base'; // Reset to base cost mode
+
+      document.getElementById('matrixProductName').textContent = product.name;
+      document.getElementById('matrixProductCost').textContent = product.base_cost > 0 ? `Base cost: $${product.base_cost.toFixed(2)}` : 'No base cost set';
+      document.getElementById('baseCostLabel').textContent = '$' + product.base_cost.toFixed(2);
       document.getElementById('productSelectorView').style.display = 'none';
-      document.getElementById('selectedProductView').style.display = 'block';
-      document.getElementById('variantQuantity').value = '1';
-      document.getElementById('variantUnitCost').value = '';
-      document.getElementById('variantQuantity').focus();
+      document.getElementById('matrixView').style.display = 'block';
+
+      // Reset cost mode UI
+      setCostMode('base');
+
+      renderVariantMatrix(product);
     }
 
-    function clearProductSelection() {
-      document.getElementById('variantSelect').value = '';
+    function setCostMode(mode) {
+      currentCostMode = mode;
+
+      // Update button styles
+      const buttons = ['costModeBase', 'costModeVariant', 'costModeCustom'];
+      buttons.forEach(btnId => {
+        const btn = document.getElementById(btnId);
+        if (btnId === 'costMode' + mode.charAt(0).toUpperCase() + mode.slice(1)) {
+          btn.style.background = '#3b82f6';
+          btn.style.color = 'white';
+          btn.style.borderColor = '#3b82f6';
+        } else {
+          btn.style.background = '#f8fafc';
+          btn.style.color = '#374151';
+          btn.style.borderColor = '#e2e8f0';
+        }
+      });
+
+      // Show/hide custom input
+      const customInput = document.getElementById('customCostInput');
+      customInput.style.display = mode === 'custom' ? 'block' : 'none';
+
+      // Update hint text
+      const hint = document.getElementById('costModeHint');
+      if (mode === 'base') {
+        hint.textContent = 'Using product base cost for all variants';
+      } else if (mode === 'variant') {
+        hint.textContent = 'Using each variant\'s individual cost (or base if not set)';
+      } else {
+        hint.textContent = 'Enter a custom cost to use for all variants';
+      }
+    }
+
+    function renderVariantMatrix(product) {
+      const container = document.getElementById('matrixTableContainer');
+      const sizes = product.sizes;
+      const colors = product.colors;
+
+      // Build table
+      let html = '<table style="width: 100%; border-collapse: collapse; font-size: 0.8125rem;">';
+
+      // Header row with colors
+      html += '<thead><tr><th style="padding: 0.5rem; text-align: left; background: #f1f5f9; border: 1px solid #e2e8f0; font-weight: 600; color: #374151;">Size / Color</th>';
+      colors.forEach(color => {
+        html += `<th style="padding: 0.5rem; text-align: center; background: #f1f5f9; border: 1px solid #e2e8f0; font-weight: 600; color: #374151; min-width: 80px;">${color}</th>`;
+      });
+      html += '</tr></thead><tbody>';
+
+      // Rows for each size
+      sizes.forEach(size => {
+        html += '<tr>';
+        html += `<td style="padding: 0.5rem; border: 1px solid #e2e8f0; font-weight: 500; background: #fafafa;">${size}</td>`;
+
+        colors.forEach(color => {
+          const key = `${size}|${color}`;
+          const variant = product.variants[key];
+
+          if (variant) {
+            const stockBadge = variant.stock > 0
+              ? `<span style="font-size: 0.625rem; color: #64748b;">Stock: ${variant.stock}</span>`
+              : `<span style="font-size: 0.625rem; color: #ef4444;">Out</span>`;
+
+            html += `<td style="padding: 0.375rem; border: 1px solid #e2e8f0; text-align: center;">
+              <input type="number" min="0" value="" placeholder="0"
+                     data-variant-id="${variant.id}"
+                     data-variant-sku="${variant.sku}"
+                     data-variant-cost="${variant.cost}"
+                     style="width: 60px; padding: 0.375rem; border: 1px solid #d1d5db; border-radius: 4px; text-align: center; font-size: 0.8125rem;">
+              <div style="margin-top: 0.25rem;">${stockBadge}</div>
+            </td>`;
+          } else {
+            html += '<td style="padding: 0.375rem; border: 1px solid #e2e8f0; text-align: center; background: #f8fafc; color: #94a3b8;">—</td>';
+          }
+        });
+
+        html += '</tr>';
+      });
+
+      html += '</tbody></table>';
+      container.innerHTML = html;
+    }
+
+    function clearMatrixSelection() {
+      const select = document.getElementById('productSelect');
+      if (select) select.value = '';
       document.getElementById('productSelectorView').style.display = 'block';
-      document.getElementById('selectedProductView').style.display = 'none';
-      document.getElementById('variantQuantity').value = '1';
-      document.getElementById('variantUnitCost').value = '';
+      document.getElementById('matrixView').style.display = 'none';
+      document.getElementById('matrixTableContainer').innerHTML = '';
+      currentMatrixProduct = null;
     }
 
-    function setPrice(amount) {
-      document.getElementById('variantUnitCost').value = amount;
+    function getCostForVariant(variantCost) {
+      // Determine cost based on selected mode
+      if (currentCostMode === 'base') {
+        return currentMatrixProduct ? currentMatrixProduct.base_cost : 0;
+      } else if (currentCostMode === 'custom') {
+        return parseFloat(document.getElementById('customCostInput').value) || 0;
+      } else {
+        // 'variant' mode - use variant cost (already includes fallback to base)
+        return variantCost;
+      }
     }
 
-    function adjustQty(delta) {
-      const input = document.getElementById('variantQuantity');
-      const newVal = Math.max(1, parseInt(input.value || 1) + delta);
-      input.value = newVal;
-    }
+    async function addMatrixItemsToShipment() {
+      const inputs = document.querySelectorAll('#matrixTableContainer input[data-variant-id]');
+      const itemsToAdd = [];
 
-    async function addVariantToShipment() {
-      const shipmentId = document.getElementById('shipmentId').value;
-      const variantId = document.getElementById('variantSelect').value;
-      const quantity = document.getElementById('variantQuantity').value;
-      const unitCost = document.getElementById('variantUnitCost').value;
+      inputs.forEach(input => {
+        const qty = parseInt(input.value) || 0;
+        if (qty > 0) {
+          const variantCost = parseFloat(input.dataset.variantCost) || 0;
+          itemsToAdd.push({
+            variant_id: parseInt(input.dataset.variantId),
+            quantity: qty,
+            unit_cost: getCostForVariant(variantCost)
+          });
+        }
+      });
 
-      if (!variantId) {
-        alert('Please select a product first');
+      if (itemsToAdd.length === 0) {
+        showToast('Please enter quantities for at least one variant', 'error');
         return;
       }
 
+      const shipmentId = document.getElementById('shipmentId').value;
+
       if (!shipmentId) {
-        // Adding to new shipment - just update local state
-        const variant = variantsData.find(v => v.id === parseInt(variantId));
-        if (!variant) return;
-
-        // Check if already added
-        if (currentShipmentItems.find(item => item.variant_id === parseInt(variantId))) {
-          alert('This variant is already in the shipment');
-          return;
-        }
-
-        const qty = parseInt(quantity) || 1;
-        const cost = parseFloat(unitCost) || 0;
-
-        const newItem = {
-          id: null, // No ID yet since shipment doesn't exist
-          variant_id: parseInt(variantId),
-          variant_sku: variant.sku,
-          variant_name: variant.display_name,
-          quantity: qty,
-          received_quantity: 0,
-          unit_cost: cost,
-          total_cost: qty * cost
-        };
-
-        currentShipmentItems.push(newItem);
-        updateVariantsTable();
-        updateCostSummary();
-        toggleAddVariantRow();
-      } else {
-        // Adding to existing shipment - send to backend
+        // For new shipment, add to local state
         const formData = new FormData();
-        formData.append('action', 'add_shipment_item');
-        formData.append('shipment_id', shipmentId);
-        formData.append('variant_id', variantId);
-        formData.append('quantity', quantity);
-        formData.append('unit_cost', unitCost);
+        formData.append('action', 'bulk_add_shipment_items');
+        formData.append('items', JSON.stringify(itemsToAdd));
         formData.append('csrfmiddlewaretoken', '{{ csrf_token }}');
 
         try {
@@ -1296,19 +1410,115 @@
 
           const data = await response.json();
 
-          if (data.success) {
-            currentShipmentItems.push(data.item);
+          if (data.success && data.items) {
+            // Check for duplicates
+            data.items.forEach(newItem => {
+              const existing = currentShipmentItems.find(item => item.variant_id === newItem.variant_id);
+              if (existing) {
+                existing.quantity += newItem.quantity;
+                existing.total_cost = existing.quantity * existing.unit_cost;
+              } else {
+                currentShipmentItems.push(newItem);
+              }
+            });
+
             updateVariantsTable();
             updateCostSummary();
             toggleAddVariantRow();
+            showToast(`Added ${data.items.length} variant(s) to shipment`, 'success');
           } else {
-            alert(data.error || 'Error adding variant');
+            showToast(data.error || 'Error adding items', 'error');
           }
         } catch (error) {
-          console.error('Error:', error);
-          alert('Error adding variant');
+          showToast('Error adding items', 'error');
+        }
+      } else {
+        // For existing shipment, add one by one
+        let addedCount = 0;
+        let updatedCount = 0;
+        for (const item of itemsToAdd) {
+          const formData = new FormData();
+          formData.append('action', 'add_shipment_item');
+          formData.append('shipment_id', shipmentId);
+          formData.append('variant_id', item.variant_id);
+          formData.append('quantity', item.quantity);
+          formData.append('unit_cost', item.unit_cost);
+          formData.append('csrfmiddlewaretoken', '{{ csrf_token }}');
+
+          try {
+            const response = await fetch('{% url "admin_shipments" %}', {
+              method: 'POST',
+              body: formData
+            });
+
+            const data = await response.json();
+
+            if (data.success) {
+              if (data.updated) {
+                // Update existing item in our local state
+                const existingIndex = currentShipmentItems.findIndex(i => i.id === data.item.id);
+                if (existingIndex >= 0) {
+                  currentShipmentItems[existingIndex] = data.item;
+                }
+                updatedCount++;
+              } else {
+                currentShipmentItems.push(data.item);
+                addedCount++;
+              }
+            }
+          } catch (error) {
+            // Continue with other items
+          }
+        }
+
+        if (addedCount > 0 || updatedCount > 0) {
+          updateVariantsTable();
+          updateCostSummary();
+          toggleAddVariantRow();
+          let message = '';
+          if (addedCount > 0 && updatedCount > 0) {
+            message = `Added ${addedCount} and updated ${updatedCount} variant(s)`;
+          } else if (addedCount > 0) {
+            message = `Added ${addedCount} variant(s) to shipment`;
+          } else {
+            message = `Updated quantities for ${updatedCount} variant(s)`;
+          }
+          showToast(message, 'success');
         }
       }
+    }
+
+    function showToast(message, type = 'info') {
+      // Create toast element
+      const toast = document.createElement('div');
+      toast.style.cssText = `
+        position: fixed;
+        bottom: 20px;
+        right: 20px;
+        padding: 12px 20px;
+        border-radius: 8px;
+        color: white;
+        font-weight: 500;
+        z-index: 10000;
+        animation: slideIn 0.3s ease;
+        max-width: 300px;
+      `;
+
+      if (type === 'error') {
+        toast.style.background = 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)';
+      } else if (type === 'success') {
+        toast.style.background = 'linear-gradient(135deg, #10b981 0%, #059669 100%)';
+      } else {
+        toast.style.background = 'linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%)';
+      }
+
+      toast.textContent = message;
+      document.body.appendChild(toast);
+
+      setTimeout(() => {
+        toast.style.animation = 'fadeOut 0.3s ease';
+        setTimeout(() => toast.remove(), 300);
+      }, 3000);
     }
 
     async function removeVariantFromShipment(index, itemId) {
@@ -1336,11 +1546,10 @@
             updateVariantsTable();
             updateCostSummary();
           } else {
-            alert(data.error || 'Error removing variant');
+            showToast(data.error || 'Error removing variant', 'error');
           }
         } catch (error) {
-          console.error('Error:', error);
-          alert('Error removing variant');
+          showToast('Error removing variant', 'error');
         }
       } else {
         // Remove from new shipment (just local state)
@@ -1367,17 +1576,22 @@
       table.style.display = 'table';
       emptyState.style.display = 'none';
 
-      // Check if we're editing (shipment exists) to show received column
+      // Check if we're editing (shipment exists) to show received/sold/available columns
       const isEditing = !!document.getElementById('shipmentId').value;
 
       currentShipmentItems.forEach((item, index) => {
+        const soldQty = item.sold_quantity || 0;
+        const availQty = item.available_quantity || 0;
+
         const row = document.createElement('tr');
         row.innerHTML = `
           <td style="font-weight: 500;">${item.variant_name}</td>
           <td><code style="background: #f1f5f9; padding: 0.25rem 0.5rem; border-radius: 4px; font-size: 0.75rem;">${item.variant_sku}</code></td>
-          <td><input type="number" value="${item.quantity}" min="1" onchange="updateItemQuantity(${index}, this.value, 'quantity')" style="width: 60px;"></td>
-          ${isEditing ? `<td><input type="number" value="${item.received_quantity}" min="0" onchange="updateItemQuantity(${index}, this.value, 'received_quantity')" style="width: 60px;"></td>` : ''}
-          <td><input type="number" value="${item.unit_cost}" step="0.01" min="0" onchange="updateItemQuantity(${index}, this.value, 'unit_cost')" style="width: 70px;" placeholder="0"></td>
+          <td><input type="number" value="${item.quantity}" min="1" onchange="updateItemQuantity(${index}, this.value, 'quantity')" style="width: 55px;"></td>
+          ${isEditing ? `<td><input type="number" value="${item.received_quantity}" min="0" onchange="updateItemQuantity(${index}, this.value, 'received_quantity')" style="width: 55px;"></td>` : ''}
+          ${isEditing ? `<td style="text-align: center;"><span style="color: ${soldQty > 0 ? '#10b981' : '#94a3b8'}; font-weight: ${soldQty > 0 ? '600' : '400'};">${soldQty}</span></td>` : ''}
+          ${isEditing ? `<td style="text-align: center;"><span style="color: ${availQty > 0 ? '#3b82f6' : '#94a3b8'}; font-weight: ${availQty > 0 ? '600' : '400'};">${availQty}</span></td>` : ''}
+          <td><input type="number" value="${item.unit_cost}" step="0.01" min="0" onchange="updateItemQuantity(${index}, this.value, 'unit_cost')" style="width: 65px;" placeholder="0"></td>
           <td>
             <button type="button" class="btn btn-sm btn-danger" onclick="removeVariantFromShipment(${index}, ${item.id || 'null'})" title="Remove">
               <i class="fa-solid fa-trash"></i>
@@ -1387,11 +1601,13 @@
         tbody.appendChild(row);
       });
 
-      // Update table header based on editing mode
+      // Update table headers based on editing mode
       const receivedHeader = document.getElementById('receivedHeader');
-      if (receivedHeader) {
-        receivedHeader.style.display = isEditing ? 'table-cell' : 'none';
-      }
+      const soldHeader = document.getElementById('soldHeader');
+      const availHeader = document.getElementById('availHeader');
+      if (receivedHeader) receivedHeader.style.display = isEditing ? 'table-cell' : 'none';
+      if (soldHeader) soldHeader.style.display = isEditing ? 'table-cell' : 'none';
+      if (availHeader) availHeader.style.display = isEditing ? 'table-cell' : 'none';
     }
 
     function updateItemQuantity(index, value, field) {
@@ -1428,7 +1644,7 @@
       // Validate supplier
       const supplierValue = document.getElementById('supplier').value.trim();
       if (!supplierValue) {
-        alert('Please select or enter a supplier');
+        showToast('Please select or enter a supplier', 'error');
         return;
       }
 
@@ -1450,8 +1666,9 @@
       formData.append('other_fees', document.getElementById('otherFees').value);
       formData.append('notes', document.getElementById('notes').value);
 
-      // Add variant items data for updates
+      // Add variant items data
       if (shipmentId) {
+        // For existing shipment, update existing items
         currentShipmentItems.forEach(item => {
           if (item.id) {
             formData.append(`item_${item.id}_quantity`, item.quantity);
@@ -1459,6 +1676,13 @@
             formData.append(`item_${item.id}_unit_cost`, item.unit_cost);
           }
         });
+      } else {
+        // For new shipment, include items to create
+        formData.append('new_items', JSON.stringify(currentShipmentItems.map(item => ({
+          variant_id: item.variant_id,
+          quantity: item.quantity,
+          unit_cost: item.unit_cost
+        }))));
       }
 
       formData.append('csrfmiddlewaretoken', '{{ csrf_token }}');
@@ -1472,11 +1696,10 @@
         if (response.ok) {
           location.reload();
         } else {
-          alert('Error saving shipment');
+          showToast('Error saving shipment', 'error');
         }
       } catch (error) {
-        console.error('Error:', error);
-        alert('Error saving shipment');
+        showToast('Error saving shipment', 'error');
       }
     });
 

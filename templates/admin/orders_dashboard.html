@@ -468,6 +468,16 @@
               <div style="font-size: 0.875rem; color: #64748b;">{{ order.item_count }} items</div>
             </div>
             <div>
+              <div style="font-size: 0.75rem; color: #64748b; font-weight: 600; text-transform: uppercase; margin-bottom: 0.25rem;">Profit</div>
+              {% if order.profit != None %}
+              <div style="color: {% if order.profit > 0 %}#10b981{% else %}#ef4444{% endif %}; font-weight: 600;">${{ order.profit|floatformat:2 }}</div>
+              <div style="font-size: 0.875rem; color: #64748b;">{{ order.profit_margin|floatformat:1 }}% margin</div>
+              {% else %}
+              <div style="color: #94a3b8; font-style: italic;">Not tracked</div>
+              <div style="font-size: 0.75rem; color: #94a3b8;">No shipment data</div>
+              {% endif %}
+            </div>
+            <div>
               <div style="font-size: 0.75rem; color: #64748b; font-weight: 600; text-transform: uppercase; margin-bottom: 0.25rem;">Date</div>
               <div style="color: #0f172a; font-weight: 500;">{{ order.created_at|date:"M d, Y" }}</div>
               <div style="font-size: 0.875rem; color: #64748b;">{{ order.created_at|date:"g:i A" }}</div>

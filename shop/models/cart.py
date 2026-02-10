@@ -118,6 +118,77 @@ class OrderItem(models.Model):
     variant = models.ForeignKey(
         "shop.ProductVariant", null=True, blank=True, on_delete=models.SET_NULL
     )
+    shipment_item = models.ForeignKey(
+        "shop.ShipmentItem",
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name="order_items",
+        help_text="The shipment batch this item was allocated from",
+    )
     sku = models.CharField(max_length=50)
     quantity = models.PositiveIntegerField(validators=[MinValueValidator(1)])
     line_total = models.DecimalField(max_digits=10, decimal_places=2)
+    unit_cost = models.DecimalField(
+        max_digits=10,
+        decimal_places=2,
+        null=True,
+        blank=True,
+        help_text="Cost per unit at time of sale (from shipment)",
+    )
+
+    @property
+    def profit(self):
+        """Calculate profit for this line item"""
+        if self.unit_cost is not None:
+            revenue = self.line_total
+            cost = self.unit_cost * self.quantity
+            return revenue - cost
+        return None
+
+    @property
+    def profit_margin(self):
+        """Calculate profit margin percentage"""
+        if self.unit_cost is not None and self.line_total > 0:
+            profit = self.profit
+            return (profit / self.line_total) * 100 if profit else 0
+        return None
+
+    def allocate_from_shipments(self):
+        """
+        Allocate this order item to shipment batches using FIFO.
+        Returns True if fully allocated, False if insufficient stock.
+        """
+        from shop.models import ShipmentItem
+
+        if not self.variant:
+            return False
+
+        # Find delivered shipment items for this variant, ordered by date (FIFO)
+        available_shipments = (
+            ShipmentItem.objects.filter(
+                variant=self.variant,
+                shipment__status="delivered",
+            )
+            .select_related("shipment")
+            .order_by("shipment__date_received", "shipment__created_at")
+        )
+
+        # Find first shipment with available stock
+        for shipment_item in available_shipments:
+            if shipment_item.available_quantity >= self.quantity:
+                self.shipment_item = shipment_item
+                self.unit_cost = shipment_item.unit_cost
+                self.save(update_fields=["shipment_item", "unit_cost"])
+                return True
+
+        # If no single shipment has enough, use the oldest with any stock
+        # (for simplicity, we allocate to one shipment - could split if needed)
+        for shipment_item in available_shipments:
+            if shipment_item.available_quantity > 0:
+                self.shipment_item = shipment_item
+                self.unit_cost = shipment_item.unit_cost
+                self.save(update_fields=["shipment_item", "unit_cost"])
+                return True
+
+        return False

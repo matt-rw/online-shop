@@ -112,3 +112,19 @@ class ShipmentItem(models.Model):
     def total_cost(self):
         """Total cost for this line item"""
         return self.quantity * self.unit_cost
+
+    @property
+    def sold_quantity(self):
+        """How many units from this shipment have been sold"""
+        from django.db.models import Sum
+
+        result = self.order_items.aggregate(total=Sum("quantity"))
+        return result["total"] or 0
+
+    @property
+    def available_quantity(self):
+        """How many units are available to sell from this shipment"""
+        # Use received_quantity if shipment is delivered, otherwise 0
+        if self.shipment.status == "delivered":
+            return max(0, self.received_quantity - self.sold_quantity)
+        return 0

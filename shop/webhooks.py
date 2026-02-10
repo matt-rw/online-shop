@@ -154,13 +154,15 @@ def handle_checkout_session_completed(event):
 
         # Create order items from cart
         for item in cart_items:
-            OrderItem.objects.create(
+            order_item = OrderItem.objects.create(
                 order=order,
                 variant=item.variant,
                 sku=str(item.variant.id),
                 quantity=item.quantity,
                 line_total=item.variant.price * item.quantity,
             )
+            # Allocate from shipment batches (FIFO)
+            order_item.allocate_from_shipments()
 
         # Clear the cart
         cart.items.all().delete()

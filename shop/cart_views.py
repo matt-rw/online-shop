@@ -803,13 +803,15 @@ def checkout_success_view(request):
 
                     # Create order items from regular cart items
                     for item in cart_items:
-                        OrderItem.objects.create(
+                        order_item = OrderItem.objects.create(
                             order=order,
                             variant=item.variant,
                             sku=str(item.variant.id),
                             quantity=item.quantity,
                             line_total=item.variant.price * item.quantity,
                         )
+                        # Allocate from shipment batches (FIFO)
+                        order_item.allocate_from_shipments()
 
                     # Create order items from bundles (expanded into individual components)
                     for bundle_cart_item in bundle_items:
@@ -820,13 +822,15 @@ def checkout_success_view(request):
                             for bundle_item, variant in variants:
                                 total_qty = bundle_item.quantity * bundle_cart_item.quantity
                                 # Calculate proportional line total from bundle price
-                                OrderItem.objects.create(
+                                order_item = OrderItem.objects.create(
                                     order=order,
                                     variant=variant,
                                     sku=str(variant.id),
                                     quantity=total_qty,
                                     line_total=variant.price * total_qty,
                                 )
+                                # Allocate from shipment batches (FIFO)
+                                order_item.allocate_from_shipments()
 
                     # Clear cart
                     cart.items.all().delete()
