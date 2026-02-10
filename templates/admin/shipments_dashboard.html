@@ -603,8 +603,8 @@
               <div style="color: #0f172a; font-weight: 500;">{{ shipment.item_count }} items ({{ shipment.variant_count }} variants)</div>
             </div>
             <div>
-              <div style="font-size: 0.75rem; color: #64748b; font-weight: 600; text-transform: uppercase; margin-bottom: 0.25rem;">Total Cost</div>
-              <div style="color: #0f172a; font-weight: 500;">${{ shipment.total_cost|floatformat:2 }}</div>
+              <div style="font-size: 0.75rem; color: #64748b; font-weight: 600; text-transform: uppercase; margin-bottom: 0.25rem;">Items Cost</div>
+              <div style="color: #0f172a; font-weight: 500;">${{ shipment.items_subtotal|floatformat:2 }}</div>
             </div>
           </div>
 

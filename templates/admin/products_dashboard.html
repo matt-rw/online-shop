@@ -1524,7 +1524,6 @@
       })
       .catch(error => {
         console.error('Error:', error);
-        showToast('Failed to delete product', 'error');
       });
     }
 
@@ -3116,12 +3115,12 @@
       const price = document.getElementById('new_variant_price').value;
 
       if (!sizeId || !colorId) {
-        alert('Please select both size and color');
+        showToast('Please select both size and color', 'error');
         return;
       }
 
       if (!price) {
-        alert('Please enter a price');
+        showToast('Please enter a price', 'error');
         return;
       }
 
@@ -3499,12 +3498,12 @@
       const useBaseCost = costModeBase ? costModeBase.checked : true;
 
       if (!sizeId || !colorId) {
-        alert('Please select both size and color');
+        showToast('Please select both size and color', 'error');
         return;
       }
 
       if (!price) {
-        alert('Please enter a price');
+        showToast('Please enter a price', 'error');
         return;
       }
 
@@ -3606,16 +3605,20 @@
       // Update modal title with SKU
       document.getElementById('restock_variant_sku').textContent = sku;
 
+      // Find variant in allVariants to get cost info
+      const variant = allVariants.find(v => v.id === variantId);
+
       // Reset form
       document.getElementById('restock_quantity').value = '';
-      document.getElementById('restock_unit_cost').value = '';
       document.getElementById('restock_shipment_select').value = '';
       document.getElementById('quick_shipment_form').style.display = 'none';
       document.getElementById('quick_supplier').value = '';
       document.getElementById('quick_tracking').value = '';
 
-      // Find variant in allVariants to show current pending info
-      const variant = allVariants.find(v => v.id === variantId);
+      // Pre-populate cost from variant (already includes product base_cost fallback)
+      const variantCost = variant ? parseFloat(variant.cost || 0) : 0;
+      document.getElementById('restock_unit_cost').value = variantCost > 0 ? variantCost : '';
+
       displayCurrentPending(variant);
 
       // Load available shipments
@@ -3690,7 +3693,7 @@
       const tracking = document.getElementById('quick_tracking').value.trim();
 
       if (!supplier) {
-        alert('Please enter a supplier name');
+        showToast('Please enter a supplier name', 'error');
         return null;
       }
 
@@ -3713,15 +3716,14 @@
         const data = await response.json();
 
         if (data.success) {
-          showToast(`Shipment ${data.shipment.tracking_number} created`);
+          showToast('Shipment created');
           return data.shipment.id;
         } else {
-          alert('Error creating shipment: ' + (data.error || 'Unknown error'));
+          showToast(data.error || 'Failed to create shipment', 'error');
           return null;
         }
       } catch (error) {
-        console.error('Error:', error);
-        alert('Failed to create shipment');
+        showToast('Failed to create shipment', 'error');
         return null;
       }
     }
@@ -3733,7 +3735,7 @@
       const unitCost = document.getElementById('restock_unit_cost').value;
 
       if (!quantity || parseInt(quantity) <= 0) {
-        alert('Please enter a valid quantity');
+        showToast('Please enter a valid quantity', 'error');
         return;
       }
 
@@ -3744,7 +3746,7 @@
       }
 
       if (!shipmentId) {
-        alert('Please select a shipment');
+        showToast('Please select a shipment', 'error');
         return;
       }
 
@@ -3768,13 +3770,18 @@
       .then(data => {
         if (data.success) {
           closeRestockModal();
-          showToast(`Added ${quantity} units of ${currentRestockVariantSku} to shipment`);
+          showToast(`Added ${quantity} units to shipment`);
           // Reload variants to update incoming counts
           const productId = document.getElementById('variants_product_id').value;
-          loadVariants(productId);
+          if (productId) {
+            loadVariants(productId);
+          }
         } else {
-          alert('Error: ' + (data.error || 'Failed to add to shipment'));
+          showToast(data.error || 'Failed to add to shipment', 'error');
         }
+      })
+      .catch(error => {
+        showToast('Error adding to shipment', 'error');
       });
     }
 

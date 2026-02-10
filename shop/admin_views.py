@@ -3056,7 +3056,7 @@ def products_dashboard(request):
             shipment_id = request.POST.get("shipment_id")
             variant_id = request.POST.get("variant_id")
             quantity = request.POST.get("quantity", 0)
-            unit_cost = request.POST.get("unit_cost", "0")
+            unit_cost = request.POST.get("unit_cost", "")
 
             if not shipment_id or not variant_id:
                 return JsonResponse({"success": False, "error": "Shipment and variant are required"})
@@ -3067,7 +3067,15 @@ def products_dashboard(request):
                     return JsonResponse({"success": False, "error": "Quantity must be positive"})
 
                 shipment = Shipment.objects.get(id=shipment_id)
-                variant = ProductVariant.objects.get(id=variant_id)
+                variant = ProductVariant.objects.select_related("product").get(id=variant_id)
+
+                # Auto-populate unit_cost from variant cost or product base_cost if not provided
+                if unit_cost and unit_cost.strip():
+                    final_cost = Decimal(unit_cost)
+                elif variant.cost is not None:
+                    final_cost = variant.cost
+                else:
+                    final_cost = variant.product.base_cost or Decimal("0")
 
                 # Check if item already exists - update quantity if so
                 item, created = ShipmentItem.objects.get_or_create(
@@ -3075,15 +3083,14 @@ def products_dashboard(request):
                     variant=variant,
                     defaults={
                         "quantity": quantity,
-                        "unit_cost": Decimal(unit_cost) if unit_cost else Decimal("0"),
+                        "unit_cost": final_cost,
                     }
                 )
 
                 if not created:
                     # Update existing item
                     item.quantity += quantity
-                    if unit_cost:
-                        item.unit_cost = Decimal(unit_cost)
+                    item.unit_cost = final_cost
                     item.save()
 
                 return JsonResponse({
