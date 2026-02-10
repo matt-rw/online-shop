@@ -3237,15 +3237,21 @@ def products_dashboard(request):
             }
         )
 
-    # Stats
-    total_products = products.count()
-    active_products = products.filter(is_active=True).count()
-    total_variants = ProductVariant.objects.count()
-    total_stock = ProductVariant.objects.aggregate(total=Sum("stock_quantity"))["total"] or 0
-    low_stock_count = ProductVariant.objects.filter(
-        stock_quantity__lt=10, stock_quantity__gt=0
-    ).count()
-    out_of_stock_count = ProductVariant.objects.filter(stock_quantity=0).count()
+    # Stats - use already-fetched data to avoid extra queries
+    total_products = len(products_data)
+    active_products = sum(1 for p in products_data if p.get("is_active", True))
+
+    # Get variant stats in a single query instead of 4 separate queries
+    variant_stats = ProductVariant.objects.aggregate(
+        total_variants=Count("id"),
+        total_stock=Sum("stock_quantity"),
+        low_stock_count=Count("id", filter=Q(stock_quantity__lt=10, stock_quantity__gt=0)),
+        out_of_stock_count=Count("id", filter=Q(stock_quantity=0)),
+    )
+    total_variants = variant_stats["total_variants"] or 0
+    total_stock = variant_stats["total_stock"] or 0
+    low_stock_count = variant_stats["low_stock_count"] or 0
+    out_of_stock_count = variant_stats["out_of_stock_count"] or 0
 
     # Get all categories for the dropdown
     from shop.models import Category
@@ -6182,11 +6188,17 @@ def bundles_dashboard(request):
         action = request.POST.get("action")
 
         if action == "create":
+            import json
             name = request.POST.get("name")
             price = request.POST.get("price")
             use_component_pricing = request.POST.get("use_component_pricing") == "on"
             description = request.POST.get("description", "")
             product_ids = request.POST.getlist("product_ids")
+            images_json = request.POST.get("images", "[]")
+            try:
+                images = json.loads(images_json) if images_json else []
+            except json.JSONDecodeError:
+                images = []
 
             if not name or (not use_component_pricing and not price):
                 messages.error(request, "Name and price are required (unless using component pricing)")
@@ -6207,6 +6219,7 @@ def bundles_dashboard(request):
                     price=price if not use_component_pricing else None,
                     use_component_pricing=use_component_pricing,
                     description=description,
+                    images=images,
                     show_includes=request.POST.get("show_includes") == "on",
                     is_active=True,
                 )
@@ -6229,6 +6242,7 @@ def bundles_dashboard(request):
             return redirect("admin_bundles")
 
         elif action == "update":
+            import json
             bundle_id = request.POST.get("bundle_id")
             try:
                 bundle = Bundle.objects.get(id=bundle_id)
@@ -6240,6 +6254,12 @@ def bundles_dashboard(request):
                 bundle.show_includes = request.POST.get("show_includes") == "on"
                 bundle.is_active = request.POST.get("is_active") == "on"
                 bundle.featured = request.POST.get("featured") == "on"
+                # Handle images
+                images_json = request.POST.get("images", "[]")
+                try:
+                    bundle.images = json.loads(images_json) if images_json else []
+                except json.JSONDecodeError:
+                    pass  # Keep existing images if JSON is invalid
                 bundle.save()
 
                 # Update products

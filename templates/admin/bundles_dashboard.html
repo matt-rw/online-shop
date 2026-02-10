@@ -517,13 +517,16 @@
 
           <div class="bundle-meta">
             <span class="meta-item"><i class="fas fa-tag"></i> {{ bundle.slug }}</span>
+            {% if bundle.images %}
+            <span class="meta-item"><i class="fas fa-image" style="color: #667eea;"></i> {{ bundle.images|length }} image{{ bundle.images|length|pluralize }}</span>
+            {% endif %}
             {% if bundle.featured %}
             <span class="meta-item"><i class="fas fa-star" style="color: #eab308;"></i> Featured</span>
             {% endif %}
           </div>
         </div>
         <div class="bundle-actions">
-          <button class="btn-sm btn-edit" onclick="openEditModal({{ bundle.id }}, '{{ bundle.name|escapejs }}', '{{ bundle.price|default_if_none:"" }}', '{{ bundle.description|escapejs }}', {{ bundle.is_active|yesno:'true,false' }}, {{ bundle.featured|yesno:'true,false' }}, {{ bundle.show_includes|yesno:'true,false' }}, [{% for bi in bundle.items.all %}{{ bi.product.id }}{% if not forloop.last %},{% endif %}{% endfor %}], '{{ bundle.slug }}', {{ bundle.use_component_pricing|yesno:'true,false' }})">
+          <button class="btn-sm btn-edit" onclick="openEditModal({{ bundle.id }}, '{{ bundle.name|escapejs }}', '{{ bundle.price|default_if_none:"" }}', '{{ bundle.description|escapejs }}', {{ bundle.is_active|yesno:'true,false' }}, {{ bundle.featured|yesno:'true,false' }}, {{ bundle.show_includes|yesno:'true,false' }}, [{% for bi in bundle.items.all %}{{ bi.product.id }}{% if not forloop.last %},{% endif %}{% endfor %}], '{{ bundle.slug }}', {{ bundle.use_component_pricing|yesno:'true,false' }}, {{ bundle.images|safe|default:'[]' }})">
             <i class="fas fa-edit"></i> Edit
           </button>
           <form method="POST" style="display: inline;">
@@ -635,6 +638,24 @@
             </div>
           </div>
           <div class="form-group">
+            <label>Bundle Images</label>
+            <p style="font-size: 0.75rem; color: #64748b; margin-bottom: 0.5rem;">Optional custom images for the bundle (otherwise uses first product's images)</p>
+            <div id="bundleImagesContainer" style="display: flex; gap: 0.75rem; flex-wrap: wrap; margin-bottom: 0.75rem; min-height: 40px;">
+              <p id="noBundleImagesMsg" style="color: #94a3b8; font-size: 0.8125rem; font-style: italic;">No custom images (using product images)</p>
+            </div>
+            <div style="display: flex; gap: 0.5rem;">
+              <input type="file" id="bundleImageUpload" accept="image/*" multiple style="display: none;" onchange="handleBundleImageUpload(event)">
+              <button type="button" onclick="document.getElementById('bundleImageUpload').click()" class="btn-sm" style="background: #f1f5f9; color: #475569; border: 1px solid #e2e8f0;">
+                <i class="fas fa-image"></i> Upload Images
+              </button>
+              <button type="button" onclick="addBundleImageByURL()" class="btn-sm" style="background: #f1f5f9; color: #475569; border: 1px solid #e2e8f0;">
+                <i class="fas fa-link"></i> Add URL
+              </button>
+            </div>
+            <!-- Hidden input for images JSON -->
+            <input type="hidden" name="images" id="bundleImagesInput" value="[]">
+          </div>
+          <div class="form-group">
             <label style="display: flex; align-items: center; gap: 0.5rem;">
               <input type="checkbox" name="show_includes" id="showIncludes" checked> Show "Includes" preview on bundle page
             </label>
@@ -684,6 +705,8 @@
     let componentTotal = 0;
     let selectedProducts = []; // Array of product IDs in order
     let currentBundleSlug = null;
+    let bundleImages = []; // Array of bundle image URLs/data URLs
+    let draggedBundleImageIndex = null;
 
     function addProductToBundle(productId, productName) {
       if (selectedProducts.includes(productId)) return;
@@ -821,6 +844,110 @@
       }
     }
 
+    // Bundle Image Functions
+    function handleBundleImageUpload(event) {
+      const files = event.target.files;
+      for (let file of files) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+          bundleImages.push(e.target.result);
+          displayBundleImages();
+        };
+        reader.readAsDataURL(file);
+      }
+      event.target.value = '';
+    }
+
+    function addBundleImageByURL() {
+      const url = prompt('Enter image URL:');
+      if (url) {
+        bundleImages.push(url);
+        displayBundleImages();
+      }
+    }
+
+    function displayBundleImages() {
+      const container = document.getElementById('bundleImagesContainer');
+      const noImagesMsg = document.getElementById('noBundleImagesMsg');
+      const imagesInput = document.getElementById('bundleImagesInput');
+
+      // Update hidden input
+      imagesInput.value = JSON.stringify(bundleImages);
+
+      // Clear container
+      container.innerHTML = '';
+
+      if (bundleImages.length === 0) {
+        container.innerHTML = '<p id="noBundleImagesMsg" style="color: #94a3b8; font-size: 0.8125rem; font-style: italic;">No custom images (using product images)</p>';
+        return;
+      }
+
+      bundleImages.forEach((img, index) => {
+        const imgSrc = img.startsWith('/') || img.startsWith('http') || img.startsWith('data:') ? img : `/static/${img}`;
+        const imgDiv = document.createElement('div');
+        imgDiv.draggable = true;
+        imgDiv.dataset.index = index;
+        imgDiv.style.cssText = 'position: relative; width: 80px; height: 100px; border-radius: 8px; overflow: hidden; border: 2px solid #e2e8f0; cursor: grab; transition: transform 0.15s, border-color 0.15s;';
+
+        // Drag events
+        imgDiv.ondragstart = (e) => {
+          draggedBundleImageIndex = index;
+          imgDiv.style.opacity = '0.5';
+          e.dataTransfer.effectAllowed = 'move';
+        };
+        imgDiv.ondragend = () => {
+          imgDiv.style.opacity = '1';
+          draggedBundleImageIndex = null;
+          container.querySelectorAll('[data-index]').forEach(el => {
+            el.style.borderColor = '#e2e8f0';
+            el.style.transform = 'none';
+          });
+        };
+        imgDiv.ondragover = (e) => {
+          e.preventDefault();
+          if (draggedBundleImageIndex !== null && draggedBundleImageIndex !== index) {
+            imgDiv.style.borderColor = '#667eea';
+            imgDiv.style.transform = 'scale(1.05)';
+          }
+        };
+        imgDiv.ondragleave = () => {
+          imgDiv.style.borderColor = '#e2e8f0';
+          imgDiv.style.transform = 'none';
+        };
+        imgDiv.ondrop = (e) => {
+          e.preventDefault();
+          if (draggedBundleImageIndex !== null && draggedBundleImageIndex !== index) {
+            const draggedImg = bundleImages[draggedBundleImageIndex];
+            bundleImages.splice(draggedBundleImageIndex, 1);
+            bundleImages.splice(index, 0, draggedImg);
+            displayBundleImages();
+          }
+        };
+
+        imgDiv.innerHTML = `
+          <img src="${imgSrc}" style="width: 100%; height: 100%; object-fit: cover; pointer-events: none;" onerror="this.src='/static/images/white_bg_top.webp'">
+          <div style="position: absolute; top: 3px; left: 3px; background: rgba(0,0,0,0.6); color: white; border-radius: 4px; width: 18px; height: 18px; font-size: 0.625rem; display: flex; align-items: center; justify-content: center; font-weight: 600;">${index + 1}</div>
+          <button type="button" onclick="event.stopPropagation(); removeBundleImage(${index})" style="position: absolute; top: 3px; right: 3px; background: rgba(239, 68, 68, 0.9); color: white; border: none; border-radius: 4px; width: 20px; height: 20px; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 0.65rem;">
+            <i class="fas fa-times"></i>
+          </button>
+        `;
+        container.appendChild(imgDiv);
+      });
+
+      // Add helper text if multiple images
+      if (bundleImages.length > 1) {
+        const helpText = document.createElement('p');
+        helpText.style.cssText = 'width: 100%; font-size: 0.7rem; color: #94a3b8; margin-top: 0.25rem;';
+        helpText.innerHTML = '<i class="fas fa-arrows-up-down-left-right"></i> Drag to reorder';
+        container.appendChild(helpText);
+      }
+    }
+
+    function removeBundleImage(index) {
+      bundleImages.splice(index, 1);
+      displayBundleImages();
+    }
+
     function togglePriceField() {
       const useComponentPricing = document.getElementById('useComponentPricing').checked;
       const priceFieldWrapper = document.getElementById('priceFieldWrapper');
@@ -860,10 +987,14 @@
       renderSelectedProducts();
       updateComponentTotal();
 
+      // Clear bundle images
+      bundleImages = [];
+      displayBundleImages();
+
       document.getElementById('bundleModal').classList.add('active');
     }
 
-    function openEditModal(id, name, price, description, isActive, isFeatured, showIncludes, productIds, slug, useComponentPricing) {
+    function openEditModal(id, name, price, description, isActive, isFeatured, showIncludes, productIds, slug, useComponentPricing, images) {
       document.getElementById('modalTitle').textContent = 'Edit Bundle';
       document.getElementById('formAction').value = 'update';
       document.getElementById('bundleId').value = id;
@@ -885,6 +1016,10 @@
       selectedProducts = [...productIds];
       renderSelectedProducts();
       updateComponentTotal();
+
+      // Load bundle images
+      bundleImages = images ? [...images] : [];
+      displayBundleImages();
 
       // Update price field visibility based on checkbox
       togglePriceField();

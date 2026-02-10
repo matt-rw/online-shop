@@ -548,9 +548,14 @@
         {% for product in featured_products %}
         <a href="{% url 'shop:product_detail' slug=product.slug %}" class="group block {% if not forloop.last %}border-r border-black{% endif %}">
           <div class="overflow-hidden mx-auto" style="aspect-ratio: 4/5; max-height: 65vh; width: 100%; max-width: calc(65vh * 0.8);">
+            {% if product.images %}
+            <img src="{{ product.images.0 }}"
+                 alt="{{ product.name }}"
+                 class="w-full h-full object-cover transition-all duration-700 group-hover:scale-105" />
+            {% else %}
             {% with first_variant=product.variants.first %}
             {% if first_variant and first_variant.images %}
-            <img src="{% static first_variant.images.0 %}"
+            <img src="{{ first_variant.images.0 }}"
                  alt="{{ product.name }}"
                  class="w-full h-full object-cover transition-all duration-700 group-hover:scale-105" />
             {% else %}
@@ -559,6 +564,7 @@
             </div>
             {% endif %}
             {% endwith %}
+            {% endif %}
           </div>
           <div class="border-t border-black p-4 flex justify-between items-start">
             <div>

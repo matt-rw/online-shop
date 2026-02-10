@@ -3485,16 +3485,18 @@
 
     // Save variant function
     function saveVariant() {
-      const variantId = document.getElementById('edit_variant_id').value;
-      const productId = document.getElementById('variants_product_id').value;
-      const sizeId = document.getElementById('variant_size').value;
-      const colorId = document.getElementById('variant_color').value;
-      const materialId = document.getElementById('variant_material').value;
-      const sku = document.getElementById('variant_sku').value;
-      const stock = document.getElementById('variant_stock').value;
-      const price = document.getElementById('variant_price').value;
-      const cost = document.getElementById('variant_cost').value;
-      const useBaseCost = document.getElementById('cost_mode_base').checked;
+      const variantId = document.getElementById('edit_variant_id')?.value || '';
+      const productId = document.getElementById('variants_product_id')?.value || '';
+      const sizeId = document.getElementById('variant_size')?.value || '';
+      const colorId = document.getElementById('variant_color')?.value || '';
+      const materialId = document.getElementById('variant_material')?.value || '';
+      const sku = document.getElementById('variant_sku')?.value || '';
+      const stock = document.getElementById('variant_stock')?.value || '0';
+      const price = document.getElementById('variant_price')?.value || '';
+      const costInput = document.getElementById('variant_cost');
+      const cost = costInput ? costInput.value : '';
+      const costModeBase = document.getElementById('cost_mode_base');
+      const useBaseCost = costModeBase ? costModeBase.checked : true;
 
       if (!sizeId || !colorId) {
         alert('Please select both size and color');
@@ -3509,28 +3511,14 @@
       // Collect custom fields
       const customFields = {};
       document.querySelectorAll('#custom_fields_container > div').forEach(div => {
-        const name = div.querySelector('.custom-field-name').value;
-        const value = div.querySelector('.custom-field-value').value;
-        if (name && value) {
-          customFields[name] = value;
+        const nameEl = div.querySelector('.custom-field-name');
+        const valueEl = div.querySelector('.custom-field-value');
+        if (nameEl && valueEl && nameEl.value && valueEl.value) {
+          customFields[nameEl.value] = valueEl.value;
         }
       });
 
       const csrftoken = getCookie('csrftoken');
-
-      console.log('Saving variant:', {
-        variantId,
-        productId,
-        sizeId,
-        colorId,
-        materialId,
-        sku,
-        stock,
-        price,
-        cost,
-        useBaseCost,
-        images: variantImages
-      });
 
       const formData = new URLSearchParams({
         'action': variantId ? 'update_variant' : 'add_variant',
@@ -3551,6 +3539,12 @@
         formData.append('variant_id', variantId);
       }
 
+      // Show saving state
+      const saveBtn = document.querySelector('#variantFormModal .btn-primary');
+      const originalText = saveBtn.innerHTML;
+      saveBtn.disabled = true;
+      saveBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Saving...';
+
       fetch(window.location.pathname, {
         method: 'POST',
         headers: {
@@ -3568,14 +3562,19 @@
       .then(data => {
         if (data.success) {
           closeVariantForm();
-          loadVariants(productId);
+          // Clear cached variants so they reload fresh
+          delete loadedVariants[productId];
+          loadVariantsForProduct(productId);
         } else {
           alert('Error: ' + (data.error || 'Failed to save variant'));
+          saveBtn.disabled = false;
+          saveBtn.innerHTML = originalText;
         }
       })
       .catch(error => {
-        console.error('Save variant error:', error);
         alert('Error saving variant: ' + error.message);
+        saveBtn.disabled = false;
+        saveBtn.innerHTML = originalText;
       });
     }
 
