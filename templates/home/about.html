@@ -211,11 +211,61 @@
     .noise-overlay {
       animation: none;
     }
+    .poster-scroll-track {
+      animation: none;
+    }
+  }
+
+  /* Scrolling poster banner */
+  .poster-scroll-container {
+    overflow: hidden;
+    width: 100%;
+    height: 500px;
+  }
+
+  .poster-scroll-track {
+    display: flex;
+    height: 100%;
+    animation: scroll-right 30s linear infinite;
+    will-change: transform;
+    backface-visibility: hidden;
+  }
+
+  .poster-scroll-track img {
+    flex-shrink: 0;
+    height: 100%;
+    width: auto;
+    object-fit: cover;
+  }
+
+  @keyframes scroll-right {
+    0% {
+      transform: translateX(-50%);
+    }
+    100% {
+      transform: translateX(0%);
+    }
   }
 </style>
 {% endblock %}
 
 {% block content %}
+
+<!-- Scrolling Poster Banner -->
+<section class="bg-black border-b border-black">
+  <div class="poster-scroll-container">
+    <div class="poster-scroll-track">
+      <img src="{% static 'images/poster.png' %}" alt="Blueprint Poster" />
+      <img src="{% static 'images/poster.png' %}" alt="Blueprint Poster" />
+      <img src="{% static 'images/poster.png' %}" alt="Blueprint Poster" />
+      <img src="{% static 'images/poster.png' %}" alt="Blueprint Poster" />
+      <img src="{% static 'images/poster.png' %}" alt="Blueprint Poster" />
+      <img src="{% static 'images/poster.png' %}" alt="Blueprint Poster" />
+      <img src="{% static 'images/poster.png' %}" alt="Blueprint Poster" />
+      <img src="{% static 'images/poster.png' %}" alt="Blueprint Poster" />
+    </div>
+  </div>
+</section>
 
 <!-- ============================================ -->
 <!-- ABOUT SECTION - Integrated layout -->

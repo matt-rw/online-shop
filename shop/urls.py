@@ -20,6 +20,8 @@ urlpatterns = [
     path("terms/", views.terms, name="terms"),
     # Product detail
     path("product/<slug:slug>/", views.product_detail, name="product_detail"),
+    # Bundle detail
+    path("bundle/<slug:slug>/", views.bundle_detail, name="bundle_detail"),
     # Account
     path("account/", views.account, name="account"),
     # Email subscription
@@ -31,6 +33,10 @@ urlpatterns = [
     path("cart/add/", cart_views.add_to_cart_view, name="add_to_cart"),
     path("cart/update/<int:item_id>/", cart_views.update_cart_item_view, name="update_cart_item"),
     path("cart/remove/<int:item_id>/", cart_views.remove_from_cart_view, name="remove_from_cart"),
+    # Bundle cart management
+    path("cart/add-bundle/", cart_views.add_bundle_to_cart_view, name="add_bundle_to_cart"),
+    path("cart/update-bundle/<int:item_id>/", cart_views.update_bundle_item_view, name="update_bundle_item"),
+    path("cart/remove-bundle/<int:item_id>/", cart_views.remove_bundle_from_cart_view, name="remove_bundle_from_cart"),
     # Checkout
     path("checkout/", cart_views.checkout_view, name="checkout"),
     path("checkout/shipping-rates/", cart_views.get_shipping_rates_view, name="get_shipping_rates"),

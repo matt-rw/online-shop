@@ -504,9 +504,9 @@ def product_detail(request, slug):
 
 
 def shop(request):
-    """Shop catalog page - lists all products with filtering."""
+    """Shop catalog page - lists all products and bundles with filtering."""
     from django.db.models import Prefetch
-    from .models import Category, Product, ProductVariant
+    from .models import Bundle, Category, Product, ProductVariant
 
     # Get filter parameters
     category_slug = request.GET.get("category")
@@ -564,14 +564,51 @@ def shop(request):
             "product": product,
             "image": image,
             "variant_count": len(product.active_variants),
+            "is_bundle": False,
         })
+
+    # Get bundles (only if no category filter, since bundles don't have categories)
+    bundle_list = []
+    if not selected_category:
+        bundles = Bundle.objects.filter(is_active=True).prefetch_related("items__product")
+
+        if sort_by == "price_low":
+            bundles = bundles.order_by("price")
+        elif sort_by == "price_high":
+            bundles = bundles.order_by("-price")
+        elif sort_by == "name":
+            bundles = bundles.order_by("name")
+        else:
+            bundles = bundles.order_by("-created_at")
+
+        for bundle in bundles:
+            # Get bundle image or first component product image
+            if bundle.images:
+                image = bundle.images[0]
+                if image and not image.startswith(("/", "http", "data:")):
+                    image = f"/static/{image}"
+            else:
+                first_item = bundle.items.first()
+                if first_item and first_item.product.images:
+                    image = first_item.product.images[0]
+                    if image and not image.startswith(("/", "http", "data:")):
+                        image = f"/static/{image}"
+                else:
+                    image = "/static/images/white_bg_top.webp"
+
+            bundle_list.append({
+                "bundle": bundle,
+                "image": image,
+                "is_bundle": True,
+            })
 
     context = {
         "products": product_list,
+        "bundles": bundle_list,
         "categories": categories,
         "selected_category": selected_category,
         "sort_by": sort_by,
-        "product_count": len(product_list),
+        "product_count": len(product_list) + len(bundle_list),
     }
 
     return render(request, "shop/shop.html", context)
@@ -700,6 +737,78 @@ def process_campaigns_webhook(request):
         'status': 'success',
         'results': results
     })
+
+
+def bundle_detail(request, slug):
+    """Bundle detail page."""
+    from django.shortcuts import get_object_or_404
+
+    from .models import Bundle
+
+    bundle = get_object_or_404(Bundle, slug=slug, is_active=True)
+
+    # Get available sizes (sizes with stock for ALL component products)
+    available_sizes = bundle.get_available_sizes()
+
+    # Build size data for JavaScript
+    size_data = []
+    for size in available_sizes:
+        size_data.append({
+            "id": size.id,
+            "code": size.code,
+            "label": size.label or size.code,
+        })
+
+    # Get bundle images
+    images = []
+    if bundle.images:
+        for img in bundle.images:
+            if img and not img.startswith(("/", "http", "data:")):
+                images.append(f"/static/{img}")
+            else:
+                images.append(img)
+
+    # Fallback to component product images if no bundle images
+    if not images:
+        for item in bundle.items.select_related("product"):
+            if item.product.images:
+                for img in item.product.images:
+                    if img and not img.startswith(("/", "http", "data:")):
+                        images.append(f"/static/{img}")
+                    else:
+                        images.append(img)
+                    break  # Just take first image from each product
+
+    main_image = images[0] if images else "/static/images/white_bg_top.webp"
+
+    # Get component products
+    components = []
+    for item in bundle.items.select_related("product"):
+        product = item.product
+        product_image = None
+        if product.images and product.images[0]:
+            img = product.images[0]
+            if not img.startswith(("/", "http", "data:")):
+                product_image = f"/static/{img}"
+            else:
+                product_image = img
+        components.append({
+            "product": product,
+            "quantity": item.quantity,
+            "image": product_image or "/static/images/white_bg_top.webp",
+        })
+
+    context = {
+        "bundle": bundle,
+        "available_sizes": available_sizes,
+        "size_data": size_data,
+        "images": images,
+        "main_image": main_image,
+        "components": components,
+        "has_stock": len(available_sizes) > 0,
+    }
+
+    return render(request, "shop/bundle_detail.html", context)
 
 
 def promo_redirect(request, promo_code):

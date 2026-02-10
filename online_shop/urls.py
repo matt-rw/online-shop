@@ -69,6 +69,7 @@ urlpatterns = [
     path("admin/email/campaigns/", admin_views.email_campaigns, name="admin_email_campaigns"),
     path("admin/email/templates/", admin_views.email_templates, name="admin_email_templates"),
     path("admin/ab-testing/", admin_views.ab_testing_dashboard, name="admin_ab_testing"),
+    path("admin/bundles/", admin_views.bundles_dashboard, name="admin_bundles"),
     path("admin/2fa/setup/", two_factor_views.two_factor_setup, name="two_factor_setup"),
     path("admin/2fa/verify/", two_factor_views.two_factor_verify, name="two_factor_verify"),
     path("admin/2fa/disable/", two_factor_views.two_factor_disable, name="two_factor_disable"),

@@ -2482,6 +2482,12 @@ def products_dashboard(request):
             except (ValueError, TypeError):
                 base_price = 0
 
+            # Get base cost (default to 0 if not provided)
+            try:
+                base_cost = float(request.POST.get("base_cost", 0))
+            except (ValueError, TypeError):
+                base_cost = 0
+
             # Parse images
             images_json = request.POST.get("images", "[]")
             try:
@@ -2499,6 +2505,7 @@ def products_dashboard(request):
                     slug=slug,
                     description=request.POST.get("description", ""),
                     base_price=base_price,
+                    base_cost=base_cost,
                     category_obj=category_obj,
                     is_active=request.POST.get("is_active") == "true",
                     featured=request.POST.get("featured") in ("true", "on"),
@@ -2533,7 +2540,14 @@ def products_dashboard(request):
 
             product_id = request.POST.get("product_id")
             try:
+                from decimal import Decimal
+
                 product = Product.objects.get(id=product_id)
+
+                # Store old base_price to update variants using it
+                old_base_price = product.base_price
+                new_base_price = Decimal(request.POST.get("base_price"))
+
                 product.name = request.POST.get("name")
                 product.slug = request.POST.get("slug")
 
@@ -2548,7 +2562,8 @@ def products_dashboard(request):
                         product.category_legacy = category_slug
 
                 product.description = request.POST.get("description")
-                product.base_price = request.POST.get("base_price")
+                product.base_price = new_base_price
+                product.base_cost = request.POST.get("base_cost") or 0
                 product.featured = request.POST.get("featured") == "true"
                 product.available_for_purchase = request.POST.get("available_for_purchase") == "true"
 
@@ -2561,6 +2576,13 @@ def products_dashboard(request):
                         pass
 
                 product.save()
+
+                # Update all variants that were using the old base price to the new base price
+                if old_base_price != new_base_price:
+                    variants_updated = product.variants.filter(price=old_base_price).update(
+                        price=new_base_price
+                    )
+
                 return JsonResponse({"success": True})
             except Product.DoesNotExist:
                 return JsonResponse({"success": False, "error": "Product not found"})
@@ -2608,15 +2630,50 @@ def products_dashboard(request):
                 return JsonResponse({"success": False, "error": "Product not found"})
 
         elif action == "get_variants":
+            from django.db.models import Sum
             from django.http import JsonResponse
+
+            from shop.models import ShipmentItem
 
             product_id = request.POST.get("product_id")
             try:
                 product = Product.objects.get(id=product_id)
                 variants = product.variants.all().select_related("size", "color", "material")
 
-                variants_data = [
-                    {
+                # Get pending shipment data for all variants in this product
+                pending_shipments = ShipmentItem.objects.filter(
+                    variant__product=product,
+                    shipment__status__in=["pending", "in-transit", "delayed"]
+                ).select_related("shipment", "variant")
+
+                # Build lookup of pending items by variant_id
+                pending_by_variant = {}
+                for item in pending_shipments:
+                    if item.variant_id not in pending_by_variant:
+                        pending_by_variant[item.variant_id] = []
+                    pending_by_variant[item.variant_id].append({
+                        "shipment_id": item.shipment.id,
+                        "name": item.shipment.name,
+                        "tracking": item.shipment.tracking_number,
+                        "supplier": item.shipment.supplier,
+                        "expected_date": item.shipment.expected_date.isoformat() if item.shipment.expected_date else None,
+                        "status": item.shipment.status,
+                        "quantity": item.quantity,
+                    })
+
+                variants_data = []
+                base_price = product.base_price
+                base_cost = product.base_cost
+                for v in variants:
+                    pending_items = pending_by_variant.get(v.id, [])
+                    pending_total = sum(item["quantity"] for item in pending_items)
+                    # Check if variant has custom price (differs from product base_price)
+                    has_custom_price = v.price != base_price if base_price else False
+                    # Check if variant has custom cost (has a value set, not null)
+                    has_custom_cost = v.cost is not None
+                    # Effective cost is variant cost if set, otherwise product base_cost
+                    effective_cost = v.cost if v.cost is not None else base_cost
+                    variants_data.append({
                         "id": v.id,
                         "sku": v.sku,
                         "size": str(v.size),
@@ -2627,12 +2684,15 @@ def products_dashboard(request):
                         "material_id": v.material.id if v.material else None,
                         "stock_quantity": v.stock_quantity,
                         "price": str(v.price),
+                        "has_custom_price": has_custom_price,
+                        "cost": str(effective_cost) if effective_cost else "0",
+                        "has_custom_cost": has_custom_cost,
                         "is_active": v.is_active,
                         "images": v.images if hasattr(v, "images") else [],
                         "custom_fields": v.custom_fields if hasattr(v, "custom_fields") else {},
-                    }
-                    for v in variants
-                ]
+                        "pending_shipments": pending_items,
+                        "pending_total": pending_total,
+                    })
 
                 return JsonResponse({"success": True, "variants": variants_data})
             except Product.DoesNotExist:
@@ -2717,6 +2777,8 @@ def products_dashboard(request):
             sku = request.POST.get("sku", "")
             stock_quantity = request.POST.get("stock_quantity", 0)
             price = request.POST.get("price")
+            cost = request.POST.get("cost")  # None means use base cost
+            use_base_cost = request.POST.get("use_base_cost") == "true"
             images_json = request.POST.get("images", "[]")
             custom_fields_json = request.POST.get("custom_fields", "{}")
 
@@ -2754,6 +2816,11 @@ def products_dashboard(request):
                 variant.sku = sku or None
                 variant.stock_quantity = stock_quantity
                 variant.price = price
+                # Handle cost - None means use base cost, a value means custom cost
+                if use_base_cost:
+                    variant.cost = None
+                elif cost:
+                    variant.cost = cost
                 variant.images = images
                 variant.custom_fields = custom_fields
                 variant.save()
@@ -2857,6 +2924,31 @@ def products_dashboard(request):
             except Exception as e:
                 return JsonResponse({"success": False, "error": str(e)})
 
+        elif action == "apply_base_price_to_all":
+            from django.http import JsonResponse
+
+            product_id = request.POST.get("product_id")
+
+            try:
+                product = Product.objects.get(id=product_id)
+                base_price = product.base_price
+
+                if not base_price:
+                    return JsonResponse({"success": False, "error": "Product has no base price"})
+
+                # Update all variants to use the base price
+                updated_count = product.variants.update(price=base_price)
+
+                return JsonResponse({
+                    "success": True,
+                    "updated_count": updated_count,
+                    "base_price": str(base_price)
+                })
+            except Product.DoesNotExist:
+                return JsonResponse({"success": False, "error": "Product not found"})
+            except Exception as e:
+                return JsonResponse({"success": False, "error": str(e)})
+
         elif action == "toggle_variant_active":
             from django.http import JsonResponse
 
@@ -2879,6 +2971,132 @@ def products_dashboard(request):
                 variant = ProductVariant.objects.get(id=variant_id)
                 variant.delete()
                 return JsonResponse({"success": True})
+            except ProductVariant.DoesNotExist:
+                return JsonResponse({"success": False, "error": "Variant not found"})
+            except Exception as e:
+                return JsonResponse({"success": False, "error": str(e)})
+
+        elif action == "get_pending_shipments":
+            from django.http import JsonResponse
+
+            from shop.models import Shipment
+
+            try:
+                shipments = Shipment.objects.filter(
+                    status__in=["pending", "in-transit", "delayed"]
+                ).order_by("-expected_date")
+
+                shipments_data = [
+                    {
+                        "id": s.id,
+                        "name": s.name,
+                        "tracking_number": s.tracking_number,
+                        "supplier": s.supplier,
+                        "expected_date": s.expected_date.isoformat() if s.expected_date else None,
+                        "status": s.status,
+                        "item_count": s.item_count,
+                    }
+                    for s in shipments
+                ]
+
+                return JsonResponse({"success": True, "shipments": shipments_data})
+            except Exception as e:
+                return JsonResponse({"success": False, "error": str(e)})
+
+        elif action == "quick_create_shipment":
+            import uuid
+            from datetime import timedelta
+
+            from django.http import JsonResponse
+
+            from shop.models import Shipment
+
+            supplier = request.POST.get("supplier", "").strip()
+            tracking = request.POST.get("tracking_number", "").strip()
+
+            if not supplier:
+                return JsonResponse({"success": False, "error": "Supplier name is required"})
+
+            # Auto-generate tracking number if not provided
+            if not tracking:
+                tracking = f"QUICK-{uuid.uuid4().hex[:8].upper()}"
+
+            # Default expected date is 2 weeks from now
+            expected_date = timezone.now().date() + timedelta(days=14)
+
+            try:
+                shipment = Shipment.objects.create(
+                    tracking_number=tracking,
+                    supplier=supplier,
+                    expected_date=expected_date,
+                    status="pending",
+                )
+
+                return JsonResponse({
+                    "success": True,
+                    "shipment": {
+                        "id": shipment.id,
+                        "name": shipment.name,
+                        "tracking_number": shipment.tracking_number,
+                        "supplier": shipment.supplier,
+                        "expected_date": shipment.expected_date.isoformat(),
+                        "status": shipment.status,
+                    }
+                })
+            except Exception as e:
+                return JsonResponse({"success": False, "error": str(e)})
+
+        elif action == "add_variant_to_shipment":
+            from decimal import Decimal
+
+            from django.http import JsonResponse
+
+            from shop.models import Shipment, ShipmentItem
+
+            shipment_id = request.POST.get("shipment_id")
+            variant_id = request.POST.get("variant_id")
+            quantity = request.POST.get("quantity", 0)
+            unit_cost = request.POST.get("unit_cost", "0")
+
+            if not shipment_id or not variant_id:
+                return JsonResponse({"success": False, "error": "Shipment and variant are required"})
+
+            try:
+                quantity = int(quantity)
+                if quantity <= 0:
+                    return JsonResponse({"success": False, "error": "Quantity must be positive"})
+
+                shipment = Shipment.objects.get(id=shipment_id)
+                variant = ProductVariant.objects.get(id=variant_id)
+
+                # Check if item already exists - update quantity if so
+                item, created = ShipmentItem.objects.get_or_create(
+                    shipment=shipment,
+                    variant=variant,
+                    defaults={
+                        "quantity": quantity,
+                        "unit_cost": Decimal(unit_cost) if unit_cost else Decimal("0"),
+                    }
+                )
+
+                if not created:
+                    # Update existing item
+                    item.quantity += quantity
+                    if unit_cost:
+                        item.unit_cost = Decimal(unit_cost)
+                    item.save()
+
+                return JsonResponse({
+                    "success": True,
+                    "created": created,
+                    "item": {
+                        "id": item.id,
+                        "quantity": item.quantity,
+                        "unit_cost": str(item.unit_cost),
+                    }
+                })
+            except Shipment.DoesNotExist:
+                return JsonResponse({"success": False, "error": "Shipment not found"})
             except ProductVariant.DoesNotExist:
                 return JsonResponse({"success": False, "error": "Variant not found"})
             except Exception as e:
@@ -3007,6 +3225,7 @@ def products_dashboard(request):
                 "category_slug": category_slug,
                 "description": product.description,
                 "base_price": product.base_price,
+                "base_cost": product.base_cost,
                 "price_range": price_range,
                 "is_active": product.is_active,
                 "featured": product.featured,
@@ -4636,13 +4855,29 @@ def shipments_dashboard(request):
         action = request.POST.get("action")
 
         if action == "create_shipment":
+            import uuid
+            from datetime import timedelta
+
             try:
+                tracking_number = request.POST.get("tracking_number", "").strip()
+                supplier = request.POST.get("supplier", "").strip()
+                expected_date = request.POST.get("expected_date")
+
+                # Auto-generate tracking number if not provided
+                if not tracking_number:
+                    tracking_number = f"ORD-{uuid.uuid4().hex[:8].upper()}"
+
+                # Default expected date to 2 weeks if not provided
+                if not expected_date:
+                    expected_date = (timezone.now().date() + timedelta(days=14)).isoformat()
+
                 shipment = Shipment.objects.create(
-                    tracking_number=request.POST.get("tracking_number"),
-                    supplier=request.POST.get("supplier"),
-                    status=request.POST.get("status"),
+                    name=request.POST.get("name", "").strip(),
+                    tracking_number=tracking_number,
+                    supplier=supplier or "Unknown Supplier",
+                    status=request.POST.get("status") or "pending",
                     date_shipped=request.POST.get("date_shipped") or None,
-                    expected_date=request.POST.get("expected_date"),
+                    expected_date=expected_date,
                     date_received=request.POST.get("date_received") or None,
                     manufacturing_cost=request.POST.get("manufacturing_cost") or 0,
                     shipping_cost=request.POST.get("shipping_cost") or 0,
@@ -4650,7 +4885,11 @@ def shipments_dashboard(request):
                     other_fees=request.POST.get("other_fees") or 0,
                     notes=request.POST.get("notes", ""),
                 )
-                return JsonResponse({"success": True, "shipment_id": shipment.id})
+                return JsonResponse({
+                    "success": True,
+                    "shipment_id": shipment.id,
+                    "tracking_number": shipment.tracking_number,
+                })
             except Exception as e:
                 return JsonResponse({"success": False, "error": str(e)})
 
@@ -4661,9 +4900,14 @@ def shipments_dashboard(request):
                 shipment_id = request.POST.get("shipment_id")
                 shipment = Shipment.objects.get(id=shipment_id)
 
+                # Track old status to detect delivery
+                old_status = shipment.status
+                new_status = request.POST.get("status")
+
+                shipment.name = request.POST.get("name", "").strip()
                 shipment.tracking_number = request.POST.get("tracking_number")
                 shipment.supplier = request.POST.get("supplier")
-                shipment.status = request.POST.get("status")
+                shipment.status = new_status
                 shipment.date_shipped = request.POST.get("date_shipped") or None
                 shipment.expected_date = request.POST.get("expected_date")
                 shipment.date_received = request.POST.get("date_received") or None
@@ -4678,6 +4922,20 @@ def shipments_dashboard(request):
                     shipment.date_received = date.today()
 
                 shipment.save()
+
+                # If status changed TO delivered, add received quantities to variant stock
+                if old_status != "delivered" and new_status == "delivered":
+                    for item in shipment.items.select_related("variant"):
+                        if item.received_quantity > 0:
+                            item.variant.stock_quantity += item.received_quantity
+                            item.variant.save()
+
+                # If status changed FROM delivered to something else, reverse the stock
+                elif old_status == "delivered" and new_status != "delivered":
+                    for item in shipment.items.select_related("variant"):
+                        if item.received_quantity > 0:
+                            item.variant.stock_quantity = max(0, item.variant.stock_quantity - item.received_quantity)
+                            item.variant.save()
 
                 # Update shipment items
                 for key, value in request.POST.items():
@@ -4807,6 +5065,30 @@ def shipments_dashboard(request):
             except Exception as e:
                 return JsonResponse({"success": False, "error": str(e)})
 
+        elif action == "delete_shipment":
+            try:
+                from shop.models import ShipmentItem
+
+                shipment_id = request.POST.get("shipment_id")
+                shipment = Shipment.objects.get(id=shipment_id)
+
+                # If delivered, subtract stock from variants
+                if shipment.status == "delivered":
+                    items = ShipmentItem.objects.filter(shipment=shipment).select_related("variant")
+                    for item in items:
+                        variant = item.variant
+                        # Subtract received quantity (use received_quantity if set, else quantity)
+                        qty_to_subtract = item.received_quantity if item.received_quantity > 0 else item.quantity
+                        variant.stock_quantity = max(0, variant.stock_quantity - qty_to_subtract)
+                        variant.save(update_fields=["stock_quantity"])
+
+                shipment.delete()
+                return JsonResponse({"success": True})
+            except Shipment.DoesNotExist:
+                return JsonResponse({"success": False, "error": "Shipment not found"})
+            except Exception as e:
+                return JsonResponse({"success": False, "error": str(e)})
+
     # Get all shipments
     shipments = Shipment.objects.all()
 
@@ -4851,6 +5133,11 @@ def shipments_dashboard(request):
         # Get items for this shipment
         items_data = []
         for item in shipment.items.all():
+            # Calculate stock impact for deletion warning
+            qty_received = item.received_quantity if item.received_quantity > 0 else item.quantity
+            current_stock = item.variant.stock_quantity
+            stock_after_delete = current_stock - qty_received if shipment.status == "delivered" else current_stock
+
             items_data.append(
                 {
                     "id": item.id,
@@ -4861,12 +5148,16 @@ def shipments_dashboard(request):
                     "received_quantity": item.received_quantity,
                     "unit_cost": float(item.unit_cost),
                     "total_cost": float(item.total_cost),
+                    "current_stock": current_stock,
+                    "stock_after_delete": max(0, stock_after_delete),
+                    "would_go_negative": stock_after_delete < 0,
                 }
             )
 
         shipments_data.append(
             {
                 "id": shipment.id,
+                "name": shipment.name,
                 "tracking_number": shipment.tracking_number,
                 "supplier": shipment.supplier,
                 "status": shipment.status,
@@ -4913,11 +5204,22 @@ def shipments_dashboard(request):
             }
         )
 
+    # Get unique suppliers for autocomplete
+    saved_suppliers = list(
+        Shipment.objects.exclude(supplier="")
+        .exclude(supplier="Unknown Supplier")
+        .values_list("supplier", flat=True)
+        .distinct()
+        .order_by("supplier")
+    )
+
     context = {
         "shipments": shipments_data,
         "shipments_json": json.dumps(shipments_data, default=str),
         "variants": variants_data,
         "variants_json": json.dumps(variants_data, default=str),
+        "saved_suppliers": saved_suppliers,
+        "saved_suppliers_json": json.dumps(saved_suppliers),
         "stats": stats,
         "metrics": metrics,
         "cst_time": timezone.now().astimezone(pytz.timezone("America/Chicago")),
@@ -5866,3 +6168,168 @@ def ab_testing_dashboard(request):
     }
 
     return render(request, "admin/ab_testing_dashboard.html", context)
+
+
+@staff_member_required
+def bundles_dashboard(request):
+    """
+    Dashboard for managing product bundles.
+    """
+    from django.utils.text import slugify
+    from .models import Bundle, BundleItem, Product
+
+    if request.method == "POST":
+        action = request.POST.get("action")
+
+        if action == "create":
+            name = request.POST.get("name")
+            price = request.POST.get("price")
+            use_component_pricing = request.POST.get("use_component_pricing") == "on"
+            description = request.POST.get("description", "")
+            product_ids = request.POST.getlist("product_ids")
+
+            if not name or (not use_component_pricing and not price):
+                messages.error(request, "Name and price are required (unless using component pricing)")
+                return redirect("admin_bundles")
+
+            try:
+                # Generate unique slug
+                base_slug = slugify(name)
+                slug = base_slug
+                counter = 1
+                while Bundle.objects.filter(slug=slug).exists():
+                    slug = f"{base_slug}-{counter}"
+                    counter += 1
+
+                bundle = Bundle.objects.create(
+                    name=name,
+                    slug=slug,
+                    price=price if not use_component_pricing else None,
+                    use_component_pricing=use_component_pricing,
+                    description=description,
+                    show_includes=request.POST.get("show_includes") == "on",
+                    is_active=True,
+                )
+
+                # Add products to bundle
+                for i, product_id in enumerate(product_ids):
+                    if product_id:
+                        product = Product.objects.get(id=product_id)
+                        BundleItem.objects.create(
+                            bundle=bundle,
+                            product=product,
+                            quantity=1,
+                            display_order=i,
+                        )
+
+                messages.success(request, f'Bundle "{bundle.name}" created successfully!')
+            except Exception as e:
+                messages.error(request, f"Error creating bundle: {str(e)}")
+
+            return redirect("admin_bundles")
+
+        elif action == "update":
+            bundle_id = request.POST.get("bundle_id")
+            try:
+                bundle = Bundle.objects.get(id=bundle_id)
+                bundle.name = request.POST.get("name")
+                use_component_pricing = request.POST.get("use_component_pricing") == "on"
+                bundle.use_component_pricing = use_component_pricing
+                bundle.price = request.POST.get("price") if not use_component_pricing else None
+                bundle.description = request.POST.get("description", "")
+                bundle.show_includes = request.POST.get("show_includes") == "on"
+                bundle.is_active = request.POST.get("is_active") == "on"
+                bundle.featured = request.POST.get("featured") == "on"
+                bundle.save()
+
+                # Update products
+                product_ids = request.POST.getlist("product_ids")
+                bundle.items.all().delete()
+                for i, product_id in enumerate(product_ids):
+                    if product_id:
+                        product = Product.objects.get(id=product_id)
+                        BundleItem.objects.create(
+                            bundle=bundle,
+                            product=product,
+                            quantity=1,
+                            display_order=i,
+                        )
+
+                messages.success(request, f'Bundle "{bundle.name}" updated!')
+            except Bundle.DoesNotExist:
+                messages.error(request, "Bundle not found")
+            except Exception as e:
+                messages.error(request, f"Error: {str(e)}")
+
+            return redirect("admin_bundles")
+
+        elif action == "delete":
+            bundle_id = request.POST.get("bundle_id")
+            try:
+                bundle = Bundle.objects.get(id=bundle_id)
+                name = bundle.name
+                bundle.delete()
+                messages.success(request, f'Bundle "{name}" deleted!')
+            except Bundle.DoesNotExist:
+                messages.error(request, "Bundle not found")
+
+            return redirect("admin_bundles")
+
+        elif action == "toggle_active":
+            bundle_id = request.POST.get("bundle_id")
+            try:
+                bundle = Bundle.objects.get(id=bundle_id)
+                bundle.is_active = not bundle.is_active
+                bundle.save()
+                status = "activated" if bundle.is_active else "deactivated"
+                messages.success(request, f'Bundle "{bundle.name}" {status}!')
+            except Bundle.DoesNotExist:
+                messages.error(request, "Bundle not found")
+
+            return redirect("admin_bundles")
+
+    # Get all bundles
+    bundles = Bundle.objects.prefetch_related("items__product").all().order_by("-created_at")
+
+    # Build availability data for each bundle
+    bundles_with_stock = []
+    for bundle in bundles:
+        available_sizes = bundle.get_available_sizes()
+        size_stock_data = []
+        total_available = 0
+
+        for size in available_sizes:
+            variants_for_size = bundle.get_variants_for_size(size)
+            skus = []
+            max_qty = 999
+
+            if variants_for_size:
+                for item, variant in variants_for_size:
+                    skus.append(variant.sku)
+                    available_bundles = variant.stock_quantity // item.quantity
+                    max_qty = min(max_qty, available_bundles)
+
+            if max_qty != 999 and max_qty > 0:
+                size_stock_data.append({
+                    "size": size.label or size.code,
+                    "quantity": max_qty,
+                    "skus": skus,
+                })
+                total_available += max_qty
+
+        bundles_with_stock.append({
+            "bundle": bundle,
+            "size_stock": size_stock_data,
+            "total_available": total_available,
+        })
+
+    # Get all products for the create/edit form
+    products = Product.objects.filter(is_active=True).order_by("name")
+
+    context = {
+        "bundles_with_stock": bundles_with_stock,
+        "products": products,
+        "cst_time": timezone.now().astimezone(pytz.timezone("America/Chicago")),
+    }
+
+    return render(request, "admin/bundles_dashboard.html", context)

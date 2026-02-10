@@ -10,7 +10,7 @@ from django.contrib.auth import get_user_model
 
 logger = logging.getLogger(__name__)
 
-from .models import Cart, CartItem, ProductVariant
+from .models import Bundle, BundleCartItem, Cart, CartItem, ProductVariant, Size
 
 User = get_user_model()
 
@@ -143,7 +143,7 @@ def remove_from_cart(cart_item_id, user=None, session_key=None):
 
 def get_cart_total(cart):
     """
-    Calculate the total price of all items in the cart.
+    Calculate the total price of all items in the cart (products + bundles).
 
     Args:
         cart: Cart object
@@ -152,14 +152,18 @@ def get_cart_total(cart):
         Decimal: Total price
     """
     total = Decimal("0.00")
-    for item in cart.items.all():
+    # Regular cart items
+    for item in cart.items.select_related("variant"):
         total += item.variant.price * item.quantity
+    # Bundle cart items
+    for item in cart.bundle_items.select_related("bundle"):
+        total += item.bundle.effective_price * item.quantity
     return total
 
 
 def get_cart_count(request):
     """
-    Get the total number of items in the cart.
+    Get the total number of items in the cart (products + bundles).
 
     Args:
         request: HTTP request object
@@ -169,7 +173,9 @@ def get_cart_count(request):
     """
     try:
         cart = get_or_create_cart(request)
-        return sum(item.quantity for item in cart.items.all())
+        count = sum(item.quantity for item in cart.items.all())
+        count += sum(item.quantity for item in cart.bundle_items.all())
+        return count
     except Exception as e:
         logger.error(f"Error getting cart count: {e}")
         return 0
@@ -195,7 +201,7 @@ def merge_carts(user, session_key):
     except Cart.DoesNotExist:
         return user_cart
 
-    # Merge items from anonymous cart into user cart
+    # Merge regular items from anonymous cart into user cart
     for anon_item in anonymous_cart.items.all():
         user_item, created = CartItem.objects.get_or_create(
             cart=user_cart, variant=anon_item.variant, defaults={"quantity": anon_item.quantity}
@@ -206,10 +212,24 @@ def merge_carts(user, session_key):
             user_item.quantity += anon_item.quantity
             user_item.save()
 
+    # Merge bundle items from anonymous cart into user cart
+    for anon_item in anonymous_cart.bundle_items.all():
+        user_item, created = BundleCartItem.objects.get_or_create(
+            cart=user_cart,
+            bundle=anon_item.bundle,
+            size=anon_item.size,
+            defaults={"quantity": anon_item.quantity},
+        )
+
+        if not created:
+            user_item.quantity += anon_item.quantity
+            user_item.save()
+
     # Deactivate and clean up anonymous cart
     anonymous_cart.is_active = False
     anonymous_cart.save()
     anonymous_cart.items.all().delete()
+    anonymous_cart.bundle_items.all().delete()
 
     return user_cart
 
@@ -222,3 +242,130 @@ def clear_cart(cart):
         cart: Cart object
     """
     cart.items.all().delete()
+    cart.bundle_items.all().delete()
+
+
+# BUNDLE CART FUNCTIONS #
+
+
+def add_bundle_to_cart(request, bundle_id, size_id, quantity=1):
+    """
+    Add a bundle to the cart with a selected size.
+
+    Args:
+        request: HTTP request object
+        bundle_id: ID of the Bundle to add
+        size_id: ID of the Size selected
+        quantity: Number of bundles to add (default: 1)
+
+    Returns:
+        tuple: (bundle_cart_item, created)
+
+    Raises:
+        ValueError: If bundle not found, inactive, or insufficient stock
+    """
+    cart = get_or_create_cart(request)
+
+    try:
+        bundle = Bundle.objects.prefetch_related("items__product").get(
+            id=bundle_id, is_active=True
+        )
+    except Bundle.DoesNotExist:
+        raise ValueError("Bundle not found or inactive")
+
+    try:
+        size = Size.objects.get(id=size_id)
+    except Size.DoesNotExist:
+        raise ValueError("Size not found")
+
+    # Check if bundle is available in this size
+    variants = bundle.get_variants_for_size(size)
+    if not variants:
+        raise ValueError(f"Bundle not available in size {size}")
+
+    # Check if item already in cart
+    cart_item, created = BundleCartItem.objects.get_or_create(
+        cart=cart, bundle=bundle, size=size, defaults={"quantity": 0}
+    )
+
+    new_quantity = cart_item.quantity + quantity
+
+    # Check stock availability for all components
+    for bundle_item, variant in variants:
+        required = bundle_item.quantity * new_quantity
+        if required > variant.stock_quantity:
+            available = variant.stock_quantity // bundle_item.quantity
+            raise ValueError(
+                f"Only {available} bundle(s) available due to {variant.product.name} stock"
+            )
+
+    cart_item.quantity = new_quantity
+    cart_item.save()
+
+    return cart_item, created
+
+
+def update_bundle_cart_item(cart_item_id, quantity, user=None, session_key=None):
+    """
+    Update the quantity of a bundle cart item.
+
+    Args:
+        cart_item_id: ID of the BundleCartItem to update
+        quantity: New quantity (will be deleted if <= 0)
+        user: Authenticated user (optional)
+        session_key: Session key for anonymous users (optional)
+
+    Returns:
+        BundleCartItem or None if deleted
+
+    Raises:
+        ValueError: If cart item not found or quantity exceeds stock
+    """
+    try:
+        filters = {"id": cart_item_id, "cart__is_active": True}
+
+        if user and user.is_authenticated:
+            filters["cart__user"] = user
+        elif session_key:
+            filters["cart__session_key"] = session_key
+        else:
+            raise ValueError("Must provide either user or session_key")
+
+        cart_item = BundleCartItem.objects.select_related("bundle", "size").get(**filters)
+
+        if quantity <= 0:
+            cart_item.delete()
+            return None
+
+        # Check stock availability
+        variants = cart_item.bundle.get_variants_for_size(cart_item.size)
+        if not variants:
+            raise ValueError("Bundle no longer available in this size")
+
+        for bundle_item, variant in variants:
+            required = bundle_item.quantity * quantity
+            if required > variant.stock_quantity:
+                available = variant.stock_quantity // bundle_item.quantity
+                raise ValueError(f"Only {available} bundle(s) available")
+
+        cart_item.quantity = quantity
+        cart_item.save()
+        return cart_item
+
+    except BundleCartItem.DoesNotExist:
+        raise ValueError("Bundle cart item not found")
+
+
+def remove_bundle_from_cart(cart_item_id, user=None, session_key=None):
+    """
+    Remove a bundle from the cart.
+
+    Args:
+        cart_item_id: ID of the BundleCartItem to remove
+        user: Authenticated user (optional)
+        session_key: Session key for anonymous users (optional)
+
+    Returns:
+        bool: True if deleted successfully
+    """
+    return update_bundle_cart_item(cart_item_id, 0, user, session_key) is None

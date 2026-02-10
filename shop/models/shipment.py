@@ -13,6 +13,7 @@ class Shipment(models.Model):
         ("delayed", "Delayed"),
     ]
 
+    name = models.CharField(max_length=200, blank=True, help_text="Friendly name for this shipment (e.g., 'Spring 2025 Restock')")
     tracking_number = models.CharField(max_length=100, unique=True)
     supplier = models.CharField(max_length=200)
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default="pending")
@@ -47,6 +48,8 @@ class Shipment(models.Model):
         ordering = ["-expected_date"]
 
     def __str__(self):
+        if self.name:
+            return self.name
         return f"{self.tracking_number} - {self.supplier}"
 
     @property

@@ -1,4 +1,5 @@
 from .analytics import PageView, VisitorSession
+from .bundle import Bundle, BundleItem
 from .campaign import Campaign, CampaignMessage
 from .cart import *
 from .connection_log import ConnectionLog

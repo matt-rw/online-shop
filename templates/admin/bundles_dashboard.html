@@ -1,0 +1,939 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="csrf-token" content="{{ csrf_token }}">
+  <title>Bundles - Blueprint Apparel</title>
+  <link rel="icon" type="image/svg+xml" href="{% static 'admin-favicon.svg' %}">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <style>
+    {% include "admin/partials/dark_mode_styles.html" %}
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: 'Inter', sans-serif;
+      background: #f1f5f9;
+      min-height: 100vh;
+    }
+    .nav-links {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      padding: 1rem 2rem;
+      display: flex;
+      gap: 0.75rem;
+      align-items: center;
+    }
+    .nav-link {
+      background: rgba(255, 255, 255, 0.15);
+      color: white;
+      padding: 0.5rem 1rem;
+      border-radius: 8px;
+      text-decoration: none;
+      font-size: 0.875rem;
+      font-weight: 500;
+      transition: all 0.3s;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+    .nav-link:hover {
+      background: rgba(255, 255, 255, 0.25);
+      transform: translateY(-1px);
+    }
+    .top-bar {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      padding: 2rem 0;
+      margin-bottom: 2rem;
+    }
+    .container { max-width: 1400px; margin: 0 auto; padding: 0 2rem; }
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .header h1 { color: white; font-size: 2.5rem; font-weight: 800; }
+    .btn-primary {
+      background: white;
+      color: #667eea;
+      padding: 0.875rem 1.75rem;
+      border-radius: 12px;
+      text-decoration: none;
+      font-weight: 700;
+      font-size: 1rem;
+      transition: all 0.3s;
+      border: none;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 6px 16px rgba(0, 0, 0, 0.15); }
+    .card {
+      background: white;
+      border-radius: 16px;
+      box-shadow: 0 4px 24px rgba(0, 0, 0, 0.06);
+      padding: 1.5rem;
+      margin-bottom: 1.5rem;
+    }
+    .bundle-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+      gap: 1.5rem;
+    }
+    .bundle-card {
+      background: white;
+      border-radius: 12px;
+      box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
+      overflow: hidden;
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+    .bundle-card:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+    }
+    .bundle-header {
+      padding: 1rem 1.25rem;
+      border-bottom: 1px solid #e2e8f0;
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+    }
+    .bundle-name { font-weight: 700; font-size: 1.1rem; color: #1e293b; }
+    .bundle-price { font-weight: 700; font-size: 1.25rem; color: #667eea; }
+    .bundle-savings { font-size: 0.75rem; color: #10b981; font-weight: 600; }
+    .bundle-body { padding: 1rem 1.25rem; }
+    .bundle-products { margin-bottom: 1rem; }
+    .bundle-products h4 { font-size: 0.75rem; color: #64748b; text-transform: uppercase; margin-bottom: 0.5rem; }
+    .product-tag {
+      display: inline-block;
+      background: #f1f5f9;
+      padding: 0.25rem 0.75rem;
+      border-radius: 6px;
+      font-size: 0.8rem;
+      color: #475569;
+      margin-right: 0.5rem;
+      margin-bottom: 0.5rem;
+    }
+    .bundle-meta { display: flex; gap: 1rem; flex-wrap: wrap; }
+    .meta-item { font-size: 0.8rem; color: #64748b; }
+    .status-badge {
+      display: inline-block;
+      padding: 0.25rem 0.75rem;
+      border-radius: 20px;
+      font-size: 0.75rem;
+      font-weight: 600;
+    }
+    .status-active { background: #dcfce7; color: #166534; }
+    .status-inactive { background: #fee2e2; color: #991b1b; }
+    .bundle-actions {
+      padding: 1rem 1.25rem;
+      border-top: 1px solid #e2e8f0;
+      display: flex;
+      gap: 0.5rem;
+    }
+    .btn-sm {
+      padding: 0.5rem 1rem;
+      border-radius: 8px;
+      font-size: 0.8rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+      border: none;
+    }
+    .btn-edit { background: #e0e7ff; color: #3730a3; }
+    .btn-edit:hover { background: #c7d2fe; }
+    .btn-delete { background: #fee2e2; color: #991b1b; }
+    .btn-delete:hover { background: #fecaca; }
+    .btn-toggle { background: #fef3c7; color: #92400e; }
+    .btn-toggle:hover { background: #fde68a; }
+
+    /* Modal styles */
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.5);
+      z-index: 1000;
+      align-items: center;
+      justify-content: center;
+    }
+    .modal-overlay.active { display: flex; }
+    .modal {
+      background: white;
+      border-radius: 16px;
+      width: 90%;
+      max-width: 600px;
+      max-height: 90vh;
+      overflow-y: auto;
+    }
+    .modal-header {
+      padding: 1.5rem;
+      border-bottom: 1px solid #e2e8f0;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .modal-header h2 { font-weight: 700; font-size: 1.25rem; }
+    .modal-close {
+      background: none;
+      border: none;
+      font-size: 1.5rem;
+      cursor: pointer;
+      color: #64748b;
+    }
+    .modal-body { padding: 1.5rem; }
+    .form-group { margin-bottom: 1.25rem; }
+    .form-group label {
+      display: block;
+      font-weight: 600;
+      font-size: 0.875rem;
+      color: #374151;
+      margin-bottom: 0.5rem;
+    }
+    .form-input {
+      width: 100%;
+      padding: 0.75rem 1rem;
+      border: 2px solid #e5e7eb;
+      border-radius: 10px;
+      font-size: 1rem;
+      transition: border-color 0.2s;
+    }
+    .form-input:focus {
+      outline: none;
+      border-color: #667eea;
+    }
+    .form-textarea {
+      min-height: 100px;
+      resize: vertical;
+    }
+    .product-select {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      margin-top: 0.5rem;
+    }
+    .product-checkbox {
+      display: none;
+    }
+    .product-label {
+      display: inline-block;
+      padding: 0.5rem 1rem;
+      background: #f1f5f9;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 0.875rem;
+      transition: all 0.2s;
+      border: 2px solid transparent;
+    }
+    .product-checkbox:checked + .product-label {
+      background: #e0e7ff;
+      border-color: #667eea;
+      color: #3730a3;
+    }
+    .modal-footer {
+      padding: 1.5rem;
+      border-top: 1px solid #e2e8f0;
+      display: flex;
+      gap: 0.75rem;
+      justify-content: flex-end;
+    }
+    .btn-cancel {
+      background: #e5e7eb;
+      color: #374151;
+      padding: 0.75rem 1.5rem;
+      border-radius: 10px;
+      font-weight: 600;
+      cursor: pointer;
+      border: none;
+    }
+    .btn-save {
+      background: #667eea;
+      color: white;
+      padding: 0.75rem 1.5rem;
+      border-radius: 10px;
+      font-weight: 600;
+    }
+    .discount-btn {
+      background: white;
+      border: 1px solid #d1d5db;
+      padding: 0.375rem 0.75rem;
+      border-radius: 6px;
+      font-size: 0.75rem;
+      font-weight: 500;
+      color: #374151;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    .discount-btn:hover {
+      background: #667eea;
+      border-color: #667eea;
+      color: white;
+    }
+    .product-option:hover {
+      background: #e0e7ff;
+    }
+    .product-option.added {
+      opacity: 0.4;
+      pointer-events: none;
+    }
+    .selected-product {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.5rem 0.75rem;
+      background: white;
+      border: 1px solid #e2e8f0;
+      border-radius: 6px;
+      font-size: 0.85rem;
+    }
+    .selected-product .order-num {
+      background: #667eea;
+      color: white;
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.7rem;
+      font-weight: 600;
+      flex-shrink: 0;
+    }
+    .selected-product .product-thumb {
+      width: 36px;
+      height: 44px;
+      object-fit: cover;
+      border-radius: 4px;
+      border: 1px solid #e2e8f0;
+      flex-shrink: 0;
+    }
+    .selected-product .product-name {
+      flex: 1;
+      font-weight: 500;
+    }
+    .selected-product .move-btn {
+      background: none;
+      border: none;
+      color: #94a3b8;
+      cursor: pointer;
+      padding: 0.125rem 0.25rem;
+      font-size: 0.75rem;
+    }
+    .selected-product .move-btn:hover {
+      color: #667eea;
+    }
+    .selected-product .remove-btn {
+      background: none;
+      border: none;
+      color: #ef4444;
+      cursor: pointer;
+      padding: 0.125rem 0.25rem;
+      font-size: 0.85rem;
+    }
+    .selected-product .remove-btn:hover {
+      color: #dc2626;
+    }
+    .btn-preview {
+      background: #f1f5f9;
+      color: #475569;
+      padding: 0.75rem 1.25rem;
+      border-radius: 10px;
+      font-weight: 600;
+      cursor: pointer;
+      border: 1px solid #e2e8f0;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      transition: all 0.2s;
+    }
+    .btn-preview:hover {
+      background: #e2e8f0;
+      color: #1e293b;
+      cursor: pointer;
+      border: none;
+    }
+    .btn-save:hover { background: #5a67d8; }
+
+    .empty-state {
+      text-align: center;
+      padding: 4rem 2rem;
+      color: #64748b;
+    }
+    .empty-state i { font-size: 3rem; margin-bottom: 1rem; opacity: 0.5; }
+    .empty-state p { font-size: 1.1rem; margin-bottom: 1.5rem; }
+
+    /* Django messages */
+    .messages {
+      margin-bottom: 1.5rem;
+    }
+    .message {
+      padding: 1rem 1.5rem;
+      border-radius: 10px;
+      margin-bottom: 0.75rem;
+      font-weight: 500;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      animation: slideIn 0.3s ease;
+    }
+    .message.success { background: #dcfce7; color: #166534; }
+    .message.error { background: #fee2e2; color: #991b1b; }
+    .message.warning { background: #fef3c7; color: #92400e; }
+    .message.info { background: #e0e7ff; color: #3730a3; }
+    .message .close-btn {
+      background: none;
+      border: none;
+      font-size: 1.25rem;
+      cursor: pointer;
+      opacity: 0.6;
+      transition: opacity 0.2s;
+      padding: 0 0.25rem;
+    }
+    .message .close-btn:hover { opacity: 1; }
+    .message.fade-out {
+      animation: fadeOut 0.3s ease forwards;
+    }
+    @keyframes slideIn {
+      from { opacity: 0; transform: translateY(-10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes fadeOut {
+      from { opacity: 1; transform: translateY(0); }
+      to { opacity: 0; transform: translateY(-10px); }
+    }
+  </style>
+</head>
+<body>
+  <!-- Navigation -->
+  <nav class="nav-links">
+    <a href="{% url 'admin_home' %}" class="nav-link"><i class="fas fa-home"></i> Home</a>
+    <a href="{% url 'admin_products' %}" class="nav-link"><i class="fas fa-box"></i> Products</a>
+    <a href="{% url 'admin_bundles' %}" class="nav-link" style="background: rgba(255,255,255,0.25);"><i class="fas fa-cubes"></i> Bundles</a>
+    <a href="{% url 'admin_orders' %}" class="nav-link"><i class="fas fa-shopping-cart"></i> Orders</a>
+    <a href="{% url 'shop:shop' %}" class="nav-link"><i class="fas fa-store"></i> View Shop</a>
+  </nav>
+
+  <!-- Header -->
+  <div class="top-bar">
+    <div class="container">
+      <div class="header">
+        <h1><i class="fas fa-cubes"></i> Bundles</h1>
+        <button class="btn-primary" onclick="openCreateModal()">
+          <i class="fas fa-plus"></i> Create Bundle
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <div class="container">
+    <!-- Messages -->
+    {% if messages %}
+    <div class="messages" id="messagesContainer">
+      {% for message in messages %}
+      <div class="message {{ message.tags }}">
+        <span>{{ message }}</span>
+        <button class="close-btn" onclick="dismissMessage(this)">&times;</button>
+      </div>
+      {% endfor %}
+    </div>
+    {% endif %}
+
+    <!-- Bundles Grid -->
+    {% if bundles_with_stock %}
+    <div class="bundle-grid">
+      {% for item in bundles_with_stock %}
+      {% with bundle=item.bundle %}
+      <div class="bundle-card">
+        <div class="bundle-header">
+          <div>
+            <div class="bundle-name">{{ bundle.name }}</div>
+            <span class="status-badge {% if bundle.is_active %}status-active{% else %}status-inactive{% endif %}">
+              {% if bundle.is_active %}Active{% else %}Inactive{% endif %}
+            </span>
+          </div>
+          <div style="text-align: right;">
+            <div class="bundle-price">${{ bundle.effective_price }}</div>
+            {% if bundle.use_component_pricing %}
+            <div style="font-size: 0.7rem; color: #64748b;">Component pricing</div>
+            {% elif bundle.savings > 0 %}
+            <div class="bundle-savings">Save {{ bundle.savings_percent }}%</div>
+            {% endif %}
+          </div>
+        </div>
+        <div class="bundle-body">
+          <div class="bundle-products">
+            <h4>Includes</h4>
+            {% for bi in bundle.items.all %}
+            <span class="product-tag">{{ bi.product.name }}</span>
+            {% empty %}
+            <span class="product-tag" style="background: #fee2e2; color: #991b1b;">No products</span>
+            {% endfor %}
+          </div>
+
+          <!-- Stock Availability (Collapsible) -->
+          <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid #e2e8f0;">
+            <div onclick="toggleStock({{ bundle.id }})" style="cursor: pointer; display: flex; justify-content: space-between; align-items: center;">
+              <span style="font-size: 0.75rem; color: #64748b; font-weight: 500;">
+                <i class="fas fa-boxes"></i> Stock
+              </span>
+              <span style="display: flex; align-items: center; gap: 0.5rem;">
+                <span style="font-size: 0.75rem; font-weight: 600; padding: 0.125rem 0.5rem; border-radius: 10px; {% if item.total_available > 0 %}background: #dcfce7; color: #16a34a;{% else %}background: #fee2e2; color: #dc2626;{% endif %}">
+                  {{ item.total_available }}
+                </span>
+                <i class="fas fa-chevron-down stock-chevron" id="stock-chevron-{{ bundle.id }}" style="font-size: 0.6rem; color: #94a3b8; transition: transform 0.2s;"></i>
+              </span>
+            </div>
+            <div id="stock-details-{{ bundle.id }}" style="display: none; margin-top: 0.75rem;">
+              {% if item.size_stock %}
+              <table style="width: 100%; font-size: 0.75rem; border-collapse: collapse;">
+                <thead>
+                  <tr style="border-bottom: 1px solid #e2e8f0;">
+                    <th style="text-align: left; padding: 0.25rem 0; color: #64748b; font-weight: 500;">Size</th>
+                    <th style="text-align: center; padding: 0.25rem 0; color: #64748b; font-weight: 500;">Qty</th>
+                    <th style="text-align: left; padding: 0.25rem 0; color: #64748b; font-weight: 500;">SKUs</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {% for size_info in item.size_stock %}
+                  <tr style="border-bottom: 1px solid #f1f5f9;">
+                    <td style="padding: 0.375rem 0; font-weight: 600;">{{ size_info.size }}</td>
+                    <td style="padding: 0.375rem 0; text-align: center; color: #16a34a;">{{ size_info.quantity }}</td>
+                    <td style="padding: 0.375rem 0;">
+                      {% for sku in size_info.skus %}
+                      <code style="background: #f1f5f9; padding: 0.125rem 0.25rem; border-radius: 3px; font-size: 0.65rem; color: #64748b; margin-right: 0.25rem;">{{ sku }}</code>
+                      {% endfor %}
+                    </td>
+                  </tr>
+                  {% endfor %}
+                </tbody>
+              </table>
+              {% else %}
+              <div style="color: #dc2626; font-size: 0.75rem; font-style: italic;">No stock available</div>
+              {% endif %}
+            </div>
+          </div>
+
+          <div class="bundle-meta">
+            <span class="meta-item"><i class="fas fa-tag"></i> {{ bundle.slug }}</span>
+            {% if bundle.featured %}
+            <span class="meta-item"><i class="fas fa-star" style="color: #eab308;"></i> Featured</span>
+            {% endif %}
+          </div>
+        </div>
+        <div class="bundle-actions">
+          <button class="btn-sm btn-edit" onclick="openEditModal({{ bundle.id }}, '{{ bundle.name|escapejs }}', '{{ bundle.price|default_if_none:"" }}', '{{ bundle.description|escapejs }}', {{ bundle.is_active|yesno:'true,false' }}, {{ bundle.featured|yesno:'true,false' }}, {{ bundle.show_includes|yesno:'true,false' }}, [{% for bi in bundle.items.all %}{{ bi.product.id }}{% if not forloop.last %},{% endif %}{% endfor %}], '{{ bundle.slug }}', {{ bundle.use_component_pricing|yesno:'true,false' }})">
+            <i class="fas fa-edit"></i> Edit
+          </button>
+          <form method="POST" style="display: inline;">
+            {% csrf_token %}
+            <input type="hidden" name="action" value="toggle_active">
+            <input type="hidden" name="bundle_id" value="{{ bundle.id }}">
+            <button type="submit" class="btn-sm btn-toggle">
+              <i class="fas fa-{% if bundle.is_active %}pause{% else %}play{% endif %}"></i>
+              {% if bundle.is_active %}Deactivate{% else %}Activate{% endif %}
+            </button>
+          </form>
+          <form method="POST" style="display: inline;" onsubmit="return confirm('Delete this bundle?');">
+            {% csrf_token %}
+            <input type="hidden" name="action" value="delete">
+            <input type="hidden" name="bundle_id" value="{{ bundle.id }}">
+            <button type="submit" class="btn-sm btn-delete">
+              <i class="fas fa-trash"></i> Delete
+            </button>
+          </form>
+        </div>
+      </div>
+      {% endwith %}
+      {% endfor %}
+    </div>
+    {% else %}
+    <div class="card">
+      <div class="empty-state">
+        <i class="fas fa-cubes"></i>
+        <p>No bundles yet</p>
+        <button class="btn-primary" onclick="openCreateModal()">
+          <i class="fas fa-plus"></i> Create Your First Bundle
+        </button>
+      </div>
+    </div>
+    {% endif %}
+  </div>
+
+  <!-- Create/Edit Modal -->
+  <div class="modal-overlay" id="bundleModal">
+    <div class="modal">
+      <div class="modal-header">
+        <h2 id="modalTitle">Create Bundle</h2>
+        <button class="modal-close" onclick="closeModal()">&times;</button>
+      </div>
+      <form method="POST" id="bundleForm">
+        {% csrf_token %}
+        <input type="hidden" name="action" id="formAction" value="create">
+        <input type="hidden" name="bundle_id" id="bundleId" value="">
+        <div class="modal-body">
+          <div class="form-group">
+            <label for="bundleName">Bundle Name</label>
+            <input type="text" id="bundleName" name="name" class="form-input" required placeholder="e.g., Foundation Set">
+          </div>
+          <div class="form-group">
+            <label style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.75rem;">
+              <input type="checkbox" name="use_component_pricing" id="useComponentPricing" onchange="togglePriceField()"> Use component pricing (sum of product prices)
+            </label>
+            <div id="priceFieldWrapper">
+              <label for="bundlePrice">Price ($)</label>
+              <input type="number" id="bundlePrice" name="price" class="form-input" step="0.01" min="0" placeholder="99.00">
+              <!-- Component total and discount suggestions -->
+              <div id="priceSuggestions" style="display: none; margin-top: 0.75rem; padding: 0.75rem; background: #f8fafc; border-radius: 8px; border: 1px solid #e2e8f0;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
+                  <span style="font-size: 0.8rem; color: #64748b;">Full price:</span>
+                  <span id="componentTotal" style="font-size: 0.9rem; font-weight: 600; color: #0f172a;">$0.00</span>
+                </div>
+                <div style="font-size: 0.75rem; color: #64748b; margin-bottom: 0.5rem;">Quick discounts:</div>
+                <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+                  <button type="button" onclick="applyDiscount(0.10)" class="discount-btn">10% off</button>
+                  <button type="button" onclick="applyDiscount(0.15)" class="discount-btn">15% off</button>
+                  <button type="button" onclick="applyDiscount(0.20)" class="discount-btn">20% off</button>
+                  <button type="button" onclick="applyDiscount(0.25)" class="discount-btn">25% off</button>
+                </div>
+                <div id="savingsPreview" style="display: none; margin-top: 0.5rem; font-size: 0.75rem; color: #16a34a; font-weight: 500;"></div>
+              </div>
+            </div>
+            <div id="componentPricingNote" style="display: none; margin-top: 0.5rem; padding: 0.75rem; background: #f0fdf4; border-radius: 8px; border: 1px solid #bbf7d0;">
+              <div style="font-size: 0.85rem; color: #166534;">
+                <i class="fas fa-info-circle"></i> Bundle price will automatically follow the sum of component product prices.
+              </div>
+              <div id="componentPricingTotal" style="font-size: 0.9rem; font-weight: 600; color: #166534; margin-top: 0.25rem;">Current total: $0.00</div>
+            </div>
+          </div>
+          <div class="form-group">
+            <label for="bundleDescription">Description</label>
+            <textarea id="bundleDescription" name="description" class="form-input form-textarea" placeholder="Optional description..."></textarea>
+          </div>
+          <div class="form-group">
+            <label>Products in Bundle</label>
+            <p style="font-size: 0.8rem; color: #64748b; margin-bottom: 0.5rem;">Click to add, drag to reorder (first product's image shown first)</p>
+
+            <!-- Selected products (ordered) -->
+            <div id="selectedProducts" style="min-height: 40px; margin-bottom: 0.75rem; padding: 0.5rem; background: #f8fafc; border-radius: 8px; border: 2px dashed #e2e8f0;">
+              <div id="selectedProductsList" style="display: flex; flex-direction: column; gap: 0.375rem;"></div>
+              <div id="emptyProductsMsg" style="color: #94a3b8; font-size: 0.8rem; text-align: center; padding: 0.5rem;">No products selected</div>
+            </div>
+
+            <!-- Hidden inputs for form submission -->
+            <div id="productInputs"></div>
+
+            <!-- Available products to add -->
+            <div style="font-size: 0.75rem; color: #64748b; margin-bottom: 0.375rem;">Available products:</div>
+            <div class="product-select" style="max-height: 150px; overflow-y: auto;">
+              {% for product in products %}
+              <div class="product-option" data-product-id="{{ product.id }}" data-product-name="{{ product.name }}" onclick="addProductToBundle({{ product.id }}, '{{ product.name|escapejs }}')" style="cursor: pointer; padding: 0.375rem 0.5rem; border-radius: 4px; transition: background 0.15s;">
+                <span style="font-size: 0.85rem;">{{ product.name }}</span>
+              </div>
+              {% endfor %}
+            </div>
+          </div>
+          <div class="form-group">
+            <label style="display: flex; align-items: center; gap: 0.5rem;">
+              <input type="checkbox" name="show_includes" id="showIncludes" checked> Show "Includes" preview on bundle page
+            </label>
+          </div>
+          <div class="form-group" id="editOnlyFields" style="display: none;">
+            <label style="display: flex; align-items: center; gap: 0.5rem;">
+              <input type="checkbox" name="is_active" id="isActive"> Active
+            </label>
+            <label style="display: flex; align-items: center; gap: 0.5rem; margin-top: 0.5rem;">
+              <input type="checkbox" name="featured" id="isFeatured"> Featured
+            </label>
+          </div>
+        </div>
+        <div class="modal-footer" style="display: flex; justify-content: space-between;">
+          <button type="button" class="btn-preview" id="previewBtn" onclick="openBundlePreview()" style="display: none;">
+            <i class="fas fa-external-link-alt"></i> Preview
+          </button>
+          <div style="display: flex; gap: 0.75rem; margin-left: auto;">
+            <button type="button" class="btn-cancel" onclick="closeModal()">Cancel</button>
+            <button type="submit" class="btn-save" id="saveBtn">Create Bundle</button>
+          </div>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script>
+    // Product data for component total calculation
+    const productData = {
+      {% for product in products %}
+      {{ product.id }}: {
+        name: "{{ product.name|escapejs }}",
+        price: {{ product.base_price|default:"0" }},
+        images: {{ product.images|safe|default:"[]" }}
+      }{% if not forloop.last %},{% endif %}
+      {% endfor %}
+    };
+
+    function getProductImage(product) {
+      if (!product.images || product.images.length === 0) {
+        return '/static/images/white_bg_top.webp';
+      }
+      const img = product.images[0];
+      return (img.startsWith('/') || img.startsWith('http') || img.startsWith('data:')) ? img : `/static/${img}`;
+    }
+
+    let componentTotal = 0;
+    let selectedProducts = []; // Array of product IDs in order
+    let currentBundleSlug = null;
+
+    function addProductToBundle(productId, productName) {
+      if (selectedProducts.includes(productId)) return;
+      selectedProducts.push(productId);
+      renderSelectedProducts();
+      updateComponentTotal();
+    }
+
+    function removeProductFromBundle(productId) {
+      selectedProducts = selectedProducts.filter(id => id !== productId);
+      renderSelectedProducts();
+      updateComponentTotal();
+    }
+
+    function moveProduct(productId, direction) {
+      const index = selectedProducts.indexOf(productId);
+      if (index === -1) return;
+
+      const newIndex = index + direction;
+      if (newIndex < 0 || newIndex >= selectedProducts.length) return;
+
+      // Swap
+      [selectedProducts[index], selectedProducts[newIndex]] = [selectedProducts[newIndex], selectedProducts[index]];
+      renderSelectedProducts();
+    }
+
+    function renderSelectedProducts() {
+      const listEl = document.getElementById('selectedProductsList');
+      const emptyMsg = document.getElementById('emptyProductsMsg');
+      const inputsEl = document.getElementById('productInputs');
+
+      // Clear
+      listEl.innerHTML = '';
+      inputsEl.innerHTML = '';
+
+      // Update product options (dim added ones)
+      document.querySelectorAll('.product-option').forEach(opt => {
+        const pid = parseInt(opt.dataset.productId);
+        if (selectedProducts.includes(pid)) {
+          opt.classList.add('added');
+        } else {
+          opt.classList.remove('added');
+        }
+      });
+
+      if (selectedProducts.length === 0) {
+        emptyMsg.style.display = 'block';
+        return;
+      }
+
+      emptyMsg.style.display = 'none';
+
+      selectedProducts.forEach((productId, index) => {
+        const product = productData[productId];
+        if (!product) return;
+
+        // Create selected item element
+        const itemEl = document.createElement('div');
+        itemEl.className = 'selected-product';
+        const imgSrc = getProductImage(product);
+        itemEl.innerHTML = `
+          <span class="order-num">${index + 1}</span>
+          <img src="${imgSrc}" alt="${product.name}" class="product-thumb">
+          <span class="product-name">${product.name}</span>
+          <button type="button" class="move-btn" onclick="moveProduct(${productId}, -1)" ${index === 0 ? 'disabled style="opacity:0.3"' : ''}>▲</button>
+          <button type="button" class="move-btn" onclick="moveProduct(${productId}, 1)" ${index === selectedProducts.length - 1 ? 'disabled style="opacity:0.3"' : ''}>▼</button>
+          <button type="button" class="remove-btn" onclick="removeProductFromBundle(${productId})">×</button>
+        `;
+        listEl.appendChild(itemEl);
+
+        // Create hidden input for form submission
+        const input = document.createElement('input');
+        input.type = 'hidden';
+        input.name = 'product_ids';
+        input.value = productId;
+        inputsEl.appendChild(input);
+      });
+    }
+
+    function updateComponentTotal() {
+      componentTotal = 0;
+      selectedProducts.forEach(productId => {
+        componentTotal += productData[productId]?.price || 0;
+      });
+
+      const suggestionsDiv = document.getElementById('priceSuggestions');
+      const totalSpan = document.getElementById('componentTotal');
+      const useComponentPricing = document.getElementById('useComponentPricing').checked;
+
+      if (componentTotal > 0 && !useComponentPricing) {
+        suggestionsDiv.style.display = 'block';
+        totalSpan.textContent = '$' + componentTotal.toFixed(2);
+      } else {
+        suggestionsDiv.style.display = 'none';
+      }
+
+      // Update component pricing note
+      document.getElementById('componentPricingTotal').textContent = 'Current total: $' + componentTotal.toFixed(2);
+
+      updateSavingsPreview();
+    }
+
+    function applyDiscount(discountPercent) {
+      if (componentTotal <= 0) return;
+      const discountedPrice = componentTotal * (1 - discountPercent);
+      document.getElementById('bundlePrice').value = discountedPrice.toFixed(2);
+      updateSavingsPreview();
+    }
+
+    function updateSavingsPreview() {
+      const priceInput = document.getElementById('bundlePrice');
+      const previewDiv = document.getElementById('savingsPreview');
+      const currentPrice = parseFloat(priceInput.value) || 0;
+
+      if (componentTotal > 0 && currentPrice > 0 && currentPrice < componentTotal) {
+        const savings = componentTotal - currentPrice;
+        const savingsPercent = Math.round((savings / componentTotal) * 100);
+        previewDiv.textContent = `Bundle saves $${savings.toFixed(2)} (${savingsPercent}% off)`;
+        previewDiv.style.display = 'block';
+      } else {
+        previewDiv.style.display = 'none';
+      }
+    }
+
+    function toggleStock(bundleId) {
+      const details = document.getElementById('stock-details-' + bundleId);
+      const chevron = document.getElementById('stock-chevron-' + bundleId);
+
+      if (details.style.display === 'none') {
+        details.style.display = 'block';
+        chevron.style.transform = 'rotate(180deg)';
+      } else {
+        details.style.display = 'none';
+        chevron.style.transform = 'rotate(0deg)';
+      }
+    }
+
+    function togglePriceField() {
+      const useComponentPricing = document.getElementById('useComponentPricing').checked;
+      const priceFieldWrapper = document.getElementById('priceFieldWrapper');
+      const componentPricingNote = document.getElementById('componentPricingNote');
+      const priceInput = document.getElementById('bundlePrice');
+
+      if (useComponentPricing) {
+        priceFieldWrapper.style.display = 'none';
+        componentPricingNote.style.display = 'block';
+        priceInput.removeAttribute('required');
+        document.getElementById('componentPricingTotal').textContent = 'Current total: $' + componentTotal.toFixed(2);
+      } else {
+        priceFieldWrapper.style.display = 'block';
+        componentPricingNote.style.display = 'none';
+      }
+    }
+
+    function openCreateModal() {
+      document.getElementById('modalTitle').textContent = 'Create Bundle';
+      document.getElementById('formAction').value = 'create';
+      document.getElementById('bundleId').value = '';
+      document.getElementById('bundleName').value = '';
+      document.getElementById('bundlePrice').value = '';
+      document.getElementById('bundleDescription').value = '';
+      document.getElementById('showIncludes').checked = true;
+      document.getElementById('useComponentPricing').checked = false;
+      document.getElementById('editOnlyFields').style.display = 'none';
+      document.getElementById('saveBtn').textContent = 'Create Bundle';
+      document.getElementById('previewBtn').style.display = 'none';
+      currentBundleSlug = null;
+
+      // Reset price field visibility
+      togglePriceField();
+
+      // Clear selected products
+      selectedProducts = [];
+      renderSelectedProducts();
+      updateComponentTotal();
+
+      document.getElementById('bundleModal').classList.add('active');
+    }
+
+    function openEditModal(id, name, price, description, isActive, isFeatured, showIncludes, productIds, slug, useComponentPricing) {
+      document.getElementById('modalTitle').textContent = 'Edit Bundle';
+      document.getElementById('formAction').value = 'update';
+      document.getElementById('bundleId').value = id;
+      document.getElementById('bundleName').value = name;
+      document.getElementById('bundlePrice').value = price;
+      document.getElementById('bundleDescription').value = description;
+      document.getElementById('showIncludes').checked = showIncludes;
+      document.getElementById('useComponentPricing').checked = useComponentPricing;
+      document.getElementById('isActive').checked = isActive;
+      document.getElementById('isFeatured').checked = isFeatured;
+      document.getElementById('editOnlyFields').style.display = 'block';
+      document.getElementById('saveBtn').textContent = 'Save Changes';
+
+      // Show preview button and store slug
+      currentBundleSlug = slug;
+      document.getElementById('previewBtn').style.display = 'inline-flex';
+
+      // Set selected products in order
+      selectedProducts = [...productIds];
+      renderSelectedProducts();
+      updateComponentTotal();
+
+      // Update price field visibility based on checkbox
+      togglePriceField();
+
+      document.getElementById('bundleModal').classList.add('active');
+    }
+
+    function openBundlePreview() {
+      if (currentBundleSlug) {
+        window.open('/shop/bundle/' + currentBundleSlug + '/', '_blank');
+      }
+    }
+
+    function closeModal() {
+      document.getElementById('bundleModal').classList.remove('active');
+    }
+
+    // Close modal on outside click
+    document.getElementById('bundleModal').addEventListener('click', function(e) {
+      if (e.target === this) closeModal();
+    });
+
+    // Close modal on Escape key
+    document.addEventListener('keydown', function(e) {
+      if (e.key === 'Escape') closeModal();
+    });
+
+    // Message dismiss functions
+    function dismissMessage(btn) {
+      const message = btn.closest('.message');
+      message.classList.add('fade-out');
+      setTimeout(() => message.remove(), 300);
+    }
+
+    // Auto-dismiss messages after 5 seconds
+    document.addEventListener('DOMContentLoaded', function() {
+      const messages = document.querySelectorAll('.message');
+      messages.forEach((msg, index) => {
+        setTimeout(() => {
+          if (msg.parentNode) {
+            msg.classList.add('fade-out');
+            setTimeout(() => msg.remove(), 300);
+          }
+        }, 5000 + (index * 500));
+      });
+
+      // Listen for price input changes
+      document.getElementById('bundlePrice').addEventListener('input', updateSavingsPreview);
+    });
+  </script>
+</body>
+</html>

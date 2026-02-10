@@ -16,14 +16,17 @@ from django.views.decorators.http import require_http_methods, require_POST
 import stripe
 
 from .cart_utils import (
+    add_bundle_to_cart,
     add_to_cart,
     clear_cart,
     get_cart_total,
     get_or_create_cart,
+    remove_bundle_from_cart,
     remove_from_cart,
+    update_bundle_cart_item,
     update_cart_item_quantity,
 )
-from .models import Address, Cart, CartItem, Order, OrderItem, ProductVariant
+from .models import Address, Bundle, Cart, CartItem, Order, OrderItem, ProductVariant
 
 logger = logging.getLogger(__name__)
 stripe.api_key = settings.STRIPE_SECRET_KEY
@@ -142,6 +145,28 @@ def cart_view(request):
             "image": image,
         })
 
+    # Build bundle cart items
+    bundle_items = cart.bundle_items.select_related("bundle", "size").prefetch_related(
+        "bundle__items__product"
+    ).all()
+
+    bundle_items_with_images = []
+    for item in bundle_items:
+        image = None
+        if item.bundle.images and item.bundle.images[0]:
+            img = item.bundle.images[0]
+            if not img.startswith(("/", "http")):
+                image = f"/static/{img}"
+            else:
+                image = img
+        # Get component product names
+        components = [bi.product.name for bi in item.bundle.items.all()]
+        bundle_items_with_images.append({
+            "item": item,
+            "image": image,
+            "components": components,
+        })
+
     # Calculate totals
     subtotal = get_cart_total(cart)
     # Shipping is calculated at checkout based on destination
@@ -151,6 +176,7 @@ def cart_view(request):
     context = {
         "cart": cart,
         "cart_items": cart_items_with_images,
+        "bundle_items": bundle_items_with_images,
         "subtotal": subtotal,
         "free_shipping": free_shipping,
         "stripe_publishable_key": settings.STRIPE_PUBLISHABLE_KEY,
@@ -219,7 +245,7 @@ def remove_from_cart_view(request, item_id):
             return JsonResponse(
                 {
                     "success": True,
-                    "cart_count": sum(item.quantity for item in cart.items.all()),
+                    "cart_count": sum(item.quantity for item in cart.items.all()) + sum(item.quantity for item in cart.bundle_items.all()),
                     "cart_total": str(get_cart_total(cart)),
                 }
             )
@@ -229,6 +255,126 @@ def remove_from_cart_view(request, item_id):
     except ValueError as e:
         messages.error(request, str(e))
         logger.error(f"Error removing cart item {item_id}: {e}")
+
+        if request.headers.get("X-Requested-With") == "XMLHttpRequest":
+            return JsonResponse({"success": False, "error": str(e)}, status=400)
+
+        return redirect("shop:cart")
+
+
+# BUNDLE CART VIEWS #
+
+
+@require_POST
+def add_bundle_to_cart_view(request):
+    """
+    Add a bundle to the cart with a selected size.
+    Expects POST data: bundle_id, size_id, quantity (optional, defaults to 1)
+    """
+    bundle_id = request.POST.get("bundle_id")
+    size_id = request.POST.get("size_id")
+    quantity = int(request.POST.get("quantity", 1))
+
+    if not bundle_id or not size_id:
+        messages.error(request, "Please select a size.")
+        return redirect(_get_safe_referer(request))
+
+    try:
+        cart_item, created = add_bundle_to_cart(request, bundle_id, size_id, quantity)
+
+        logger.info(f"Added bundle {bundle_id} size {size_id} to cart (qty: {quantity})")
+
+        # Return JSON for AJAX requests
+        if request.headers.get("X-Requested-With") == "XMLHttpRequest":
+            cart = get_or_create_cart(request)
+            return JsonResponse(
+                {
+                    "success": True,
+                    "message": "Bundle added to cart",
+                    "cart_count": sum(item.quantity for item in cart.items.all()) + sum(item.quantity for item in cart.bundle_items.all()),
+                    "cart_total": str(get_cart_total(cart)),
+                }
+            )
+
+        return redirect("shop:cart")
+
+    except ValueError as e:
+        messages.error(request, str(e))
+        logger.error(f"Error adding bundle to cart: {e}")
+
+        if request.headers.get("X-Requested-With") == "XMLHttpRequest":
+            return JsonResponse({"success": False, "error": str(e)}, status=400)
+
+        return redirect(_get_safe_referer(request))
+
+
+@require_POST
+def update_bundle_item_view(request, item_id):
+    """
+    Update the quantity of a bundle cart item.
+    Expects POST data: quantity
+    """
+    quantity = int(request.POST.get("quantity", 0))
+
+    try:
+        user = request.user if request.user.is_authenticated else None
+        session_key = request.session.session_key if not user else None
+
+        cart_item = update_bundle_cart_item(item_id, quantity, user, session_key)
+
+        # Return JSON for AJAX requests
+        if request.headers.get("X-Requested-With") == "XMLHttpRequest":
+            cart = get_or_create_cart(request)
+            return JsonResponse(
+                {
+                    "success": True,
+                    "cart_count": sum(item.quantity for item in cart.items.all()) + sum(item.quantity for item in cart.bundle_items.all()),
+                    "cart_total": str(get_cart_total(cart)),
+                    "item_total": (
+                        str(cart_item.bundle.effective_price * cart_item.quantity) if cart_item else "0.00"
+                    ),
+                }
+            )
+
+        return redirect("shop:cart")
+
+    except ValueError as e:
+        messages.error(request, str(e))
+        logger.error(f"Error updating bundle cart item {item_id}: {e}")
+
+        if request.headers.get("X-Requested-With") == "XMLHttpRequest":
+            return JsonResponse({"success": False, "error": str(e)}, status=400)
+
+        return redirect("shop:cart")
+
+
+@require_POST
+def remove_bundle_from_cart_view(request, item_id):
+    """
+    Remove a bundle from the cart.
+    """
+    try:
+        user = request.user if request.user.is_authenticated else None
+        session_key = request.session.session_key if not user else None
+
+        remove_bundle_from_cart(item_id, user, session_key)
+
+        # Return JSON for AJAX requests
+        if request.headers.get("X-Requested-With") == "XMLHttpRequest":
+            cart = get_or_create_cart(request)
+            return JsonResponse(
+                {
+                    "success": True,
+                    "cart_count": sum(item.quantity for item in cart.items.all()) + sum(item.quantity for item in cart.bundle_items.all()),
+                    "cart_total": str(get_cart_total(cart)),
+                }
+            )
+
+        return redirect("shop:cart")
+
+    except ValueError as e:
+        messages.error(request, str(e))
+        logger.error(f"Error removing bundle cart item {item_id}: {e}")
 
         if request.headers.get("X-Requested-With") == "XMLHttpRequest":
             return JsonResponse({"success": False, "error": str(e)}, status=400)
@@ -452,8 +598,11 @@ def create_checkout_session(request):
     """
     cart = get_or_create_cart(request)
     cart_items = cart.items.select_related("variant__product").all()
+    bundle_items = cart.bundle_items.select_related("bundle", "size").prefetch_related(
+        "bundle__items__product"
+    ).all()
 
-    if not cart_items.exists():
+    if not cart_items.exists() and not bundle_items.exists():
         messages.error(request, "Your cart is empty.")
         return redirect("shop:cart")
 
@@ -469,6 +618,23 @@ def create_checkout_session(request):
                         "product_data": {
                             "name": f"{item.variant.product.name} - {item.variant.size} - {item.variant.color}",
                             "description": f"SKU: {item.variant.id}",
+                        },
+                    },
+                    "quantity": item.quantity,
+                }
+            )
+
+        # Add bundle line items
+        for item in bundle_items:
+            components = ", ".join([bi.product.name for bi in item.bundle.items.all()])
+            line_items.append(
+                {
+                    "price_data": {
+                        "currency": "usd",
+                        "unit_amount": int(item.bundle.effective_price * 100),  # Convert to cents
+                        "product_data": {
+                            "name": f"{item.bundle.name} - Size {item.size}",
+                            "description": f"Bundle includes: {components}",
                         },
                     },
                     "quantity": item.quantity,
@@ -599,8 +765,11 @@ def checkout_success_view(request):
             try:
                 cart = Cart.objects.get(id=cart_id)
                 cart_items = cart.items.select_related("variant__product").all()
+                bundle_items = cart.bundle_items.select_related(
+                    "bundle", "size"
+                ).prefetch_related("bundle__items__product").all()
 
-                if cart_items.exists():
+                if cart_items.exists() or bundle_items.exists():
                     # Get user if exists
                     user = None
                     user_id = metadata.get("user_id")
@@ -632,7 +801,7 @@ def checkout_success_view(request):
                         stripe_payment_intent_id=session.payment_intent,
                     )
 
-                    # Create order items
+                    # Create order items from regular cart items
                     for item in cart_items:
                         OrderItem.objects.create(
                             order=order,
@@ -642,8 +811,26 @@ def checkout_success_view(request):
                             line_total=item.variant.price * item.quantity,
                         )
 
+                    # Create order items from bundles (expanded into individual components)
+                    for bundle_cart_item in bundle_items:
+                        variants = bundle_cart_item.bundle.get_variants_for_size(
+                            bundle_cart_item.size
+                        )
+                        if variants:
+                            for bundle_item, variant in variants:
+                                total_qty = bundle_item.quantity * bundle_cart_item.quantity
+                                # Calculate proportional line total from bundle price
+                                OrderItem.objects.create(
+                                    order=order,
+                                    variant=variant,
+                                    sku=str(variant.id),
+                                    quantity=total_qty,
+                                    line_total=variant.price * total_qty,
+                                )
+
                     # Clear cart
                     cart.items.all().delete()
+                    cart.bundle_items.all().delete()
                     cart.is_active = False
                     cart.save()
 

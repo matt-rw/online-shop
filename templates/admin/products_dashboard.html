@@ -222,6 +222,18 @@
       border-bottom: 2px solid #e2e8f0;
     }
 
+    /* Variants table in modal */
+    .variants-modal-table th {
+      background: #f8fafc !important;
+      color: #475569 !important;
+      font-size: 0.75rem !important;
+      font-weight: 600 !important;
+      text-transform: uppercase !important;
+      letter-spacing: 0.05em !important;
+      padding: 0.875rem 1rem !important;
+      border-bottom: 2px solid #e2e8f0 !important;
+    }
+
     td {
       padding: 1.25rem 1rem;
       border-bottom: 1px solid #f1f5f9;
@@ -246,6 +258,22 @@
       font-size: 0.75rem;
       color: #64748b;
       margin-top: 0.25rem;
+    }
+
+    .product-row {
+      transition: background-color 0.15s ease;
+    }
+
+    .product-row:hover {
+      background-color: #f8fafc;
+    }
+
+    .product-row:hover .expand-icon {
+      color: #667eea;
+    }
+
+    .variants-row {
+      border-left: 3px solid #667eea;
     }
 
     .badge {
@@ -293,6 +321,28 @@
       outline: none;
       border-color: #667eea;
       box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+    }
+
+    .price-preset-btn {
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      padding: 0.25rem 0.625rem;
+      border-radius: 6px;
+      font-size: 0.75rem;
+      font-weight: 500;
+      color: #64748b;
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+
+    .price-preset-btn:hover {
+      background: #667eea;
+      border-color: #667eea;
+      color: white;
+    }
+
+    .price-preset-btn:active {
+      transform: scale(0.95);
     }
 
     .btn {
@@ -564,18 +614,24 @@
             <th>Product Name</th>
             <th>Category</th>
             <th>Base Price</th>
-            <th>SKUs</th>
+            <th>Base Cost</th>
             <th>Total Stock</th>
+            <th>SKUs</th>
             <th>Status</th>
             <th>Actions</th>
           </tr>
         </thead>
         <tbody>
           {% for product in products %}
-          <tr>
+          <tr class="product-row" data-product-id="{{ product.id }}" onclick="toggleProductExpand(this, event)" style="cursor: pointer;">
             <td>
-              <div class="product-name">{{ product.name }}</div>
-              <div class="product-slug">/{{ product.slug }}</div>
+              <div style="display: flex; align-items: center; gap: 0.75rem;">
+                <i class="fa-solid fa-chevron-right expand-icon" style="color: #94a3b8; font-size: 0.75rem; transition: transform 0.2s;"></i>
+                <div>
+                  <div class="product-name">{{ product.name }}</div>
+                  <div class="product-slug">/{{ product.slug }}</div>
+                </div>
+              </div>
             </td>
             <td>
               <span class="badge" style="background: linear-gradient(135deg, #e0e7ff 0%, #c7d2fe 100%); color: #4338ca;">
@@ -583,20 +639,10 @@
               </span>
             </td>
             <td>
-              <input
-                type="number"
-                class="price-input"
-                value="{{ product.base_price }}"
-                step="0.01"
-                data-product-id="{{ product.id }}"
-                onchange="updatePrice(this)"
-              >
+              <span style="font-weight: 600; color: #0f172a;">${{ product.base_price }}</span>
             </td>
             <td>
-              <strong>{{ product.variant_count }}</strong> total
-              <div style="font-size: 0.75rem; color: #64748b; margin-top: 0.25rem;">
-                {{ product.active_variants }} active
-              </div>
+              <span style="color: #64748b;">${{ product.base_cost|default:0 }}</span>
             </td>
             <td>
               {% if product.total_stock == 0 %}
@@ -614,10 +660,16 @@
               {% endif %}
             </td>
             <td>
+              <strong>{{ product.variant_count }}</strong> total
+              <div style="font-size: 0.75rem; color: #64748b; margin-top: 0.25rem;">
+                {{ product.active_variants }} active
+              </div>
+            </td>
+            <td>
               <span
                 class="badge {% if product.is_active %}active{% else %}inactive{% endif %} toggle-active"
                 data-product-id="{{ product.id }}"
-                onclick="toggleActive(this)"
+                onclick="event.stopPropagation(); toggleActive(this)"
               >
                 <i class="fa-solid fa-{% if product.is_active %}check-circle{% else %}times-circle{% endif %}"></i>
                 {% if product.is_active %}Active{% else %}Inactive{% endif %}
@@ -626,28 +678,34 @@
             <td>
               <div style="display: flex; gap: 0.5rem;">
                 <button
-                  onclick="openEditModal({{ product.id }}, '{{ product.name|escapejs }}', '{{ product.slug }}', '{{ product.category_slug|escapejs }}', '{{ product.description|escapejs }}', '{{ product.base_price }}', {{ product.featured|lower }}, {{ product.available_for_purchase|lower }}, {{ product.images|safe|default:"[]" }})"
+                  onclick="event.stopPropagation(); openEditModal({{ product.id }}, '{{ product.name|escapejs }}', '{{ product.slug }}', '{{ product.category_slug|escapejs }}', '{{ product.description|escapejs }}', '{{ product.base_price }}', '{{ product.base_cost|default:0 }}', {{ product.featured|lower }}, {{ product.available_for_purchase|lower }}, {{ product.images|safe|default:"[]" }})"
                   class="btn btn-secondary btn-sm"
                 >
                   <i class="fa-solid fa-edit"></i>
                   Edit
                 </button>
                 <button
-                  onclick="openVariantsModal({{ product.id }}, '{{ product.name|escapejs }}', '{{ product.base_price }}', {{ product.images|safe|default:"[]" }})"
-                  class="btn btn-secondary btn-sm"
-                  title="Manage size/color variants"
-                >
-                  <i class="fa-solid fa-shapes"></i>
-                  Variants
-                </button>
-                <button
-                  onclick="deleteProduct({{ product.id }}, '{{ product.name|escapejs }}')"
+                  onclick="event.stopPropagation(); deleteProduct({{ product.id }}, '{{ product.name|escapejs }}')"
                   class="btn btn-sm"
                   style="background: #fef2f2; color: #dc2626; border: 1px solid #fecaca;"
                   title="Delete product"
                 >
                   <i class="fa-solid fa-trash"></i>
                 </button>
+              </div>
+            </td>
+          </tr>
+          <tr class="variants-row" id="variants-row-{{ product.id }}"
+              data-product-name="{{ product.name|escapejs }}"
+              data-base-price="{{ product.base_price }}"
+              data-base-cost="{{ product.base_cost|default:0 }}"
+              style="display: none;">
+            <td colspan="8" style="padding: 0; background: #f8fafc;">
+              <div class="variants-container" style="padding: 1rem 1rem 1rem 2.5rem;">
+                <div class="variants-loading" style="text-align: center; padding: 1rem; color: #64748b;">
+                  <i class="fa-solid fa-spinner fa-spin"></i> Loading variants...
+                </div>
+                <div class="variants-content" style="display: none;"></div>
               </div>
             </td>
           </tr>
@@ -698,9 +756,15 @@
             <textarea id="edit_description"></textarea>
           </div>
 
-          <div class="form-group">
-            <label for="edit_base_price">Base Price ($)</label>
-            <input type="number" id="edit_base_price" step="0.01" required>
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1.25rem;">
+            <div class="form-group" style="margin-bottom: 0;">
+              <label for="edit_base_price">Base Price ($)</label>
+              <input type="number" id="edit_base_price" step="1" required>
+            </div>
+            <div class="form-group" style="margin-bottom: 0;">
+              <label for="edit_base_cost">Base Cost ($)</label>
+              <input type="number" id="edit_base_cost" step="1" min="0" value="0">
+            </div>
           </div>
 
           <div class="form-group">
@@ -859,6 +923,7 @@
       <div class="modal-body" style="max-height: calc(95vh - 180px); overflow-y: auto; background: #f8fafc;">
         <input type="hidden" id="variants_product_id">
         <input type="hidden" id="variants_base_price">
+        <input type="hidden" id="variants_base_cost">
 
         <!-- Summary Stats -->
         <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 1.25rem; margin-bottom: 2rem;">
@@ -901,9 +966,6 @@
             onkeyup="filterVariants()"
             style="flex: 1; padding: 0.75rem 1rem; border: 1px solid #d1d5db; border-radius: 8px; font-size: 0.875rem;"
           >
-          <button onclick="openBulkStockModal()" class="btn btn-primary" style="background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); color: white; border: none; padding: 0.75rem 1.5rem; box-shadow: 0 2px 8px rgba(245, 158, 11, 0.3); white-space: nowrap; font-weight: 600;">
-            <i class="fa-solid fa-boxes-stacked"></i> Bulk Stock
-          </button>
           <button onclick="openBulkVariantModal()" class="btn btn-primary" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white; border: none; padding: 0.75rem 1.5rem; box-shadow: 0 2px 8px rgba(16, 185, 129, 0.3); white-space: nowrap; font-weight: 600;">
             <i class="fa-solid fa-grid"></i> Bulk Add
           </button>
@@ -962,12 +1024,54 @@
               </div>
             </div>
             <div class="form-group">
-              <label for="variant_stock">Stock Quantity *</label>
-              <input type="number" id="variant_stock" min="0" value="0" required>
+              <label style="color: #64748b;">Stock Quantity</label>
+              <div style="display: flex; align-items: center; gap: 0.75rem;">
+                <span id="variant_stock_display" style="font-size: 1.5rem; font-weight: 700; color: #0f172a;">0</span>
+                <span style="font-size: 0.75rem; color: #94a3b8; background: #f1f5f9; padding: 0.25rem 0.5rem; border-radius: 4px;">
+                  <i class="fa-solid fa-lock"></i> From shipments
+                </span>
+              </div>
+              <input type="hidden" id="variant_stock" value="0">
             </div>
             <div class="form-group">
-              <label for="variant_price">Price ($) *</label>
-              <input type="number" id="variant_price" step="0.01" min="0" required>
+              <label>Price</label>
+              <div style="display: flex; gap: 0.75rem; margin-bottom: 0.75rem;">
+                <label style="display: flex; align-items: center; gap: 0.5rem; padding: 0.625rem 1rem; background: #f8fafc; border: 2px solid #e2e8f0; border-radius: 8px; cursor: pointer; flex: 1; transition: all 0.2s;" onclick="selectPriceMode('base')" id="price_mode_base_label">
+                  <input type="radio" name="price_mode" value="base" id="price_mode_base" checked style="accent-color: #667eea;">
+                  <div>
+                    <span style="font-weight: 600; color: #374151; font-size: 0.875rem;">Use Base Price</span>
+                    <span id="base_price_display" style="display: block; font-size: 0.75rem; color: #64748b;">$0.00</span>
+                  </div>
+                </label>
+                <label style="display: flex; align-items: center; gap: 0.5rem; padding: 0.625rem 1rem; background: #f8fafc; border: 2px solid #e2e8f0; border-radius: 8px; cursor: pointer; flex: 1; transition: all 0.2s;" onclick="selectPriceMode('custom')" id="price_mode_custom_label">
+                  <input type="radio" name="price_mode" value="custom" id="price_mode_custom" style="accent-color: #667eea;">
+                  <span style="font-weight: 600; color: #374151; font-size: 0.875rem;">Custom Price</span>
+                </label>
+              </div>
+              <div id="custom_price_input" style="display: none;">
+                <input type="number" id="variant_price" step="1" min="0" placeholder="Enter custom price" style="width: 100%; padding: 0.75rem; border: 2px solid #667eea; border-radius: 8px; font-size: 1rem; font-weight: 600;">
+              </div>
+              <input type="hidden" id="variant_price_hidden" value="0">
+            </div>
+            <div class="form-group">
+              <label>Cost</label>
+              <div style="display: flex; gap: 0.75rem; margin-bottom: 0.75rem;">
+                <label style="display: flex; align-items: center; gap: 0.5rem; padding: 0.625rem 1rem; background: #f8fafc; border: 2px solid #e2e8f0; border-radius: 8px; cursor: pointer; flex: 1; transition: all 0.2s;" onclick="selectCostMode('base')" id="cost_mode_base_label">
+                  <input type="radio" name="cost_mode" value="base" id="cost_mode_base" checked style="accent-color: #667eea;">
+                  <div>
+                    <span style="font-weight: 600; color: #374151; font-size: 0.875rem;">Use Base Cost</span>
+                    <span id="base_cost_display" style="display: block; font-size: 0.75rem; color: #64748b;">$0.00</span>
+                  </div>
+                </label>
+                <label style="display: flex; align-items: center; gap: 0.5rem; padding: 0.625rem 1rem; background: #f8fafc; border: 2px solid #e2e8f0; border-radius: 8px; cursor: pointer; flex: 1; transition: all 0.2s;" onclick="selectCostMode('custom')" id="cost_mode_custom_label">
+                  <input type="radio" name="cost_mode" value="custom" id="cost_mode_custom" style="accent-color: #667eea;">
+                  <span style="font-weight: 600; color: #374151; font-size: 0.875rem;">Custom Cost</span>
+                </label>
+              </div>
+              <div id="custom_cost_input" style="display: none;">
+                <input type="number" id="variant_cost" step="1" min="0" placeholder="Enter custom cost" style="width: 100%; padding: 0.75rem; border: 2px solid #667eea; border-radius: 8px; font-size: 1rem; font-weight: 600;">
+              </div>
+              <input type="hidden" id="variant_cost_hidden" value="0">
             </div>
           </div>
         </div>
@@ -1110,11 +1214,23 @@
           <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 1rem;">
             <div class="form-group">
               <label style="display: block; font-size: 0.875rem; font-weight: 600; color: #374151; margin-bottom: 0.5rem;">Price ($) *</label>
-              <input type="number" id="bulk_price" step="0.01" min="0" required style="width: 100%; padding: 0.75rem; border: 1px solid #d1d5db; border-radius: 8px; font-size: 0.9375rem;">
+              <input type="number" id="bulk_price" step="1" min="0" required style="width: 100%; padding: 0.75rem; border: 1px solid #d1d5db; border-radius: 8px; font-size: 0.9375rem;">
+              <div style="display: flex; gap: 0.375rem; margin-top: 0.5rem; flex-wrap: wrap;">
+                <button type="button" onclick="document.getElementById('bulk_price').value='19.99'" class="price-preset-btn">$19.99</button>
+                <button type="button" onclick="document.getElementById('bulk_price').value='24.99'" class="price-preset-btn">$24.99</button>
+                <button type="button" onclick="document.getElementById('bulk_price').value='29.99'" class="price-preset-btn">$29.99</button>
+                <button type="button" onclick="document.getElementById('bulk_price').value='34.99'" class="price-preset-btn">$34.99</button>
+                <button type="button" onclick="document.getElementById('bulk_price').value='39.99'" class="price-preset-btn">$39.99</button>
+                <button type="button" onclick="document.getElementById('bulk_price').value='49.99'" class="price-preset-btn">$49.99</button>
+              </div>
             </div>
             <div class="form-group">
-              <label style="display: block; font-size: 0.875rem; font-weight: 600; color: #374151; margin-bottom: 0.5rem;">Initial Stock</label>
-              <input type="number" id="bulk_stock" min="0" value="0" style="width: 100%; padding: 0.75rem; border: 1px solid #d1d5db; border-radius: 8px; font-size: 0.9375rem;">
+              <label style="display: block; font-size: 0.875rem; font-weight: 600; color: #64748b; margin-bottom: 0.5rem;">Initial Stock</label>
+              <div style="display: flex; align-items: center; gap: 0.5rem; padding: 0.75rem; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px;">
+                <span style="font-size: 1.25rem; font-weight: 700; color: #0f172a;">0</span>
+                <span style="font-size: 0.75rem; color: #94a3b8;"><i class="fa-solid fa-lock"></i> Add stock via shipments</span>
+              </div>
+              <input type="hidden" id="bulk_stock" value="0">
             </div>
           </div>
         </div>
@@ -1206,6 +1322,134 @@
           <i class="fa-solid fa-check"></i>
           Update Stock
         </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Restock Modal -->
+  <div class="modal-overlay" id="restockModal">
+    <div class="modal-content" style="max-width: 550px; max-height: 95vh;">
+      <div class="modal-header" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); border-bottom: none;">
+        <h2 style="color: white; display: flex; align-items: center; gap: 0.75rem;">
+          <i class="fa-solid fa-truck"></i> Restock: <span id="restock_variant_sku" style="font-family: monospace;"></span>
+        </h2>
+        <button class="modal-close" onclick="closeRestockModal()" style="color: white; background: rgba(255, 255, 255, 0.1);">
+          <i class="fa-solid fa-times"></i>
+        </button>
+      </div>
+      <div class="modal-body" style="background: #f8fafc;">
+        <!-- Current Pending Shipments -->
+        <div style="background: white; border: 1px solid #e2e8f0; border-radius: 12px; padding: 1.25rem; margin-bottom: 1.5rem;">
+          <h3 style="font-size: 0.875rem; font-weight: 700; color: #64748b; margin-bottom: 0.75rem; display: flex; align-items: center; gap: 0.5rem;">
+            <i class="fa-solid fa-boxes-stacked" style="color: #10b981;"></i> Current Pending Shipments
+          </h3>
+          <div id="restock_current_pending">
+            <!-- Will be populated by JS -->
+          </div>
+        </div>
+
+        <!-- Shipment Selection -->
+        <div style="background: white; border: 1px solid #e2e8f0; border-radius: 12px; padding: 1.25rem; margin-bottom: 1.5rem;">
+          <h3 style="font-size: 0.875rem; font-weight: 700; color: #1e293b; margin-bottom: 0.75rem; display: flex; align-items: center; gap: 0.5rem;">
+            <i class="fa-solid fa-ship" style="color: #10b981;"></i> Add to Shipment
+          </h3>
+          <div class="form-group" style="margin-bottom: 0.75rem;">
+            <label style="display: block; font-size: 0.875rem; font-weight: 600; color: #374151; margin-bottom: 0.5rem;">Select Shipment</label>
+            <select id="restock_shipment_select" onchange="onShipmentSelectChange()" style="width: 100%; padding: 0.75rem; border: 1px solid #d1d5db; border-radius: 8px; font-size: 0.9375rem; cursor: pointer;">
+              <option value="">Select a shipment...</option>
+              <!-- Options populated by JS -->
+            </select>
+          </div>
+
+          <!-- Quick Create Shipment Form (Hidden by default) -->
+          <div id="quick_shipment_form" style="display: none; margin-top: 1rem; padding: 1rem; background: linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%); border-radius: 10px; border: 1px solid #a7f3d0;">
+            <div style="font-size: 0.8125rem; font-weight: 600; color: #065f46; margin-bottom: 0.75rem;">
+              <i class="fa-solid fa-plus-circle"></i> Quick Create Shipment
+            </div>
+            <div style="display: grid; gap: 0.75rem;">
+              <div class="form-group" style="margin-bottom: 0;">
+                <label style="font-size: 0.8125rem; font-weight: 600; color: #374151; margin-bottom: 0.25rem; display: block;">Supplier Name *</label>
+                <input type="text" id="quick_supplier" placeholder="e.g. Factory ABC" style="width: 100%; padding: 0.625rem; border: 1px solid #d1d5db; border-radius: 6px; font-size: 0.875rem;">
+              </div>
+              <div class="form-group" style="margin-bottom: 0;">
+                <label style="font-size: 0.8125rem; font-weight: 600; color: #374151; margin-bottom: 0.25rem; display: block;">Tracking Number (optional)</label>
+                <input type="text" id="quick_tracking" placeholder="Auto-generated if empty" style="width: 100%; padding: 0.625rem; border: 1px solid #d1d5db; border-radius: 6px; font-size: 0.875rem;">
+              </div>
+              <p style="font-size: 0.75rem; color: #64748b; margin: 0;">
+                <i class="fa-solid fa-info-circle"></i> Expected delivery defaults to 2 weeks from today
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Quantity & Cost -->
+        <div style="background: white; border: 1px solid #e2e8f0; border-radius: 12px; padding: 1.25rem;">
+          <h3 style="font-size: 0.875rem; font-weight: 700; color: #1e293b; margin-bottom: 0.75rem; display: flex; align-items: center; gap: 0.5rem;">
+            <i class="fa-solid fa-calculator" style="color: #10b981;"></i> Quantity & Cost
+          </h3>
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+            <div class="form-group" style="margin-bottom: 0;">
+              <label style="font-size: 0.8125rem; font-weight: 600; color: #374151; margin-bottom: 0.25rem; display: block;">Quantity *</label>
+              <input type="number" id="restock_quantity" min="1" placeholder="0" style="width: 100%; padding: 0.75rem; border: 1px solid #d1d5db; border-radius: 6px; font-size: 1rem; font-weight: 600; text-align: center;">
+            </div>
+            <div class="form-group" style="margin-bottom: 0;">
+              <label style="font-size: 0.8125rem; font-weight: 600; color: #374151; margin-bottom: 0.25rem; display: block;">Unit Cost ($)</label>
+              <input type="number" id="restock_unit_cost" step="1" min="0" placeholder="0.00" style="width: 100%; padding: 0.75rem; border: 1px solid #d1d5db; border-radius: 6px; font-size: 1rem; font-weight: 600; text-align: center;">
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer" style="background: #f8fafc; border-top: 1px solid #e2e8f0; padding: 1.5rem 2rem; display: flex; gap: 1rem; justify-content: space-between; align-items: center;">
+        <a href="/admin/shipments/" style="font-size: 0.875rem; color: #64748b; text-decoration: none; display: flex; align-items: center; gap: 0.5rem;" onmouseenter="this.style.color='#3b82f6'" onmouseleave="this.style.color='#64748b'">
+          <i class="fa-solid fa-external-link"></i> Manage all shipments
+        </a>
+        <div style="display: flex; gap: 1rem;">
+          <button class="btn btn-secondary" onclick="closeRestockModal()" style="padding: 0.75rem 2rem;">
+            <i class="fa-solid fa-times"></i> Cancel
+          </button>
+          <button class="btn btn-primary" onclick="submitRestock()" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); border: none; padding: 0.75rem 2rem; box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);">
+            <i class="fa-solid fa-check"></i>
+            Add to Shipment
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Incoming Details Modal -->
+  <div class="modal-overlay" id="incomingDetailsModal">
+    <div class="modal-content" style="max-width: 500px; max-height: 95vh;">
+      <div class="modal-header" style="background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%); border-bottom: none;">
+        <h2 style="color: white; display: flex; align-items: center; gap: 0.75rem;">
+          <i class="fa-solid fa-boxes-stacked"></i> Incoming: <span id="incoming_variant_sku" style="font-family: monospace;"></span>
+        </h2>
+        <button class="modal-close" onclick="closeIncomingDetailsModal()" style="color: white; background: rgba(255, 255, 255, 0.1);">
+          <i class="fa-solid fa-times"></i>
+        </button>
+      </div>
+      <div class="modal-body" style="background: #f8fafc;">
+        <!-- Summary -->
+        <div style="background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%); border: 1px solid #93c5fd; border-radius: 12px; padding: 1rem 1.25rem; margin-bottom: 1.5rem; display: flex; align-items: center; justify-content: space-between;">
+          <div style="display: flex; align-items: center; gap: 0.5rem;">
+            <i class="fa-solid fa-truck-fast" style="color: #1d4ed8; font-size: 1.25rem;"></i>
+            <span style="font-weight: 600; color: #1e40af;">Total Incoming</span>
+          </div>
+          <span id="incoming_total_count" style="font-size: 1.5rem; font-weight: 800; color: #1d4ed8;">0</span>
+        </div>
+
+        <!-- Shipment List -->
+        <div id="incoming_details_list">
+          <!-- Will be populated by JS -->
+        </div>
+      </div>
+      <div class="modal-footer" style="background: #f8fafc; border-top: 1px solid #e2e8f0; padding: 1.25rem 2rem; display: flex; gap: 1rem; justify-content: flex-end;">
+        <button class="btn btn-secondary" onclick="closeIncomingDetailsModal()" style="padding: 0.75rem 2rem;">
+          <i class="fa-solid fa-times"></i> Close
+        </button>
+        <a href="/admin/shipments/" class="btn btn-primary" style="background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%); border: none; padding: 0.75rem 2rem; box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3); text-decoration: none;">
+          <i class="fa-solid fa-external-link"></i>
+          View All Shipments
+        </a>
       </div>
     </div>
   </div>
@@ -1327,6 +1571,148 @@
       });
     }
 
+    // Track loaded variants to avoid re-fetching
+    const loadedVariants = {};
+
+    function toggleProductExpand(row, event) {
+      const productId = row.dataset.productId;
+      const variantsRow = document.getElementById('variants-row-' + productId);
+      const expandIcon = row.querySelector('.expand-icon');
+      const isExpanded = variantsRow.style.display !== 'none';
+
+      if (isExpanded) {
+        // Collapse
+        variantsRow.style.display = 'none';
+        expandIcon.style.transform = 'rotate(0deg)';
+        row.style.background = '';
+      } else {
+        // Expand
+        variantsRow.style.display = 'table-row';
+        expandIcon.style.transform = 'rotate(90deg)';
+        row.style.background = '#f8fafc';
+
+        // Load variants if not already loaded
+        if (!loadedVariants[productId]) {
+          loadVariantsForProduct(productId);
+        }
+      }
+    }
+
+    function loadVariantsForProduct(productId) {
+      const variantsRow = document.getElementById('variants-row-' + productId);
+      const loadingDiv = variantsRow.querySelector('.variants-loading');
+      const contentDiv = variantsRow.querySelector('.variants-content');
+      const csrftoken = getCookie('csrftoken');
+
+      fetch(window.location.pathname, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded',
+          'X-CSRFToken': csrftoken,
+        },
+        body: new URLSearchParams({
+          'action': 'get_variants',
+          'product_id': productId
+        })
+      })
+      .then(response => response.json())
+      .then(data => {
+        if (data.success) {
+          loadedVariants[productId] = data.variants;
+          renderInlineVariants(productId, data.variants, contentDiv);
+          loadingDiv.style.display = 'none';
+          contentDiv.style.display = 'block';
+        } else {
+          loadingDiv.innerHTML = '<span style="color: #dc2626;">Failed to load variants</span>';
+        }
+      })
+      .catch(error => {
+        loadingDiv.innerHTML = '<span style="color: #dc2626;">Error loading variants</span>';
+      });
+    }
+
+    function renderInlineVariants(productId, variants, container) {
+      if (variants.length === 0) {
+        container.innerHTML = `
+          <div style="text-align: center; padding: 1rem; color: #64748b;">
+            <i class="fa-solid fa-box-open" style="font-size: 1.5rem; margin-bottom: 0.5rem;"></i>
+            <p>No variants yet</p>
+          </div>
+        `;
+        return;
+      }
+
+      let html = `
+        <table style="width: 100%; border-collapse: collapse; font-size: 0.875rem;">
+          <thead>
+            <tr style="background: #e2e8f0;">
+              <th style="padding: 0.5rem 0.75rem; text-align: left; font-weight: 600; color: #475569;">SKU</th>
+              <th style="padding: 0.5rem 0.75rem; text-align: left; font-weight: 600; color: #475569;">Size</th>
+              <th style="padding: 0.5rem 0.75rem; text-align: left; font-weight: 600; color: #475569;">Color</th>
+              <th style="padding: 0.5rem 0.75rem; text-align: center; font-weight: 600; color: #475569;">Stock</th>
+              <th style="padding: 0.5rem 0.75rem; text-align: center; font-weight: 600; color: #475569;">Incoming</th>
+              <th style="padding: 0.5rem 0.75rem; text-align: right; font-weight: 600; color: #475569;">Price</th>
+              <th style="padding: 0.5rem 0.75rem; text-align: right; font-weight: 600; color: #475569;">Cost</th>
+              <th style="padding: 0.5rem 0.75rem; text-align: center; font-weight: 600; color: #475569;">Status</th>
+            </tr>
+          </thead>
+          <tbody>
+      `;
+
+      variants.forEach((v, index) => {
+        const rowBg = index % 2 === 0 ? 'white' : '#f8fafc';
+        const stockColor = v.stock_quantity === 0 ? '#dc2626' : (v.stock_quantity < 10 ? '#f59e0b' : '#10b981');
+        const statusBadge = v.is_active
+          ? '<span style="background: #dcfce7; color: #166534; padding: 0.25rem 0.5rem; border-radius: 4px; font-size: 0.75rem;">Active</span>'
+          : '<span style="background: #fee2e2; color: #991b1b; padding: 0.25rem 0.5rem; border-radius: 4px; font-size: 0.75rem;">Inactive</span>';
+
+        html += `
+          <tr style="background: ${rowBg}; border-bottom: 1px solid #e2e8f0;">
+            <td style="padding: 0.5rem 0.75rem; font-family: monospace; font-size: 0.8125rem; color: #64748b;">${v.sku || '-'}</td>
+            <td style="padding: 0.5rem 0.75rem;">${v.size || '-'}</td>
+            <td style="padding: 0.5rem 0.75rem;">${v.color || '-'}</td>
+            <td style="padding: 0.5rem 0.75rem; text-align: center;">
+              <span style="color: ${stockColor}; font-weight: 600;">${v.stock_quantity}</span>
+            </td>
+            <td style="padding: 0.5rem 0.75rem; text-align: center;">
+              ${v.pending_total > 0 ? `<span style="background: #dbeafe; color: #1d4ed8; padding: 0.125rem 0.5rem; border-radius: 4px; font-size: 0.75rem; font-weight: 600;">+${v.pending_total}</span>` : '<span style="color: #94a3b8;">-</span>'}
+            </td>
+            <td style="padding: 0.5rem 0.75rem; text-align: right;">
+              <span style="font-weight: 600;">$${parseFloat(v.price).toFixed(2)}</span>
+              ${v.has_custom_price ? '<span style="font-size: 0.625rem; background: #f5f3ff; color: #667eea; padding: 0.125rem 0.25rem; border-radius: 3px; margin-left: 0.25rem;">CUSTOM</span>' : ''}
+            </td>
+            <td style="padding: 0.5rem 0.75rem; text-align: right;">
+              <span style="color: #64748b;">$${parseFloat(v.cost || 0).toFixed(2)}</span>
+              ${v.has_custom_cost ? '<span style="font-size: 0.625rem; background: #fef3c7; color: #92400e; padding: 0.125rem 0.25rem; border-radius: 3px; margin-left: 0.25rem;">CUSTOM</span>' : ''}
+            </td>
+            <td style="padding: 0.5rem 0.75rem; text-align: center;">${statusBadge}</td>
+          </tr>
+        `;
+      });
+
+      html += '</tbody></table>';
+      html += `
+        <div style="display: flex; justify-content: flex-end; margin-top: 0.75rem; padding-top: 0.75rem; border-top: 1px solid #e2e8f0;">
+          <button onclick="openVariantsModalById(${productId})" class="btn btn-secondary btn-sm" style="font-size: 0.8125rem;">
+            <i class="fa-solid fa-shapes"></i> Manage Variants
+          </button>
+        </div>
+      `;
+      container.innerHTML = html;
+    }
+
+    function openVariantsModalById(productId) {
+      // Find the variants row which has the data attributes
+      const variantsRow = document.getElementById('variants-row-' + productId);
+      if (!variantsRow) return;
+
+      const productName = variantsRow.dataset.productName;
+      const basePrice = variantsRow.dataset.basePrice;
+      const baseCost = variantsRow.dataset.baseCost;
+
+      openVariantsModal(productId, productName, basePrice, baseCost, []);
+    }
+
     function updatePrice(input) {
       const productId = input.dataset.productId;
       const newPrice = input.value;
@@ -1357,13 +1743,14 @@
 
     let productImages = [];
 
-    function openEditModal(id, name, slug, category, description, price, featured, available, images) {
+    function openEditModal(id, name, slug, category, description, price, cost, featured, available, images) {
       document.getElementById('edit_product_id').value = id;
       document.getElementById('edit_name').value = name;
       document.getElementById('edit_slug').value = slug;
       document.getElementById('edit_category').value = category;
       document.getElementById('edit_description').value = description;
       document.getElementById('edit_base_price').value = price;
+      document.getElementById('edit_base_cost').value = cost || 0;
       document.getElementById('edit_featured').checked = featured;
       document.getElementById('edit_available').checked = available !== false;
 
@@ -1495,6 +1882,7 @@
       formData.append('category', document.getElementById('edit_category').value);
       formData.append('description', document.getElementById('edit_description').value);
       formData.append('base_price', document.getElementById('edit_base_price').value);
+      formData.append('base_cost', document.getElementById('edit_base_cost').value || '0');
       formData.append('featured', document.getElementById('edit_featured').checked ? 'true' : 'false');
       formData.append('available_for_purchase', document.getElementById('edit_available').checked ? 'true' : 'false');
       formData.append('images', JSON.stringify(productImages));
@@ -1598,9 +1986,10 @@
     let sharedProductImages = [];
 
     // Variants Modal Functions
-    function openVariantsModal(productId, productName, basePrice, productImages) {
+    function openVariantsModal(productId, productName, basePrice, baseCost, productImages) {
       document.getElementById('variants_product_id').value = productId;
       document.getElementById('variants_base_price').value = basePrice || '';
+      document.getElementById('variants_base_cost').value = baseCost || '0';
       document.getElementById('variants_modal_title').innerHTML = `<i class="fa-solid fa-shapes"></i> Variants: ${productName}`;
       document.getElementById('variantsModal').classList.add('active');
 
@@ -1628,8 +2017,19 @@
       // Reset form fields
       document.getElementById('variant_sku').value = '';
       document.getElementById('variant_stock').value = '0';
-      // Default price to product's base price
-      document.getElementById('variant_price').value = document.getElementById('variants_base_price').value || '';
+      document.getElementById('variant_stock_display').textContent = '0';
+
+      // Set price to base price mode
+      const basePrice = document.getElementById('variants_base_price').value || '0';
+      document.getElementById('base_price_display').textContent = '$' + parseFloat(basePrice).toFixed(2);
+      selectPriceMode('base');
+      document.getElementById('variant_price').value = basePrice;
+
+      // Set cost to base cost mode
+      const baseCost = document.getElementById('variants_base_cost').value || '0';
+      document.getElementById('base_cost_display').textContent = '$' + parseFloat(baseCost).toFixed(2);
+      selectCostMode('base');
+      document.getElementById('variant_cost').value = baseCost;
 
       // Clear images and custom fields
       variantImages = [];
@@ -1794,6 +2194,62 @@
 
     function closeVariantForm() {
       document.getElementById('variantFormModal').classList.remove('active');
+    }
+
+    function selectPriceMode(mode) {
+      const baseLabel = document.getElementById('price_mode_base_label');
+      const customLabel = document.getElementById('price_mode_custom_label');
+      const customInput = document.getElementById('custom_price_input');
+      const basePriceRadio = document.getElementById('price_mode_base');
+      const customPriceRadio = document.getElementById('price_mode_custom');
+      const priceInput = document.getElementById('variant_price');
+      const basePrice = document.getElementById('variants_base_price').value || '0';
+
+      if (mode === 'base') {
+        basePriceRadio.checked = true;
+        baseLabel.style.borderColor = '#667eea';
+        baseLabel.style.background = '#f5f3ff';
+        customLabel.style.borderColor = '#e2e8f0';
+        customLabel.style.background = '#f8fafc';
+        customInput.style.display = 'none';
+        priceInput.value = basePrice;
+      } else {
+        customPriceRadio.checked = true;
+        customLabel.style.borderColor = '#667eea';
+        customLabel.style.background = '#f5f3ff';
+        baseLabel.style.borderColor = '#e2e8f0';
+        baseLabel.style.background = '#f8fafc';
+        customInput.style.display = 'block';
+        priceInput.focus();
+      }
+    }
+
+    function selectCostMode(mode) {
+      const baseLabel = document.getElementById('cost_mode_base_label');
+      const customLabel = document.getElementById('cost_mode_custom_label');
+      const customInput = document.getElementById('custom_cost_input');
+      const baseCostRadio = document.getElementById('cost_mode_base');
+      const customCostRadio = document.getElementById('cost_mode_custom');
+      const costInput = document.getElementById('variant_cost');
+      const baseCost = document.getElementById('variants_base_cost').value || '0';
+
+      if (mode === 'base') {
+        baseCostRadio.checked = true;
+        baseLabel.style.borderColor = '#667eea';
+        baseLabel.style.background = '#f5f3ff';
+        customLabel.style.borderColor = '#e2e8f0';
+        customLabel.style.background = '#f8fafc';
+        customInput.style.display = 'none';
+        costInput.value = baseCost;
+      } else {
+        customCostRadio.checked = true;
+        customLabel.style.borderColor = '#667eea';
+        customLabel.style.background = '#f5f3ff';
+        baseLabel.style.borderColor = '#e2e8f0';
+        baseLabel.style.background = '#f8fafc';
+        customInput.style.display = 'block';
+        costInput.focus();
+      }
     }
 
     function generateVariantSKU() {
@@ -2350,6 +2806,7 @@
 
       // Create table view
       const table = document.createElement('table');
+      table.className = 'variants-modal-table';
       table.style.cssText = 'width: 100%; border-collapse: separate; border-spacing: 0; background: white; border-radius: 12px; overflow: hidden; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);';
 
       table.innerHTML = `
@@ -2358,6 +2815,7 @@
             <th style="padding: 1rem; text-align: left; color: white; font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em;">Attributes</th>
             <th style="padding: 1rem; text-align: left; color: white; font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em;">SKU</th>
             <th style="padding: 1rem; text-align: center; color: white; font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em;">Stock</th>
+            <th style="padding: 1rem; text-align: center; color: white; font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em;">Incoming</th>
             <th style="padding: 1rem; text-align: center; color: white; font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em;">Price</th>
             <th style="padding: 1rem; text-align: center; color: white; font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em;">Status</th>
             <th style="padding: 1rem; text-align: center; color: white; font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em;">Actions</th>
@@ -2368,6 +2826,7 @@
             const stockBadgeColor = variant.stock_quantity === 0 ? '#fee2e2' : variant.stock_quantity < 10 ? '#fef3c7' : '#d1fae5';
             const stockTextColor = variant.stock_quantity === 0 ? '#991b1b' : variant.stock_quantity < 10 ? '#92400e' : '#065f46';
             const rowBg = index % 2 === 0 ? '#ffffff' : '#f8fafc';
+            const pendingTotal = variant.pending_total || 0;
 
             return `
               <tr style="background: ${rowBg}; border-bottom: 1px solid #e2e8f0; transition: all 0.2s;"
@@ -2388,13 +2847,27 @@
                   </span>
                 </td>
                 <td style="padding: 1rem; text-align: center;">
-                  <input
-                    type="number"
-                    value="${variant.price}"
-                    step="0.01"
-                    onchange="updateVariantPrice(${variant.id}, this.value)"
-                    style="width: 80px; padding: 0.5rem; border: 1px solid #d1d5db; border-radius: 6px; font-size: 0.875rem; font-weight: 600; text-align: center;"
-                  >
+                  ${pendingTotal > 0 ? `
+                    <span
+                      onclick="showIncomingDetails(${variant.id})"
+                      style="background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%); color: #1e40af; padding: 0.375rem 0.75rem; border-radius: 6px; font-size: 0.8125rem; font-weight: 600; display: inline-block; cursor: pointer; transition: all 0.2s;"
+                      onmouseenter="this.style.transform='scale(1.05)'"
+                      onmouseleave="this.style.transform='scale(1)'"
+                      title="Click to view pending shipments"
+                    >
+                      +${pendingTotal}
+                    </span>
+                  ` : `
+                    <span style="color: #94a3b8; font-size: 0.8125rem;">-</span>
+                  `}
+                </td>
+                <td style="padding: 1rem; text-align: center;">
+                  <div style="display: flex; align-items: center; justify-content: center; gap: 0.375rem;">
+                    <span style="font-size: 0.9375rem; font-weight: 600; color: #0f172a;">$${parseFloat(variant.price).toFixed(2)}</span>
+                    ${variant.has_custom_price ? `
+                      <span style="font-size: 0.625rem; background: #f5f3ff; color: #667eea; padding: 0.125rem 0.375rem; border-radius: 4px; font-weight: 600;">CUSTOM</span>
+                    ` : ''}
+                  </div>
                 </td>
                 <td style="padding: 1rem; text-align: center;">
                   <span class="badge ${variant.is_active ? 'active' : 'inactive'}" style="cursor: pointer; font-size: 0.75rem;" onclick="toggleVariantActive(${variant.id})">
@@ -2404,6 +2877,14 @@
                 </td>
                 <td style="padding: 1rem; text-align: center;">
                   <div style="display: inline-flex; gap: 0.5rem;">
+                    <button
+                      onclick="openRestockModal(${variant.id}, '${variant.sku}')"
+                      class="btn btn-secondary btn-sm"
+                      title="Restock - Add to shipment"
+                      style="padding: 0.5rem 0.75rem; background: linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%); color: #065f46; border-color: #a7f3d0;"
+                    >
+                      <i class="fa-solid fa-truck"></i>
+                    </button>
                     <button
                       onclick="editVariant(${variant.id})"
                       class="btn btn-secondary btn-sm"
@@ -2444,7 +2925,29 @@
       document.getElementById('variant_form_title').textContent = 'Edit Variant';
       document.getElementById('variant_sku').value = variant.sku;
       document.getElementById('variant_stock').value = variant.stock_quantity;
+      document.getElementById('variant_stock_display').textContent = variant.stock_quantity;
+
+      // Set price mode based on whether variant has custom price
+      const basePrice = document.getElementById('variants_base_price').value || '0';
+      document.getElementById('base_price_display').textContent = '$' + parseFloat(basePrice).toFixed(2);
       document.getElementById('variant_price').value = variant.price;
+
+      if (variant.has_custom_price) {
+        selectPriceMode('custom');
+      } else {
+        selectPriceMode('base');
+      }
+
+      // Set cost mode based on whether variant has custom cost
+      const baseCost = document.getElementById('variants_base_cost').value || '0';
+      document.getElementById('base_cost_display').textContent = '$' + parseFloat(baseCost).toFixed(2);
+      document.getElementById('variant_cost').value = variant.cost || baseCost;
+
+      if (variant.has_custom_cost) {
+        selectCostMode('custom');
+      } else {
+        selectCostMode('base');
+      }
 
       // Load images
       variantImages = variant.images || [];
@@ -2609,7 +3112,7 @@
       const productId = document.getElementById('variants_product_id').value;
       const sizeId = document.getElementById('new_variant_size').value;
       const colorId = document.getElementById('new_variant_color').value;
-      const stock = document.getElementById('new_variant_stock').value;
+      const stock = 0; // Stock only comes from shipments
       const price = document.getElementById('new_variant_price').value;
 
       if (!sizeId || !colorId) {
@@ -2645,7 +3148,6 @@
           // Reset form
           document.getElementById('new_variant_size').value = '';
           document.getElementById('new_variant_color').value = '';
-          document.getElementById('new_variant_stock').value = '0';
           document.getElementById('new_variant_price').value = '';
 
           // Reload variants
@@ -2674,11 +3176,9 @@
       .then(response => response.json())
       .then(data => {
         if (data.success) {
-          // Visual feedback
-          event.target.style.borderColor = '#10b981';
-          setTimeout(() => {
-            event.target.style.borderColor = '#e2e8f0';
-          }, 1000);
+          // Reload to update custom price indicators
+          const productId = document.getElementById('variants_product_id').value;
+          loadVariants(productId);
         }
       });
     }
@@ -2993,6 +3493,8 @@
       const sku = document.getElementById('variant_sku').value;
       const stock = document.getElementById('variant_stock').value;
       const price = document.getElementById('variant_price').value;
+      const cost = document.getElementById('variant_cost').value;
+      const useBaseCost = document.getElementById('cost_mode_base').checked;
 
       if (!sizeId || !colorId) {
         alert('Please select both size and color');
@@ -3015,15 +3517,32 @@
       });
 
       const csrftoken = getCookie('csrftoken');
+
+      console.log('Saving variant:', {
+        variantId,
+        productId,
+        sizeId,
+        colorId,
+        materialId,
+        sku,
+        stock,
+        price,
+        cost,
+        useBaseCost,
+        images: variantImages
+      });
+
       const formData = new URLSearchParams({
         'action': variantId ? 'update_variant' : 'add_variant',
         'product_id': productId,
         'size_id': sizeId,
         'color_id': colorId,
-        'material_id': materialId,
+        'material_id': materialId || '',
         'sku': sku,
         'stock_quantity': stock,
         'price': price,
+        'cost': cost || '',
+        'use_base_cost': useBaseCost ? 'true' : 'false',
         'images': JSON.stringify(variantImages),
         'custom_fields': JSON.stringify(customFields)
       });
@@ -3040,7 +3559,12 @@
         },
         body: formData
       })
-      .then(response => response.json())
+      .then(response => {
+        if (!response.ok) {
+          throw new Error('Network response was not ok: ' + response.status);
+        }
+        return response.json();
+      })
       .then(data => {
         if (data.success) {
           closeVariantForm();
@@ -3048,6 +3572,10 @@
         } else {
           alert('Error: ' + (data.error || 'Failed to save variant'));
         }
+      })
+      .catch(error => {
+        console.error('Save variant error:', error);
+        alert('Error saving variant: ' + error.message);
       });
     }
 
@@ -3062,6 +3590,290 @@
     document.getElementById('variantFormModal').addEventListener('click', function(e) {
       if (e.target === this) {
         closeVariantForm();
+      }
+    });
+
+    // ============================================
+    // RESTOCK / SHIPMENT FUNCTIONS
+    // ============================================
+    let currentRestockVariantId = null;
+    let currentRestockVariantSku = null;
+    let pendingShipmentsList = [];
+
+    function openRestockModal(variantId, sku) {
+      currentRestockVariantId = variantId;
+      currentRestockVariantSku = sku;
+
+      // Update modal title with SKU
+      document.getElementById('restock_variant_sku').textContent = sku;
+
+      // Reset form
+      document.getElementById('restock_quantity').value = '';
+      document.getElementById('restock_unit_cost').value = '';
+      document.getElementById('restock_shipment_select').value = '';
+      document.getElementById('quick_shipment_form').style.display = 'none';
+      document.getElementById('quick_supplier').value = '';
+      document.getElementById('quick_tracking').value = '';
+
+      // Find variant in allVariants to show current pending info
+      const variant = allVariants.find(v => v.id === variantId);
+      displayCurrentPending(variant);
+
+      // Load available shipments
+      loadPendingShipments();
+
+      document.getElementById('restockModal').classList.add('active');
+    }
+
+    function closeRestockModal() {
+      document.getElementById('restockModal').classList.remove('active');
+      currentRestockVariantId = null;
+      currentRestockVariantSku = null;
+    }
+
+    function loadPendingShipments() {
+      const csrftoken = getCookie('csrftoken');
+
+      fetch(window.location.pathname, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded',
+          'X-CSRFToken': csrftoken,
+        },
+        body: new URLSearchParams({
+          'action': 'get_pending_shipments'
+        })
+      })
+      .then(response => response.json())
+      .then(data => {
+        if (data.success) {
+          pendingShipmentsList = data.shipments;
+          const select = document.getElementById('restock_shipment_select');
+          select.innerHTML = '<option value="">Select a shipment...</option>';
+
+          data.shipments.forEach(shipment => {
+            const option = document.createElement('option');
+            option.value = shipment.id;
+            const statusEmoji = shipment.status === 'pending' ? '📦' : shipment.status === 'in-transit' ? '🚚' : '⏳';
+            const displayName = shipment.name || shipment.tracking_number;
+            option.textContent = `${statusEmoji} ${displayName} - ${shipment.supplier} (${shipment.item_count} items)`;
+            select.appendChild(option);
+          });
+
+          // Add "Create new" option
+          const newOption = document.createElement('option');
+          newOption.value = 'new';
+          newOption.textContent = '➕ Create new shipment...';
+          newOption.style.fontWeight = '600';
+          select.appendChild(newOption);
+        }
+      });
+    }
+
+    function onShipmentSelectChange() {
+      const select = document.getElementById('restock_shipment_select');
+      const quickForm = document.getElementById('quick_shipment_form');
+
+      if (select.value === 'new') {
+        quickForm.style.display = 'block';
+      } else {
+        quickForm.style.display = 'none';
+      }
+    }
+
+    function toggleQuickShipmentForm() {
+      const form = document.getElementById('quick_shipment_form');
+      form.style.display = form.style.display === 'none' ? 'block' : 'none';
+    }
+
+    async function createQuickShipment() {
+      const supplier = document.getElementById('quick_supplier').value.trim();
+      const tracking = document.getElementById('quick_tracking').value.trim();
+
+      if (!supplier) {
+        alert('Please enter a supplier name');
+        return null;
+      }
+
+      const csrftoken = getCookie('csrftoken');
+
+      try {
+        const response = await fetch(window.location.pathname, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+            'X-CSRFToken': csrftoken,
+          },
+          body: new URLSearchParams({
+            'action': 'quick_create_shipment',
+            'supplier': supplier,
+            'tracking_number': tracking
+          })
+        });
+
+        const data = await response.json();
+
+        if (data.success) {
+          showToast(`Shipment ${data.shipment.tracking_number} created`);
+          return data.shipment.id;
+        } else {
+          alert('Error creating shipment: ' + (data.error || 'Unknown error'));
+          return null;
+        }
+      } catch (error) {
+        console.error('Error:', error);
+        alert('Failed to create shipment');
+        return null;
+      }
+    }
+
+    async function submitRestock() {
+      const select = document.getElementById('restock_shipment_select');
+      let shipmentId = select.value;
+      const quantity = document.getElementById('restock_quantity').value;
+      const unitCost = document.getElementById('restock_unit_cost').value;
+
+      if (!quantity || parseInt(quantity) <= 0) {
+        alert('Please enter a valid quantity');
+        return;
+      }
+
+      // If "new" selected, create shipment first
+      if (shipmentId === 'new') {
+        shipmentId = await createQuickShipment();
+        if (!shipmentId) return;
+      }
+
+      if (!shipmentId) {
+        alert('Please select a shipment');
+        return;
+      }
+
+      const csrftoken = getCookie('csrftoken');
+
+      fetch(window.location.pathname, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded',
+          'X-CSRFToken': csrftoken,
+        },
+        body: new URLSearchParams({
+          'action': 'add_variant_to_shipment',
+          'shipment_id': shipmentId,
+          'variant_id': currentRestockVariantId,
+          'quantity': quantity,
+          'unit_cost': unitCost || '0'
+        })
+      })
+      .then(response => response.json())
+      .then(data => {
+        if (data.success) {
+          closeRestockModal();
+          showToast(`Added ${quantity} units of ${currentRestockVariantSku} to shipment`);
+          // Reload variants to update incoming counts
+          const productId = document.getElementById('variants_product_id').value;
+          loadVariants(productId);
+        } else {
+          alert('Error: ' + (data.error || 'Failed to add to shipment'));
+        }
+      });
+    }
+
+    function displayCurrentPending(variant) {
+      const container = document.getElementById('restock_current_pending');
+
+      if (!variant || !variant.pending_shipments || variant.pending_shipments.length === 0) {
+        container.innerHTML = '<p style="color: #64748b; font-size: 0.875rem; font-style: italic;">No pending shipments for this variant.</p>';
+        return;
+      }
+
+      let html = '<div style="display: flex; flex-direction: column; gap: 0.5rem;">';
+      variant.pending_shipments.forEach(item => {
+        const statusColors = {
+          'pending': { bg: '#fef3c7', text: '#92400e' },
+          'in-transit': { bg: '#dbeafe', text: '#1e40af' },
+          'delayed': { bg: '#fee2e2', text: '#991b1b' }
+        };
+        const colors = statusColors[item.status] || { bg: '#f1f5f9', text: '#64748b' };
+        const displayName = item.name || item.tracking;
+
+        html += `
+          <div style="display: flex; align-items: center; justify-content: space-between; padding: 0.75rem; background: ${colors.bg}; border-radius: 8px;">
+            <div>
+              <div style="font-weight: 600; color: ${colors.text}; font-size: 0.875rem;">${displayName}</div>
+              ${item.name ? `<div style="font-size: 0.7rem; color: #94a3b8; font-family: monospace;">${item.tracking}</div>` : ''}
+              <div style="font-size: 0.75rem; color: #64748b;">${item.supplier}</div>
+            </div>
+            <div style="text-align: right;">
+              <div style="font-weight: 700; color: ${colors.text};">+${item.quantity}</div>
+              <div style="font-size: 0.75rem; color: #64748b;">${item.expected_date || 'No date'}</div>
+            </div>
+          </div>
+        `;
+      });
+      html += '</div>';
+
+      container.innerHTML = html;
+    }
+
+    function showIncomingDetails(variantId) {
+      const variant = allVariants.find(v => v.id === variantId);
+      if (!variant || !variant.pending_shipments || variant.pending_shipments.length === 0) {
+        return;
+      }
+
+      document.getElementById('incoming_variant_sku').textContent = variant.sku;
+
+      let html = '<div style="display: flex; flex-direction: column; gap: 0.75rem;">';
+      variant.pending_shipments.forEach(item => {
+        const statusColors = {
+          'pending': { bg: '#fef3c7', text: '#92400e', icon: 'clock' },
+          'in-transit': { bg: '#dbeafe', text: '#1e40af', icon: 'truck' },
+          'delayed': { bg: '#fee2e2', text: '#991b1b', icon: 'exclamation-triangle' }
+        };
+        const colors = statusColors[item.status] || { bg: '#f1f5f9', text: '#64748b', icon: 'box' };
+
+        html += `
+          <div style="display: flex; align-items: center; gap: 1rem; padding: 1rem; background: ${colors.bg}; border-radius: 10px; border: 1px solid ${colors.text}20;">
+            <div style="width: 40px; height: 40px; background: white; border-radius: 8px; display: flex; align-items: center; justify-content: center;">
+              <i class="fa-solid fa-${colors.icon}" style="color: ${colors.text}; font-size: 1rem;"></i>
+            </div>
+            <div style="flex: 1;">
+              <div style="font-weight: 600; color: ${colors.text}; font-size: 0.9375rem; margin-bottom: 0.25rem;">${item.tracking}</div>
+              <div style="font-size: 0.8125rem; color: #64748b;">${item.supplier}</div>
+            </div>
+            <div style="text-align: right;">
+              <div style="font-weight: 700; font-size: 1.25rem; color: ${colors.text};">+${item.quantity}</div>
+              <div style="font-size: 0.75rem; color: #64748b;">
+                ${item.expected_date ? `ETA: ${new Date(item.expected_date).toLocaleDateString()}` : 'No ETA'}
+              </div>
+            </div>
+          </div>
+        `;
+      });
+      html += '</div>';
+
+      document.getElementById('incoming_details_list').innerHTML = html;
+      document.getElementById('incoming_total_count').textContent = variant.pending_total;
+
+      document.getElementById('incomingDetailsModal').classList.add('active');
+    }
+
+    function closeIncomingDetailsModal() {
+      document.getElementById('incomingDetailsModal').classList.remove('active');
+    }
+
+    // Close restock modal on overlay click
+    document.getElementById('restockModal').addEventListener('click', function(e) {
+      if (e.target === this) {
+        closeRestockModal();
+      }
+    });
+
+    // Close incoming details modal on overlay click
+    document.getElementById('incomingDetailsModal').addEventListener('click', function(e) {
+      if (e.target === this) {
+        closeIncomingDetailsModal();
       }
     });
   </script>
@@ -3109,9 +3921,15 @@
         <textarea id="add_description" name="description" class="form-input" rows="4" placeholder="Enter product description..."></textarea>
       </div>
 
-      <div class="form-group">
-        <label for="add_base_price">Base Price ($) <span style="color: #ef4444;">*</span></label>
-        <input type="number" id="add_base_price" name="base_price" class="form-input" step="0.01" min="0" placeholder="0.00" required>
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+        <div class="form-group" style="margin-bottom: 0;">
+          <label for="add_base_price">Base Price ($) <span style="color: #ef4444;">*</span></label>
+          <input type="number" id="add_base_price" name="base_price" class="form-input" step="1" min="0" placeholder="0.00" required>
+        </div>
+        <div class="form-group" style="margin-bottom: 0;">
+          <label for="add_base_cost">Base Cost ($)</label>
+          <input type="number" id="add_base_cost" name="base_cost" class="form-input" step="1" min="0" placeholder="0.00" value="0">
+        </div>
       </div>
 
       <div class="form-group">

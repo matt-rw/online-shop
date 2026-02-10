@@ -101,6 +101,9 @@ class Product(models.Model):
     base_price = models.DecimalField(
         max_digits=10, decimal_places=2, help_text="Starting/base price for this product"
     )
+    base_cost = models.DecimalField(
+        max_digits=10, decimal_places=2, default=0, help_text="Base cost for this product (used for profit calculations)"
+    )
     is_active = models.BooleanField(default=True, db_index=True)
     available_for_purchase = models.BooleanField(
         default=True, help_text="If False, product is visible but shows 'Not Available' instead of Add to Cart"
@@ -248,6 +251,10 @@ class ProductVariant(models.Model):
     stock_quantity = models.PositiveIntegerField(default=0)
     price = models.DecimalField(
         max_digits=10, decimal_places=2, help_text="Price for this specific variant"
+    )
+    cost = models.DecimalField(
+        max_digits=10, decimal_places=2, null=True, blank=True,
+        help_text="Cost for this specific variant (leave blank to use product base cost)"
     )
     is_active = models.BooleanField(default=True, db_index=True)
 

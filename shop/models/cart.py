@@ -35,6 +35,29 @@ class CartItem(models.Model):
     )
     quantity = models.PositiveIntegerField(default=1, validators=[MinValueValidator(1)])
 
+    class Meta:
+        unique_together = ["cart", "variant"]
+
+
+class BundleCartItem(models.Model):
+    """Cart item for bundles with selected size."""
+
+    cart = models.ForeignKey(
+        Cart,
+        related_name="bundle_items",
+        on_delete=models.CASCADE,
+    )
+    bundle = models.ForeignKey(
+        "shop.Bundle", on_delete=models.PROTECT
+    )
+    size = models.ForeignKey(
+        "shop.Size", on_delete=models.PROTECT
+    )
+    quantity = models.PositiveIntegerField(default=1, validators=[MinValueValidator(1)])
+
+    class Meta:
+        unique_together = ["cart", "bundle", "size"]
+
 
 # ORDERS #
 class Address(models.Model):

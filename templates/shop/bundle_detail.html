@@ -1,0 +1,253 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ bundle.name }} - Blueprint Apparel{% endblock %}
+
+{% block extra_css %}
+<style>
+  .size-btn {
+    transition: all 0.15s ease;
+  }
+  .size-btn:hover:not(:disabled) {
+    background-color: black;
+    color: white;
+  }
+  .size-btn.size-selected {
+    background-color: black;
+    color: white;
+  }
+  .size-btn:disabled {
+    color: #d1d5db;
+    cursor: not-allowed;
+    text-decoration: line-through;
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+
+<!-- Breadcrumb -->
+<div class="border-b border-black">
+  <div class="max-w-7xl mx-auto px-6 py-3">
+    <nav class="flex items-center text-xs tracking-wider">
+      <a href="{% url 'home' %}" class="text-neutral-500 hover:text-black transition-colors uppercase">Home</a>
+      <span class="mx-3 text-neutral-300">/</span>
+      <a href="{% url 'shop:shop' %}" class="text-neutral-500 hover:text-black transition-colors uppercase">Shop</a>
+      <span class="mx-3 text-neutral-300">/</span>
+      <span class="text-black uppercase">{{ bundle.name }}</span>
+    </nav>
+  </div>
+</div>
+
+<!-- Bundle Detail -->
+<section class="bg-white">
+  <div class="max-w-7xl mx-auto">
+    <div class="grid grid-cols-1 lg:grid-cols-2">
+
+      <!-- Left: Image -->
+      <div class="border-r border-black">
+        <div class="relative" style="aspect-ratio: 4/5;">
+          <img id="main-image"
+               src="{{ main_image }}"
+               alt="{{ bundle.name }}"
+               class="w-full h-full object-cover" />
+          <!-- Bundle badge -->
+          <div class="absolute top-4 left-4 px-3 py-1 bg-black text-white text-xs uppercase tracking-widest font-medium">
+            Bundle
+          </div>
+        </div>
+
+        <!-- Thumbnail Gallery -->
+        {% if images|length > 1 %}
+        <div class="border-t border-black p-4">
+          <div class="flex gap-3 overflow-x-auto">
+            {% for image in images %}
+            <button onclick="document.getElementById('main-image').src='{{ image }}'"
+                    class="flex-shrink-0 w-20 h-24 border border-black hover:border-2 transition-all overflow-hidden">
+              <img src="{{ image }}" alt="{{ bundle.name }}" class="w-full h-full object-cover" />
+            </button>
+            {% endfor %}
+          </div>
+        </div>
+        {% endif %}
+      </div>
+
+      <!-- Right: Bundle Info -->
+      <div class="p-6 lg:p-12 flex flex-col">
+
+        <!-- Bundle Header -->
+        <div class="border-b border-black pb-6 mb-6">
+          <p class="text-xs text-neutral-500 uppercase tracking-wider mb-2">Bundle</p>
+          <h1 class="text-2xl md:text-3xl font-bold tracking-tight mb-4">"{{ bundle.name|upper }}"</h1>
+          <div class="flex items-center gap-4">
+            <span class="text-2xl font-bold">${{ bundle.effective_price }}</span>
+            {% if bundle.savings > 0 %}
+            <span class="text-sm text-neutral-500 line-through">${{ bundle.component_total }}</span>
+            <span class="px-2 py-1 bg-green-100 text-green-800 text-xs font-medium">Save {{ bundle.savings_percent }}%</span>
+            {% endif %}
+          </div>
+        </div>
+
+        <!-- Includes Section -->
+        {% if bundle.show_includes %}
+        <div class="mb-6">
+          <span class="text-xs tracking-widest uppercase font-medium block mb-3">Includes</span>
+          <div class="space-y-3">
+            {% for comp in components %}
+            <div class="flex items-center gap-4 p-3 border border-neutral-200">
+              <img src="{{ comp.image }}" alt="{{ comp.product.name }}" class="w-16 h-20 object-cover" />
+              <div>
+                <p class="font-medium">{{ comp.product.name }}</p>
+                {% if comp.quantity > 1 %}
+                <p class="text-sm text-neutral-500">Qty: {{ comp.quantity }}</p>
+                {% endif %}
+                <p class="text-sm text-neutral-400">${{ comp.product.base_price }}</p>
+              </div>
+            </div>
+            {% endfor %}
+          </div>
+        </div>
+        {% endif %}
+
+        <!-- Size Selection -->
+        {% if available_sizes %}
+        <div class="mb-6">
+          <div class="flex justify-between items-center mb-3">
+            <span class="text-xs tracking-widest uppercase font-medium">Size</span>
+            <span class="text-xs text-neutral-500">All items in same size</span>
+          </div>
+          <div class="flex flex-wrap gap-2">
+            {% for size in available_sizes %}
+            <button onclick="selectSize({{ size.id }}, '{{ size.code }}')"
+                    class="size-btn w-14 h-10 border border-black text-sm font-medium uppercase tracking-wide"
+                    data-size-id="{{ size.id }}">
+              {{ size.label|default:size.code }}
+            </button>
+            {% endfor %}
+          </div>
+          <input type="hidden" id="selected-size-id" value="">
+        </div>
+        {% endif %}
+
+        <!-- Quantity -->
+        <div class="mb-8" id="quantity-section" {% if not has_stock %}style="display: none;"{% endif %}>
+          <span class="text-xs tracking-widest uppercase font-medium block mb-3">Quantity</span>
+          <div class="flex items-center border border-black w-fit">
+            <button type="button" onclick="decrementQty()" class="px-4 py-2 hover:bg-black hover:text-white transition-colors">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 12H4"></path>
+              </svg>
+            </button>
+            <input type="number" id="quantity" value="1" min="1" max="10"
+                   class="w-12 text-center border-x border-black py-2 font-medium" readonly />
+            <button type="button" onclick="incrementQty()" class="px-4 py-2 hover:bg-black hover:text-white transition-colors">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+              </svg>
+            </button>
+          </div>
+        </div>
+
+        <!-- Add to Cart Button -->
+        <form action="{% url 'shop:add_bundle_to_cart' %}" method="POST" class="mb-8" id="add-to-cart-form">
+          {% csrf_token %}
+          <input type="hidden" name="bundle_id" value="{{ bundle.id }}">
+          <input type="hidden" name="size_id" id="form-size-id" value="">
+          <input type="hidden" name="quantity" id="form-quantity" value="1">
+          {% if not has_stock %}
+          <button type="button" disabled
+                  class="w-full py-4 bg-neutral-300 text-neutral-500 font-bold uppercase tracking-widest text-sm cursor-not-allowed">
+            Out of Stock
+          </button>
+          {% else %}
+          <button type="submit" id="add-to-cart-btn" disabled
+                  class="w-full py-4 bg-neutral-300 text-neutral-500 font-bold uppercase tracking-widest text-sm cursor-not-allowed">
+            Select Size
+          </button>
+          {% endif %}
+        </form>
+
+        <!-- Description -->
+        <div class="border-t border-black pt-6 space-y-4 mt-auto">
+          <div>
+            <span class="text-xs tracking-widest uppercase font-medium block mb-2">Description</span>
+            <p class="text-neutral-600 text-sm leading-relaxed">
+              {{ bundle.description|default:"Get the complete look with this curated bundle. All items are selected to work perfectly together." }}
+            </p>
+          </div>
+
+          <details class="mt-8 group">
+            <summary class="flex justify-between items-center cursor-pointer text-xs tracking-widest uppercase font-medium mb-2">
+              Shipping & Returns
+              <svg class="w-4 h-4 transition-transform group-open:rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+              </svg>
+            </summary>
+            <ul class="space-y-2 text-sm text-neutral-600 leading-relaxed">
+              <li>Free shipping on orders over $100</li>
+              <li>Standard shipping: 5-7 business days</li>
+              <li>Returns for store credit within 30 days</li>
+            </ul>
+          </details>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Section Divider -->
+<div class="border-t border-black">
+  <div class="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center">
+    <span class="text-xs tracking-wider text-neutral-500">Bundle: {{ bundle.slug|upper }}</span>
+    <span class="text-xs tracking-widest uppercase font-medium">Blueprint Apparel</span>
+  </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  let selectedSizeId = null;
+
+  function selectSize(sizeId, sizeCode) {
+    selectedSizeId = sizeId;
+    document.getElementById('selected-size-id').value = sizeId;
+    document.getElementById('form-size-id').value = sizeId;
+
+    // Update button states
+    document.querySelectorAll('.size-btn').forEach(btn => {
+      if (parseInt(btn.dataset.sizeId) === sizeId) {
+        btn.classList.add('size-selected');
+      } else {
+        btn.classList.remove('size-selected');
+      }
+    });
+
+    // Enable add to cart button
+    const btn = document.getElementById('add-to-cart-btn');
+    btn.disabled = false;
+    btn.textContent = 'Add to Cart';
+    btn.className = 'w-full py-4 bg-black text-white font-bold uppercase tracking-widest text-sm hover:bg-neutral-800 transition-colors';
+  }
+
+  function incrementQty() {
+    const input = document.getElementById('quantity');
+    const formInput = document.getElementById('form-quantity');
+    const max = parseInt(input.max) || 10;
+    if (parseInt(input.value) < max) {
+      input.value = parseInt(input.value) + 1;
+      formInput.value = input.value;
+    }
+  }
+
+  function decrementQty() {
+    const input = document.getElementById('quantity');
+    const formInput = document.getElementById('form-quantity');
+    if (parseInt(input.value) > 1) {
+      input.value = parseInt(input.value) - 1;
+      formInput.value = input.value;
+    }
+  }
+</script>
+{% endblock %}

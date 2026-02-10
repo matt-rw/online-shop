@@ -658,7 +658,7 @@
     </div>
 
     <!-- Quick Send Widget -->
-    <div id="quickSendWidget" class="quick-send-widget">
+    <div id="quickSendWidget" class="quick-send-widget collapsed">
       <div class="quick-send-header" onclick="toggleQuickSendWidget()">
         <div style="display: flex; align-items: center; gap: 0.5rem;">
           <span id="quickSendToggleIcon" class="quick-send-chevron">
@@ -740,6 +740,12 @@
         <div class="icon">📦</div>
         <h3>Manage Products</h3>
         <p>Add, edit, and organize your product catalog. {{ stats.total_products }} product{{ stats.total_products|pluralize }} total.</p>
+      </a>
+
+      <a href="{% url 'admin_bundles' %}" class="admin-card">
+        <div class="icon">🎁</div>
+        <h3>Bundles</h3>
+        <p>Create product bundles to sell sets of items together at a special price.</p>
       </a>
 
       <a href="{% url 'admin_categories' %}" class="admin-card">

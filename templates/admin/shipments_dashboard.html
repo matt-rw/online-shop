@@ -4,7 +4,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Incoming Shipments - Blueprint Apparel</title>
+  <title>Shipments - Blueprint Apparel</title>
   <link rel="icon" type="image/svg+xml" href="{% static 'admin-favicon.svg' %}">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
@@ -346,12 +346,12 @@
     }
 
     .variants-table th {
-      background: #f8fafc;
+      background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
       padding: 0.75rem;
       text-align: left;
       font-weight: 600;
-      color: #64748b;
-      border-bottom: 2px solid #e2e8f0;
+      color: white;
+      border-bottom: 2px solid #1d4ed8;
       font-size: 0.75rem;
       text-transform: uppercase;
       letter-spacing: 0.05em;
@@ -469,6 +469,59 @@
     .chevron-icon.collapsed {
       transform: rotate(-90deg);
     }
+
+    .add-product-btn {
+      background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+      color: white;
+      border: none;
+      padding: 0.625rem 1.25rem;
+      border-radius: 8px;
+      font-size: 0.8125rem;
+      font-weight: 600;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      transition: all 0.2s ease;
+      box-shadow: 0 2px 8px rgba(59, 130, 246, 0.25);
+    }
+
+    .add-product-btn:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(59, 130, 246, 0.35);
+      background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+    }
+
+    .add-product-btn:active {
+      transform: translateY(0);
+      box-shadow: 0 2px 4px rgba(59, 130, 246, 0.2);
+    }
+
+    .add-product-btn i {
+      font-size: 0.75rem;
+    }
+
+    .price-preset {
+      background: white;
+      border: 1px solid #e2e8f0;
+      padding: 0.375rem 0.75rem;
+      border-radius: 6px;
+      font-size: 0.8125rem;
+      font-weight: 500;
+      color: #475569;
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+
+    .price-preset:hover {
+      background: #3b82f6;
+      border-color: #3b82f6;
+      color: white;
+    }
+
+    .price-preset:active {
+      transform: scale(0.95);
+    }
   </style>
   {% include "admin/partials/dark_mode_apply.html" %}
 </head>
@@ -481,7 +534,7 @@
     <div class="container">
       <div class="header">
         <h1>Shipments</h1>
-        <button class="btn-primary" onclick="openCreateShipmentModal()">+ Add Shipment</button>
+        <button class="btn-primary" onclick="openCreateShipmentModal()"><i class="fa-solid fa-plus"></i> New</button>
       </div>
     </div>
   </div>
@@ -513,7 +566,7 @@
 
     <!-- Shipments List -->
     <div class="content-card" style="border-radius: 16px; padding: 2rem; box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);">
-      <h2 style="font-size: 1.5rem; font-weight: 700; margin-bottom: 1.5rem;">All Shipments ({{ shipments|length }})</h2>
+      <h2 style="font-size: 1.25rem; font-weight: 600; margin-bottom: 1.5rem; color: #374151;">All Shipments <span style="color: #9ca3af; font-weight: 500;">({{ shipments|length }})</span></h2>
 
       {% if shipments %}
         {% for shipment in shipments %}
@@ -521,8 +574,9 @@
           <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 1rem;">
             <div>
               <h3 style="font-size: 1.125rem; font-weight: 700; color: #0f172a; margin-bottom: 0.5rem;">
-                {{ shipment.tracking_number }}
+                {% if shipment.name %}{{ shipment.name }}{% else %}{{ shipment.tracking_number }}{% endif %}
               </h3>
+              {% if shipment.name %}<div style="font-size: 0.75rem; color: #64748b; font-family: monospace;">{{ shipment.tracking_number }}</div>{% endif %}
               <span class="status-badge {{ shipment.status }}">{{ shipment.status|title }}</span>
             </div>
             <button class="btn btn-secondary btn-sm" onclick="openEditShipmentModal({{ shipment.id }})">
@@ -612,209 +666,404 @@
 
   <!-- Shipment Modal -->
   <div class="modal-overlay" id="shipmentModal">
-    <div class="modal-content">
-      <h2 id="modalTitle" style="font-size: 1.75rem; font-weight: 700; margin-bottom: 1.5rem;">Add Shipment</h2>
+    <div class="modal-content" style="max-width: 600px; max-height: 95vh; padding: 0; overflow: hidden;">
+      <div class="modal-header" style="background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%); padding: 1.25rem 1.5rem; border-bottom: none; display: flex; justify-content: space-between; align-items: center;">
+        <h2 id="modalTitle" style="color: white; font-size: 1.125rem; font-weight: 700; display: flex; align-items: center; gap: 0.5rem; margin: 0;">
+          <i class="fa-solid fa-truck-fast"></i> New Order
+        </h2>
+        <button class="modal-close" onclick="closeShipmentModal()" style="background: rgba(255,255,255,0.15); border: none; color: white; width: 32px; height: 32px; border-radius: 6px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: background 0.2s;">
+          <i class="fa-solid fa-times"></i>
+        </button>
+      </div>
 
       <form id="shipmentForm">
         <input type="hidden" id="shipmentId">
 
-        <div class="form-row">
-          <div class="form-group">
-            <label for="trackingNumber">Tracking Number *</label>
-            <input type="text" id="trackingNumber" required>
-          </div>
+        <div class="modal-body" style="background: #f8fafc; padding: 1.5rem 2rem; max-height: calc(95vh - 200px); overflow-y: auto;">
 
-          <div class="form-group">
-            <label for="supplier">Supplier *</label>
-            <input type="text" id="supplier" required>
-          </div>
-        </div>
-
-        <div class="form-row">
-          <div class="form-group">
-            <label for="status">Status *</label>
-            <select id="status" required>
-              <option value="pending">Pending</option>
-              <option value="in-transit">In Transit</option>
-              <option value="delivered">Delivered</option>
-              <option value="delayed">Delayed</option>
-            </select>
-          </div>
-
-          <div class="form-group">
-            <label for="expectedDate">Expected Delivery Date *</label>
-            <input type="date" id="expectedDate" required>
-          </div>
-        </div>
-
-        <div class="form-row">
-          <div class="form-group">
-            <label for="dateShipped">Date Shipped</label>
-            <input type="date" id="dateShipped">
-          </div>
-
-          <div class="form-group">
-            <label for="dateReceived">Date Received</label>
-            <input type="date" id="dateReceived">
-          </div>
-        </div>
-
-        <div class="form-group">
-          <label for="notes">Notes</label>
-          <textarea id="notes" rows="3"></textarea>
-        </div>
-
-        <!-- Cost Fields -->
-        <div style="margin-top: 2rem; padding-top: 2rem; border-top: 2px solid #e2e8f0;">
-          <h3 style="font-size: 1rem; font-weight: 600; margin-bottom: 1rem;">Shipment Costs</h3>
-
-          <div class="form-row">
-            <div class="form-group">
-              <label for="manufacturingCost">Manufacturing Cost</label>
-              <input type="number" id="manufacturingCost" step="0.01" min="0" value="0" onchange="updateCostSummary()">
+          <!-- Supplier & Date Card -->
+          <div style="background: white; border: 1px solid #e2e8f0; border-radius: 12px; padding: 1.25rem; margin-bottom: 1rem;">
+            <h3 style="font-size: 0.8125rem; font-weight: 600; color: #64748b; margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem;">
+              <i class="fa-solid fa-building" style="color: #94a3b8;"></i> Details
+            </h3>
+            <div class="form-group" style="margin-bottom: 1rem;">
+              <label style="font-size: 0.8125rem; font-weight: 600; color: #374151; margin-bottom: 0.25rem; display: block;">Name</label>
+              <input type="text" id="shipmentName" placeholder="e.g. Spring 2025 Restock (optional)" style="width: 100%; padding: 0.625rem; border: 1px solid #d1d5db; border-radius: 6px; font-size: 0.875rem;">
             </div>
-
-            <div class="form-group">
-              <label for="shippingCost">Shipping Cost</label>
-              <input type="number" id="shippingCost" step="0.01" min="0" value="0" onchange="updateCostSummary()">
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+              <div class="form-group" style="margin-bottom: 0;">
+                <label style="font-size: 0.8125rem; font-weight: 600; color: #374151; margin-bottom: 0.25rem; display: block;">Supplier *</label>
+                {% if saved_suppliers %}
+                <div style="display: flex; gap: 0.5rem;">
+                  <select id="supplierSelect" onchange="onSupplierSelect(this)" style="flex: 1; padding: 0.625rem; border: 1px solid #d1d5db; border-radius: 6px; font-size: 0.875rem; background: white;">
+                    <option value="">Select or type new...</option>
+                    {% for supplier in saved_suppliers %}
+                    <option value="{{ supplier }}">{{ supplier }}</option>
+                    {% endfor %}
+                    <option value="__new__">+ Add new supplier</option>
+                  </select>
+                  <input type="text" id="supplier" placeholder="New supplier name" style="flex: 1; padding: 0.625rem; border: 1px solid #d1d5db; border-radius: 6px; font-size: 0.875rem; display: none;" required>
+                  <button type="button" id="cancelNewSupplier" onclick="cancelNewSupplier()" style="display: none; background: #f1f5f9; border: 1px solid #d1d5db; border-radius: 6px; padding: 0 0.75rem; cursor: pointer; color: #64748b;">
+                    <i class="fa-solid fa-times"></i>
+                  </button>
+                </div>
+                {% else %}
+                <input type="text" id="supplier" placeholder="e.g. Factory ABC" style="width: 100%; padding: 0.625rem; border: 1px solid #d1d5db; border-radius: 6px; font-size: 0.875rem;" required>
+                {% endif %}
+              </div>
+              <div class="form-group" style="margin-bottom: 0;">
+                <label style="font-size: 0.8125rem; font-weight: 600; color: #374151; margin-bottom: 0.25rem; display: block;">Expected Arrival</label>
+                <input type="date" id="expectedDate" style="width: 100%; padding: 0.625rem; border: 1px solid #d1d5db; border-radius: 6px; font-size: 0.875rem;">
+              </div>
+            </div>
+            <div class="form-group" style="margin-top: 1rem; margin-bottom: 0;">
+              <label style="font-size: 0.8125rem; font-weight: 600; color: #374151; margin-bottom: 0.25rem; display: block;">Notes</label>
+              <textarea id="notes" rows="2" placeholder="Any details about this order..." style="width: 100%; padding: 0.625rem; border: 1px solid #d1d5db; border-radius: 6px; font-size: 0.875rem; resize: vertical;"></textarea>
             </div>
           </div>
 
-          <div class="form-row">
-            <div class="form-group">
-              <label for="customsDuty">Customs Duty</label>
-              <input type="number" id="customsDuty" step="0.01" min="0" value="0" onchange="updateCostSummary()">
+          <!-- Products Card -->
+          <div style="background: white; border: 1px solid #e2e8f0; border-radius: 12px; padding: 1.25rem;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+              <h3 style="font-size: 0.8125rem; font-weight: 600; color: #64748b; margin: 0; display: flex; align-items: center; gap: 0.5rem;">
+                <i class="fa-solid fa-boxes-stacked" style="color: #94a3b8;"></i> Products
+              </h3>
+              <button type="button" class="add-product-btn" onclick="toggleAddVariantRow()">
+                <i class="fa-solid fa-plus"></i> Add
+              </button>
             </div>
 
-            <div class="form-group">
-              <label for="otherFees">Other Fees</label>
-              <input type="number" id="otherFees" step="0.01" min="0" value="0" onchange="updateCostSummary()">
+            <!-- Add Variant Row -->
+            <div class="add-variant-row" id="addVariantRow" style="display: none; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 1rem; margin-bottom: 1rem;">
+              <!-- Product Selector -->
+              <div id="productSelectorView">
+                <select id="variantSelect" onchange="onProductSelect(this)" style="width: 100%; padding: 0.625rem; border: 1px solid #d1d5db; border-radius: 6px; font-size: 0.875rem; background: white; cursor: pointer;">
+                  <option value="">Select a product...</option>
+                  {% for variant in variants %}
+                  <option value="{{ variant.id }}" data-sku="{{ variant.sku }}" data-name="{{ variant.display_name }}">{{ variant.display_name }} ({{ variant.sku }})</option>
+                  {% endfor %}
+                </select>
+              </div>
+
+              <!-- Selected Product Display -->
+              <div id="selectedProductView" style="display: none;">
+                <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 1rem; padding: 0.75rem; background: white; border-radius: 6px; border: 1px solid #e2e8f0;">
+                  <div style="width: 40px; height: 40px; background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%); border-radius: 8px; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+                    <i class="fa-solid fa-box" style="color: white; font-size: 1rem;"></i>
+                  </div>
+                  <div style="flex: 1; min-width: 0;">
+                    <div id="selectedProductName" style="font-weight: 600; color: #1e293b; font-size: 0.9375rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;"></div>
+                    <div id="selectedProductSku" style="font-size: 0.75rem; color: #64748b;"></div>
+                  </div>
+                  <button type="button" onclick="clearProductSelection()" style="background: none; border: none; color: #94a3b8; cursor: pointer; padding: 0.25rem;">
+                    <i class="fa-solid fa-times"></i>
+                  </button>
+                </div>
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; margin-bottom: 0.75rem;">
+                  <div>
+                    <label style="font-size: 0.75rem; font-weight: 500; color: #64748b; margin-bottom: 0.25rem; display: block;">Quantity</label>
+                    <div style="display: flex; align-items: center; gap: 0.5rem;">
+                      <button type="button" onclick="adjustQty(-1)" style="background: #f1f5f9; border: 1px solid #e2e8f0; width: 32px; height: 32px; border-radius: 6px; cursor: pointer; font-size: 1rem; color: #64748b;">−</button>
+                      <input type="number" id="variantQuantity" min="1" value="1" style="flex: 1; padding: 0.5rem; border: 1px solid #d1d5db; border-radius: 6px; font-size: 0.875rem; text-align: center;">
+                      <button type="button" onclick="adjustQty(1)" style="background: #f1f5f9; border: 1px solid #e2e8f0; width: 32px; height: 32px; border-radius: 6px; cursor: pointer; font-size: 1rem; color: #64748b;">+</button>
+                    </div>
+                  </div>
+                  <div>
+                    <label style="font-size: 0.75rem; font-weight: 500; color: #64748b; margin-bottom: 0.25rem; display: block;">Unit Cost</label>
+                    <input type="number" id="variantUnitCost" step="0.01" min="0" placeholder="$0.00" style="width: 100%; padding: 0.5rem; border: 1px solid #d1d5db; border-radius: 6px; font-size: 0.875rem; text-align: center;">
+                  </div>
+                </div>
+                <div style="display: flex; gap: 0.5rem; margin-bottom: 0.75rem; flex-wrap: wrap;">
+                  <button type="button" onclick="setPrice(5)" class="price-preset">$5</button>
+                  <button type="button" onclick="setPrice(10)" class="price-preset">$10</button>
+                  <button type="button" onclick="setPrice(15)" class="price-preset">$15</button>
+                  <button type="button" onclick="setPrice(20)" class="price-preset">$20</button>
+                  <button type="button" onclick="setPrice(25)" class="price-preset">$25</button>
+                  <button type="button" onclick="setPrice(50)" class="price-preset">$50</button>
+                </div>
+                <button type="button" onclick="addVariantToShipment()" style="width: 100%; background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white; border: none; padding: 0.625rem 1.25rem; border-radius: 6px; cursor: pointer; font-weight: 600; font-size: 0.875rem;">
+                  <i class="fa-solid fa-check"></i> Add to Order
+                </button>
+              </div>
+
+              <!-- Cancel link -->
+              <div style="text-align: center; margin-top: 0.75rem;">
+                <button type="button" onclick="toggleAddVariantRow()" style="background: none; border: none; color: #64748b; font-size: 0.8125rem; cursor: pointer;">Cancel</button>
+              </div>
+            </div>
+
+            <!-- Empty State -->
+            <div id="emptyVariantsState" style="text-align: center; padding: 2rem; background: #f8fafc; border-radius: 8px; border: 2px dashed #e2e8f0;">
+              <i class="fa-solid fa-box-open" style="font-size: 2rem; color: #cbd5e1; margin-bottom: 0.5rem; display: block;"></i>
+              <p style="color: #64748b; margin: 0; font-size: 0.875rem;">No products added yet</p>
+            </div>
+
+            <!-- Variants Table -->
+            <table class="variants-table" id="variantsTable" style="display: none;">
+              <thead>
+                <tr>
+                  <th>Product</th>
+                  <th>SKU</th>
+                  <th style="width: 70px;">Qty</th>
+                  <th id="receivedHeader" style="width: 70px; display: none;">Received</th>
+                  <th style="width: 80px;">Cost</th>
+                  <th style="width: 50px;"></th>
+                </tr>
+              </thead>
+              <tbody id="variantsTableBody">
+              </tbody>
+            </table>
+          </div>
+
+          <!-- Advanced Options Toggle -->
+          <div style="margin-top: 1rem;">
+            <button type="button" onclick="toggleAdvancedOptions()" style="background: none; border: none; color: #64748b; font-size: 0.8125rem; cursor: pointer; display: flex; align-items: center; gap: 0.5rem; padding: 0.5rem 0;">
+              <i class="fa-solid fa-chevron-right" id="advancedChevron" style="transition: transform 0.2s; font-size: 0.625rem;"></i>
+              Advanced options
+            </button>
+
+            <div id="advancedOptions" style="display: none; background: white; border: 1px solid #e2e8f0; border-radius: 12px; padding: 1.25rem; margin-top: 0.5rem;">
+              <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1rem;">
+                <div class="form-group" style="margin-bottom: 0;">
+                  <label style="font-size: 0.8125rem; font-weight: 600; color: #374151; margin-bottom: 0.25rem; display: block;">Tracking #</label>
+                  <input type="text" id="trackingNumber" placeholder="Auto-generated" style="width: 100%; padding: 0.5rem; border: 1px solid #d1d5db; border-radius: 6px; font-size: 0.875rem;">
+                </div>
+                <div class="form-group" style="margin-bottom: 0;">
+                  <label style="font-size: 0.8125rem; font-weight: 600; color: #374151; margin-bottom: 0.25rem; display: block;">Status</label>
+                  <select id="status" style="width: 100%; padding: 0.5rem; border: 1px solid #d1d5db; border-radius: 6px; font-size: 0.875rem;">
+                    <option value="pending">Pending</option>
+                    <option value="in-transit">In Transit</option>
+                    <option value="delivered">Delivered</option>
+                    <option value="delayed">Delayed</option>
+                  </select>
+                </div>
+              </div>
+              <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1rem;">
+                <div class="form-group" style="margin-bottom: 0;">
+                  <label style="font-size: 0.8125rem; font-weight: 600; color: #374151; margin-bottom: 0.25rem; display: block;">Date Shipped</label>
+                  <input type="date" id="dateShipped" style="width: 100%; padding: 0.5rem; border: 1px solid #d1d5db; border-radius: 6px; font-size: 0.875rem;">
+                </div>
+                <div class="form-group" style="margin-bottom: 0;">
+                  <label style="font-size: 0.8125rem; font-weight: 600; color: #374151; margin-bottom: 0.25rem; display: block;">Date Received</label>
+                  <input type="date" id="dateReceived" style="width: 100%; padding: 0.5rem; border: 1px solid #d1d5db; border-radius: 6px; font-size: 0.875rem;">
+                </div>
+              </div>
+              <div style="font-size: 0.8125rem; font-weight: 600; color: #64748b; margin-bottom: 0.5rem;">Costs</div>
+              <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 0.75rem;">
+                <div class="form-group" style="margin-bottom: 0;">
+                  <label style="font-size: 0.6875rem; color: #64748b; margin-bottom: 0.25rem; display: block;">Manufacturing</label>
+                  <input type="number" id="manufacturingCost" step="0.01" min="0" value="0" onchange="updateCostSummary()" style="width: 100%; padding: 0.375rem; border: 1px solid #d1d5db; border-radius: 6px; font-size: 0.8125rem; text-align: center;">
+                </div>
+                <div class="form-group" style="margin-bottom: 0;">
+                  <label style="font-size: 0.6875rem; color: #64748b; margin-bottom: 0.25rem; display: block;">Shipping</label>
+                  <input type="number" id="shippingCost" step="0.01" min="0" value="0" onchange="updateCostSummary()" style="width: 100%; padding: 0.375rem; border: 1px solid #d1d5db; border-radius: 6px; font-size: 0.8125rem; text-align: center;">
+                </div>
+                <div class="form-group" style="margin-bottom: 0;">
+                  <label style="font-size: 0.6875rem; color: #64748b; margin-bottom: 0.25rem; display: block;">Customs</label>
+                  <input type="number" id="customsDuty" step="0.01" min="0" value="0" onchange="updateCostSummary()" style="width: 100%; padding: 0.375rem; border: 1px solid #d1d5db; border-radius: 6px; font-size: 0.8125rem; text-align: center;">
+                </div>
+                <div class="form-group" style="margin-bottom: 0;">
+                  <label style="font-size: 0.6875rem; color: #64748b; margin-bottom: 0.25rem; display: block;">Other</label>
+                  <input type="number" id="otherFees" step="0.01" min="0" value="0" onchange="updateCostSummary()" style="width: 100%; padding: 0.375rem; border: 1px solid #d1d5db; border-radius: 6px; font-size: 0.8125rem; text-align: center;">
+                </div>
+              </div>
             </div>
           </div>
         </div>
 
-        <!-- Variants Section (only show when editing) -->
-        <div class="variants-section" id="variantsSection" style="display: none;">
-          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
-            <h3 style="font-size: 1rem; font-weight: 600;">Product Variants</h3>
-            <button type="button" class="btn btn-sm btn-success" onclick="toggleAddVariantRow()">
-              <i class="fa-solid fa-plus"></i> Add Variant
+        <div class="modal-footer" style="background: #f8fafc; border-top: 1px solid #e2e8f0; padding: 1.25rem 2rem; display: flex; justify-content: space-between; gap: 1rem;">
+          <button type="button" id="deleteShipmentBtn" class="btn btn-danger" onclick="showDeleteConfirmation()" style="padding: 0.75rem 1.5rem; display: none;">
+            <i class="fa-solid fa-trash"></i> Delete
+          </button>
+          <div style="display: flex; gap: 1rem; margin-left: auto;">
+            <button type="button" class="btn btn-secondary" onclick="closeShipmentModal()" style="padding: 0.75rem 1.5rem;">
+              Cancel
+            </button>
+            <button type="submit" class="btn btn-primary" style="background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%); color: white; border: none; padding: 0.75rem 1.5rem; box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);">
+              <i class="fa-solid fa-check"></i> Save
             </button>
           </div>
-
-          <!-- Add Variant Row -->
-          <div class="add-variant-row" id="addVariantRow" style="display: none;">
-            <div class="form-group" style="margin-bottom: 0;">
-              <label for="variantSelect">Select Variant</label>
-              <select id="variantSelect">
-                <option value="">Choose a variant...</option>
-                {% for variant in variants %}
-                <option value="{{ variant.id }}" data-sku="{{ variant.sku }}">{{ variant.display_name }} ({{ variant.sku }})</option>
-                {% endfor %}
-              </select>
-            </div>
-            <div class="form-group" style="margin-bottom: 0;">
-              <label for="variantQuantity">Quantity</label>
-              <input type="number" id="variantQuantity" min="1" value="1">
-            </div>
-            <div class="form-group" style="margin-bottom: 0;">
-              <label for="variantUnitCost">Unit Cost</label>
-              <input type="number" id="variantUnitCost" step="0.01" min="0" value="0">
-            </div>
-            <div style="display: flex; gap: 0.5rem;">
-              <button type="button" class="btn btn-sm btn-success" onclick="addVariantToShipment()">
-                <i class="fa-solid fa-check"></i>
-              </button>
-              <button type="button" class="btn btn-sm btn-secondary" onclick="toggleAddVariantRow()">
-                <i class="fa-solid fa-times"></i>
-              </button>
-            </div>
-          </div>
-
-          <!-- Variants Table -->
-          <table class="variants-table" id="variantsTable">
-            <thead>
-              <tr>
-                <th>SKU</th>
-                <th>Product</th>
-                <th>Qty Ordered</th>
-                <th>Qty Received</th>
-                <th>Unit Cost</th>
-                <th>Total</th>
-                <th style="width: 60px;"></th>
-              </tr>
-            </thead>
-            <tbody id="variantsTableBody">
-              <!-- Variant rows will be added here dynamically -->
-            </tbody>
-          </table>
-        </div>
-
-        <!-- Cost Summary -->
-        <div class="cost-summary">
-          <div class="cost-row">
-            <span>Items Subtotal:</span>
-            <span id="itemsSubtotal">$0.00</span>
-          </div>
-          <div class="cost-row">
-            <span>Manufacturing Cost:</span>
-            <span id="manufacturingCostDisplay">$0.00</span>
-          </div>
-          <div class="cost-row">
-            <span>Shipping Cost:</span>
-            <span id="shippingCostDisplay">$0.00</span>
-          </div>
-          <div class="cost-row">
-            <span>Customs Duty:</span>
-            <span id="customsDutyDisplay">$0.00</span>
-          </div>
-          <div class="cost-row">
-            <span>Other Fees:</span>
-            <span id="otherFeesDisplay">$0.00</span>
-          </div>
-          <div class="cost-row total">
-            <span>Total Shipment Cost:</span>
-            <span id="totalCost">$0.00</span>
-          </div>
-        </div>
-
-        <div style="display: flex; gap: 1rem; margin-top: 2rem;">
-          <button type="button" class="btn btn-secondary" onclick="closeShipmentModal()">
-            Cancel
-          </button>
-          <button type="submit" class="btn btn-primary">
-            <i class="fa-solid fa-save"></i> Save Shipment
-          </button>
         </div>
       </form>
     </div>
   </div>
 
+  <!-- Delete Confirmation Modal -->
+  <div class="modal-overlay" id="deleteConfirmModal">
+    <div class="modal-content" style="max-width: 500px; padding: 0; overflow: hidden; border-radius: 16px;">
+      <div style="background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%); padding: 1.5rem; text-align: center;">
+        <div style="width: 56px; height: 56px; background: rgba(255,255,255,0.2); border-radius: 50%; margin: 0 auto 1rem; display: flex; align-items: center; justify-content: center;">
+          <i class="fa-solid fa-triangle-exclamation" style="font-size: 1.5rem; color: white;"></i>
+        </div>
+        <h3 style="color: white; font-size: 1.25rem; font-weight: 700; margin: 0;">Delete Shipment</h3>
+      </div>
+      <div style="padding: 1.5rem; max-height: 60vh; overflow-y: auto;">
+        <p id="deleteConfirmMessage" style="color: #374151; font-size: 0.9375rem; line-height: 1.6; margin: 0 0 1rem; text-align: center;"></p>
+
+        <!-- Stock Impact Table (for delivered shipments) -->
+        <div id="stockImpactSection" style="display: none; margin-bottom: 1rem;">
+          <div style="font-size: 0.8125rem; font-weight: 600; color: #374151; margin-bottom: 0.5rem;">Stock will be subtracted:</div>
+          <table style="width: 100%; border-collapse: collapse; font-size: 0.8125rem;">
+            <thead>
+              <tr style="background: #f8fafc;">
+                <th style="padding: 0.5rem; text-align: left; border-bottom: 1px solid #e2e8f0;">Item</th>
+                <th style="padding: 0.5rem; text-align: center; border-bottom: 1px solid #e2e8f0;">Remove</th>
+                <th style="padding: 0.5rem; text-align: center; border-bottom: 1px solid #e2e8f0;">New Stock</th>
+              </tr>
+            </thead>
+            <tbody id="stockImpactBody"></tbody>
+          </table>
+        </div>
+
+        <div id="deleteWarningBox" style="display: none; background: #fef3c7; border: 1px solid #fcd34d; border-radius: 8px; padding: 0.875rem; margin-bottom: 1rem;">
+          <div style="display: flex; gap: 0.5rem; align-items: start;">
+            <i class="fa-solid fa-exclamation-circle" style="color: #d97706; margin-top: 2px;"></i>
+            <p style="color: #92400e; font-size: 0.8125rem; margin: 0; line-height: 1.5;" id="deleteWarningText"></p>
+          </div>
+        </div>
+        <div style="display: flex; gap: 0.75rem; margin-top: 1.25rem;">
+          <button type="button" onclick="closeDeleteConfirmation()" style="flex: 1; padding: 0.75rem; background: #f1f5f9; border: 1px solid #e2e8f0; border-radius: 8px; font-size: 0.875rem; font-weight: 600; color: #64748b; cursor: pointer; transition: all 0.2s;">
+            Cancel
+          </button>
+          <button type="button" onclick="confirmDeleteShipment()" style="flex: 1; padding: 0.75rem; background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%); border: none; border-radius: 8px; font-size: 0.875rem; font-weight: 600; color: white; cursor: pointer; transition: all 0.2s; box-shadow: 0 2px 8px rgba(239, 68, 68, 0.3);">
+            <i class="fa-solid fa-trash"></i> Delete
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Hidden elements for cost summary (keeping for JS compatibility) -->
+  <div style="display: none;">
+    <span id="itemsSubtotal">$0.00</span>
+    <span id="manufacturingCostDisplay">$0.00</span>
+    <span id="shippingCostDisplay">$0.00</span>
+    <span id="customsDutyDisplay">$0.00</span>
+    <span id="otherFeesDisplay">$0.00</span>
+    <span id="totalCost">$0.00</span>
+  </div>
+
   <script>
     let shipmentsData = {{ shipments_json|safe }};
     let variantsData = {{ variants_json|safe }};
+    let savedSuppliers = {{ saved_suppliers_json|safe }};
     let currentShipmentItems = [];
+    let currentEditingShipment = null;
+
+    // Supplier selection functions
+    function onSupplierSelect(selectEl) {
+      const supplierInput = document.getElementById('supplier');
+      const cancelBtn = document.getElementById('cancelNewSupplier');
+
+      if (selectEl.value === '__new__') {
+        // Show text input for new supplier
+        selectEl.style.display = 'none';
+        supplierInput.style.display = 'block';
+        supplierInput.value = '';
+        supplierInput.focus();
+        cancelBtn.style.display = 'flex';
+      } else if (selectEl.value) {
+        // Use selected supplier
+        supplierInput.value = selectEl.value;
+      } else {
+        supplierInput.value = '';
+      }
+    }
+
+    function cancelNewSupplier() {
+      const selectEl = document.getElementById('supplierSelect');
+      const supplierInput = document.getElementById('supplier');
+      const cancelBtn = document.getElementById('cancelNewSupplier');
+
+      selectEl.style.display = 'block';
+      selectEl.value = '';
+      supplierInput.style.display = 'none';
+      supplierInput.value = '';
+      cancelBtn.style.display = 'none';
+    }
+
+    function resetSupplierUI() {
+      const selectEl = document.getElementById('supplierSelect');
+      const supplierInput = document.getElementById('supplier');
+      const cancelBtn = document.getElementById('cancelNewSupplier');
+
+      if (selectEl) {
+        selectEl.style.display = 'block';
+        selectEl.value = '';
+      }
+      if (supplierInput && selectEl) {
+        supplierInput.style.display = 'none';
+      }
+      if (cancelBtn) {
+        cancelBtn.style.display = 'none';
+      }
+    }
 
     function openCreateShipmentModal() {
-      document.getElementById('modalTitle').textContent = 'Add Shipment';
+      document.getElementById('modalTitle').innerHTML = '<i class="fa-solid fa-truck-fast"></i> New Shipment';
       document.getElementById('shipmentForm').reset();
       document.getElementById('shipmentId').value = '';
-      document.getElementById('variantsSection').style.display = 'none';
+      document.getElementById('shipmentName').value = '';
       document.getElementById('addVariantRow').style.display = 'none';
+      document.getElementById('advancedOptions').style.display = 'none';
+      document.getElementById('advancedChevron').style.transform = 'rotate(0deg)';
+      document.getElementById('deleteShipmentBtn').style.display = 'none';
+      resetSupplierUI();
       currentShipmentItems = [];
+      currentEditingShipment = null;
       updateVariantsTable();
       updateCostSummary();
       document.getElementById('shipmentModal').classList.add('active');
+    }
+
+    function toggleAdvancedOptions() {
+      const options = document.getElementById('advancedOptions');
+      const chevron = document.getElementById('advancedChevron');
+      if (options.style.display === 'none') {
+        options.style.display = 'block';
+        chevron.style.transform = 'rotate(90deg)';
+      } else {
+        options.style.display = 'none';
+        chevron.style.transform = 'rotate(0deg)';
+      }
     }
 
     function openEditShipmentModal(shipmentId) {
       const shipment = shipmentsData.find(s => s.id === shipmentId);
       if (!shipment) return;
 
-      document.getElementById('modalTitle').textContent = 'Edit Shipment';
+      currentEditingShipment = shipment;
+      document.getElementById('deleteShipmentBtn').style.display = 'block';
+      document.getElementById('modalTitle').innerHTML = '<i class="fa-solid fa-truck-fast"></i> Edit Shipment';
       document.getElementById('shipmentId').value = shipment.id;
+      document.getElementById('shipmentName').value = shipment.name || '';
       document.getElementById('trackingNumber').value = shipment.tracking_number;
-      document.getElementById('supplier').value = shipment.supplier;
+
+      // Handle supplier selection
+      const selectEl = document.getElementById('supplierSelect');
+      const supplierInput = document.getElementById('supplier');
+      const cancelBtn = document.getElementById('cancelNewSupplier');
+
+      if (selectEl) {
+        // Check if supplier is in the saved list
+        if (savedSuppliers.includes(shipment.supplier)) {
+          selectEl.style.display = 'block';
+          selectEl.value = shipment.supplier;
+          supplierInput.style.display = 'none';
+          supplierInput.value = shipment.supplier;
+          cancelBtn.style.display = 'none';
+        } else {
+          // Custom supplier - show text input
+          selectEl.style.display = 'none';
+          supplierInput.style.display = 'block';
+          supplierInput.value = shipment.supplier;
+          cancelBtn.style.display = 'flex';
+        }
+      } else {
+        supplierInput.value = shipment.supplier;
+      }
+
       document.getElementById('status').value = shipment.status;
       document.getElementById('expectedDate').value = shipment.expected_date;
       document.getElementById('dateShipped').value = shipment.date_shipped || '';
@@ -827,7 +1076,12 @@
 
       // Load variant items
       currentShipmentItems = shipment.items || [];
-      document.getElementById('variantsSection').style.display = 'block';
+      document.getElementById('addVariantRow').style.display = 'none';
+
+      // Show advanced options when editing (since we have more data)
+      document.getElementById('advancedOptions').style.display = 'block';
+      document.getElementById('advancedChevron').style.transform = 'rotate(90deg)';
+
       updateVariantsTable();
       updateCostSummary();
 
@@ -837,16 +1091,151 @@
     function closeShipmentModal() {
       document.getElementById('shipmentModal').classList.remove('active');
       currentShipmentItems = [];
+      currentEditingShipment = null;
+    }
+
+    function showDeleteConfirmation() {
+      if (!currentEditingShipment) return;
+
+      const shipment = currentEditingShipment;
+      const displayName = shipment.name || shipment.tracking_number;
+      const items = shipment.items || [];
+
+      // Set the message
+      let message = `Are you sure you want to delete <strong>${displayName}</strong>?`;
+      document.getElementById('deleteConfirmMessage').innerHTML = message;
+
+      // Show stock impact for delivered shipments
+      const stockImpactSection = document.getElementById('stockImpactSection');
+      const warningBox = document.getElementById('deleteWarningBox');
+
+      if (shipment.status === 'delivered' && items.length > 0) {
+        stockImpactSection.style.display = 'block';
+
+        // Build stock impact table
+        const tbody = document.getElementById('stockImpactBody');
+        tbody.innerHTML = '';
+
+        let hasNegativeImpact = false;
+
+        items.forEach(item => {
+          const qtyToRemove = item.received_quantity > 0 ? item.received_quantity : item.quantity;
+          const row = document.createElement('tr');
+          const isNegative = item.would_go_negative;
+          if (isNegative) hasNegativeImpact = true;
+
+          row.innerHTML = `
+            <td style="padding: 0.5rem; border-bottom: 1px solid #f1f5f9;">
+              <div style="font-weight: 500;">${item.variant_sku}</div>
+              <div style="font-size: 0.75rem; color: #64748b;">${item.variant_name}</div>
+            </td>
+            <td style="padding: 0.5rem; text-align: center; border-bottom: 1px solid #f1f5f9; color: #dc2626; font-weight: 600;">
+              -${qtyToRemove}
+            </td>
+            <td style="padding: 0.5rem; text-align: center; border-bottom: 1px solid #f1f5f9; font-weight: 600; ${isNegative ? 'color: #dc2626;' : ''}">
+              ${item.stock_after_delete}${isNegative ? ' ⚠️' : ''}
+            </td>
+          `;
+          tbody.appendChild(row);
+        });
+
+        // Show warning if any items would have gone negative
+        if (hasNegativeImpact) {
+          warningBox.style.display = 'block';
+          document.getElementById('deleteWarningText').textContent =
+            'Some items have less stock than was received. Stock has likely been sold. These will be set to 0.';
+        } else {
+          warningBox.style.display = 'none';
+        }
+      } else if (items.length > 0) {
+        stockImpactSection.style.display = 'none';
+        warningBox.style.display = 'none';
+        // Add note about items being removed
+        message += `<br><br>This shipment contains <strong>${items.length} item${items.length > 1 ? 's' : ''}</strong> that will also be removed.`;
+        document.getElementById('deleteConfirmMessage').innerHTML = message;
+      } else {
+        stockImpactSection.style.display = 'none';
+        warningBox.style.display = 'none';
+      }
+
+      document.getElementById('deleteConfirmModal').classList.add('active');
+    }
+
+    function closeDeleteConfirmation() {
+      document.getElementById('deleteConfirmModal').classList.remove('active');
+    }
+
+    async function confirmDeleteShipment() {
+      if (!currentEditingShipment) return;
+
+      const formData = new FormData();
+      formData.append('action', 'delete_shipment');
+      formData.append('shipment_id', currentEditingShipment.id);
+      formData.append('csrfmiddlewaretoken', '{{ csrf_token }}');
+
+      try {
+        const response = await fetch('{% url "admin_shipments" %}', {
+          method: 'POST',
+          body: formData
+        });
+
+        const data = await response.json();
+
+        if (data.success) {
+          location.reload();
+        } else {
+          closeDeleteConfirmation();
+          alert(data.error || 'Error deleting shipment');
+        }
+      } catch (error) {
+        console.error('Error:', error);
+        closeDeleteConfirmation();
+        alert('Error deleting shipment');
+      }
     }
 
     function toggleAddVariantRow() {
       const row = document.getElementById('addVariantRow');
-      row.style.display = row.style.display === 'none' ? 'grid' : 'none';
-      if (row.style.display === 'grid') {
-        document.getElementById('variantSelect').value = '';
-        document.getElementById('variantQuantity').value = '1';
-        document.getElementById('variantUnitCost').value = '0';
+      if (row.style.display === 'none') {
+        row.style.display = 'block';
+        clearProductSelection();
+      } else {
+        row.style.display = 'none';
       }
+    }
+
+    function onProductSelect(selectEl) {
+      if (!selectEl.value) return;
+
+      const option = selectEl.options[selectEl.selectedIndex];
+      const name = option.dataset.name;
+      const sku = option.dataset.sku;
+
+      document.getElementById('selectedProductName').textContent = name;
+      document.getElementById('selectedProductSku').textContent = sku;
+      document.getElementById('productSelectorView').style.display = 'none';
+      document.getElementById('selectedProductView').style.display = 'block';
+      document.getElementById('variantQuantity').value = '1';
+      document.getElementById('variantUnitCost').value = '';
+      document.getElementById('variantQuantity').focus();
+    }
+
+    function clearProductSelection() {
+      document.getElementById('variantSelect').value = '';
+      document.getElementById('productSelectorView').style.display = 'block';
+      document.getElementById('selectedProductView').style.display = 'none';
+      document.getElementById('variantQuantity').value = '1';
+      document.getElementById('variantUnitCost').value = '';
+    }
+
+    function setPrice(amount) {
+      document.getElementById('variantUnitCost').value = amount;
+    }
+
+    function adjustQty(delta) {
+      const input = document.getElementById('variantQuantity');
+      const newVal = Math.max(1, parseInt(input.value || 1) + delta);
+      input.value = newVal;
     }
 
     async function addVariantToShipment() {
@@ -856,7 +1245,7 @@
       const unitCost = document.getElementById('variantUnitCost').value;
 
       if (!variantId) {
-        alert('Please select a variant');
+        alert('Please select a product first');
         return;
       }
 
@@ -871,15 +1260,18 @@
           return;
         }
 
+        const qty = parseInt(quantity) || 1;
+        const cost = parseFloat(unitCost) || 0;
+
         const newItem = {
           id: null, // No ID yet since shipment doesn't exist
           variant_id: parseInt(variantId),
           variant_sku: variant.sku,
           variant_name: variant.display_name,
-          quantity: parseInt(quantity),
+          quantity: qty,
           received_quantity: 0,
-          unit_cost: parseFloat(unitCost),
-          total_cost: parseInt(quantity) * parseFloat(unitCost)
+          unit_cost: cost,
+          total_cost: qty * cost
         };
 
         currentShipmentItems.push(newItem);
@@ -960,25 +1352,46 @@
 
     function updateVariantsTable() {
       const tbody = document.getElementById('variantsTableBody');
+      const table = document.getElementById('variantsTable');
+      const emptyState = document.getElementById('emptyVariantsState');
+
       tbody.innerHTML = '';
+
+      // Show/hide empty state vs table
+      if (currentShipmentItems.length === 0) {
+        table.style.display = 'none';
+        emptyState.style.display = 'block';
+        return;
+      }
+
+      table.style.display = 'table';
+      emptyState.style.display = 'none';
+
+      // Check if we're editing (shipment exists) to show received column
+      const isEditing = !!document.getElementById('shipmentId').value;
 
       currentShipmentItems.forEach((item, index) => {
         const row = document.createElement('tr');
         row.innerHTML = `
-          <td><code style="background: #f1f5f9; padding: 0.25rem 0.5rem; border-radius: 4px; font-size: 0.75rem;">${item.variant_sku}</code></td>
           <td style="font-weight: 500;">${item.variant_name}</td>
-          <td><input type="number" value="${item.quantity}" min="1" onchange="updateItemQuantity(${index}, this.value, 'quantity')"></td>
-          <td><input type="number" value="${item.received_quantity}" min="0" onchange="updateItemQuantity(${index}, this.value, 'received_quantity')"></td>
-          <td><input type="number" value="${item.unit_cost}" step="0.01" min="0" onchange="updateItemQuantity(${index}, this.value, 'unit_cost')"></td>
-          <td style="font-weight: 600;">$${item.total_cost.toFixed(2)}</td>
+          <td><code style="background: #f1f5f9; padding: 0.25rem 0.5rem; border-radius: 4px; font-size: 0.75rem;">${item.variant_sku}</code></td>
+          <td><input type="number" value="${item.quantity}" min="1" onchange="updateItemQuantity(${index}, this.value, 'quantity')" style="width: 60px;"></td>
+          ${isEditing ? `<td><input type="number" value="${item.received_quantity}" min="0" onchange="updateItemQuantity(${index}, this.value, 'received_quantity')" style="width: 60px;"></td>` : ''}
+          <td><input type="number" value="${item.unit_cost}" step="0.01" min="0" onchange="updateItemQuantity(${index}, this.value, 'unit_cost')" style="width: 70px;" placeholder="0"></td>
           <td>
-            <button type="button" class="btn btn-sm btn-danger" onclick="removeVariantFromShipment(${index}, ${item.id || 'null'})">
+            <button type="button" class="btn btn-sm btn-danger" onclick="removeVariantFromShipment(${index}, ${item.id || 'null'})" title="Remove">
               <i class="fa-solid fa-trash"></i>
             </button>
           </td>
         `;
         tbody.appendChild(row);
       });
+
+      // Update table header based on editing mode
+      const receivedHeader = document.getElementById('receivedHeader');
+      if (receivedHeader) {
+        receivedHeader.style.display = isEditing ? 'table-cell' : 'none';
+      }
     }
 
     function updateItemQuantity(index, value, field) {
@@ -993,7 +1406,7 @@
     }
 
     function updateCostSummary() {
-      const itemsSubtotal = currentShipmentItems.reduce((sum, item) => sum + item.total_cost, 0);
+      const itemsSubtotal = currentShipmentItems.reduce((sum, item) => sum + (item.total_cost || 0), 0);
       const manufacturingCost = parseFloat(document.getElementById('manufacturingCost').value) || 0;
       const shippingCost = parseFloat(document.getElementById('shippingCost').value) || 0;
       const customsDuty = parseFloat(document.getElementById('customsDuty').value) || 0;
@@ -1012,13 +1425,21 @@
     document.getElementById('shipmentForm').addEventListener('submit', async function(e) {
       e.preventDefault();
 
+      // Validate supplier
+      const supplierValue = document.getElementById('supplier').value.trim();
+      if (!supplierValue) {
+        alert('Please select or enter a supplier');
+        return;
+      }
+
       const shipmentId = document.getElementById('shipmentId').value;
       const formData = new FormData();
 
       formData.append('action', shipmentId ? 'update_shipment' : 'create_shipment');
       if (shipmentId) formData.append('shipment_id', shipmentId);
+      formData.append('name', document.getElementById('shipmentName').value);
       formData.append('tracking_number', document.getElementById('trackingNumber').value);
-      formData.append('supplier', document.getElementById('supplier').value);
+      formData.append('supplier', supplierValue);
       formData.append('status', document.getElementById('status').value);
       formData.append('expected_date', document.getElementById('expectedDate').value);
       formData.append('date_shipped', document.getElementById('dateShipped').value);
@@ -1063,6 +1484,12 @@
     document.getElementById('shipmentModal').addEventListener('click', function(e) {
       if (e.target === this) {
         closeShipmentModal();
+      }
+    });
+
+    document.getElementById('deleteConfirmModal').addEventListener('click', function(e) {
+      if (e.target === this) {
+        closeDeleteConfirmation();
       }
     });
 
