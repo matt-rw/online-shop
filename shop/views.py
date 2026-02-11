@@ -390,52 +390,118 @@ def account(request):
 def product_detail(request, slug):
     """Product detail page."""
     import json
+    from collections import OrderedDict
     from django.shortcuts import get_object_or_404
 
-    from .models import Product
+    from .models import CustomAttribute, Product
 
     product = get_object_or_404(Product, slug=slug, is_active=True)
 
-    # Get all variants for this product with related size and color
-    variants = product.variants.filter(is_active=True).select_related("size", "color")
+    # Get all variants with unified attributes (and legacy fields for fallback)
+    variants = product.variants.filter(is_active=True).prefetch_related(
+        "attributes__attribute"
+    ).select_related("size", "color")  # Keep legacy for fallback
 
-    # Build variant data map for JavaScript (size -> variant info)
-    # This allows the frontend to look up stock and variant ID by size
+    # Build variant data map for JavaScript
+    # Key format: "attr1value_attr2value_..." (e.g., "M_Black" or "M_Black_Cotton")
     variant_data = {}
-    for variant in variants:
-        size_code = variant.size.code if variant.size else "one-size"
-        color_name = variant.color.name if variant.color else "default"
-        key = f"{size_code}_{color_name}"
-        variant_data[key] = {
-            "id": variant.id,
-            "stock": variant.stock_quantity,
-            "price": str(variant.price),
-        }
 
-    # Collect unique sizes and colors from variants
-    sizes = []
-    colors = []
-    seen_sizes = set()
-    seen_colors = set()
+    # Collect all unique attribute values grouped by attribute
+    # OrderedDict preserves attribute display_order
+    attributes_map = OrderedDict()  # {attr_slug: {'attribute': attr, 'values': OrderedDict}}
 
     # Calculate total stock across all variants
     total_stock = sum(v.stock_quantity for v in variants)
 
     for variant in variants:
-        if variant.size and variant.size.code not in seen_sizes:
-            sizes.append({
-                "code": variant.size.code,
-                "label": variant.size.label or variant.size.code,
-                "available": variant.stock_quantity > 0,
-                "stock": variant.stock_quantity,
-            })
-            seen_sizes.add(variant.size.code)
-        if variant.color and variant.color.name not in seen_colors:
-            colors.append({
-                "name": variant.color.name,
-                "hex": "#000000"  # Default, could be extended to store hex in model
-            })
-            seen_colors.add(variant.color.name)
+        # Get attributes from unified system
+        variant_attrs = {}
+        for attr_value in variant.attributes.select_related('attribute').order_by('attribute__display_order'):
+            attr = attr_value.attribute
+            attr_slug = attr.slug
+            variant_attrs[attr_slug] = attr_value.value
+
+            # Build attributes_map for display
+            if attr_slug not in attributes_map:
+                attributes_map[attr_slug] = {
+                    'attribute': attr,
+                    'values': OrderedDict(),
+                }
+
+            if attr_value.value not in attributes_map[attr_slug]['values']:
+                attributes_map[attr_slug]['values'][attr_value.value] = {
+                    'value': attr_value.value,
+                    'display_order': attr_value.display_order,
+                    'metadata': attr_value.metadata,
+                    'available': variant.stock_quantity > 0,
+                    'stock': variant.stock_quantity,
+                }
+            elif variant.stock_quantity > 0:
+                # Update availability if any variant with this value has stock
+                attributes_map[attr_slug]['values'][attr_value.value]['available'] = True
+
+        # Fallback to legacy fields if no unified attributes
+        if not variant_attrs:
+            if variant.size:
+                variant_attrs['size'] = variant.size.code
+            if variant.color:
+                variant_attrs['color'] = variant.color.name
+
+        # Build variant key from attribute values (sorted by attribute display_order)
+        key_parts = [variant_attrs.get(slug, 'default') for slug in attributes_map.keys()]
+        if not key_parts:
+            # Fallback key for legacy data
+            size_code = variant.size.code if variant.size else "one-size"
+            color_name = variant.color.name if variant.color else "default"
+            key_parts = [size_code, color_name]
+
+        key = "_".join(key_parts)
+        variant_data[key] = {
+            "id": variant.id,
+            "stock": variant.stock_quantity,
+            "price": str(variant.price),
+            "attributes": variant_attrs,
+        }
+
+    # Convert attributes_map to list format for template, sorted by display_order
+    product_attributes = []
+    for attr_slug, attr_data in attributes_map.items():
+        attr = attr_data['attribute']
+        # Sort values by display_order
+        sorted_values = sorted(
+            attr_data['values'].values(),
+            key=lambda x: x['display_order']
+        )
+        product_attributes.append({
+            'slug': attr_slug,
+            'name': attr.name,
+            'input_type': attr.input_type,
+            'display_order': attr.display_order,
+            'values': sorted_values,
+        })
+
+    # Legacy format for backwards compatibility with existing templates
+    sizes = []
+    colors = []
+    for attr in product_attributes:
+        if attr['slug'] == 'size':
+            sizes = [
+                {
+                    'code': v['value'],
+                    'label': v['metadata'].get('label', v['value']),
+                    'available': v['available'],
+                    'stock': v['stock'],
+                }
+                for v in attr['values']
+            ]
+        elif attr['slug'] == 'color':
+            colors = [
+                {
+                    'name': v['value'],
+                    'hex': v['metadata'].get('hex_code', '#000000'),
+                }
+                for v in attr['values']
+            ]
 
     # Collect unique images: product-level first, then variant-specific
     images = []
@@ -487,17 +553,26 @@ def product_detail(request, slug):
     default_variant_id = default_variant.id if default_variant else None
     default_variant_stock = default_variant.stock_quantity if default_variant else 0
 
+    # Build attribute order list for JavaScript variant lookup
+    attribute_order = [attr['slug'] for attr in product_attributes]
+
     context = {
         "product": product,
         "variants": variants,
+        # Unified attribute system
+        "product_attributes": product_attributes,
+        "attribute_order": attribute_order,
+        # Legacy format for backwards compatibility
         "sizes": sizes,
         "colors": colors,
+        # Images and variant data
         "images": images,
         "main_image": main_image,
         "default_variant_id": default_variant_id,
         "default_variant_stock": default_variant_stock,
         "total_stock": total_stock,
         "variant_data_json": json.dumps(variant_data),
+        "attribute_order_json": json.dumps(attribute_order),
     }
 
     return render(request, "shop/product_detail.html", context)

@@ -23,6 +23,9 @@ class Bundle(models.Model):
     images = models.JSONField(default=list, blank=True, help_text="Bundle images")
     show_includes = models.BooleanField(default=True, help_text="Show 'Includes' section with component products on bundle page")
     is_active = models.BooleanField(default=True, db_index=True)
+    available_for_purchase = models.BooleanField(
+        default=True, help_text="Whether this bundle can be purchased (uncheck for coming soon/preview)"
+    )
     featured = models.BooleanField(default=False, db_index=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)

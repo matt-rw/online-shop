@@ -159,7 +159,49 @@
           </div>
         </div>
 
-        <!-- Size Selection -->
+        <!-- Dynamic Attribute Selection -->
+        {% for attr in product_attributes %}
+        <div class="mb-6">
+          <div class="flex justify-between items-center mb-3">
+            <span class="text-xs tracking-widest uppercase font-medium">{{ attr.name }}</span>
+            {% if attr.slug == 'size' %}
+            <a href="#" class="text-xs text-neutral-500 hover:text-black underline transition-colors">Size Guide</a>
+            {% endif %}
+          </div>
+
+          {% if attr.input_type == 'color' %}
+          <!-- Color Swatches -->
+          <div class="flex flex-wrap gap-3">
+            {% for val in attr.values %}
+            <button onclick="selectAttribute('{{ attr.slug }}', '{{ val.value }}')"
+                    class="attr-btn attr-{{ attr.slug }}-btn w-8 h-8 rounded-full border-2 border-transparent hover:border-black transition-all"
+                    style="background-color: {{ val.metadata.hex_code|default:'#000' }};"
+                    data-attr="{{ attr.slug }}"
+                    data-value="{{ val.value }}"
+                    title="{{ val.value }}">
+            </button>
+            {% endfor %}
+          </div>
+          {% else %}
+          <!-- Standard Buttons (Size, Material, etc.) -->
+          <div class="flex flex-wrap gap-2">
+            {% for val in attr.values %}
+            <button onclick="selectAttribute('{{ attr.slug }}', '{{ val.value }}')"
+                    class="attr-btn attr-{{ attr.slug }}-btn w-14 h-10 border border-black text-sm font-medium uppercase tracking-wide
+                           {% if not val.available %}opacity-50 cursor-not-allowed{% endif %}"
+                    {% if not val.available %}disabled{% endif %}
+                    data-attr="{{ attr.slug }}"
+                    data-value="{{ val.value }}">
+              {{ val.metadata.label|default:val.value }}
+            </button>
+            {% endfor %}
+          </div>
+          {% endif %}
+
+          <input type="hidden" id="selected-{{ attr.slug }}" name="{{ attr.slug }}" value="">
+        </div>
+        {% empty %}
+        <!-- Fallback to legacy Size/Color if no unified attributes -->
         {% if sizes %}
         <div class="mb-6">
           <div class="flex justify-between items-center mb-3">
@@ -168,11 +210,12 @@
           </div>
           <div class="flex flex-wrap gap-2">
             {% for size in sizes %}
-            <button onclick="selectSize('{{ size.code }}')"
-                    class="size-btn w-14 h-10 border border-black text-sm font-medium uppercase tracking-wide
-                           {% if size.available %}{% else %}size-unavailable{% endif %}"
+            <button onclick="selectAttribute('size', '{{ size.code }}')"
+                    class="attr-btn attr-size-btn w-14 h-10 border border-black text-sm font-medium uppercase tracking-wide
+                           {% if not size.available %}opacity-50 cursor-not-allowed{% endif %}"
                     {% if not size.available %}disabled{% endif %}
-                    data-size="{{ size.code }}">
+                    data-attr="size"
+                    data-value="{{ size.code }}">
               {{ size.label|default:size.code }}
             </button>
             {% endfor %}
@@ -180,17 +223,16 @@
           <input type="hidden" id="selected-size" name="size" value="">
         </div>
         {% endif %}
-
-        <!-- Color Selection -->
         {% if colors %}
         <div class="mb-6">
           <span class="text-xs tracking-widest uppercase font-medium block mb-3">Color</span>
           <div class="flex flex-wrap gap-3">
             {% for color in colors %}
-            <button onclick="selectColor('{{ color.name }}')"
-                    class="color-btn w-8 h-8 rounded-full border-2 border-transparent hover:border-black transition-all"
+            <button onclick="selectAttribute('color', '{{ color.name }}')"
+                    class="attr-btn attr-color-btn w-8 h-8 rounded-full border-2 border-transparent hover:border-black transition-all"
                     style="background-color: {{ color.hex|default:'#000' }};"
-                    data-color="{{ color.name }}"
+                    data-attr="color"
+                    data-value="{{ color.name }}"
                     title="{{ color.name }}">
             </button>
             {% endfor %}
@@ -198,6 +240,7 @@
           <input type="hidden" id="selected-color" name="color" value="">
         </div>
         {% endif %}
+        {% endfor %}
 
         <!-- Quantity -->
         <div class="mb-8" id="quantity-section" {% if total_stock == 0 or not product.available_for_purchase %}style="display: none;"{% endif %}>
@@ -309,7 +352,16 @@
 <script>
   // Variant data from server
   const variantData = {{ variant_data_json|safe }};
+  const attributeOrder = {{ attribute_order_json|safe }};
   let currentStock = {{ default_variant_stock|default:0 }};
+
+  // Track selected values for each attribute
+  const selectedAttributes = {};
+  {% for attr in product_attributes %}
+  selectedAttributes['{{ attr.slug }}'] = '';
+  {% endfor %}
+
+  // Legacy compatibility
   let selectedSize = '';
   let selectedColor = '{{ colors.0.name|default:"default" }}';
 
@@ -390,47 +442,61 @@
     }
   })();
 
-  // Size selection
-  function selectSize(size) {
-    selectedSize = size;
-    document.getElementById('selected-size').value = size;
+  // Unified attribute selection
+  function selectAttribute(attrSlug, value) {
+    selectedAttributes[attrSlug] = value;
 
-    // Update button states
-    document.querySelectorAll('.size-btn').forEach(btn => {
-      if (btn.dataset.size === size) {
-        btn.classList.add('size-selected');
+    // Update hidden input
+    const hiddenInput = document.getElementById(`selected-${attrSlug}`);
+    if (hiddenInput) {
+      hiddenInput.value = value;
+    }
+
+    // Update button states for this attribute
+    document.querySelectorAll(`.attr-${attrSlug}-btn`).forEach(btn => {
+      if (btn.dataset.value === value) {
+        // Selected state
+        if (btn.classList.contains('rounded-full')) {
+          // Color swatch - use border
+          btn.classList.add('border-black', 'ring-2', 'ring-offset-1', 'ring-black');
+        } else {
+          // Regular button - use background
+          btn.classList.add('bg-black', 'text-white');
+        }
       } else {
-        btn.classList.remove('size-selected');
+        // Deselected state
+        if (btn.classList.contains('rounded-full')) {
+          btn.classList.remove('border-black', 'ring-2', 'ring-offset-1', 'ring-black');
+        } else {
+          btn.classList.remove('bg-black', 'text-white');
+        }
       }
     });
+
+    // Legacy compatibility
+    if (attrSlug === 'size') selectedSize = value;
+    if (attrSlug === 'color') selectedColor = value;
 
     updateVariant();
   }
 
-  // Color selection
-  function selectColor(color) {
-    selectedColor = color;
-    document.getElementById('selected-color').value = color;
-
-    // Update button states
-    document.querySelectorAll('.color-btn').forEach(btn => {
-      if (btn.dataset.color === color) {
-        btn.classList.add('border-black');
-      } else {
-        btn.classList.remove('border-black');
-      }
-    });
-
-    updateVariant();
-  }
+  // Legacy functions for backwards compatibility
+  function selectSize(size) { selectAttribute('size', size); }
+  function selectColor(color) { selectAttribute('color', color); }
 
   // Update variant ID and stock based on selections
   function updateVariant() {
-    const sizeCode = selectedSize || 'one-size';
-    const colorName = selectedColor || 'default';
-    const key = `${sizeCode}_${colorName}`;
+    // Build variant key from selected attributes in order
+    const keyParts = attributeOrder.map(slug => selectedAttributes[slug] || 'default');
+    const key = keyParts.join('_');
 
-    const variant = variantData[key];
+    let variant = variantData[key];
+
+    // Fallback: try legacy key format if new format not found
+    if (!variant && selectedSize) {
+      const legacyKey = `${selectedSize}_${selectedColor || 'default'}`;
+      variant = variantData[legacyKey];
+    }
 
     if (variant) {
       // Update variant ID

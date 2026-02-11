@@ -452,6 +452,9 @@
             <span class="status-badge {% if bundle.is_active %}status-active{% else %}status-inactive{% endif %}">
               {% if bundle.is_active %}Active{% else %}Inactive{% endif %}
             </span>
+            {% if bundle.is_active and not bundle.available_for_purchase %}
+            <span class="status-badge" style="background: #fef3c7; color: #92400e; margin-left: 0.25rem;">Coming Soon</span>
+            {% endif %}
           </div>
           <div style="text-align: right;">
             <div class="bundle-price">${{ bundle.effective_price }}</div>
@@ -526,7 +529,7 @@
           </div>
         </div>
         <div class="bundle-actions">
-          <button class="btn-sm btn-edit" onclick="openEditModal({{ bundle.id }}, '{{ bundle.name|escapejs }}', '{{ bundle.price|default_if_none:"" }}', '{{ bundle.description|escapejs }}', {{ bundle.is_active|yesno:'true,false' }}, {{ bundle.featured|yesno:'true,false' }}, {{ bundle.show_includes|yesno:'true,false' }}, [{% for bi in bundle.items.all %}{{ bi.product.id }}{% if not forloop.last %},{% endif %}{% endfor %}], '{{ bundle.slug }}', {{ bundle.use_component_pricing|yesno:'true,false' }}, {{ bundle.images|safe|default:'[]' }})">
+          <button class="btn-sm btn-edit" onclick="openEditModal({{ bundle.id }}, '{{ bundle.name|escapejs }}', '{{ bundle.price|default_if_none:"" }}', '{{ bundle.description|escapejs }}', {{ bundle.is_active|yesno:'true,false' }}, {{ bundle.available_for_purchase|yesno:'true,false' }}, {{ bundle.featured|yesno:'true,false' }}, {{ bundle.show_includes|yesno:'true,false' }}, [{% for bi in bundle.items.all %}{{ bi.product.id }}{% if not forloop.last %},{% endif %}{% endfor %}], '{{ bundle.slug }}', {{ bundle.use_component_pricing|yesno:'true,false' }}, {{ bundle.images|safe|default:'[]' }})">
             <i class="fas fa-edit"></i> Edit
           </button>
           <form method="POST" style="display: inline;">
@@ -672,6 +675,9 @@
           <div class="form-group" id="editOnlyFields" style="display: none;">
             <label style="display: flex; align-items: center; gap: 0.5rem;">
               <input type="checkbox" name="is_active" id="isActive"> Active
+            </label>
+            <label style="display: flex; align-items: center; gap: 0.5rem; margin-top: 0.5rem;">
+              <input type="checkbox" name="available_for_purchase" id="isAvailable" checked> Available for Purchase
             </label>
             <label style="display: flex; align-items: center; gap: 0.5rem; margin-top: 0.5rem;">
               <input type="checkbox" name="featured" id="isFeatured"> Featured
@@ -880,11 +886,27 @@
     }
 
     function getImageSrc(img) {
-      return (img.startsWith('/') || img.startsWith('http') || img.startsWith('data:')) ? img : `/static/${img}`;
+      if (!img) return '/static/images/white_bg_top.webp';
+      if (img.startsWith('/') || img.startsWith('http') || img.startsWith('data:')) {
+        return img;
+      }
+      return `/static/${img}`;
+    }
+
+    // Normalize image URL for comparison (handle both with and without /static/ prefix)
+    function normalizeImageUrl(img) {
+      if (!img) return '';
+      // Remove /static/ prefix for comparison
+      return img.replace(/^\/static\//, '');
+    }
+
+    function isImageInBundle(imgSrc) {
+      const normalized = normalizeImageUrl(imgSrc);
+      return bundleImages.some(bi => normalizeImageUrl(bi) === normalized);
     }
 
     function addProductImageToBundle(imgUrl) {
-      if (!bundleImages.includes(imgUrl)) {
+      if (!isImageInBundle(imgUrl)) {
         bundleImages.push(imgUrl);
         displayBundleImages();
         updateAvailableProductImages();
@@ -899,18 +921,21 @@
       let availableImages = [];
       selectedProducts.forEach(productId => {
         const product = productData[productId];
-        if (product && product.images) {
+        if (product && product.images && Array.isArray(product.images)) {
           product.images.forEach(img => {
-            const imgSrc = getImageSrc(img);
-            if (!availableImages.includes(imgSrc)) {
-              availableImages.push(imgSrc);
+            if (img) {
+              const imgSrc = getImageSrc(img);
+              // Check if this image (normalized) is already in availableImages
+              if (!availableImages.some(ai => normalizeImageUrl(ai) === normalizeImageUrl(imgSrc))) {
+                availableImages.push(imgSrc);
+              }
             }
           });
         }
       });
 
       // Filter out images already in bundle
-      const unusedImages = availableImages.filter(img => !bundleImages.includes(img));
+      const unusedImages = availableImages.filter(img => !isImageInBundle(img));
 
       if (unusedImages.length === 0) {
         section.style.display = 'none';
@@ -925,8 +950,8 @@
         imgDiv.style.cssText = 'width: 50px; height: 62px; border-radius: 4px; overflow: hidden; border: 2px solid #e2e8f0; cursor: pointer; transition: all 0.15s;';
         imgDiv.onmouseenter = () => { imgDiv.style.borderColor = '#667eea'; imgDiv.style.transform = 'scale(1.05)'; };
         imgDiv.onmouseleave = () => { imgDiv.style.borderColor = '#e2e8f0'; imgDiv.style.transform = 'none'; };
-        imgDiv.onclick = () => addProductImageToBundle(imgSrc);
-        imgDiv.innerHTML = `<img src="${imgSrc}" style="width: 100%; height: 100%; object-fit: cover;" onerror="this.src='/static/images/white_bg_top.webp'" title="Click to add">`;
+        imgDiv.onclick = (e) => { e.preventDefault(); e.stopPropagation(); addProductImageToBundle(imgSrc); };
+        imgDiv.innerHTML = `<img src="${imgSrc}" style="width: 100%; height: 100%; object-fit: cover;" onerror="this.parentElement.style.display='none'" title="Click to add">`;
         container.appendChild(imgDiv);
       });
     }
@@ -1052,7 +1077,7 @@
       document.getElementById('bundleModal').classList.add('active');
     }
 
-    function openEditModal(id, name, price, description, isActive, isFeatured, showIncludes, productIds, slug, useComponentPricing, images) {
+    function openEditModal(id, name, price, description, isActive, availableForPurchase, isFeatured, showIncludes, productIds, slug, useComponentPricing, images) {
       document.getElementById('modalTitle').textContent = 'Edit Bundle';
       document.getElementById('formAction').value = 'update';
       document.getElementById('bundleId').value = id;
@@ -1062,6 +1087,7 @@
       document.getElementById('showIncludes').checked = showIncludes;
       document.getElementById('useComponentPricing').checked = useComponentPricing;
       document.getElementById('isActive').checked = isActive;
+      document.getElementById('isAvailable').checked = availableForPurchase;
       document.getElementById('isFeatured').checked = isFeatured;
       document.getElementById('editOnlyFields').style.display = 'block';
       document.getElementById('saveBtn').textContent = 'Save Changes';
@@ -1075,8 +1101,8 @@
       renderSelectedProducts();
       updateComponentTotal();
 
-      // Load bundle images (convert to full paths for comparison)
-      bundleImages = images ? images.map(img => getImageSrc(img)) : [];
+      // Load bundle images (keep original format, getImageSrc handles display)
+      bundleImages = images ? [...images] : [];
       displayBundleImages();
       updateAvailableProductImages();
 

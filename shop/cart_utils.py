@@ -268,10 +268,10 @@ def add_bundle_to_cart(request, bundle_id, size_id, quantity=1):
 
     try:
         bundle = Bundle.objects.prefetch_related("items__product").get(
-            id=bundle_id, is_active=True
+            id=bundle_id, is_active=True, available_for_purchase=True
         )
     except Bundle.DoesNotExist:
-        raise ValueError("Bundle not found or inactive")
+        raise ValueError("Bundle not found or not available for purchase")
 
     try:
         size = Size.objects.get(id=size_id)

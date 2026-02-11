@@ -154,7 +154,12 @@
           <input type="hidden" name="bundle_id" value="{{ bundle.id }}">
           <input type="hidden" name="size_id" id="form-size-id" value="">
           <input type="hidden" name="quantity" id="form-quantity" value="1">
-          {% if not has_stock %}
+          {% if not bundle.available_for_purchase %}
+          <button type="button" disabled
+                  class="w-full py-4 bg-neutral-300 text-neutral-500 font-bold uppercase tracking-widest text-sm cursor-not-allowed">
+            Coming Soon
+          </button>
+          {% elif not has_stock %}
           <button type="button" disabled
                   class="w-full py-4 bg-neutral-300 text-neutral-500 font-bold uppercase tracking-widest text-sm cursor-not-allowed">
             Out of Stock

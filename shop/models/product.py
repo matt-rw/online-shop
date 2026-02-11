@@ -169,29 +169,49 @@ class Material(models.Model):
 
 class CustomAttribute(models.Model):
     """
-    A custom attribute type that can be used for product variants.
-    Examples: Waist, Inseam, Lens Color, Screen Size, etc.
+    A product attribute type (e.g., Size, Color, Material, Fit, Waist, Inseam).
+    This is the unified attribute system - all attributes including Size/Color are managed here.
     """
-    name = models.CharField(max_length=100, unique=True, help_text="Attribute name (e.g., Waist, Inseam)")
+    INPUT_TYPES = [
+        ('select', 'Dropdown/Buttons'),
+        ('color', 'Color Swatches'),
+        ('text', 'Text Input'),
+    ]
+
+    name = models.CharField(max_length=100, unique=True, help_text="Attribute name (e.g., Size, Color, Waist)")
     slug = models.SlugField(unique=True, help_text="URL-friendly identifier")
     description = models.TextField(blank=True, help_text="Optional description of this attribute")
+    input_type = models.CharField(
+        max_length=20,
+        choices=INPUT_TYPES,
+        default='select',
+        help_text="How this attribute should be displayed in the UI"
+    )
+    display_order = models.PositiveIntegerField(
+        default=0,
+        help_text="Order in which to display this attribute (lower = first)"
+    )
     is_active = models.BooleanField(default=True, help_text="Whether this attribute is available for use")
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
-        ordering = ["name"]
-        verbose_name = "Custom Attribute"
-        verbose_name_plural = "Custom Attributes"
+        ordering = ["display_order", "name"]
+        verbose_name = "Product Attribute"
+        verbose_name_plural = "Product Attributes"
 
     def __str__(self):
         return self.name
 
 
+# Alias for new naming convention
+ProductAttribute = CustomAttribute
+
+
 class CustomAttributeValue(models.Model):
     """
-    A value for a custom attribute.
-    Examples: For "Waist" attribute: 28, 30, 32, 34, etc.
+    A value for a product attribute.
+    Examples: For "Size" → S, M, L, XL; For "Color" → Red, Blue, Black
     """
     attribute = models.ForeignKey(
         CustomAttribute,
@@ -199,19 +219,33 @@ class CustomAttributeValue(models.Model):
         related_name="values",
         help_text="The attribute this value belongs to"
     )
-    value = models.CharField(max_length=100, help_text="The attribute value (e.g., 28, 30, 32)")
+    value = models.CharField(max_length=100, help_text="The attribute value (e.g., M, Red, 32)")
     display_order = models.PositiveIntegerField(default=0, help_text="Order in which to display this value")
+    metadata = models.JSONField(
+        default=dict,
+        blank=True,
+        help_text="Additional data for this value (e.g., {'hex_code': '#FF0000'} for colors)"
+    )
     is_active = models.BooleanField(default=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
         ordering = ["attribute", "display_order", "value"]
         unique_together = ["attribute", "value"]
-        verbose_name = "Custom Attribute Value"
-        verbose_name_plural = "Custom Attribute Values"
+        verbose_name = "Product Attribute Value"
+        verbose_name_plural = "Product Attribute Values"
 
     def __str__(self):
         return f"{self.attribute.name}: {self.value}"
+
+    @property
+    def hex_code(self):
+        """Convenience property for color attributes."""
+        return self.metadata.get('hex_code', '#000000')
+
+
+# Alias for new naming convention
+ProductAttributeValue = CustomAttributeValue
 
 
 # GENDER?
@@ -221,9 +255,7 @@ class ProductVariant(models.Model):
     """
     A specific variant of a product with unique attribute combinations.
 
-    The available attributes are determined by the product's category.
-    For example, an Apparel product might use Size + Color + Material,
-    while an Electronics product might use Screen Size + Color + Storage.
+    Uses the unified ProductAttribute system for all attributes (Size, Color, etc.).
     """
 
     product = models.ForeignKey(Product, related_name="variants", on_delete=models.CASCADE)
@@ -235,17 +267,22 @@ class ProductVariant(models.Model):
         help_text="Stock Keeping Unit - auto-generated if blank",
     )
 
-    # Optional standard attributes (only used if category specifies)
+    # UNIFIED ATTRIBUTE SYSTEM - all attributes stored here
+    attributes = models.ManyToManyField(
+        'CustomAttributeValue',
+        blank=True,
+        related_name="variants",
+        help_text="All attribute values for this variant (Size, Color, etc.)"
+    )
+
+    # DEPRECATED: Legacy fields - kept for migration, will be removed
     size = models.ForeignKey(Size, on_delete=models.PROTECT, null=True, blank=True)
     color = models.ForeignKey(Color, on_delete=models.PROTECT, null=True, blank=True)
     material = models.ForeignKey(Material, on_delete=models.PROTECT, null=True, blank=True)
-
-    # Dynamic variant attributes (category-specific)
-    # Format: {"Storage": "256GB", "Processor": "M2", ...}
     variant_attributes = models.JSONField(
         default=dict,
         blank=True,
-        help_text="Dynamic variant attributes based on category configuration",
+        help_text="DEPRECATED: Use 'attributes' ManyToMany field instead",
     )
 
     stock_quantity = models.PositiveIntegerField(default=0)
@@ -278,17 +315,21 @@ class ProductVariant(models.Model):
     def __str__(self):
         parts = [self.product.name]
 
-        # Add standard attributes if present
-        if self.size:
-            parts.append(str(self.size))
-        if self.color:
-            parts.append(str(self.color))
-        if self.material:
-            parts.append(str(self.material))
+        # Use unified attributes if available
+        if self.pk:  # Only access M2M if saved
+            for attr_value in self.attributes.select_related('attribute').order_by('attribute__display_order'):
+                parts.append(attr_value.value)
 
-        # Add dynamic attributes
-        for key, value in self.variant_attributes.items():
-            parts.append(f"{key}: {value}")
+        # Fallback to legacy fields if no unified attributes
+        if len(parts) == 1:
+            if self.size:
+                parts.append(str(self.size))
+            if self.color:
+                parts.append(str(self.color))
+            if self.material:
+                parts.append(str(self.material))
+            for key, value in self.variant_attributes.items():
+                parts.append(f"{key}: {value}")
 
         return " - ".join(parts)
 
@@ -297,20 +338,53 @@ class ProductVariant(models.Model):
         if not self.sku:
             parts = [self.product.slug[:15].upper().replace("-", "")]
 
-            # Add standard attributes
+            # Try unified attributes first (need to save first for M2M)
+            # SKU generation from unified attributes happens in generate_sku()
+
+            # Fallback to legacy fields
             if self.size:
                 parts.append(self.size.code.upper())
             if self.color:
                 parts.append(self.color.name[:8].upper().replace(" ", ""))
             if self.material:
                 parts.append(self.material.name[:8].upper().replace(" ", ""))
-
-            # Add dynamic attributes
             for key, value in self.variant_attributes.items():
                 parts.append(str(value)[:8].upper().replace(" ", ""))
 
             self.sku = "-".join(parts)
         super().save(*args, **kwargs)
+
+    def generate_sku_from_attributes(self):
+        """Generate SKU from unified attributes. Call after setting attributes."""
+        parts = [self.product.slug[:15].upper().replace("-", "")]
+        for attr_value in self.attributes.select_related('attribute').order_by('attribute__display_order'):
+            parts.append(attr_value.value[:8].upper().replace(" ", ""))
+        return "-".join(parts)
+
+    def get_attribute_value(self, attribute_slug):
+        """Get the value for a specific attribute by slug (e.g., 'size', 'color')."""
+        try:
+            return self.attributes.get(attribute__slug=attribute_slug)
+        except CustomAttributeValue.DoesNotExist:
+            return None
+
+    def get_attributes_by_type(self):
+        """Get all attributes grouped by attribute type."""
+        result = {}
+        for attr_value in self.attributes.select_related('attribute').order_by('attribute__display_order'):
+            attr_name = attr_value.attribute.slug
+            result[attr_name] = {
+                'attribute': attr_value.attribute,
+                'value': attr_value,
+            }
+        return result
+
+    def get_attribute_display(self):
+        """Get a dict of attribute_slug -> value for display."""
+        return {
+            av.attribute.slug: av.value
+            for av in self.attributes.select_related('attribute')
+        }
 
 
 class Discount(models.Model):

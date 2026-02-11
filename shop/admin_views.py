@@ -3752,14 +3752,22 @@ def attributes_dashboard(request):
         # CUSTOM ATTRIBUTE ACTIONS
         elif action == "create_custom_attribute":
             try:
+                from django.db.models import Max
+
                 name = request.POST.get("name", "").strip()
+                input_type = request.POST.get("input_type", "select").strip()
                 description = request.POST.get("description", "").strip()
                 if not name:
                     return JsonResponse({"success": False, "error": "Attribute name is required"})
                 slug = slugify(name)
                 if CustomAttribute.objects.filter(slug=slug).exists():
                     return JsonResponse({"success": False, "error": f"Attribute '{name}' already exists"})
-                attr = CustomAttribute.objects.create(name=name, slug=slug, description=description)
+                # Get next display order
+                max_order = CustomAttribute.objects.aggregate(Max("display_order"))["display_order__max"] or 0
+                attr = CustomAttribute.objects.create(
+                    name=name, slug=slug, input_type=input_type,
+                    description=description, display_order=max_order + 1
+                )
                 return JsonResponse({"success": True, "id": attr.id, "name": attr.name, "slug": attr.slug})
             except Exception as e:
                 return JsonResponse({"success": False, "error": str(e)})
@@ -3800,17 +3808,24 @@ def attributes_dashboard(request):
         # CUSTOM ATTRIBUTE VALUE ACTIONS
         elif action == "add_attribute_value":
             try:
+                from django.db.models import Max
+
                 attr_id = request.POST.get("attribute_id")
                 value = request.POST.get("value", "").strip()
+                hex_code = request.POST.get("hex_code", "").strip()
                 if not value:
                     return JsonResponse({"success": False, "error": "Value is required"})
                 attr = CustomAttribute.objects.get(id=attr_id)
                 if attr.values.filter(value__iexact=value).exists():
                     return JsonResponse({"success": False, "error": f"Value '{value}' already exists"})
                 # Get next display order
-                max_order = attr.values.aggregate(models.Max("display_order"))["display_order__max"] or 0
+                max_order = attr.values.aggregate(Max("display_order"))["display_order__max"] or 0
+                # Build metadata if hex_code provided
+                metadata = {}
+                if hex_code:
+                    metadata["hex_code"] = hex_code
                 attr_value = CustomAttributeValue.objects.create(
-                    attribute=attr, value=value, display_order=max_order + 1
+                    attribute=attr, value=value, display_order=max_order + 1, metadata=metadata
                 )
                 return JsonResponse({"success": True, "id": attr_value.id, "value": attr_value.value})
             except CustomAttribute.DoesNotExist:
@@ -3826,6 +3841,74 @@ def attributes_dashboard(request):
                 return JsonResponse({"success": True})
             except CustomAttributeValue.DoesNotExist:
                 return JsonResponse({"success": False, "error": "Value not found"})
+            except Exception as e:
+                return JsonResponse({"success": False, "error": str(e)})
+
+        elif action == "reorder_attribute_values":
+            # Reorder values within an attribute (drag-and-drop)
+            try:
+                import json
+                value_ids = json.loads(request.POST.get("value_ids", "[]"))
+                for order, value_id in enumerate(value_ids):
+                    CustomAttributeValue.objects.filter(id=value_id).update(display_order=order)
+                return JsonResponse({"success": True})
+            except Exception as e:
+                return JsonResponse({"success": False, "error": str(e)})
+
+        elif action == "update_attribute_value":
+            # Update a value's metadata (e.g., hex_code for colors)
+            try:
+                import json
+                value_id = request.POST.get("value_id")
+                attr_value = CustomAttributeValue.objects.get(id=value_id)
+
+                # Update metadata
+                metadata = attr_value.metadata or {}
+                hex_code = request.POST.get("hex_code")
+                label = request.POST.get("label")
+
+                if hex_code is not None:
+                    metadata["hex_code"] = hex_code
+                if label is not None:
+                    metadata["label"] = label
+
+                attr_value.metadata = metadata
+                attr_value.save()
+                return JsonResponse({"success": True, "metadata": metadata})
+            except CustomAttributeValue.DoesNotExist:
+                return JsonResponse({"success": False, "error": "Value not found"})
+            except Exception as e:
+                return JsonResponse({"success": False, "error": str(e)})
+
+        elif action == "update_attribute_type":
+            # Update an attribute's input_type and display_order
+            try:
+                attr_id = request.POST.get("attribute_id")
+                attr = CustomAttribute.objects.get(id=attr_id)
+
+                input_type = request.POST.get("input_type")
+                display_order = request.POST.get("display_order")
+
+                if input_type:
+                    attr.input_type = input_type
+                if display_order is not None:
+                    attr.display_order = int(display_order)
+
+                attr.save()
+                return JsonResponse({"success": True})
+            except CustomAttribute.DoesNotExist:
+                return JsonResponse({"success": False, "error": "Attribute not found"})
+            except Exception as e:
+                return JsonResponse({"success": False, "error": str(e)})
+
+        elif action == "reorder_attributes":
+            # Reorder attributes (drag-and-drop)
+            try:
+                import json
+                attr_ids = json.loads(request.POST.get("attribute_ids", "[]"))
+                for order, attr_id in enumerate(attr_ids):
+                    CustomAttribute.objects.filter(id=attr_id).update(display_order=order)
+                return JsonResponse({"success": True})
             except Exception as e:
                 return JsonResponse({"success": False, "error": str(e)})
 
@@ -3864,17 +3947,24 @@ def attributes_dashboard(request):
             "variant_count": variant_count,
         })
 
-    # Get custom attributes with their values
-    custom_attributes = CustomAttribute.objects.prefetch_related("values").filter(is_active=True)
+    # Get custom attributes with their values, ordered by display_order
+    custom_attributes = CustomAttribute.objects.prefetch_related("values").filter(is_active=True).order_by("display_order", "name")
     custom_attrs_data = []
     for attr in custom_attributes:
         values_data = [
-            {"id": v.id, "value": v.value, "display_order": v.display_order}
-            for v in attr.values.filter(is_active=True)
+            {
+                "id": v.id,
+                "value": v.value,
+                "display_order": v.display_order,
+                "metadata": v.metadata or {},
+            }
+            for v in attr.values.filter(is_active=True).order_by("display_order", "value")
         ]
         custom_attrs_data.append({
             "id": attr.id,
             "name": attr.name,
+            "input_type": attr.input_type,
+            "display_order": attr.display_order,
             "slug": attr.slug,
             "description": attr.description,
             "values": values_data,
@@ -6421,6 +6511,7 @@ def bundles_dashboard(request):
                     images=images,
                     show_includes=request.POST.get("show_includes") == "on",
                     is_active=True,
+                    available_for_purchase=True,
                 )
 
                 # Add products to bundle
@@ -6452,6 +6543,7 @@ def bundles_dashboard(request):
                 bundle.description = request.POST.get("description", "")
                 bundle.show_includes = request.POST.get("show_includes") == "on"
                 bundle.is_active = request.POST.get("is_active") == "on"
+                bundle.available_for_purchase = request.POST.get("available_for_purchase") == "on"
                 bundle.featured = request.POST.get("featured") == "on"
                 # Handle images
                 images_json = request.POST.get("images", "[]")

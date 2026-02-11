@@ -9,6 +9,7 @@
   <link rel="icon" type="image/svg+xml" href="{% static 'admin-favicon.svg' %}">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
   <style>
     {% include "admin/partials/dark_mode_styles.html" %}
     * {
@@ -493,6 +494,35 @@
       box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
     }
 
+    /* Sortable drag-and-drop styles */
+    .sortable-ghost {
+      opacity: 0.4;
+      background: #ddd6fe;
+    }
+
+    .sortable-chosen {
+      background: #f5f3ff;
+      box-shadow: 0 4px 12px rgba(139, 92, 246, 0.2);
+    }
+
+    .drag-handle, .drag-handle-attr {
+      cursor: grab;
+      opacity: 0.5;
+      transition: opacity 0.2s;
+    }
+
+    .drag-handle:hover, .drag-handle-attr:hover {
+      opacity: 1;
+    }
+
+    .drag-handle:active, .drag-handle-attr:active {
+      cursor: grabbing;
+    }
+
+    .attribute-item {
+      cursor: default;
+    }
+
   </style>
   {% include "admin/partials/dark_mode_apply.html" %}
 </head>
@@ -687,18 +717,26 @@
     <div style="margin-top: 3rem;">
       <h2 style="font-size: 1.5rem; font-weight: 700; color: #1e293b; margin-bottom: 1.5rem; display: flex; align-items: center; gap: 0.75rem;">
         <i class="fa-solid fa-tags" style="color: #8b5cf6;"></i>
-        Custom Attributes
+        Product Attributes
+        <span style="font-size: 0.875rem; font-weight: 400; color: #64748b;">(drag to reorder)</span>
       </h2>
-      <div class="attributes-grid">
+      <div class="attributes-grid" id="attributes-container">
         {% for attr in custom_attributes %}
-        <div class="attribute-section">
+        <div class="attribute-section" data-attr-id="{{ attr.id }}">
           <div class="section-header">
-            <div class="section-title">
+            <div class="section-title" style="display: flex; align-items: center; gap: 0.5rem;">
+              <i class="fa-solid fa-grip-vertical drag-handle-attr" style="cursor: grab; color: #94a3b8;" title="Drag to reorder"></i>
               <i class="fa-solid fa-tag"></i>
               {{ attr.name }}
+              {% if attr.input_type == 'color' %}
+              <span style="font-size: 0.75rem; background: linear-gradient(135deg, #ec4899, #8b5cf6); color: white; padding: 0.125rem 0.5rem; border-radius: 9999px;">color</span>
+              {% endif %}
             </div>
             <div style="display: flex; gap: 0.5rem;">
-              <button class="btn btn-primary" onclick="openAddValueModal({{ attr.id }}, '{{ attr.name|escapejs }}')" style="padding: 0.375rem 0.75rem;">
+              <button class="btn btn-secondary" onclick="openEditAttributeModal({{ attr.id }}, '{{ attr.name|escapejs }}', '{{ attr.input_type }}')" style="padding: 0.375rem 0.75rem;" title="Edit Attribute">
+                <i class="fa-solid fa-cog"></i>
+              </button>
+              <button class="btn btn-primary" onclick="openAddValueModal({{ attr.id }}, '{{ attr.name|escapejs }}', '{{ attr.input_type }}')" style="padding: 0.375rem 0.75rem;">
                 <i class="fa-solid fa-plus"></i> Add
               </button>
               <button class="btn btn-icon btn-danger" onclick="deleteCustomAttribute({{ attr.id }}, '{{ attr.name|escapejs }}')" title="Delete Attribute">
@@ -706,12 +744,22 @@
               </button>
             </div>
           </div>
-          <div class="attribute-list">
+          <div class="attribute-list sortable-values" data-attr-id="{{ attr.id }}">
             {% if attr.values %}
               {% for value in attr.values %}
-              <div class="attribute-item">
-                <div class="attribute-info">
+              <div class="attribute-item" data-value-id="{{ value.id }}">
+                <div class="attribute-info" style="display: flex; align-items: center; gap: 0.5rem;">
+                  <i class="fa-solid fa-grip-vertical drag-handle" style="cursor: grab; color: #cbd5e1;" title="Drag to reorder"></i>
+                  {% if attr.input_type == 'color' %}
+                  <span class="color-swatch" style="width: 24px; height: 24px; border-radius: 50%; background-color: {{ value.metadata.hex_code|default:'#000000' }}; border: 2px solid #e2e8f0; flex-shrink: 0;"></span>
+                  {% endif %}
                   <span class="attribute-name">{{ value.value }}</span>
+                  {% if attr.input_type == 'color' %}
+                  <input type="color" value="{{ value.metadata.hex_code|default:'#000000' }}"
+                         onchange="updateValueHexCode({{ value.id }}, this.value)"
+                         style="width: 30px; height: 24px; border: none; cursor: pointer; background: none;"
+                         title="Click to change color">
+                  {% endif %}
                 </div>
                 <div class="attribute-actions">
                   <button class="btn btn-icon btn-danger" onclick="deleteAttributeValue({{ value.id }}, '{{ value.value|escapejs }}')" title="Delete">
@@ -833,6 +881,15 @@
           <p class="form-hint">This will be the attribute category name</p>
         </div>
         <div class="form-group">
+          <label class="form-label">Display Type</label>
+          <select id="new_attr_input_type" class="form-input">
+            <option value="select">Dropdown / Buttons (Recommended)</option>
+            <option value="color">Color Swatches</option>
+            <option value="text">Text Input</option>
+          </select>
+          <p class="form-hint">How values will be displayed on the product page</p>
+        </div>
+        <div class="form-group">
           <label class="form-label">Description</label>
           <textarea id="new_attr_description" class="form-input form-textarea" placeholder="Optional description of this attribute"></textarea>
         </div>
@@ -855,15 +912,56 @@
       </div>
       <div class="modal-body">
         <input type="hidden" id="addValueAttrId">
+        <input type="hidden" id="addValueAttrType">
         <div class="form-group">
           <label class="form-label">Value *</label>
           <input type="text" id="new_value" class="form-input" placeholder="e.g., 28, 30, 32">
+        </div>
+        <div class="form-group" id="hexCodeGroup" style="display: none;">
+          <label class="form-label">Color</label>
+          <div style="display: flex; align-items: center; gap: 0.75rem;">
+            <input type="color" id="new_hex_code" value="#000000" style="width: 60px; height: 40px; border: none; cursor: pointer;">
+            <input type="text" id="new_hex_code_text" class="form-input" value="#000000" style="width: 120px; font-family: monospace;" placeholder="#000000">
+          </div>
+          <p class="form-hint">Pick a color or enter a hex code</p>
         </div>
       </div>
       <div class="modal-footer">
         <button class="btn btn-secondary" onclick="closeAddValueModal()">Cancel</button>
         <button class="btn btn-primary" onclick="addAttributeValue()">
           <i class="fa-solid fa-plus"></i> Add Value
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Edit Attribute Modal -->
+  <div class="modal-overlay" id="editAttributeModal">
+    <div class="modal-content" style="max-width: 450px;">
+      <div class="modal-header">
+        <h2 id="editAttributeModalTitle">Edit Attribute</h2>
+        <button class="modal-close" onclick="closeEditAttributeModal()">&times;</button>
+      </div>
+      <div class="modal-body">
+        <input type="hidden" id="editAttrId">
+        <div class="form-group">
+          <label class="form-label">Attribute Name</label>
+          <input type="text" id="editAttrName" class="form-input" disabled style="background: #f1f5f9;">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Display Type</label>
+          <select id="editAttrInputType" class="form-input">
+            <option value="select">Dropdown / Buttons</option>
+            <option value="color">Color Swatches</option>
+            <option value="text">Text Input</option>
+          </select>
+          <p class="form-hint">How values are displayed on the product page</p>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" onclick="closeEditAttributeModal()">Cancel</button>
+        <button class="btn btn-primary" onclick="saveAttributeType()">
+          <i class="fa-solid fa-check"></i> Save Changes
         </button>
       </div>
     </div>
@@ -907,6 +1005,7 @@
     // ADD ATTRIBUTE MODAL FUNCTIONS (Create new attribute type)
     function openAddAttributeModal() {
       document.getElementById('new_attr_name').value = '';
+      document.getElementById('new_attr_input_type').value = 'select';
       document.getElementById('new_attr_description').value = '';
       document.getElementById('addAttributeModal').classList.add('active');
     }
@@ -917,6 +1016,7 @@
 
     function createCustomAttribute() {
       const name = document.getElementById('new_attr_name').value.trim();
+      const inputType = document.getElementById('new_attr_input_type').value;
       const description = document.getElementById('new_attr_description').value.trim();
 
       if (!name) {
@@ -928,6 +1028,7 @@
       formData.append('csrfmiddlewaretoken', getCookie('csrftoken'));
       formData.append('action', 'create_custom_attribute');
       formData.append('name', name);
+      formData.append('input_type', inputType);
       formData.append('description', description);
 
       fetch(window.location.pathname, {
@@ -973,10 +1074,22 @@
     }
 
     // ADD VALUE MODAL FUNCTIONS
-    function openAddValueModal(attrId, attrName) {
+    function openAddValueModal(attrId, attrName, inputType) {
       document.getElementById('addValueAttrId').value = attrId;
+      document.getElementById('addValueAttrType').value = inputType || 'select';
       document.getElementById('addValueModalTitle').textContent = 'Add ' + attrName + ' Value';
       document.getElementById('new_value').value = '';
+      document.getElementById('new_hex_code').value = '#000000';
+      document.getElementById('new_hex_code_text').value = '#000000';
+
+      // Show/hide hex code input based on attribute type
+      const hexGroup = document.getElementById('hexCodeGroup');
+      if (inputType === 'color') {
+        hexGroup.style.display = 'block';
+      } else {
+        hexGroup.style.display = 'none';
+      }
+
       document.getElementById('addValueModal').classList.add('active');
     }
 
@@ -986,6 +1099,7 @@
 
     function addAttributeValue() {
       const attrId = document.getElementById('addValueAttrId').value;
+      const attrType = document.getElementById('addValueAttrType').value;
       const value = document.getElementById('new_value').value.trim();
 
       if (!value) {
@@ -998,6 +1112,12 @@
       formData.append('action', 'add_attribute_value');
       formData.append('attribute_id', attrId);
       formData.append('value', value);
+
+      // Include hex code for color attributes
+      if (attrType === 'color') {
+        const hexCode = document.getElementById('new_hex_code').value;
+        formData.append('hex_code', hexCode);
+      }
 
       fetch(window.location.pathname, {
         method: 'POST',
@@ -1014,6 +1134,17 @@
         }
       });
     }
+
+    // Sync color picker and text input
+    document.getElementById('new_hex_code').addEventListener('input', function() {
+      document.getElementById('new_hex_code_text').value = this.value;
+    });
+    document.getElementById('new_hex_code_text').addEventListener('input', function() {
+      const hex = this.value;
+      if (/^#[0-9A-Fa-f]{6}$/.test(hex)) {
+        document.getElementById('new_hex_code').value = hex;
+      }
+    });
 
     function deleteAttributeValue(valueId, valueName) {
       if (!confirm(`Delete value "${valueName}"?`)) return;
@@ -1282,6 +1413,146 @@
       if (e.key === 'Escape') {
         document.querySelectorAll('.modal-overlay.active').forEach(modal => {
           modal.classList.remove('active');
+        });
+      }
+    });
+
+    // UPDATE HEX CODE FOR COLOR VALUES
+    function updateValueHexCode(valueId, hexCode) {
+      const formData = new FormData();
+      formData.append('csrfmiddlewaretoken', getCookie('csrftoken'));
+      formData.append('action', 'update_attribute_value');
+      formData.append('value_id', valueId);
+      formData.append('hex_code', hexCode);
+
+      fetch(window.location.pathname, {
+        method: 'POST',
+        body: formData
+      })
+      .then(response => response.json())
+      .then(data => {
+        if (data.success) {
+          // Update the swatch color preview
+          const item = document.querySelector(`[data-value-id="${valueId}"]`);
+          if (item) {
+            const swatch = item.querySelector('.color-swatch');
+            if (swatch) {
+              swatch.style.backgroundColor = hexCode;
+            }
+          }
+          showToast('Color updated');
+        } else {
+          showToast(data.error || 'Failed to update color', 'error');
+        }
+      });
+    }
+
+    // EDIT ATTRIBUTE MODAL FUNCTIONS
+    function openEditAttributeModal(attrId, attrName, inputType) {
+      document.getElementById('editAttrId').value = attrId;
+      document.getElementById('editAttrName').value = attrName;
+      document.getElementById('editAttrInputType').value = inputType || 'select';
+      document.getElementById('editAttributeModalTitle').textContent = 'Edit ' + attrName;
+      document.getElementById('editAttributeModal').classList.add('active');
+    }
+
+    function closeEditAttributeModal() {
+      document.getElementById('editAttributeModal').classList.remove('active');
+    }
+
+    function saveAttributeType() {
+      const attrId = document.getElementById('editAttrId').value;
+      const inputType = document.getElementById('editAttrInputType').value;
+
+      const formData = new FormData();
+      formData.append('csrfmiddlewaretoken', getCookie('csrftoken'));
+      formData.append('action', 'update_attribute_type');
+      formData.append('attribute_id', attrId);
+      formData.append('input_type', inputType);
+
+      fetch(window.location.pathname, {
+        method: 'POST',
+        body: formData
+      })
+      .then(response => response.json())
+      .then(data => {
+        if (data.success) {
+          showToast('Attribute type updated');
+          closeEditAttributeModal();
+          location.reload();
+        } else {
+          showToast(data.error || 'Failed to update attribute', 'error');
+        }
+      });
+    }
+
+    // SORTABLEJS INITIALIZATION FOR DRAG-AND-DROP
+    document.addEventListener('DOMContentLoaded', function() {
+      // Initialize sortable for attribute values
+      document.querySelectorAll('.sortable-values').forEach(function(list) {
+        new Sortable(list, {
+          handle: '.drag-handle',
+          animation: 150,
+          ghostClass: 'sortable-ghost',
+          chosenClass: 'sortable-chosen',
+          onEnd: function(evt) {
+            const attrId = list.dataset.attrId;
+            const items = list.querySelectorAll('.attribute-item[data-value-id]');
+            const valueIds = Array.from(items).map(item => item.dataset.valueId);
+
+            // Save new order to backend
+            const formData = new FormData();
+            formData.append('csrfmiddlewaretoken', getCookie('csrftoken'));
+            formData.append('action', 'reorder_attribute_values');
+            formData.append('value_ids', JSON.stringify(valueIds));
+
+            fetch(window.location.pathname, {
+              method: 'POST',
+              body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+              if (data.success) {
+                showToast('Order saved');
+              } else {
+                showToast('Failed to save order', 'error');
+              }
+            });
+          }
+        });
+      });
+
+      // Initialize sortable for attributes (the sections themselves)
+      const attrsContainer = document.getElementById('attributes-container');
+      if (attrsContainer) {
+        new Sortable(attrsContainer, {
+          handle: '.drag-handle-attr',
+          animation: 150,
+          ghostClass: 'sortable-ghost',
+          chosenClass: 'sortable-chosen',
+          onEnd: function(evt) {
+            const sections = attrsContainer.querySelectorAll('.attribute-section[data-attr-id]');
+            const attrIds = Array.from(sections).map(section => section.dataset.attrId);
+
+            // Save new order to backend
+            const formData = new FormData();
+            formData.append('csrfmiddlewaretoken', getCookie('csrftoken'));
+            formData.append('action', 'reorder_attributes');
+            formData.append('attribute_ids', JSON.stringify(attrIds));
+
+            fetch(window.location.pathname, {
+              method: 'POST',
+              body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+              if (data.success) {
+                showToast('Attribute order saved');
+              } else {
+                showToast('Failed to save order', 'error');
+              }
+            });
+          }
         });
       }
     });
