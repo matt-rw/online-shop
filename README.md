@@ -21,12 +21,15 @@ This isn't just a store — it's a complete business management system with:
 The admin system is the core of this project — a complete back-office solution for running an e-commerce business.
 
 ### Products & Inventory
+- 4-step product creation wizard (details → variants → images → review)
 - Product management with variants (size, color, material)
 - Stock tracking with low-stock alerts
 - Bulk variant editing
 - Cost tracking at product, variant, and shipment levels
 
 ![Products Dashboard](screenshots/06-products-inventory.jpg)
+![Edit Product](screenshots/16-product-edit.jpg)
+![Edit Variant](screenshots/17-variant-edit.jpg)
 
 ### Shipments
 - Track incoming inventory shipments
@@ -42,6 +45,14 @@ The admin system is the core of this project — a complete back-office solution
 - **Subscriber Management** — CSV import, activity tracking
 
 ![Subscribers](screenshots/10-subscribers-growth.jpg)
+
+### Visitor Analytics
+- Page views and session tracking
+- Bot detection and filtering
+- Session insights (duration, pages/session, bounce rate)
+- Geographic breakdown by country and city
+
+![Visitor Analytics](screenshots/12-visitors-analytics.jpg)
 
 ### Finance
 - Revenue tracking with date filters
