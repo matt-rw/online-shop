@@ -1,0 +1,559 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Quick Links - Blueprint Apparel</title>
+  <link rel="icon" type="image/svg+xml" href="{% static 'admin-favicon.svg' %}">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <style>
+    {% include "admin/partials/dark_mode_styles.html" %}
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background: #f1f5f9;
+      min-height: 100vh;
+    }
+
+    .nav-links {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      padding: 1rem 2rem;
+      display: flex;
+      gap: 0.75rem;
+      align-items: center;
+    }
+
+    .nav-link {
+      background: rgba(255, 255, 255, 0.15);
+      color: white;
+      padding: 0.5rem 1rem;
+      border-radius: 8px;
+      text-decoration: none;
+      font-size: 0.875rem;
+      font-weight: 500;
+      transition: all 0.2s;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .nav-link:hover {
+      background: rgba(255, 255, 255, 0.25);
+    }
+
+    .top-bar {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      padding: 2rem 0;
+      margin-bottom: 2rem;
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 0 2rem;
+    }
+
+    .header h1 {
+      color: white;
+      font-size: 2.5rem;
+      font-weight: 800;
+    }
+
+    .main-content {
+      padding: 0 2rem 2rem 2rem;
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    .section-card {
+      background: white;
+      border-radius: 16px;
+      padding: 2rem;
+      margin-bottom: 2rem;
+      box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
+    }
+
+    .section-title {
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: #0f172a;
+      margin-bottom: 1.5rem;
+      padding-bottom: 0.75rem;
+      border-bottom: 2px solid #e2e8f0;
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+
+    .info-box {
+      background: linear-gradient(135deg, #eff6ff 0%, #f0f9ff 100%);
+      border-left: 4px solid #3b82f6;
+      padding: 1rem 1.25rem;
+      border-radius: 8px;
+      margin-bottom: 1.5rem;
+    }
+
+    .info-box p {
+      color: #1e40af;
+      font-size: 0.875rem;
+      line-height: 1.6;
+      margin: 0;
+    }
+
+    .form-group {
+      margin-bottom: 1rem;
+    }
+
+    .form-group label {
+      display: block;
+      color: #475569;
+      font-weight: 600;
+      margin-bottom: 0.5rem;
+      font-size: 0.875rem;
+    }
+
+    .form-group input[type="text"],
+    .form-group input[type="number"],
+    .form-group select {
+      width: 100%;
+      padding: 0.75rem 1rem;
+      border: 2px solid #e2e8f0;
+      border-radius: 8px;
+      font-family: inherit;
+      font-size: 1rem;
+      transition: border-color 0.2s;
+    }
+
+    .form-group input:focus,
+    .form-group select:focus {
+      outline: none;
+      border-color: #667eea;
+    }
+
+    .btn {
+      padding: 0.75rem 1.5rem;
+      border-radius: 8px;
+      border: none;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-size: 0.9375rem;
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+    }
+
+    .btn-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+    }
+
+    .btn-secondary {
+      background: #f1f5f9;
+      color: #475569;
+      border: 2px solid #e2e8f0;
+    }
+
+    .btn-secondary:hover {
+      background: #e2e8f0;
+    }
+
+    .btn-danger {
+      background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+      color: white;
+    }
+
+    .btn-sm {
+      padding: 0.5rem 1rem;
+      font-size: 0.875rem;
+    }
+
+    .quick-link-item {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      padding: 1rem;
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+      margin-bottom: 0.75rem;
+      transition: all 0.2s;
+    }
+
+    .quick-link-item:hover {
+      border-color: #667eea;
+    }
+
+    .quick-link-icon {
+      font-size: 1.5rem;
+      color: #667eea;
+      width: 40px;
+      text-align: center;
+    }
+
+    .quick-link-info {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .quick-link-name {
+      font-weight: 600;
+      color: #1e293b;
+    }
+
+    .quick-link-url {
+      font-size: 0.8125rem;
+      color: #64748b;
+      text-decoration: none;
+      word-break: break-all;
+    }
+
+    .quick-link-url:hover {
+      color: #667eea;
+    }
+
+    .badge {
+      font-size: 0.75rem;
+      padding: 0.25rem 0.5rem;
+      border-radius: 9999px;
+      font-weight: 500;
+    }
+
+    .badge-category {
+      background: #e0e7ff;
+      color: #4338ca;
+    }
+
+    .badge-inactive {
+      background: #fef3c7;
+      color: #b45309;
+    }
+
+    .button-group {
+      display: flex;
+      gap: 0.75rem;
+      flex-wrap: wrap;
+    }
+
+    .form-row {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 1rem;
+    }
+
+    .add-form {
+      background: #f8fafc;
+      border-radius: 8px;
+      padding: 1.5rem;
+      border: 1px solid #e2e8f0;
+      margin-top: 1.5rem;
+    }
+
+    .add-form h3 {
+      font-size: 1rem;
+      font-weight: 600;
+      color: #1e293b;
+      margin-bottom: 1rem;
+    }
+
+    .toast {
+      position: fixed;
+      bottom: 2rem;
+      right: 2rem;
+      padding: 1rem 1.5rem;
+      border-radius: 8px;
+      color: white;
+      font-weight: 500;
+      z-index: 1000;
+      animation: slideIn 0.3s ease;
+    }
+
+    .toast-success { background: #10b981; }
+    .toast-error { background: #ef4444; }
+
+    @keyframes slideIn {
+      from { transform: translateX(100%); opacity: 0; }
+      to { transform: translateX(0); opacity: 1; }
+    }
+
+    .empty-state {
+      text-align: center;
+      padding: 3rem;
+      color: #64748b;
+    }
+
+    .empty-state i {
+      font-size: 3rem;
+      margin-bottom: 1rem;
+      opacity: 0.5;
+    }
+  </style>
+  {% include "admin/partials/dark_mode_apply.html" %}
+</head>
+<body>
+  <div class="nav-links">
+    <a href="{% url 'admin_home' %}" class="nav-link"><i class="fas fa-arrow-left"></i> Back to Dashboard</a>
+  </div>
+
+  <div class="top-bar">
+    <div class="container">
+      <div class="header">
+        <h1><i class="fas fa-external-link-alt"></i> Quick Links</h1>
+      </div>
+    </div>
+  </div>
+
+  <div class="main-content">
+    <div class="section-card">
+      <h2 class="section-title">
+        <i class="fas fa-link"></i> Manage Quick Links
+      </h2>
+
+      <div class="info-box">
+        <p><i class="fas fa-info-circle"></i> Add shortcuts to external services like Stripe, GitHub, Render, etc. These appear on your admin dashboard for quick access.</p>
+      </div>
+
+      <!-- Quick Links List -->
+      <div id="quick-links-list">
+        {% for link in quick_links %}
+        <div class="quick-link-item" data-link-id="{{ link.id }}">
+          <div class="quick-link-icon">
+            <i class="fa-brands {{ link.icon }}"></i>
+          </div>
+          <div class="quick-link-info">
+            <div class="quick-link-name">{{ link.name }}</div>
+            <a href="{{ link.url }}" target="_blank" class="quick-link-url">{{ link.url }}</a>
+          </div>
+          <span class="badge badge-category">{{ link.category }}</span>
+          {% if not link.is_active %}
+          <span class="badge badge-inactive">inactive</span>
+          {% endif %}
+          <div class="button-group">
+            <button type="button" class="btn btn-sm btn-secondary" onclick="editQuickLink({{ link.id }}, '{{ link.name|escapejs }}', '{{ link.url|escapejs }}', '{{ link.icon }}', '{{ link.category }}', {{ link.display_order }}, {{ link.is_active|yesno:'true,false' }})">
+              <i class="fas fa-edit"></i>
+            </button>
+            <button type="button" class="btn btn-sm btn-danger" onclick="deleteQuickLink({{ link.id }})">
+              <i class="fas fa-trash"></i>
+            </button>
+          </div>
+        </div>
+        {% empty %}
+        <div class="empty-state" id="no-links-message">
+          <i class="fas fa-link"></i>
+          <p>No quick links yet. Add your first link below.</p>
+        </div>
+        {% endfor %}
+      </div>
+
+      <!-- Add/Edit Form -->
+      <div class="add-form">
+        <h3 id="form-title"><i class="fas fa-plus"></i> Add Quick Link</h3>
+        <input type="hidden" id="link-id" value="">
+
+        <div class="form-row">
+          <div class="form-group">
+            <label for="link-name"><i class="fas fa-tag"></i> Name</label>
+            <input type="text" id="link-name" placeholder="e.g., Stripe Dashboard">
+          </div>
+          <div class="form-group">
+            <label for="link-url"><i class="fas fa-link"></i> URL</label>
+            <input type="text" id="link-url" placeholder="dashboard.stripe.com">
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label for="link-icon"><i class="fas fa-icons"></i> Icon</label>
+            <select id="link-icon">
+              <option value="fa-link">Link (default)</option>
+              <option value="fa-stripe">Stripe</option>
+              <option value="fa-github">GitHub</option>
+              <option value="fa-digital-ocean">DigitalOcean</option>
+              <option value="fa-aws">AWS</option>
+              <option value="fa-google">Google</option>
+              <option value="fa-slack">Slack</option>
+              <option value="fa-discord">Discord</option>
+              <option value="fa-trello">Trello</option>
+              <option value="fa-jira">Jira</option>
+              <option value="fa-figma">Figma</option>
+              <option value="fa-mailchimp">Mailchimp</option>
+              <option value="fa-cloudflare">Cloudflare</option>
+              <option value="fa-docker">Docker</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="link-category"><i class="fas fa-folder"></i> Category</label>
+            <select id="link-category">
+              {% for value, label in quick_link_categories %}
+              <option value="{{ value }}">{{ label }}</option>
+              {% endfor %}
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="link-order"><i class="fas fa-sort"></i> Order</label>
+            <input type="number" id="link-order" value="0" min="0">
+          </div>
+          <div class="form-group">
+            <label><i class="fas fa-eye"></i> Status</label>
+            <label style="display: flex; align-items: center; gap: 0.5rem; margin-top: 0.5rem; cursor: pointer;">
+              <input type="checkbox" id="link-active" checked style="width: 18px; height: 18px;">
+              <span>Active</span>
+            </label>
+          </div>
+        </div>
+
+        <div class="button-group">
+          <button type="button" class="btn btn-primary" onclick="saveLink()">
+            <i class="fas fa-save"></i> <span id="save-btn-text">Add Link</span>
+          </button>
+          <button type="button" class="btn btn-secondary" onclick="cancelEdit()" id="cancel-btn" style="display: none;">
+            <i class="fas fa-times"></i> Cancel
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const csrfToken = '{{ csrf_token }}';
+
+    function editQuickLink(id, name, url, icon, category, order, active) {
+      document.getElementById('link-id').value = id;
+      document.getElementById('link-name').value = name;
+      document.getElementById('link-url').value = url;
+      document.getElementById('link-icon').value = icon;
+      document.getElementById('link-category').value = category;
+      document.getElementById('link-order').value = order;
+      document.getElementById('link-active').checked = active;
+
+      document.getElementById('form-title').innerHTML = '<i class="fas fa-edit"></i> Edit Quick Link';
+      document.getElementById('save-btn-text').textContent = 'Update Link';
+      document.getElementById('cancel-btn').style.display = 'inline-flex';
+
+      document.querySelector('.add-form').scrollIntoView({ behavior: 'smooth' });
+    }
+
+    function cancelEdit() {
+      document.getElementById('link-id').value = '';
+      document.getElementById('link-name').value = '';
+      document.getElementById('link-url').value = '';
+      document.getElementById('link-icon').value = 'fa-link';
+      document.getElementById('link-category').value = 'other';
+      document.getElementById('link-order').value = '0';
+      document.getElementById('link-active').checked = true;
+
+      document.getElementById('form-title').innerHTML = '<i class="fas fa-plus"></i> Add Quick Link';
+      document.getElementById('save-btn-text').textContent = 'Add Link';
+      document.getElementById('cancel-btn').style.display = 'none';
+    }
+
+    async function saveLink() {
+      const id = document.getElementById('link-id').value;
+      const name = document.getElementById('link-name').value.trim();
+      const url = document.getElementById('link-url').value.trim();
+      const icon = document.getElementById('link-icon').value;
+      const category = document.getElementById('link-category').value;
+      const order = parseInt(document.getElementById('link-order').value) || 0;
+      const active = document.getElementById('link-active').checked;
+
+      if (!name || !url) {
+        showToast('Name and URL are required', 'error');
+        return;
+      }
+
+      try {
+        const response = await fetch('{% url "admin_quick_links" %}', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-Requested-With': 'XMLHttpRequest',
+            'X-CSRFToken': csrfToken
+          },
+          body: JSON.stringify({
+            action: 'save_quick_link',
+            id: id || null,
+            name: name,
+            url: url,
+            icon: icon,
+            category: category,
+            display_order: order,
+            is_active: active
+          })
+        });
+
+        const data = await response.json();
+        if (data.success) {
+          showToast(id ? 'Link updated!' : 'Link added!', 'success');
+          setTimeout(() => location.reload(), 500);
+        } else {
+          showToast('Error: ' + data.error, 'error');
+        }
+      } catch (error) {
+        showToast('Error: ' + error.message, 'error');
+      }
+    }
+
+    async function deleteQuickLink(id) {
+      if (!confirm('Delete this quick link?')) return;
+
+      try {
+        const response = await fetch('{% url "admin_quick_links" %}', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-Requested-With': 'XMLHttpRequest',
+            'X-CSRFToken': csrfToken
+          },
+          body: JSON.stringify({
+            action: 'delete_quick_link',
+            id: id
+          })
+        });
+
+        const data = await response.json();
+        if (data.success) {
+          showToast('Link deleted', 'success');
+          const item = document.querySelector(`.quick-link-item[data-link-id="${id}"]`);
+          if (item) item.remove();
+
+          const list = document.getElementById('quick-links-list');
+          if (!list.querySelector('.quick-link-item')) {
+            list.innerHTML = `<div class="empty-state" id="no-links-message">
+              <i class="fas fa-link"></i>
+              <p>No quick links yet. Add your first link below.</p>
+            </div>`;
+          }
+        } else {
+          showToast('Error: ' + data.error, 'error');
+        }
+      } catch (error) {
+        showToast('Error: ' + error.message, 'error');
+      }
+    }
+
+    function showToast(message, type) {
+      const existing = document.querySelector('.toast');
+      if (existing) existing.remove();
+
+      const toast = document.createElement('div');
+      toast.className = `toast toast-${type}`;
+      toast.innerHTML = `<i class="fas fa-${type === 'success' ? 'check-circle' : 'exclamation-circle'}"></i> ${message}`;
+      document.body.appendChild(toast);
+
+      setTimeout(() => toast.remove(), 3000);
+    }
+  </script>
+</body>
+</html>

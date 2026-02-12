@@ -271,27 +271,55 @@
     <div class="absolute inset-0" style="background: linear-gradient(to right, rgba(88, 28, 135, 0.2) 0%, transparent 12%, transparent 88%, rgba(159, 18, 57, 0.2) 100%);"></div>
 
     <!-- Slideshow backgrounds with vintage film effect -->
-    <div class="absolute inset-0 hero-slide hero-slide-1 film-camera film-vignette film-warm" style="opacity: 1; z-index: 2; transition: opacity 0.45s ease-out;">
-      <!-- Split view: left and right images -->
-      <div class="absolute inset-0 flex gap-0">
-        <div class="hidden md:block" style="width: 70%; background-image: url('{% static 'images/nature_shots/full-dark.jpeg' %}'); background-size: cover; background-position: 85% center; background-repeat: no-repeat;"></div>
-        <div class="w-full md:w-[30%]" style="background-image: url('{% static 'images/nature_shots/full-top-forward.jpeg' %}'); background-size: cover; background-position: 10% center; background-repeat: no-repeat;"></div>
+    {% if hero_slides %}
+      <!-- Dynamic slides from database -->
+      {% for slide in hero_slides %}
+        <div class="absolute inset-0 hero-slide hero-slide-{{ forloop.counter }} film-camera film-vignette film-warm" style="{% if forloop.first %}opacity: 1; z-index: 2;{% else %}opacity: 0; z-index: 1;{% endif %} transition: opacity 0.45s ease-out;">
+          {% if slide.is_split %}
+            <!-- Split view: two images side by side -->
+            <div class="absolute inset-0 flex gap-0">
+              <div class="hidden md:block" style="width: 70%; background-image: url('{{ slide.image_url }}'); background-size: cover; background-position: 85% {% if slide.position == 'top' %}20%{% elif slide.position == 'bottom' %}80%{% else %}center{% endif %}; background-repeat: no-repeat;"></div>
+              <div class="w-full md:w-[30%]" style="background-image: url('{{ slide.split_image_url|default:slide.image_url }}'); background-size: cover; background-position: 10% {% if slide.position == 'top' %}20%{% elif slide.position == 'bottom' %}80%{% else %}center{% endif %}; background-repeat: no-repeat;"></div>
+            </div>
+          {% else %}
+            <!-- Single image -->
+            <div class="absolute inset-0" style="background-image: url('{{ slide.image_url }}'); background-size: cover; background-position: center {% if slide.position == 'top' %}20%{% elif slide.position == 'bottom' %}80%{% else %}center{% endif %}; background-repeat: no-repeat;"></div>
+          {% endif %}
+          {% if slide.link_url %}
+            <a href="{{ slide.link_url }}" class="absolute inset-0 z-10"></a>
+          {% endif %}
+        </div>
+      {% endfor %}
+    {% else %}
+      <!-- Fallback: Default hardcoded slides -->
+      <div class="absolute inset-0 hero-slide hero-slide-1 film-camera film-vignette film-warm" style="opacity: 1; z-index: 2; transition: opacity 0.45s ease-out;">
+        <!-- Split view: left and right images -->
+        <div class="absolute inset-0 flex gap-0">
+          <div class="hidden md:block" style="width: 70%; background-image: url('{% static 'images/nature_shots/full-dark.jpeg' %}'); background-size: cover; background-position: 85% center; background-repeat: no-repeat;"></div>
+          <div class="w-full md:w-[30%]" style="background-image: url('{% static 'images/nature_shots/full-top-forward.jpeg' %}'); background-size: cover; background-position: 10% center; background-repeat: no-repeat;"></div>
+        </div>
       </div>
-    </div>
-    <div class="absolute inset-0 hero-slide hero-slide-2 film-camera film-vignette film-warm" style="background-image: url('{% static 'images/hollywood_shots/cream-tee-back-centered.jpeg' %}'); background-size: cover; background-position: center 30%; background-repeat: no-repeat; opacity: 0; z-index: 1; transition: opacity 0.45s ease-out;"></div>
-    <div class="absolute inset-0 hero-slide hero-slide-3 film-camera film-vignette film-warm" style="background-image: url('{% static 'images/nature_shots/pants-bottom-low.jpeg' %}'); background-size: cover; background-position: center center; background-repeat: no-repeat; opacity: 0; z-index: 1; transition: opacity 0.45s ease-out;"></div>
-    <div class="absolute inset-0 hero-slide hero-slide-4 film-camera film-vignette film-warm" style="background-image: url('{% static 'images/hollywood_shots/black-tee-vitruvian-back.jpeg' %}'); background-size: cover; background-position: center 25%; background-repeat: no-repeat; opacity: 0; z-index: 1; transition: opacity 0.45s ease-out;"></div>
+      <div class="absolute inset-0 hero-slide hero-slide-2 film-camera film-vignette film-warm" style="background-image: url('{% static 'images/hollywood_shots/cream-tee-back-centered.jpeg' %}'); background-size: cover; background-position: center 30%; background-repeat: no-repeat; opacity: 0; z-index: 1; transition: opacity 0.45s ease-out;"></div>
+      <div class="absolute inset-0 hero-slide hero-slide-3 film-camera film-vignette film-warm" style="background-image: url('{% static 'images/nature_shots/pants-bottom-low.jpeg' %}'); background-size: cover; background-position: center center; background-repeat: no-repeat; opacity: 0; z-index: 1; transition: opacity 0.45s ease-out;"></div>
+      <div class="absolute inset-0 hero-slide hero-slide-4 film-camera film-vignette film-warm" style="background-image: url('{% static 'images/hollywood_shots/black-tee-vitruvian-back.jpeg' %}'); background-size: cover; background-position: center 25%; background-repeat: no-repeat; opacity: 0; z-index: 1; transition: opacity 0.45s ease-out;"></div>
+    {% endif %}
 
     <!-- Nav bar gradient overlay (matching nav bar exactly) -->
     <div class="absolute inset-0" style="background: linear-gradient(to right, rgba(88, 28, 135, 0.1) 0%, transparent 12%, transparent 88%, rgba(159, 18, 57, 0.1) 100%);"></div>
 
 
     <!-- Slideshow navigation -->
-    <div class="absolute bottom-8 left-1/2 transform -translate-x-1/2 z-30 flex items-center gap-4">
-      <button onclick="changeHeroSlide(1)" class="hero-dot hero-dot-1 w-4 h-4 rounded-full bg-white transition-all duration-300 hover:scale-125 cursor-pointer shadow-lg"></button>
-      <button onclick="changeHeroSlide(2)" class="hero-dot hero-dot-2 w-4 h-4 rounded-full bg-white/50 transition-all duration-300 hover:scale-125 cursor-pointer shadow-lg"></button>
-      <button onclick="changeHeroSlide(3)" class="hero-dot hero-dot-3 w-4 h-4 rounded-full bg-white/50 transition-all duration-300 hover:scale-125 cursor-pointer shadow-lg"></button>
-      <button onclick="changeHeroSlide(4)" class="hero-dot hero-dot-4 w-4 h-4 rounded-full bg-white/50 transition-all duration-300 hover:scale-125 cursor-pointer shadow-lg"></button>
+    <div class="absolute bottom-8 left-1/2 transform -translate-x-1/2 z-30 flex items-center gap-4" id="hero-dots">
+      {% if hero_slides %}
+        {% for slide in hero_slides %}
+          <button onclick="changeHeroSlide({{ forloop.counter }})" class="hero-dot hero-dot-{{ forloop.counter }} w-4 h-4 rounded-full {% if forloop.first %}bg-white{% else %}bg-white/50{% endif %} transition-all duration-300 hover:scale-125 cursor-pointer shadow-lg"></button>
+        {% endfor %}
+      {% else %}
+        <button onclick="changeHeroSlide(1)" class="hero-dot hero-dot-1 w-4 h-4 rounded-full bg-white transition-all duration-300 hover:scale-125 cursor-pointer shadow-lg"></button>
+        <button onclick="changeHeroSlide(2)" class="hero-dot hero-dot-2 w-4 h-4 rounded-full bg-white/50 transition-all duration-300 hover:scale-125 cursor-pointer shadow-lg"></button>
+        <button onclick="changeHeroSlide(3)" class="hero-dot hero-dot-3 w-4 h-4 rounded-full bg-white/50 transition-all duration-300 hover:scale-125 cursor-pointer shadow-lg"></button>
+        <button onclick="changeHeroSlide(4)" class="hero-dot hero-dot-4 w-4 h-4 rounded-full bg-white/50 transition-all duration-300 hover:scale-125 cursor-pointer shadow-lg"></button>
+      {% endif %}
     </div>
 
     <!-- Blueprint Technical Grid Pattern -->
@@ -975,7 +1003,7 @@
       // HERO SLIDESHOW CONTROLS
       // ============================================
       let currentHeroSlide = 1;
-      const totalSlides = 4;
+      const totalSlides = document.querySelectorAll('.hero-slide').length || 4;
 
       function changeHeroSlide(slideNum) {
           if (slideNum === currentHeroSlide) return;
@@ -1051,7 +1079,7 @@
       function resumeAutoAdvance() {
           clearInterval(slideInterval);
           slideInterval = setInterval(() => {
-              const nextSlide = currentHeroSlide === 1 ? 2 : 1;
+              const nextSlide = currentHeroSlide < totalSlides ? currentHeroSlide + 1 : 1;
               changeHeroSlide(nextSlide);
           }, 8000);
       }

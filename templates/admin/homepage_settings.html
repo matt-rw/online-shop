@@ -8,6 +8,7 @@
   <link rel="icon" type="image/svg+xml" href="{% static 'admin-favicon.svg' %}">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
   <style>
     {% include "admin/partials/dark_mode_styles.html" %}
     * {
@@ -98,6 +99,9 @@
       margin-bottom: 1.5rem;
       padding-bottom: 0.75rem;
       border-bottom: 2px solid #e2e8f0;
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
     }
 
     .form-group {
@@ -205,16 +209,30 @@
       box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
     }
 
+    .btn-secondary {
+      background: #f1f5f9;
+      color: #475569;
+      border: 2px solid #e2e8f0;
+    }
+
+    .btn-secondary:hover {
+      background: #e2e8f0;
+    }
+
     .btn-danger {
       background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
       color: white;
-      margin-left: 1rem;
       box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
     }
 
     .btn-danger:hover {
       transform: translateY(-2px);
       box-shadow: 0 6px 20px rgba(239, 68, 68, 0.4);
+    }
+
+    .btn-sm {
+      padding: 0.5rem 1rem;
+      font-size: 0.875rem;
     }
 
     .alert {
@@ -241,18 +259,345 @@
       gap: 1rem;
       flex-wrap: wrap;
     }
+
+    /* Hero Slideshow Styles */
+    .slides-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 1.5rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .slide-card {
+      background: #f8fafc;
+      border: 2px solid #e2e8f0;
+      border-radius: 12px;
+      overflow: hidden;
+      transition: all 0.2s;
+      position: relative;
+    }
+
+    .slide-card:hover {
+      border-color: #667eea;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    }
+
+    .slide-card.sortable-ghost {
+      opacity: 0.4;
+    }
+
+    .slide-card.sortable-chosen {
+      border-color: #667eea;
+      box-shadow: 0 8px 24px rgba(102, 126, 234, 0.3);
+    }
+
+    .slide-order-badge {
+      position: absolute;
+      top: 0.75rem;
+      left: 0.75rem;
+      background: rgba(0, 0, 0, 0.7);
+      color: white;
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.75rem;
+      font-weight: 700;
+      z-index: 10;
+    }
+
+    .slide-drag-handle {
+      position: absolute;
+      top: 0.75rem;
+      right: 0.75rem;
+      background: rgba(0, 0, 0, 0.7);
+      color: white;
+      width: 28px;
+      height: 28px;
+      border-radius: 6px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: grab;
+      z-index: 10;
+      transition: all 0.2s;
+    }
+
+    .slide-drag-handle:hover {
+      background: rgba(0, 0, 0, 0.9);
+    }
+
+    .slide-drag-handle:active {
+      cursor: grabbing;
+    }
+
+    .slide-image-container {
+      aspect-ratio: 16/9;
+      background: #e2e8f0;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .slide-image-container img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .slide-image-placeholder {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100%;
+      color: #94a3b8;
+    }
+
+    .slide-image-placeholder i {
+      font-size: 2.5rem;
+      margin-bottom: 0.5rem;
+    }
+
+    .slide-content {
+      padding: 1rem;
+    }
+
+    .slide-input {
+      width: 100%;
+      padding: 0.5rem 0.75rem;
+      border: 1px solid #e2e8f0;
+      border-radius: 6px;
+      font-size: 0.875rem;
+      margin-bottom: 0.5rem;
+    }
+
+    .slide-input:focus {
+      outline: none;
+      border-color: #667eea;
+    }
+
+    .slide-input-label {
+      font-size: 0.75rem;
+      color: #64748b;
+      font-weight: 500;
+      margin-bottom: 0.25rem;
+      display: block;
+    }
+
+    .slide-actions {
+      display: flex;
+      gap: 0.5rem;
+      margin-top: 0.75rem;
+      padding-top: 0.75rem;
+      border-top: 1px solid #e2e8f0;
+    }
+
+    .slide-btn {
+      flex: 1;
+      padding: 0.5rem;
+      border: none;
+      border-radius: 6px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.375rem;
+    }
+
+    .slide-btn-upload {
+      background: #e0e7ff;
+      color: #4338ca;
+    }
+
+    .slide-btn-upload:hover {
+      background: #c7d2fe;
+    }
+
+    .slide-btn-delete {
+      background: #fee2e2;
+      color: #dc2626;
+    }
+
+    .slide-btn-delete:hover {
+      background: #fecaca;
+    }
+
+    .add-slide-card {
+      background: #f8fafc;
+      border: 2px dashed #cbd5e1;
+      border-radius: 12px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 280px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .add-slide-card:hover {
+      border-color: #667eea;
+      background: #f1f5f9;
+    }
+
+    .add-slide-card i {
+      font-size: 3rem;
+      color: #94a3b8;
+      margin-bottom: 1rem;
+    }
+
+    .add-slide-card span {
+      color: #64748b;
+      font-weight: 600;
+    }
+
+    /* Toast Notification */
+    .toast {
+      position: fixed;
+      bottom: 2rem;
+      right: 2rem;
+      padding: 1rem 1.5rem;
+      border-radius: 8px;
+      color: white;
+      font-weight: 500;
+      z-index: 1000;
+      animation: slideIn 0.3s ease;
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+
+    .toast-success {
+      background: #10b981;
+    }
+
+    .toast-error {
+      background: #ef4444;
+    }
+
+    .toast-warning {
+      background: #f59e0b;
+    }
+
+    @keyframes slideIn {
+      from {
+        transform: translateX(100%);
+        opacity: 0;
+      }
+      to {
+        transform: translateX(0);
+        opacity: 1;
+      }
+    }
+
+    /* Split View Indicator */
+    .split-view-toggle {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      margin-bottom: 0.5rem;
+    }
+
+    .split-view-toggle label {
+      font-size: 0.75rem;
+      color: #64748b;
+      display: flex;
+      align-items: center;
+      gap: 0.375rem;
+      cursor: pointer;
+    }
+
+    .split-view-toggle input[type="checkbox"] {
+      width: 14px;
+      height: 14px;
+    }
+
+    /* Inactive slide styling */
+    .slide-card.inactive {
+      opacity: 0.5;
+      border-style: dashed;
+      border-color: #94a3b8;
+      background: #f1f5f9;
+    }
+
+    .slide-card.inactive .slide-image-container {
+      position: relative;
+    }
+
+    .slide-card.inactive .slide-image-container::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: rgba(148, 163, 184, 0.4);
+      pointer-events: none;
+    }
+
+    .slide-card.inactive .slide-image-container img {
+      filter: grayscale(100%);
+    }
+
+    .slide-inactive-badge {
+      position: absolute;
+      top: 0.75rem;
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgba(245, 158, 11, 0.9);
+      color: white;
+      padding: 0.25rem 0.75rem;
+      border-radius: 9999px;
+      font-size: 0.6875rem;
+      font-weight: 600;
+      z-index: 10;
+      display: flex;
+      align-items: center;
+      gap: 0.375rem;
+    }
+
+    .slide-active-toggle {
+      margin-bottom: 0.75rem;
+      padding-bottom: 0.75rem;
+      border-bottom: 1px solid #e2e8f0;
+    }
+
+    .slide-active-toggle label {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      cursor: pointer;
+      font-size: 0.8125rem;
+      font-weight: 600;
+    }
+
+    .slide-active-toggle input[type="checkbox"] {
+      width: 16px;
+      height: 16px;
+      accent-color: #10b981;
+    }
+
+    .slide-active-toggle .toggle-label {
+      color: #10b981;
+    }
+
+    .slide-card.inactive .slide-active-toggle .toggle-label {
+      color: #f59e0b;
+    }
   </style>
   {% include "admin/partials/dark_mode_apply.html" %}
 </head>
 <body>
   <div class="nav-links">
-    <a href="{% url 'admin_home' %}" class="nav-link">← Back</a>
+    <a href="{% url 'admin_home' %}" class="nav-link"><i class="fas fa-arrow-left"></i> Back</a>
   </div>
 
   <div class="top-bar">
     <div class="container">
       <div class="header">
-        <h1>🏠 Homepage Settings</h1>
+        <h1><i class="fas fa-home"></i> Homepage Settings</h1>
       </div>
     </div>
   </div>
@@ -266,61 +611,405 @@
       {% endfor %}
     {% endif %}
 
-    <!-- Hero Section Settings -->
+    <!-- Hero Slideshow Settings -->
     <div class="section-card">
-      <h2 class="section-title">Hero Section</h2>
+      <h2 class="section-title">
+        <i class="fas fa-images"></i> Hero Slideshow
+        <span id="slide-count" style="margin-left: 0.75rem; font-size: 0.75rem; font-weight: 600; padding: 0.25rem 0.5rem; background: #e0e7ff; color: #4338ca; border-radius: 9999px;"></span>
+        <span style="margin-left: auto; font-size: 0.875rem; font-weight: 500; color: #64748b;">
+          Drag to reorder
+        </span>
+      </h2>
 
       <div class="info-box">
-        <p><i class="fas fa-info-circle"></i> The hero section is the first thing visitors see on your homepage. Choose a high-quality image (recommended: 1920x1080px or larger) and compelling text to make a strong first impression.</p>
+        <p><i class="fas fa-info-circle"></i> Manage the hero slideshow images. Drag cards to reorder. The first slide is shown by default.</p>
+        <details style="margin-top: 0.75rem;">
+          <summary style="cursor: pointer; font-weight: 600; font-size: 0.8125rem; color: #1e40af;">
+            <i class="fas fa-lightbulb"></i> Image size recommendations & tips
+          </summary>
+          <div style="margin-top: 0.5rem; padding-left: 0.5rem; border-left: 2px solid #93c5fd;">
+            <p style="margin-top: 0.5rem;"><strong>Recommended dimensions:</strong></p>
+            <ul style="margin-top: 0.25rem; margin-left: 1.25rem; font-size: 0.8125rem;">
+              <li><strong>Single image:</strong> 1920×1080px or larger (16:9 aspect ratio)</li>
+              <li><strong>Split view - Left (70%):</strong> ~1350×1080px</li>
+              <li><strong>Split view - Right (30%):</strong> ~580×1080px (shown on mobile)</li>
+            </ul>
+            <p style="margin-top: 0.75rem;"><strong>Recommended file sizes:</strong></p>
+            <ul style="margin-top: 0.25rem; margin-left: 1.25rem; font-size: 0.8125rem;">
+              <li><strong>Target:</strong> 150–400 KB per image (ideal for fast loading)</li>
+              <li><strong>Maximum:</strong> 1 MB (larger files slow down page load)</li>
+              <li><strong>Format:</strong> WebP (smallest), JPG (photos), PNG (transparency only)</li>
+            </ul>
+            <p style="margin-top: 0.5rem; font-size: 0.8125rem;"><strong>Tip:</strong> Use <a href="https://squoosh.app" target="_blank" style="color: #2563eb;">squoosh.app</a> or <a href="https://tinypng.com" target="_blank" style="color: #2563eb;">tinypng.com</a> to compress images before uploading.</p>
+          </div>
+        </details>
       </div>
+
+      <div class="slides-grid" id="slides-container">
+        <!-- Slides will be loaded here via JavaScript -->
+      </div>
+
+      <div class="button-group" style="margin-top: 1rem;">
+        <button type="button" class="btn btn-primary" onclick="addNewSlide()">
+          <i class="fas fa-plus"></i> Add Slide
+        </button>
+        <button type="button" class="btn btn-secondary" onclick="saveSlides()">
+          <i class="fas fa-save"></i> Save Changes
+        </button>
+      </div>
+    </div>
+
+    <!-- Hero Text Settings -->
+    <div class="section-card">
+      <h2 class="section-title"><i class="fas fa-font"></i> Hero Text</h2>
 
       <form method="POST" enctype="multipart/form-data">
         {% csrf_token %}
 
         <div class="form-group">
-          <label><i class="fas fa-image"></i> Current Hero Image</label>
-          {% if site_settings.hero_image %}
-            <div class="image-preview">
-              <img src="{{ site_settings.hero_image.url }}" alt="Current hero image" class="current-image">
-            </div>
-          {% else %}
-            <div class="image-preview">
-              <i class="fas fa-image" style="font-size: 3rem; color: #cbd5e1; margin-bottom: 0.5rem;"></i>
-              <p style="color: #94a3b8;">No hero image set</p>
-            </div>
-          {% endif %}
-        </div>
-
-        <div class="form-group">
-          <label for="hero_image"><i class="fas fa-upload"></i> Upload New Hero Image</label>
-          <input type="file" name="hero_image" id="hero_image" accept="image/*">
-          <small>Recommended size: 1920x1080px. Supports JPG, PNG, WebP.</small>
-        </div>
-
-        <div class="form-group">
           <label for="hero_title"><i class="fas fa-heading"></i> Hero Title</label>
           <input type="text" name="hero_title" id="hero_title" value="{{ site_settings.hero_title }}" placeholder="Welcome to Blueprint Apparel">
-          <small>Main headline displayed on the hero section</small>
+          <small>Main headline displayed on the hero section (optional)</small>
         </div>
 
         <div class="form-group">
           <label for="hero_subtitle"><i class="fas fa-align-left"></i> Hero Subtitle</label>
           <textarea name="hero_subtitle" id="hero_subtitle" placeholder="Discover our latest collection of premium apparel">{{ site_settings.hero_subtitle }}</textarea>
-          <small>Supporting text displayed below the title</small>
+          <small>Supporting text displayed below the title (optional)</small>
         </div>
 
         <div class="button-group">
           <button type="submit" class="btn btn-primary">
-            <i class="fas fa-save"></i> Save Changes
+            <i class="fas fa-save"></i> Save Text
           </button>
-          {% if site_settings.hero_image %}
-            <button type="submit" name="remove_image" value="true" class="btn btn-danger" onclick="return confirm('Remove the current hero image?')">
-              <i class="fas fa-trash"></i> Remove Image
-            </button>
-          {% endif %}
         </div>
       </form>
     </div>
+
   </div>
+
+  <!-- Hidden file inputs for slide image uploads -->
+  <input type="file" id="slide-image-input" accept="image/*" style="display: none;">
+  <input type="file" id="split-image-input" accept="image/*" style="display: none;">
+
+  {{ hero_slides|json_script:"hero-slides-data" }}
+
+  <script>
+    const csrfToken = '{{ csrf_token }}';
+    let slides = JSON.parse(document.getElementById('hero-slides-data').textContent) || [];
+    let currentUploadSlideIndex = null;
+    let sortableInstance = null;
+
+    // Initialize on page load
+    document.addEventListener('DOMContentLoaded', function() {
+      renderSlides();
+      initSortable();
+    });
+
+    function initSortable() {
+      const container = document.getElementById('slides-container');
+      if (sortableInstance) {
+        sortableInstance.destroy();
+      }
+      sortableInstance = Sortable.create(container, {
+        animation: 150,
+        handle: '.slide-drag-handle',
+        ghostClass: 'sortable-ghost',
+        chosenClass: 'sortable-chosen',
+        onEnd: function(evt) {
+          // Reorder slides array based on new positions
+          const newSlides = [];
+          const cards = container.querySelectorAll('.slide-card');
+          cards.forEach((card, index) => {
+            const slideIndex = parseInt(card.dataset.slideIndex);
+            if (slides[slideIndex]) {
+              newSlides.push(slides[slideIndex]);
+            }
+          });
+          slides = newSlides;
+          renderSlides();
+        }
+      });
+    }
+
+    function renderSlides() {
+      const container = document.getElementById('slides-container');
+      container.innerHTML = '';
+
+      // Update slide count badge
+      const countBadge = document.getElementById('slide-count');
+      const activeCount = slides.filter(s => s.is_active !== false).length;
+      countBadge.textContent = `${activeCount} active / ${slides.length} total`;
+      if (slides.length > RECOMMENDED_MAX) {
+        countBadge.style.background = '#fef3c7';
+        countBadge.style.color = '#b45309';
+      } else {
+        countBadge.style.background = '#e0e7ff';
+        countBadge.style.color = '#4338ca';
+      }
+
+      slides.forEach((slide, index) => {
+        const isActive = slide.is_active !== false; // Default to true if not set
+        const card = document.createElement('div');
+        card.className = 'slide-card' + (isActive ? '' : ' inactive');
+        card.dataset.slideIndex = index;
+
+        const imageHtml = slide.image_url
+          ? `<img src="${slide.image_url}" alt="${slide.alt_text || 'Hero slide'}">`
+          : `<div class="slide-image-placeholder"><i class="fas fa-image"></i><span>Click to upload</span></div>`;
+
+        card.innerHTML = `
+          <div class="slide-order-badge">${index + 1}</div>
+          ${!isActive ? '<div class="slide-inactive-badge"><i class="fas fa-eye-slash"></i> Hidden</div>' : ''}
+          <div class="slide-drag-handle"><i class="fas fa-grip-vertical"></i></div>
+          <div class="slide-image-container" onclick="triggerImageUpload(${index})">${imageHtml}</div>
+          <div class="slide-content">
+            <div class="slide-active-toggle">
+              <label>
+                <input type="checkbox" ${isActive ? 'checked' : ''}
+                       onchange="updateSlide(${index}, 'is_active', this.checked)">
+                <span class="toggle-label">${isActive ? 'Active' : 'Hidden'}</span>
+              </label>
+            </div>
+            <label class="slide-input-label">Alt Text</label>
+            <input type="text" class="slide-input" placeholder="Describe this image..."
+                   value="${slide.alt_text || ''}"
+                   onchange="updateSlide(${index}, 'alt_text', this.value)">
+            <label class="slide-input-label">Link URL (optional)</label>
+            <input type="text" class="slide-input" placeholder="/shop or https://..."
+                   value="${slide.link_url || ''}"
+                   onchange="updateSlide(${index}, 'link_url', this.value)">
+            <label class="slide-input-label">Vertical Position</label>
+            <select class="slide-input" onchange="updateSlide(${index}, 'position', this.value)" style="margin-bottom: 0.75rem;">
+              <option value="top" ${slide.position === 'top' ? 'selected' : ''}>Top</option>
+              <option value="center" ${!slide.position || slide.position === 'center' ? 'selected' : ''}>Center (default)</option>
+              <option value="bottom" ${slide.position === 'bottom' ? 'selected' : ''}>Bottom</option>
+            </select>
+            <div class="split-view-toggle">
+              <label>
+                <input type="checkbox" ${slide.is_split ? 'checked' : ''}
+                       onchange="updateSlide(${index}, 'is_split', this.checked)">
+                Split view (left 70% + right 30%)
+              </label>
+            </div>
+            ${slide.is_split ? '<p style="font-size: 0.7rem; color: #94a3b8; margin-bottom: 0.5rem;">Main image = left side (desktop only). Second image = right side (mobile shows this).</p>' : ''}
+            ${slide.is_split ? `
+              <label class="slide-input-label">Second Image (right side, 30%)</label>
+              <div style="display: flex; gap: 0.5rem; align-items: center; margin-bottom: 0.5rem;">
+                ${slide.split_image_url ? `<img src="${slide.split_image_url}" style="width: 60px; height: 40px; object-fit: cover; border-radius: 4px; border: 1px solid #e2e8f0;">` : '<span style="color: #94a3b8; font-size: 0.75rem;">No image</span>'}
+                <button type="button" class="slide-btn slide-btn-upload" style="flex: 0; padding: 0.375rem 0.75rem;" onclick="triggerSplitImageUpload(${index})">
+                  <i class="fas fa-upload"></i> Upload
+                </button>
+              </div>
+            ` : ''}
+            <div class="slide-actions">
+              <button class="slide-btn slide-btn-upload" onclick="triggerImageUpload(${index})">
+                <i class="fas fa-upload"></i> Upload
+              </button>
+              <button class="slide-btn slide-btn-delete" onclick="deleteSlide(${index})">
+                <i class="fas fa-trash"></i> Delete
+              </button>
+            </div>
+          </div>
+        `;
+        container.appendChild(card);
+      });
+
+      // Re-initialize sortable after render
+      initSortable();
+    }
+
+    const MAX_SLIDES = 10;
+    const RECOMMENDED_MAX = 6;
+
+    function addNewSlide() {
+      if (slides.length >= MAX_SLIDES) {
+        showToast(`Maximum ${MAX_SLIDES} slides allowed`, 'error');
+        return;
+      }
+
+      slides.push({
+        image_url: '',
+        alt_text: '',
+        link_url: '',
+        position: 'center',
+        is_split: false,
+        split_image_url: '',
+        is_active: true
+      });
+      renderSlides();
+
+      if (slides.length > RECOMMENDED_MAX) {
+        showToast(`Slide added. Note: ${slides.length} slides may slow page load.`, 'warning');
+      } else {
+        showToast('Slide added. Upload an image and save changes.', 'success');
+      }
+    }
+
+    function deleteSlide(index) {
+      if (!confirm('Delete this slide?')) return;
+
+      const slide = slides[index];
+      // Optionally delete the image file
+      if (slide.image_url && slide.image_url.includes('/media/')) {
+        fetch('{% url "admin_homepage" %}', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-Requested-With': 'XMLHttpRequest',
+            'X-CSRFToken': csrfToken
+          },
+          body: JSON.stringify({
+            action: 'delete_slide_image',
+            image_url: slide.image_url
+          })
+        });
+      }
+
+      slides.splice(index, 1);
+      renderSlides();
+      showToast('Slide deleted', 'success');
+    }
+
+    function updateSlide(index, field, value) {
+      slides[index][field] = value;
+      if (field === 'is_split' || field === 'is_active') {
+        renderSlides();
+      }
+    }
+
+    function triggerImageUpload(index) {
+      currentUploadSlideIndex = index;
+      document.getElementById('slide-image-input').click();
+    }
+
+    function triggerSplitImageUpload(index) {
+      currentUploadSlideIndex = index;
+      document.getElementById('split-image-input').click();
+    }
+
+    // Handle main image upload
+    document.getElementById('slide-image-input').addEventListener('change', async function(e) {
+      const file = e.target.files[0];
+      if (!file || currentUploadSlideIndex === null) return;
+
+      const reader = new FileReader();
+      reader.onload = async function(event) {
+        const imageData = event.target.result;
+
+        try {
+          // Upload to server
+          const formData = new FormData();
+          formData.append('action', 'upload_slide_image');
+          formData.append('image_data', imageData);
+
+          const response = await fetch('{% url "admin_homepage" %}', {
+            method: 'POST',
+            headers: {
+              'X-Requested-With': 'XMLHttpRequest',
+              'X-CSRFToken': csrfToken
+            },
+            body: formData
+          });
+
+          const data = await response.json();
+          if (data.success) {
+            slides[currentUploadSlideIndex].image_url = data.url;
+            renderSlides();
+            showToast('Image uploaded successfully', 'success');
+          } else {
+            showToast('Error: ' + data.error, 'error');
+          }
+        } catch (error) {
+          showToast('Error uploading image: ' + error.message, 'error');
+        }
+      };
+      reader.readAsDataURL(file);
+      e.target.value = '';
+    });
+
+    // Handle split (second) image upload
+    document.getElementById('split-image-input').addEventListener('change', async function(e) {
+      const file = e.target.files[0];
+      if (!file || currentUploadSlideIndex === null) return;
+
+      const reader = new FileReader();
+      reader.onload = async function(event) {
+        const imageData = event.target.result;
+
+        try {
+          const formData = new FormData();
+          formData.append('action', 'upload_slide_image');
+          formData.append('image_data', imageData);
+
+          const response = await fetch('{% url "admin_homepage" %}', {
+            method: 'POST',
+            headers: {
+              'X-Requested-With': 'XMLHttpRequest',
+              'X-CSRFToken': csrfToken
+            },
+            body: formData
+          });
+
+          const data = await response.json();
+          if (data.success) {
+            slides[currentUploadSlideIndex].split_image_url = data.url;
+            renderSlides();
+            showToast('Second image uploaded successfully', 'success');
+          } else {
+            showToast('Error: ' + data.error, 'error');
+          }
+        } catch (error) {
+          showToast('Error uploading image: ' + error.message, 'error');
+        }
+      };
+      reader.readAsDataURL(file);
+      e.target.value = '';
+    });
+
+    async function saveSlides() {
+      try {
+        const response = await fetch('{% url "admin_homepage" %}', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-Requested-With': 'XMLHttpRequest',
+            'X-CSRFToken': csrfToken
+          },
+          body: JSON.stringify({
+            action: 'save_slides',
+            slides: slides
+          })
+        });
+
+        const data = await response.json();
+        if (data.success) {
+          showToast('Slideshow saved successfully!', 'success');
+        } else {
+          showToast('Error: ' + data.error, 'error');
+        }
+      } catch (error) {
+        showToast('Error saving: ' + error.message, 'error');
+      }
+    }
+
+    function showToast(message, type) {
+      const existing = document.querySelector('.toast');
+      if (existing) existing.remove();
+
+      const icons = {
+        success: 'check-circle',
+        error: 'exclamation-circle',
+        warning: 'exclamation-triangle'
+      };
+
+      const toast = document.createElement('div');
+      toast.className = `toast toast-${type}`;
+      toast.innerHTML = `<i class="fas fa-${icons[type] || 'info-circle'}"></i> ${message}`;
+      document.body.appendChild(toast);
+
+      setTimeout(() => toast.remove(), 4000);
+    }
+  </script>
 </body>
 </html>

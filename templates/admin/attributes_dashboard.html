@@ -548,178 +548,28 @@
     <!-- Stats -->
     <div class="stats-grid">
       <div class="stat-card">
-        <div class="stat-icon"><i class="fa-solid fa-ruler"></i></div>
-        <div class="stat-label">Sizes</div>
-        <div class="stat-value">{{ total_sizes }}</div>
+        <div class="stat-icon"><i class="fa-solid fa-tags"></i></div>
+        <div class="stat-label">Attributes</div>
+        <div class="stat-value">{{ total_custom_attributes }}</div>
       </div>
       <div class="stat-card">
-        <div class="stat-icon"><i class="fa-solid fa-palette"></i></div>
-        <div class="stat-label">Colors</div>
-        <div class="stat-value">{{ total_colors }}</div>
+        <div class="stat-icon"><i class="fa-solid fa-list"></i></div>
+        <div class="stat-label">Total Values</div>
+        <div class="stat-value">{{ total_values }}</div>
       </div>
       <div class="stat-card">
-        <div class="stat-icon"><i class="fa-solid fa-layer-group"></i></div>
-        <div class="stat-label">Materials</div>
-        <div class="stat-value">{{ total_materials }}</div>
+        <div class="stat-icon"><i class="fa-solid fa-link"></i></div>
+        <div class="stat-label">In Use</div>
+        <div class="stat-value">{{ total_in_use }}</div>
       </div>
     </div>
 
-    <!-- Attribute Sections -->
-    <div class="attributes-grid">
-      <!-- Sizes Section -->
-      <div class="attribute-section">
-        <div class="section-header">
-          <div class="section-title">
-            <i class="fa-solid fa-ruler"></i>
-            Sizes
-          </div>
-          <button class="btn btn-primary" onclick="openAddSizeModal()">
-            <i class="fa-solid fa-plus"></i> Add
-          </button>
-        </div>
-        <div class="attribute-list" id="sizes-list">
-          {% if sizes %}
-            {% for size in sizes %}
-            <div class="attribute-item" data-id="{{ size.id }}">
-              <div class="attribute-info">
-                <span class="attribute-name">{{ size.code }}{% if size.label and size.label != size.code %} - {{ size.label }}{% endif %}</span>
-                <div class="attribute-meta">
-                  {% if size.variant_count > 0 %}
-                  <span class="usage-badge in-use">
-                    <i class="fa-solid fa-link"></i> Used in {{ size.variant_count }} SKU{{ size.variant_count|pluralize }}
-                  </span>
-                  {% else %}
-                  <span class="usage-badge unused">
-                    <i class="fa-solid fa-circle-minus"></i> Not in use
-                  </span>
-                  {% endif %}
-                </div>
-              </div>
-              <div class="attribute-actions">
-                <button class="btn btn-icon btn-secondary" onclick="openEditSizeModal({{ size.id }}, '{{ size.code }}', '{{ size.label|escapejs }}')" title="Edit">
-                  <i class="fa-solid fa-pen"></i>
-                </button>
-                <button class="btn btn-icon btn-danger" onclick="deleteSize({{ size.id }}, '{{ size.code }}')" title="Delete">
-                  <i class="fa-solid fa-trash"></i>
-                </button>
-              </div>
-            </div>
-            {% endfor %}
-          {% else %}
-            <div class="empty-state">
-              <i class="fa-solid fa-ruler"></i>
-              <p>No sizes defined yet</p>
-            </div>
-          {% endif %}
-        </div>
-      </div>
-
-      <!-- Colors Section -->
-      <div class="attribute-section">
-        <div class="section-header">
-          <div class="section-title">
-            <i class="fa-solid fa-palette"></i>
-            Colors
-          </div>
-          <button class="btn btn-primary" onclick="openAddColorModal()">
-            <i class="fa-solid fa-plus"></i> Add
-          </button>
-        </div>
-        <div class="attribute-list" id="colors-list">
-          {% if colors %}
-            {% for color in colors %}
-            <div class="attribute-item" data-id="{{ color.id }}">
-              <div class="attribute-info">
-                <span class="attribute-name">{{ color.name }}</span>
-                <div class="attribute-meta">
-                  {% if color.variant_count > 0 %}
-                  <span class="usage-badge in-use">
-                    <i class="fa-solid fa-link"></i> Used in {{ color.variant_count }} SKU{{ color.variant_count|pluralize }}
-                  </span>
-                  {% else %}
-                  <span class="usage-badge unused">
-                    <i class="fa-solid fa-circle-minus"></i> Not in use
-                  </span>
-                  {% endif %}
-                </div>
-              </div>
-              <div class="attribute-actions">
-                <button class="btn btn-icon btn-secondary" onclick="openEditColorModal({{ color.id }}, '{{ color.name|escapejs }}')" title="Edit">
-                  <i class="fa-solid fa-pen"></i>
-                </button>
-                <button class="btn btn-icon btn-danger" onclick="deleteColor({{ color.id }}, '{{ color.name|escapejs }}')" title="Delete">
-                  <i class="fa-solid fa-trash"></i>
-                </button>
-              </div>
-            </div>
-            {% endfor %}
-          {% else %}
-            <div class="empty-state">
-              <i class="fa-solid fa-palette"></i>
-              <p>No colors defined yet</p>
-            </div>
-          {% endif %}
-        </div>
-      </div>
-
-      <!-- Materials Section -->
-      <div class="attribute-section">
-        <div class="section-header">
-          <div class="section-title">
-            <i class="fa-solid fa-layer-group"></i>
-            Materials
-          </div>
-          <button class="btn btn-primary" onclick="openAddMaterialModal()">
-            <i class="fa-solid fa-plus"></i> Add
-          </button>
-        </div>
-        <div class="attribute-list" id="materials-list">
-          {% if materials %}
-            {% for material in materials %}
-            <div class="attribute-item" data-id="{{ material.id }}">
-              <div class="attribute-info">
-                <span class="attribute-name">{{ material.name }}</span>
-                <div class="attribute-meta">
-                  {% if material.description %}<span style="display: block; margin-bottom: 0.25rem;">{{ material.description|truncatechars:40 }}</span>{% endif %}
-                  {% if material.variant_count > 0 %}
-                  <span class="usage-badge in-use">
-                    <i class="fa-solid fa-link"></i> Used in {{ material.variant_count }} SKU{{ material.variant_count|pluralize }}
-                  </span>
-                  {% else %}
-                  <span class="usage-badge unused">
-                    <i class="fa-solid fa-circle-minus"></i> Not in use
-                  </span>
-                  {% endif %}
-                </div>
-              </div>
-              <div class="attribute-actions">
-                <button class="btn btn-icon btn-secondary" onclick="openEditMaterialModal({{ material.id }}, '{{ material.name|escapejs }}', '{{ material.description|escapejs }}')" title="Edit">
-                  <i class="fa-solid fa-pen"></i>
-                </button>
-                <button class="btn btn-icon btn-danger" onclick="deleteMaterial({{ material.id }}, '{{ material.name|escapejs }}')" title="Delete">
-                  <i class="fa-solid fa-trash"></i>
-                </button>
-              </div>
-            </div>
-            {% endfor %}
-          {% else %}
-            <div class="empty-state">
-              <i class="fa-solid fa-layer-group"></i>
-              <p>No materials defined yet</p>
-            </div>
-          {% endif %}
-        </div>
-      </div>
-    </div>
-
-    <!-- Custom Attributes Section -->
+    <!-- Attributes Section -->
     {% if custom_attributes %}
-    <div style="margin-top: 3rem;">
-      <h2 style="font-size: 1.5rem; font-weight: 700; color: #1e293b; margin-bottom: 1.5rem; display: flex; align-items: center; gap: 0.75rem;">
-        <i class="fa-solid fa-tags" style="color: #8b5cf6;"></i>
-        Product Attributes
-        <span style="font-size: 0.875rem; font-weight: 400; color: #64748b;">(drag to reorder)</span>
-      </h2>
+    <div>
+      <p style="font-size: 0.75rem; color: #94a3b8; margin-bottom: 1.5rem;">
+        <i class="fa-solid fa-grip-vertical" style="margin-right: 0.25rem;"></i> Drag to reorder &nbsp;·&nbsp; <i class="fa-solid fa-link" style="margin-right: 0.25rem;"></i> = linked to products (can't delete)
+      </p>
       <div class="attributes-grid" id="attributes-container">
         {% for attr in custom_attributes %}
         <div class="attribute-section" data-attr-id="{{ attr.id }}">
@@ -748,23 +598,30 @@
             {% if attr.values %}
               {% for value in attr.values %}
               <div class="attribute-item" data-value-id="{{ value.id }}">
-                <div class="attribute-info" style="display: flex; align-items: center; gap: 0.5rem;">
-                  <i class="fa-solid fa-grip-vertical drag-handle" style="cursor: grab; color: #cbd5e1;" title="Drag to reorder"></i>
+                <div style="display: flex; align-items: center; gap: 0.5rem; min-width: 0;">
+                  <i class="fa-solid fa-grip-vertical drag-handle" style="cursor: grab; color: #cbd5e1; flex-shrink: 0;" title="Drag to reorder"></i>
                   {% if attr.input_type == 'color' %}
-                  <span class="color-swatch" style="width: 24px; height: 24px; border-radius: 50%; background-color: {{ value.metadata.hex_code|default:'#000000' }}; border: 2px solid #e2e8f0; flex-shrink: 0;"></span>
+                  <span class="color-swatch" style="width: 20px; height: 20px; border-radius: 50%; background-color: {{ value.metadata.hex_code|default:'#000000' }}; border: 2px solid #e2e8f0; flex-shrink: 0;"></span>
                   {% endif %}
-                  <span class="attribute-name">{{ value.value }}</span>
+                  <span class="attribute-name" style="white-space: nowrap;">{{ value.value }}</span>
+                </div>
+                <div style="display: flex; align-items: center; gap: 0.5rem; margin-left: auto;">
                   {% if attr.input_type == 'color' %}
                   <input type="color" value="{{ value.metadata.hex_code|default:'#000000' }}"
                          onchange="updateValueHexCode({{ value.id }}, this.value)"
-                         style="width: 30px; height: 24px; border: none; cursor: pointer; background: none;"
+                         style="width: 28px; height: 22px; border: none; cursor: pointer; background: none;"
                          title="Click to change color">
                   {% endif %}
-                </div>
-                <div class="attribute-actions">
-                  <button class="btn btn-icon btn-danger" onclick="deleteAttributeValue({{ value.id }}, '{{ value.value|escapejs }}')" title="Delete">
-                    <i class="fa-solid fa-times"></i>
-                  </button>
+                  {% if value.variant_count > 0 %}
+                  <span class="usage-badge in-use">
+                    <i class="fa-solid fa-link"></i> {{ value.variant_count }}
+                  </span>
+                  {% endif %}
+                  <div class="attribute-actions">
+                    <button class="btn btn-icon btn-danger" onclick="deleteAttributeValue({{ value.id }}, '{{ value.value|escapejs }}')" title="Delete">
+                      <i class="fa-solid fa-times"></i>
+                    </button>
+                  </div>
                 </div>
               </div>
               {% endfor %}
@@ -780,88 +637,15 @@
       </div>
     </div>
     {% else %}
-    <div style="margin-top: 3rem; text-align: center; padding: 3rem; background: #f8fafc; border-radius: 16px; border: 2px dashed #e2e8f0;">
+    <div style="text-align: center; padding: 3rem; background: #f8fafc; border-radius: 16px; border: 2px dashed #e2e8f0;">
       <i class="fa-solid fa-tags" style="font-size: 3rem; color: #cbd5e1; margin-bottom: 1rem; display: block;"></i>
-      <h3 style="font-size: 1.25rem; font-weight: 600; color: #64748b; margin-bottom: 0.5rem;">No Custom Attributes Yet</h3>
-      <p style="color: #94a3b8; margin-bottom: 1.5rem;">Create custom attributes like "Waist", "Inseam", or "Lens Color" for specialized products.</p>
+      <h3 style="font-size: 1.25rem; font-weight: 600; color: #64748b; margin-bottom: 0.5rem;">No Attributes Yet</h3>
+      <p style="color: #94a3b8; margin-bottom: 1.5rem;">Create attributes like "Size", "Color", "Material", or custom attributes for your products.</p>
       <button class="btn btn-primary" onclick="openAddAttributeModal()">
         <i class="fa-solid fa-plus"></i> Create Your First Attribute
       </button>
     </div>
     {% endif %}
-  </div>
-
-  <!-- Size Modal -->
-  <div class="modal-overlay" id="sizeModal">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h2 id="sizeModalTitle">Add Size</h2>
-        <button class="modal-close" onclick="closeSizeModal()">&times;</button>
-      </div>
-      <div class="modal-body">
-        <input type="hidden" id="size_id">
-        <div class="form-group">
-          <label class="form-label">Size Code *</label>
-          <input type="text" id="size_code" class="form-input" placeholder="e.g., S, M, L, XL">
-          <p class="form-hint">Short code used in SKUs (will be uppercased)</p>
-        </div>
-        <div class="form-group">
-          <label class="form-label">Display Label</label>
-          <input type="text" id="size_label" class="form-input" placeholder="e.g., Small, Medium, Large">
-          <p class="form-hint">Optional friendly name shown to customers</p>
-        </div>
-      </div>
-      <div class="modal-footer">
-        <button class="btn btn-secondary" onclick="closeSizeModal()">Cancel</button>
-        <button class="btn btn-primary" onclick="saveSize()">Save Size</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- Color Modal -->
-  <div class="modal-overlay" id="colorModal">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h2 id="colorModalTitle">Add Color</h2>
-        <button class="modal-close" onclick="closeColorModal()">&times;</button>
-      </div>
-      <div class="modal-body">
-        <input type="hidden" id="color_id">
-        <div class="form-group">
-          <label class="form-label">Color Name *</label>
-          <input type="text" id="color_name" class="form-input" placeholder="e.g., Black, White, Navy Blue">
-        </div>
-      </div>
-      <div class="modal-footer">
-        <button class="btn btn-secondary" onclick="closeColorModal()">Cancel</button>
-        <button class="btn btn-primary" onclick="saveColor()">Save Color</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- Material Modal -->
-  <div class="modal-overlay" id="materialModal">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h2 id="materialModalTitle">Add Material</h2>
-        <button class="modal-close" onclick="closeMaterialModal()">&times;</button>
-      </div>
-      <div class="modal-body">
-        <input type="hidden" id="material_id">
-        <div class="form-group">
-          <label class="form-label">Material Name *</label>
-          <input type="text" id="material_name" class="form-input" placeholder="e.g., Cotton, Polyester, Linen">
-        </div>
-        <div class="form-group">
-          <label class="form-label">Description</label>
-          <textarea id="material_description" class="form-input form-textarea" placeholder="Optional description of the material"></textarea>
-        </div>
-      </div>
-      <div class="modal-footer">
-        <button class="btn btn-secondary" onclick="closeMaterialModal()">Cancel</button>
-        <button class="btn btn-primary" onclick="saveMaterial()">Save Material</button>
-      </div>
-    </div>
   </div>
 
   <!-- Add Attribute Modal (Create new attribute type) -->
@@ -1165,236 +949,6 @@
           location.reload();
         } else {
           showToast(data.error || 'Failed to delete value', 'error');
-        }
-      });
-    }
-
-    // SIZE FUNCTIONS
-    function openAddSizeModal() {
-      document.getElementById('sizeModalTitle').textContent = 'Add Size';
-      document.getElementById('size_id').value = '';
-      document.getElementById('size_code').value = '';
-      document.getElementById('size_label').value = '';
-      document.getElementById('sizeModal').classList.add('active');
-    }
-
-    function openEditSizeModal(id, code, label) {
-      document.getElementById('sizeModalTitle').textContent = 'Edit Size';
-      document.getElementById('size_id').value = id;
-      document.getElementById('size_code').value = code;
-      document.getElementById('size_label').value = label;
-      document.getElementById('sizeModal').classList.add('active');
-    }
-
-    function closeSizeModal() {
-      document.getElementById('sizeModal').classList.remove('active');
-    }
-
-    function saveSize() {
-      const id = document.getElementById('size_id').value;
-      const code = document.getElementById('size_code').value;
-      const label = document.getElementById('size_label').value;
-
-      if (!code.trim()) {
-        showToast('Size code is required', 'error');
-        return;
-      }
-
-      const formData = new FormData();
-      formData.append('csrfmiddlewaretoken', getCookie('csrftoken'));
-      formData.append('action', id ? 'update_size' : 'create_size');
-      formData.append('code', code);
-      formData.append('label', label);
-      if (id) formData.append('size_id', id);
-
-      fetch(window.location.pathname, {
-        method: 'POST',
-        body: formData
-      })
-      .then(response => response.json())
-      .then(data => {
-        if (data.success) {
-          showToast(id ? 'Size updated successfully' : 'Size created successfully');
-          closeSizeModal();
-          location.reload();
-        } else {
-          showToast(data.error || 'Failed to save size', 'error');
-        }
-      })
-      .catch(error => {
-        showToast('An error occurred', 'error');
-      });
-    }
-
-    function deleteSize(id, code) {
-      if (!confirm(`Are you sure you want to delete size "${code}"?`)) return;
-
-      const formData = new FormData();
-      formData.append('csrfmiddlewaretoken', getCookie('csrftoken'));
-      formData.append('action', 'delete_size');
-      formData.append('size_id', id);
-
-      fetch(window.location.pathname, {
-        method: 'POST',
-        body: formData
-      })
-      .then(response => response.json())
-      .then(data => {
-        if (data.success) {
-          showToast('Size deleted successfully');
-          location.reload();
-        } else {
-          showToast(data.error || 'Failed to delete size', 'error');
-        }
-      });
-    }
-
-    // COLOR FUNCTIONS
-    function openAddColorModal() {
-      document.getElementById('colorModalTitle').textContent = 'Add Color';
-      document.getElementById('color_id').value = '';
-      document.getElementById('color_name').value = '';
-      document.getElementById('colorModal').classList.add('active');
-    }
-
-    function openEditColorModal(id, name) {
-      document.getElementById('colorModalTitle').textContent = 'Edit Color';
-      document.getElementById('color_id').value = id;
-      document.getElementById('color_name').value = name;
-      document.getElementById('colorModal').classList.add('active');
-    }
-
-    function closeColorModal() {
-      document.getElementById('colorModal').classList.remove('active');
-    }
-
-    function saveColor() {
-      const id = document.getElementById('color_id').value;
-      const name = document.getElementById('color_name').value;
-
-      if (!name.trim()) {
-        showToast('Color name is required', 'error');
-        return;
-      }
-
-      const formData = new FormData();
-      formData.append('csrfmiddlewaretoken', getCookie('csrftoken'));
-      formData.append('action', id ? 'update_color' : 'create_color');
-      formData.append('name', name);
-      if (id) formData.append('color_id', id);
-
-      fetch(window.location.pathname, {
-        method: 'POST',
-        body: formData
-      })
-      .then(response => response.json())
-      .then(data => {
-        if (data.success) {
-          showToast(id ? 'Color updated successfully' : 'Color created successfully');
-          closeColorModal();
-          location.reload();
-        } else {
-          showToast(data.error || 'Failed to save color', 'error');
-        }
-      });
-    }
-
-    function deleteColor(id, name) {
-      if (!confirm(`Are you sure you want to delete color "${name}"?`)) return;
-
-      const formData = new FormData();
-      formData.append('csrfmiddlewaretoken', getCookie('csrftoken'));
-      formData.append('action', 'delete_color');
-      formData.append('color_id', id);
-
-      fetch(window.location.pathname, {
-        method: 'POST',
-        body: formData
-      })
-      .then(response => response.json())
-      .then(data => {
-        if (data.success) {
-          showToast('Color deleted successfully');
-          location.reload();
-        } else {
-          showToast(data.error || 'Failed to delete color', 'error');
-        }
-      });
-    }
-
-    // MATERIAL FUNCTIONS
-    function openAddMaterialModal() {
-      document.getElementById('materialModalTitle').textContent = 'Add Material';
-      document.getElementById('material_id').value = '';
-      document.getElementById('material_name').value = '';
-      document.getElementById('material_description').value = '';
-      document.getElementById('materialModal').classList.add('active');
-    }
-
-    function openEditMaterialModal(id, name, description) {
-      document.getElementById('materialModalTitle').textContent = 'Edit Material';
-      document.getElementById('material_id').value = id;
-      document.getElementById('material_name').value = name;
-      document.getElementById('material_description').value = description || '';
-      document.getElementById('materialModal').classList.add('active');
-    }
-
-    function closeMaterialModal() {
-      document.getElementById('materialModal').classList.remove('active');
-    }
-
-    function saveMaterial() {
-      const id = document.getElementById('material_id').value;
-      const name = document.getElementById('material_name').value;
-      const description = document.getElementById('material_description').value;
-
-      if (!name.trim()) {
-        showToast('Material name is required', 'error');
-        return;
-      }
-
-      const formData = new FormData();
-      formData.append('csrfmiddlewaretoken', getCookie('csrftoken'));
-      formData.append('action', id ? 'update_material' : 'create_material');
-      formData.append('name', name);
-      formData.append('description', description);
-      if (id) formData.append('material_id', id);
-
-      fetch(window.location.pathname, {
-        method: 'POST',
-        body: formData
-      })
-      .then(response => response.json())
-      .then(data => {
-        if (data.success) {
-          showToast(id ? 'Material updated successfully' : 'Material created successfully');
-          closeMaterialModal();
-          location.reload();
-        } else {
-          showToast(data.error || 'Failed to save material', 'error');
-        }
-      });
-    }
-
-    function deleteMaterial(id, name) {
-      if (!confirm(`Are you sure you want to delete material "${name}"?`)) return;
-
-      const formData = new FormData();
-      formData.append('csrfmiddlewaretoken', getCookie('csrftoken'));
-      formData.append('action', 'delete_material');
-      formData.append('material_id', id);
-
-      fetch(window.location.pathname, {
-        method: 'POST',
-        body: formData
-      })
-      .then(response => response.json())
-      .then(data => {
-        if (data.success) {
-          showToast('Material deleted successfully');
-          location.reload();
-        } else {
-          showToast(data.error || 'Failed to delete material', 'error');
         }
       });
     }

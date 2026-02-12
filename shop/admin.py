@@ -620,7 +620,7 @@ class SiteSettingsAdmin(admin.ModelAdmin):
     fieldsets = (
         ("Homepage Hero", {"fields": ("hero_image", "hero_title", "hero_subtitle")}),
         ("Site Information", {"fields": ("site_name", "site_description")}),
-        ("Contact Information", {"fields": ("contact_email", "contact_phone")}),
+        ("Contact Information", {"fields": ("contact_email", "contact_phone", "bug_report_email")}),
         (
             "Social Media",
             {"fields": ("facebook_url", "instagram_url", "twitter_url", "discord_url")},

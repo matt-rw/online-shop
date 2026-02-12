@@ -64,8 +64,8 @@ class Shipment(models.Model):
 
     @property
     def total_cost(self):
-        """Total cost including all fees"""
-        return self.manufacturing_cost + self.shipping_cost + self.customs_duty + self.other_fees
+        """Total cost including items cost and all fees"""
+        return self.items_subtotal + self.shipping_cost + self.customs_duty + self.other_fees
 
     @property
     def items_subtotal(self):

@@ -30,6 +30,8 @@ from .models import (
     SMSSubscription,
     SMSTemplate,
 )
+from .models.settings import QuickLink
+from .models.bug_report import BugReport
 from .models.analytics import PageView, VisitorSession
 
 User = get_user_model()
@@ -56,12 +58,30 @@ def admin_home(request):
         content = request.POST.get("content", "")
         test_recipient = request.POST.get("test_recipient", "").strip()
         draft_id = request.POST.get("draft_id", "").strip()
+        scheduled_for_str = request.POST.get("scheduled_for", "").strip()
 
         if not content:
             return JsonResponse({"success": False, "error": "Message content is required"})
 
         if message_type == "email" and not subject:
             return JsonResponse({"success": False, "error": "Subject is required for emails"})
+
+        # Parse scheduled_for datetime if provided
+        scheduled_for = None
+        if scheduled_for_str:
+            try:
+                from datetime import datetime
+                # Parse ISO format datetime from form (user's local time is Central)
+                scheduled_for = datetime.fromisoformat(scheduled_for_str.replace("Z", "+00:00"))
+                if timezone.is_naive(scheduled_for):
+                    # Interpret as Central Time (user's timezone)
+                    central_tz = pytz.timezone("America/Chicago")
+                    scheduled_for = central_tz.localize(scheduled_for)
+            except ValueError:
+                return JsonResponse({"success": False, "error": "Invalid date/time format"})
+
+        # Check if this is a scheduled message (future time, not a test)
+        is_scheduled = scheduled_for and scheduled_for > timezone.now() and not test_recipient
 
         try:
             sent_count = 0
@@ -81,6 +101,9 @@ def admin_home(request):
                     recipients = [{"email": sub.email, "subscription": sub} for sub in subscribers]
                     recipient_count = len(recipients)
 
+                # Determine status based on scheduling
+                msg_status = "scheduled" if is_scheduled else "sending"
+
                 # Use existing draft or create new QuickMessage record
                 if draft_id:
                     try:
@@ -90,7 +113,8 @@ def admin_home(request):
                         quick_msg.content = content
                         quick_msg.recipient_count = recipient_count
                         quick_msg.sent_by = request.user
-                        quick_msg.status = "sending"
+                        quick_msg.status = msg_status
+                        quick_msg.scheduled_for = scheduled_for
                         quick_msg.notes = "Test send" if test_recipient else ""
                         quick_msg.save()
                     except QuickMessage.DoesNotExist:
@@ -103,9 +127,19 @@ def admin_home(request):
                         content=content,
                         recipient_count=recipient_count,
                         sent_by=request.user,
-                        status="sending",
+                        status=msg_status,
+                        scheduled_for=scheduled_for,
                         notes="Test send" if test_recipient else "",
                     )
+
+                # If scheduled for later, return without sending
+                if is_scheduled:
+                    return JsonResponse({
+                        "success": True,
+                        "scheduled": True,
+                        "scheduled_for": scheduled_for.isoformat(),
+                        "recipient_count": recipient_count,
+                    })
 
                 # Wrap content in basic HTML
                 html_body = f"<html><body><p>{content.replace(chr(10), '<br>')}</p></body></html>"
@@ -137,6 +171,9 @@ def admin_home(request):
                     recipients = [{"phone": sub.phone_number, "subscription": sub} for sub in subscribers]
                     recipient_count = len(recipients)
 
+                # Determine status based on scheduling
+                msg_status = "scheduled" if is_scheduled else "sending"
+
                 # Use existing draft or create new QuickMessage record
                 if draft_id:
                     try:
@@ -146,7 +183,8 @@ def admin_home(request):
                         quick_msg.content = content
                         quick_msg.recipient_count = recipient_count
                         quick_msg.sent_by = request.user
-                        quick_msg.status = "sending"
+                        quick_msg.status = msg_status
+                        quick_msg.scheduled_for = scheduled_for
                         quick_msg.notes = "Test send" if test_recipient else ""
                         quick_msg.save()
                     except QuickMessage.DoesNotExist:
@@ -159,9 +197,19 @@ def admin_home(request):
                         content=content,
                         recipient_count=recipient_count,
                         sent_by=request.user,
-                        status="sending",
+                        status=msg_status,
+                        scheduled_for=scheduled_for,
                         notes="Test send" if test_recipient else "",
                     )
+
+                # If scheduled for later, return without sending
+                if is_scheduled:
+                    return JsonResponse({
+                        "success": True,
+                        "scheduled": True,
+                        "scheduled_for": scheduled_for.isoformat(),
+                        "recipient_count": recipient_count,
+                    })
 
                 for recipient in recipients:
                     success, _ = send_sms(
@@ -198,6 +246,20 @@ def admin_home(request):
         subject = request.POST.get("subject", "")
         content = request.POST.get("content", "")
         draft_id = request.POST.get("draft_id")
+        scheduled_for_str = request.POST.get("scheduled_for", "").strip()
+
+        # Parse scheduled_for if provided
+        scheduled_for = None
+        if scheduled_for_str:
+            try:
+                from datetime import datetime
+                scheduled_for = datetime.fromisoformat(scheduled_for_str.replace("Z", "+00:00"))
+                if timezone.is_naive(scheduled_for):
+                    # Interpret as Central Time (user's timezone)
+                    central_tz = pytz.timezone("America/Chicago")
+                    scheduled_for = central_tz.localize(scheduled_for)
+            except ValueError:
+                pass  # Ignore invalid dates for drafts
 
         try:
             if draft_id:
@@ -206,6 +268,7 @@ def admin_home(request):
                 draft.message_type = message_type
                 draft.subject = subject
                 draft.content = content
+                draft.scheduled_for = scheduled_for
                 draft.save()
             else:
                 # Create new draft
@@ -215,6 +278,7 @@ def admin_home(request):
                     content=content,
                     status="draft",
                     sent_by=request.user,
+                    scheduled_for=scheduled_for,
                 )
             return JsonResponse({
                 "success": True,
@@ -238,6 +302,7 @@ def admin_home(request):
                     "message_type": draft.message_type,
                     "subject": draft.subject,
                     "content": draft.content,
+                    "scheduled_for": draft.scheduled_for.isoformat() if draft.scheduled_for else None,
                 },
             })
         except QuickMessage.DoesNotExist:
@@ -325,6 +390,9 @@ def admin_home(request):
     from .models.settings import SiteSettings
     site_settings = SiteSettings.load()
 
+    # Get active quick links grouped by category
+    quick_links = QuickLink.objects.filter(is_active=True).order_by('display_order', 'name')
+
     context = {
         "stats": stats,
         "cst_time": timezone.now().astimezone(pytz.timezone("America/Chicago")),
@@ -332,6 +400,7 @@ def admin_home(request):
         "load_draft": load_draft,
         "default_test_email": site_settings.default_test_email,
         "default_test_phone": site_settings.default_test_phone,
+        "quick_links": quick_links,
     }
 
     return render(request, "admin/admin_home.html", context)
@@ -1931,9 +2000,86 @@ def email_templates(request):
 @staff_member_required
 def homepage_settings(request):
     """
-    Homepage settings management page for hero image, title, and subtitle.
+    Homepage settings management page for hero image, title, subtitle, and hero slideshow.
+    Handles AJAX requests for hero slide management.
     """
+    import base64
+    import uuid
+    from django.core.files.base import ContentFile
+
     site_settings = SiteSettings.load()
+
+    # Handle AJAX requests for hero slides and quick links
+    if request.headers.get("X-Requested-With") == "XMLHttpRequest":
+        action = request.POST.get("action") or request.GET.get("action")
+
+        # For JSON requests, parse body to get action
+        if not action and request.content_type == "application/json":
+            try:
+                body_data = json.loads(request.body)
+                action = body_data.get("action")
+            except (json.JSONDecodeError, ValueError):
+                pass
+
+        if action == "get_slides":
+            return JsonResponse({
+                "success": True,
+                "slides": site_settings.hero_slides or []
+            })
+
+        elif action == "save_slides":
+            try:
+                data = json.loads(request.body)
+                slides = data.get("slides", [])
+                site_settings.hero_slides = slides
+                site_settings.save()
+                return JsonResponse({"success": True})
+            except Exception as e:
+                return JsonResponse({"success": False, "error": str(e)})
+
+        elif action == "upload_slide_image":
+            try:
+                image_data = request.POST.get("image_data")
+                if not image_data:
+                    return JsonResponse({"success": False, "error": "No image data provided"})
+
+                # Parse base64 data
+                if "base64," in image_data:
+                    format_part, data_part = image_data.split("base64,")
+                    ext = "jpg"
+                    if "png" in format_part:
+                        ext = "png"
+                    elif "webp" in format_part:
+                        ext = "webp"
+                    image_content = base64.b64decode(data_part)
+                else:
+                    return JsonResponse({"success": False, "error": "Invalid image format"})
+
+                # Save image to media folder
+                filename = f"hero_slide_{uuid.uuid4().hex[:8]}.{ext}"
+                from django.core.files.storage import default_storage
+                path = default_storage.save(f"site/hero/{filename}", ContentFile(image_content))
+                url = default_storage.url(path)
+
+                return JsonResponse({"success": True, "url": url})
+            except Exception as e:
+                return JsonResponse({"success": False, "error": str(e)})
+
+        elif action == "delete_slide_image":
+            try:
+                data = json.loads(request.body)
+                image_url = data.get("image_url", "")
+                # Extract path from URL and delete if it's a media file
+                if image_url and "/media/" in image_url:
+                    from django.core.files.storage import default_storage
+                    path = image_url.split("/media/")[-1]
+                    if default_storage.exists(path):
+                        default_storage.delete(path)
+                return JsonResponse({"success": True})
+            except Exception as e:
+                return JsonResponse({"success": False, "error": str(e)})
+
+        return JsonResponse({"success": False, "error": "Unknown action"})
 
     if request.method == "POST":
         # Handle image removal
@@ -1959,10 +2105,311 @@ def homepage_settings(request):
 
     context = {
         "site_settings": site_settings,
+        "hero_slides": site_settings.hero_slides or [],
         "cst_time": timezone.now().astimezone(pytz.timezone("America/Chicago")),
     }
 
     return render(request, "admin/homepage_settings.html", context)
+
+
+@staff_member_required
+def quick_links_settings(request):
+    """
+    Quick Links management page for external service shortcuts.
+    """
+    # Handle AJAX requests
+    if request.headers.get("X-Requested-With") == "XMLHttpRequest":
+        action = request.POST.get("action") or request.GET.get("action")
+
+        # For JSON requests, parse body to get action
+        if not action and request.content_type == "application/json":
+            try:
+                body_data = json.loads(request.body)
+                action = body_data.get("action")
+            except (json.JSONDecodeError, ValueError):
+                pass
+
+        if action == "get_quick_links":
+            links = QuickLink.objects.all().order_by('display_order', 'name')
+            return JsonResponse({
+                "success": True,
+                "links": [
+                    {
+                        "id": link.id,
+                        "name": link.name,
+                        "url": link.url,
+                        "icon": link.icon,
+                        "category": link.category,
+                        "display_order": link.display_order,
+                        "is_active": link.is_active,
+                    }
+                    for link in links
+                ]
+            })
+
+        elif action == "save_quick_link":
+            try:
+                data = json.loads(request.body)
+                link_id = data.get("id")
+                name = data.get("name", "").strip()
+                url = data.get("url", "").strip()
+                icon = data.get("icon", "fa-link").strip() or "fa-link"
+                category = data.get("category", "other")
+                display_order = int(data.get("display_order", 0))
+                is_active = data.get("is_active", True)
+
+                if not name or not url:
+                    return JsonResponse({"success": False, "error": "Name and URL are required"})
+
+                # Auto-add https:// if no protocol specified
+                if url and not url.startswith(('http://', 'https://')):
+                    url = 'https://' + url
+
+                if link_id:
+                    link = QuickLink.objects.get(id=link_id)
+                    link.name = name
+                    link.url = url
+                    link.icon = icon
+                    link.category = category
+                    link.display_order = display_order
+                    link.is_active = is_active
+                    link.save()
+                else:
+                    link = QuickLink.objects.create(
+                        name=name,
+                        url=url,
+                        icon=icon,
+                        category=category,
+                        display_order=display_order,
+                        is_active=is_active,
+                    )
+
+                return JsonResponse({
+                    "success": True,
+                    "link": {
+                        "id": link.id,
+                        "name": link.name,
+                        "url": link.url,
+                        "icon": link.icon,
+                        "category": link.category,
+                        "display_order": link.display_order,
+                        "is_active": link.is_active,
+                    }
+                })
+            except QuickLink.DoesNotExist:
+                return JsonResponse({"success": False, "error": "Link not found"})
+            except Exception as e:
+                return JsonResponse({"success": False, "error": str(e)})
+
+        elif action == "delete_quick_link":
+            try:
+                data = json.loads(request.body)
+                link_id = data.get("id")
+                QuickLink.objects.filter(id=link_id).delete()
+                return JsonResponse({"success": True})
+            except Exception as e:
+                return JsonResponse({"success": False, "error": str(e)})
+
+        return JsonResponse({"success": False, "error": "Unknown action"})
+
+    # Get Quick Links
+    quick_links = QuickLink.objects.all().order_by('display_order', 'name')
+
+    context = {
+        "quick_links": quick_links,
+        "quick_link_categories": QuickLink.CATEGORY_CHOICES,
+        "cst_time": timezone.now().astimezone(pytz.timezone("America/Chicago")),
+    }
+
+    return render(request, "admin/quick_links_settings.html", context)
+
+
+@staff_member_required
+def bug_reports_dashboard(request):
+    """
+    Bug reports dashboard for submitting and managing bug reports.
+    """
+    # Handle AJAX requests
+    if request.headers.get("X-Requested-With") == "XMLHttpRequest":
+        action = request.POST.get("action") or request.GET.get("action")
+
+        # For JSON requests, parse body to get action
+        if not action and request.content_type == "application/json":
+            try:
+                body_data = json.loads(request.body)
+                action = body_data.get("action")
+            except (json.JSONDecodeError, ValueError):
+                pass
+
+        if action == "submit_report":
+            try:
+                title = request.POST.get("title", "").strip()
+                description = request.POST.get("description", "").strip()
+                page_url = request.POST.get("page_url", "").strip()
+                priority = request.POST.get("priority", "medium")
+                screenshot = request.FILES.get("screenshot")
+
+                if not title or not description:
+                    return JsonResponse({"success": False, "error": "Title and description are required"})
+
+                report = BugReport.objects.create(
+                    title=title,
+                    description=description,
+                    page_url=page_url,
+                    priority=priority,
+                    screenshot=screenshot,
+                    submitted_by=request.user,
+                )
+
+                # Send email notification only if configured
+                try:
+                    site_settings = SiteSettings.load()
+                    admin_email = site_settings.bug_report_email
+
+                    if admin_email:
+                        from .utils.email_helper import send_email
+
+                        html_body = f"""
+                        <html><body>
+                        <h2>New Bug Report Submitted</h2>
+                        <p><strong>Title:</strong> {report.title}</p>
+                        <p><strong>Priority:</strong> {report.get_priority_display()}</p>
+                        <p><strong>Submitted by:</strong> {report.submitted_by.username if report.submitted_by else 'Unknown'}</p>
+                        <p><strong>Page URL:</strong> {report.page_url or 'Not specified'}</p>
+                        <hr>
+                        <p><strong>Description:</strong></p>
+                        <p>{report.description}</p>
+                        <hr>
+                        <p><a href="https://blueprnt.store/admin/bug-reports/">View all bug reports</a></p>
+                        </body></html>
+                        """
+
+                        send_email(
+                            email_address=admin_email,
+                            subject=f"[Bug Report] {report.title}",
+                            html_body=html_body,
+                        )
+                except Exception as e:
+                    # Don't fail if email fails
+                    pass
+
+                return JsonResponse({
+                    "success": True,
+                    "report_id": report.id,
+                    "message": "Bug report submitted successfully!"
+                })
+            except Exception as e:
+                return JsonResponse({"success": False, "error": str(e)})
+
+        elif action == "update_status":
+            try:
+                data = json.loads(request.body)
+                report_id = data.get("id")
+                status = data.get("status")
+
+                report = BugReport.objects.get(id=report_id)
+                report.status = status
+
+                # Set resolved_at timestamp
+                if status == "resolved" and not report.resolved_at:
+                    report.resolved_at = timezone.now()
+                elif status != "resolved":
+                    report.resolved_at = None
+
+                report.save()
+                return JsonResponse({"success": True})
+            except BugReport.DoesNotExist:
+                return JsonResponse({"success": False, "error": "Report not found"})
+            except Exception as e:
+                return JsonResponse({"success": False, "error": str(e)})
+
+        elif action == "update_priority":
+            try:
+                data = json.loads(request.body)
+                report_id = data.get("id")
+                priority = data.get("priority")
+
+                report = BugReport.objects.get(id=report_id)
+                report.priority = priority
+                report.save()
+                return JsonResponse({"success": True})
+            except BugReport.DoesNotExist:
+                return JsonResponse({"success": False, "error": "Report not found"})
+            except Exception as e:
+                return JsonResponse({"success": False, "error": str(e)})
+
+        elif action == "add_notes":
+            try:
+                data = json.loads(request.body)
+                report_id = data.get("id")
+                notes = data.get("notes", "")
+
+                report = BugReport.objects.get(id=report_id)
+                report.admin_notes = notes
+                report.save()
+                return JsonResponse({"success": True})
+            except BugReport.DoesNotExist:
+                return JsonResponse({"success": False, "error": "Report not found"})
+            except Exception as e:
+                return JsonResponse({"success": False, "error": str(e)})
+
+        elif action == "delete_report":
+            try:
+                data = json.loads(request.body)
+                report_id = data.get("id")
+                BugReport.objects.filter(id=report_id).delete()
+                return JsonResponse({"success": True})
+            except Exception as e:
+                return JsonResponse({"success": False, "error": str(e)})
+
+        elif action == "save_email_setting":
+            try:
+                data = json.loads(request.body)
+                email = data.get("email", "").strip()
+                site_settings = SiteSettings.load()
+                site_settings.bug_report_email = email
+                site_settings.save()
+                return JsonResponse({"success": True})
+            except Exception as e:
+                return JsonResponse({"success": False, "error": str(e)})
+
+        return JsonResponse({"success": False, "error": "Unknown action"})
+
+    # Get filter parameters
+    status_filter = request.GET.get("status", "")
+    priority_filter = request.GET.get("priority", "")
+
+    # Get bug reports
+    reports = BugReport.objects.all()
+    if status_filter:
+        reports = reports.filter(status=status_filter)
+    if priority_filter:
+        reports = reports.filter(priority=priority_filter)
+
+    # Stats
+    stats = {
+        "total": BugReport.objects.count(),
+        "open": BugReport.objects.filter(status="open").count(),
+        "in_progress": BugReport.objects.filter(status="in_progress").count(),
+        "resolved": BugReport.objects.filter(status="resolved").count(),
+    }
+
+    # Get email settings
+    site_settings = SiteSettings.load()
+
+    context = {
+        "reports": reports,
+        "stats": stats,
+        "status_filter": status_filter,
+        "priority_filter": priority_filter,
+        "status_choices": BugReport.STATUS_CHOICES,
+        "priority_choices": BugReport.PRIORITY_CHOICES,
+        "bug_report_email": site_settings.bug_report_email,
+        "contact_email": site_settings.contact_email,
+        "cst_time": timezone.now().astimezone(pytz.timezone("America/Chicago")),
+    }
+
+    return render(request, "admin/bug_reports_dashboard.html", context)
 
 
 @staff_member_required
@@ -3439,6 +3886,18 @@ def categories_dashboard(request):
             except Exception as e:
                 return JsonResponse({"success": False, "error": str(e)})
 
+        elif action == "toggle_category_visibility":
+            try:
+                category_id = request.POST.get("category_id")
+                category = Category.objects.get(id=category_id)
+                category.is_hidden = not category.is_hidden
+                category.save()
+                return JsonResponse({"success": True, "is_hidden": category.is_hidden})
+            except Category.DoesNotExist:
+                return JsonResponse({"success": False, "error": "Category not found"})
+            except Exception as e:
+                return JsonResponse({"success": False, "error": str(e)})
+
     # Get all categories with product counts
     categories = Category.objects.all().order_by("name")
     categories_data = []
@@ -3472,6 +3931,7 @@ def categories_dashboard(request):
                 "uses_material": category.uses_material,
                 "custom_attributes": category.custom_attributes,
                 "common_fields": category.common_fields,
+                "is_hidden": category.is_hidden,
                 "product_count": category.products.count(),
                 "active_count": active_count,
                 "out_of_stock_count": out_of_stock_count,
@@ -3796,7 +4256,13 @@ def attributes_dashboard(request):
             try:
                 attr_id = request.POST.get("attribute_id")
                 attr = CustomAttribute.objects.get(id=attr_id)
-                # Check if any values are in use (would need to check variant_attributes JSON)
+                # Check if any values are linked to product variants
+                in_use_count = sum(v.variants.count() for v in attr.values.all())
+                if in_use_count > 0:
+                    return JsonResponse({
+                        "success": False,
+                        "error": f"Cannot delete '{attr.name}' - it has values linked to {in_use_count} product variant(s). Remove from products first."
+                    })
                 value_count = attr.values.count()
                 attr.delete()
                 return JsonResponse({"success": True, "values_deleted": value_count})
@@ -3837,6 +4303,13 @@ def attributes_dashboard(request):
             try:
                 value_id = request.POST.get("value_id")
                 attr_value = CustomAttributeValue.objects.get(id=value_id)
+                # Check if value is linked to any product variants
+                variant_count = attr_value.variants.count()
+                if variant_count > 0:
+                    return JsonResponse({
+                        "success": False,
+                        "error": f"Cannot delete '{attr_value.value}' - it's linked to {variant_count} product variant(s)."
+                    })
                 attr_value.delete()
                 return JsonResponse({"success": True})
             except CustomAttributeValue.DoesNotExist:
@@ -3950,16 +4423,23 @@ def attributes_dashboard(request):
     # Get custom attributes with their values, ordered by display_order
     custom_attributes = CustomAttribute.objects.prefetch_related("values").filter(is_active=True).order_by("display_order", "name")
     custom_attrs_data = []
+    total_values = 0
+    total_in_use = 0
     for attr in custom_attributes:
-        values_data = [
-            {
+        values_data = []
+        for v in attr.values.filter(is_active=True).order_by("display_order", "value"):
+            # Count variants using this value
+            variant_count = v.variants.count()
+            values_data.append({
                 "id": v.id,
                 "value": v.value,
                 "display_order": v.display_order,
                 "metadata": v.metadata or {},
-            }
-            for v in attr.values.filter(is_active=True).order_by("display_order", "value")
-        ]
+                "variant_count": variant_count,
+            })
+            total_values += 1
+            if variant_count > 0:
+                total_in_use += 1
         custom_attrs_data.append({
             "id": attr.id,
             "name": attr.name,
@@ -3980,6 +4460,8 @@ def attributes_dashboard(request):
         "total_colors": len(colors_data),
         "total_materials": len(materials_data),
         "total_custom_attributes": len(custom_attrs_data),
+        "total_values": total_values,
+        "total_in_use": total_in_use,
         "cst_time": timezone.now().astimezone(pytz.timezone("America/Chicago")),
     }
 
@@ -4007,6 +4489,20 @@ def messages_dashboard(request):
         except Exception as e:
             return JsonResponse({"success": False, "error": str(e)})
 
+    # Handle cancel scheduled message
+    if request.method == "POST" and request.POST.get("action") == "cancel_scheduled":
+        from django.http import JsonResponse
+
+        try:
+            message_id = request.POST.get("message_id")
+            message = QuickMessage.objects.get(id=message_id, status="scheduled")
+            message.delete()
+            return JsonResponse({"success": True})
+        except QuickMessage.DoesNotExist:
+            return JsonResponse({"success": False, "error": "Message not found"})
+        except Exception as e:
+            return JsonResponse({"success": False, "error": str(e)})
+
     # Get filter parameters
     message_type = request.GET.get("type", "all")
     date_range = request.GET.get("range", "30")
@@ -4029,21 +4525,70 @@ def messages_dashboard(request):
     # Get drafts separately
     drafts = QuickMessage.objects.filter(status="draft").order_by("-updated_at")
 
-    # Calculate stats (exclude drafts)
-    sent_messages = QuickMessage.objects.exclude(status="draft")
+    # Get scheduled messages separately
+    scheduled_messages = QuickMessage.objects.filter(status="scheduled").order_by("scheduled_for")
+
+    # Build timeline: combine scheduled messages + drafts with scheduled times + recently sent
+    timeline_items = []
+
+    # Add scheduled messages to timeline (pending)
+    for msg in scheduled_messages:
+        timeline_items.append({
+            "id": msg.id,
+            "type": "scheduled",
+            "status": "pending",
+            "message_type": msg.message_type,
+            "subject": msg.subject,
+            "content": msg.content,
+            "scheduled_for": msg.scheduled_for,
+            "sent_at": None,
+            "recipient_count": msg.recipient_count,
+            "sent_count": 0,
+            "failed_count": 0,
+        })
+
+    # Add drafts with future scheduled times to timeline (skip past times)
+    now = timezone.now()
+    for draft in drafts.filter(scheduled_for__isnull=False, scheduled_for__gt=now):
+        timeline_items.append({
+            "id": draft.id,
+            "type": "draft",
+            "status": "draft",
+            "message_type": draft.message_type,
+            "subject": draft.subject,
+            "content": draft.content,
+            "scheduled_for": draft.scheduled_for,
+            "sent_at": None,
+            "recipient_count": 0,
+            "sent_count": 0,
+            "failed_count": 0,
+        })
+
+    # Sort by scheduled_for time
+    timeline_items.sort(key=lambda x: x["scheduled_for"])
+
+    # Calculate stats (exclude drafts and scheduled)
+    sent_messages = QuickMessage.objects.exclude(status__in=["draft", "scheduled"])
     total_messages = sent_messages.count()
     total_sent = sent_messages.aggregate(total=Sum("sent_count"))["total"] or 0
     total_failed = sent_messages.aggregate(total=Sum("failed_count"))["total"] or 0
     email_messages = sent_messages.filter(message_type="email").count()
     sms_messages = sent_messages.filter(message_type="sms").count()
     draft_count = drafts.count()
+    scheduled_count = scheduled_messages.count()
 
     # Get site settings for test defaults
     site_settings = SiteSettings.load()
 
+    # Get subscriber counts for quick send form
+    email_sub_count = EmailSubscription.objects.filter(is_active=True).count()
+    sms_sub_count = SMSSubscription.objects.filter(is_active=True).count()
+
     context = {
         "messages": messages[:100],  # Limit to 100 most recent
         "drafts": drafts,
+        "scheduled_messages": scheduled_messages,
+        "timeline_items": timeline_items,
         "message_type": message_type,
         "date_range": date_range,
         "stats": {
@@ -4053,6 +4598,9 @@ def messages_dashboard(request):
             "email_messages": email_messages,
             "sms_messages": sms_messages,
             "draft_count": draft_count,
+            "scheduled_count": scheduled_count,
+            "email_sub_count": email_sub_count,
+            "sms_sub_count": sms_sub_count,
         },
         "default_test_email": site_settings.default_test_email,
         "default_test_phone": site_settings.default_test_phone,
@@ -5811,10 +6359,10 @@ def finance_dashboard(request):
     import stripe
     from django.conf import settings
     from django.contrib import messages
-    from django.db.models import Count, Q, Sum
+    from django.db.models import Count, F, Q, Sum
     from django.utils import timezone
 
-    from shop.models import Expense, ExpenseCategory, Order, OrderStatus
+    from shop.models import Expense, ExpenseCategory, Order, OrderStatus, Shipment, ShipmentItem, ProductVariant
 
     # Handle Stripe connection test
     stripe_status = None
@@ -6056,6 +6604,201 @@ def finance_dashboard(request):
 
     stats["total_stripe_fees"] = float(total_stripe_fees)
 
+    # ===== INVENTORY & COGS CALCULATIONS =====
+
+    # Cost of Goods Sold (COGS) - sum of unit_cost for all sold items
+    # This comes from OrderItem.unit_cost which is set during FIFO allocation
+    from shop.models import OrderItem
+
+    cogs_result = OrderItem.objects.filter(
+        order__status__in=[OrderStatus.PAID, OrderStatus.SHIPPED, OrderStatus.FULFILLED],
+        unit_cost__isnull=False
+    ).aggregate(
+        total_cogs=Sum(F('unit_cost') * F('quantity'))
+    )
+    total_cogs = cogs_result['total_cogs'] or Decimal("0")
+
+    # Gross Profit = Revenue - COGS
+    gross_profit = total_revenue - total_cogs
+
+    # Net Profit = Gross Profit - Operating Expenses - Stripe Fees
+    net_profit = gross_profit - total_expenses - total_stripe_fees
+
+    stats["total_cogs"] = float(total_cogs)
+    stats["gross_profit"] = float(gross_profit)
+    stats["net_profit"] = float(net_profit)
+
+    # Gross margin percentage
+    if total_revenue > 0:
+        stats["gross_margin_pct"] = float((gross_profit / total_revenue) * 100)
+        stats["net_margin_pct"] = float((net_profit / total_revenue) * 100)
+    else:
+        stats["gross_margin_pct"] = 0
+        stats["net_margin_pct"] = 0
+
+    # ===== INVENTORY VALUE =====
+    # Calculate current inventory value based on shipment costs
+    # Only count delivered shipments, and use available_quantity (received - sold)
+
+    inventory_items = []
+
+    delivered_shipments = Shipment.objects.filter(status="delivered").prefetch_related(
+        'items__variant__product'
+    )
+
+    # Build a map of variant costs from delivered shipments (for fallback calculations)
+    variant_costs = {}
+    for shipment in delivered_shipments:
+        for item in shipment.items.all():
+            if item.unit_cost > 0:
+                variant_id = item.variant_id
+                if variant_id not in variant_costs:
+                    variant_costs[variant_id] = {'total_cost': Decimal("0"), 'total_qty': 0}
+                variant_costs[variant_id]['total_cost'] += item.unit_cost * item.received_quantity
+                variant_costs[variant_id]['total_qty'] += item.received_quantity
+
+            # Also track inventory items for the breakdown table
+            available = item.available_quantity
+            if available > 0 and item.unit_cost > 0:
+                item_value = available * item.unit_cost
+                inventory_items.append({
+                    'sku': item.variant.sku,
+                    'product': item.variant.product.name,
+                    'size': item.variant.size.code if item.variant.size else '',
+                    'color': item.variant.color.name if item.variant.color else '',
+                    'available': available,
+                    'unit_cost': float(item.unit_cost),
+                    'value': float(item_value),
+                    'shipment': shipment.name or shipment.tracking_number,
+                })
+
+    # Calculate average cost per variant from shipments
+    variant_avg_cost = {}
+    for variant_id, data in variant_costs.items():
+        if data['total_qty'] > 0:
+            variant_avg_cost[variant_id] = data['total_cost'] / data['total_qty']
+
+    # Also calculate total stock (even items without cost data)
+    total_stock_units = ProductVariant.objects.filter(
+        is_active=True
+    ).aggregate(total=Sum('stock_quantity'))['total'] or 0
+
+    # Potential revenue and inventory value using fallback costs
+    potential_revenue = Decimal("0")
+    inventory_value = Decimal("0")
+
+    for variant in ProductVariant.objects.filter(is_active=True, stock_quantity__gt=0).select_related('product'):
+        potential_revenue += variant.price * variant.stock_quantity
+
+        # Get cost with fallback: shipment > variant > product base_cost
+        shipment_cost = variant_avg_cost.get(variant.id, None)
+        if shipment_cost:
+            unit_cost = shipment_cost
+        elif variant.cost and variant.cost > 0:
+            unit_cost = variant.cost
+        elif variant.product.base_cost and variant.product.base_cost > 0:
+            unit_cost = variant.product.base_cost
+        else:
+            unit_cost = Decimal("0")
+
+        inventory_value += unit_cost * variant.stock_quantity
+
+    stats["inventory_value"] = float(inventory_value)
+    stats["inventory_units"] = total_stock_units
+    stats["potential_revenue"] = float(potential_revenue)
+    stats["potential_profit"] = float(potential_revenue - inventory_value)
+
+    # Sort inventory items by value (highest first)
+    inventory_items.sort(key=lambda x: x['value'], reverse=True)
+
+    # ===== PRODUCT-LEVEL PROFIT BREAKDOWN =====
+    # Aggregate inventory data by product for a cleaner view
+    from shop.models import Product
+    from collections import defaultdict
+
+    product_profit_data = defaultdict(lambda: {
+        'stock': 0,
+        'retail_value': Decimal("0"),
+        'cost_value': Decimal("0"),
+        'variants': []
+    })
+
+    # Get all active variants with stock
+    variants_with_stock = ProductVariant.objects.filter(
+        is_active=True,
+        stock_quantity__gt=0
+    ).select_related('product', 'size', 'color')
+
+    # Note: variant_avg_cost is already calculated above in the inventory section
+
+    # Aggregate by product
+    for variant in variants_with_stock:
+        product_name = variant.product.name
+        product_id = variant.product.id
+        stock = variant.stock_quantity
+        retail = variant.price * stock
+
+        # Get cost - priority: shipment data > variant cost > product base_cost
+        shipment_cost = variant_avg_cost.get(variant.id, None)
+        if shipment_cost:
+            unit_cost = shipment_cost
+            cost_source = 'shipment'
+        elif variant.cost and variant.cost > 0:
+            unit_cost = variant.cost
+            cost_source = 'variant'
+        elif variant.product.base_cost and variant.product.base_cost > 0:
+            unit_cost = variant.product.base_cost
+            cost_source = 'product'
+        else:
+            unit_cost = None
+            cost_source = None
+
+        cost = unit_cost * stock if unit_cost else Decimal("0")
+
+        product_profit_data[product_id]['name'] = product_name
+        product_profit_data[product_id]['product_id'] = product_id
+        product_profit_data[product_id]['stock'] += stock
+        product_profit_data[product_id]['retail_value'] += retail
+        product_profit_data[product_id]['cost_value'] += cost
+        product_profit_data[product_id]['base_price'] = float(variant.product.base_price)
+        product_profit_data[product_id]['base_cost'] = float(variant.product.base_cost) if variant.product.base_cost else 0
+        product_profit_data[product_id]['has_cost_data'] = unit_cost is not None
+        product_profit_data[product_id]['variants'].append({
+            'sku': variant.sku,
+            'size': variant.size.code if variant.size else '',
+            'color': variant.color.name if variant.color else '',
+            'stock': stock,
+            'price': float(variant.price),
+            'cost': float(unit_cost) if unit_cost else None,
+            'cost_source': cost_source,
+        })
+
+    # Convert to list and calculate profit/margin
+    product_profits = []
+    for product_id, data in product_profit_data.items():
+        retail = data['retail_value']
+        cost = data['cost_value']
+        profit = retail - cost
+        margin = (profit / retail * 100) if retail > 0 else 0
+        has_cost = data.get('has_cost_data', cost > 0)
+
+        product_profits.append({
+            'product_id': data['product_id'],
+            'name': data['name'],
+            'stock': data['stock'],
+            'base_price': data['base_price'],
+            'base_cost': data.get('base_cost', 0),
+            'retail_value': float(retail),
+            'cost_value': float(cost),
+            'potential_profit': float(profit),
+            'margin_pct': float(margin),
+            'has_cost_data': has_cost,
+            'variant_count': len(data['variants']),
+        })
+
+    # Sort by potential profit (highest first)
+    product_profits.sort(key=lambda x: x['potential_profit'], reverse=True)
+
     # Get recurring monthly expenses (like Render, etc.)
     # These are expenses with specific recurring categories
     recurring_categories = ["Hosting", "Software Subscriptions", "Services", "Platform Fees"]
@@ -6123,6 +6866,10 @@ def finance_dashboard(request):
         "stripe_fees_by_month": stripe_fees_by_month,
         "stripe_fees_total_year": sum(m["fees"] for m in stripe_fees_by_month),
         "stripe_status": stripe_status,
+        "inventory_items": inventory_items[:20],  # Top 20 by value
+        "inventory_items_json": json.dumps(inventory_items[:50]),
+        "product_profits": product_profits,
+        "product_profits_json": json.dumps(product_profits),
     }
 
     return render(request, "admin/finance_dashboard.html", context)

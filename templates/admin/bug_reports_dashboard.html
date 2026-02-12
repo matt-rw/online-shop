@@ -1,0 +1,830 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Bug Reports - Blueprint Apparel</title>
+  <link rel="icon" type="image/svg+xml" href="{% static 'admin-favicon.svg' %}">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <style>
+    {% include "admin/partials/dark_mode_styles.html" %}
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background: #f1f5f9;
+      min-height: 100vh;
+    }
+
+    .nav-links {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      padding: 1rem 2rem;
+      display: flex;
+      gap: 0.75rem;
+      align-items: center;
+    }
+
+    .nav-link {
+      background: rgba(255, 255, 255, 0.15);
+      color: white;
+      padding: 0.5rem 1rem;
+      border-radius: 8px;
+      text-decoration: none;
+      font-size: 0.875rem;
+      font-weight: 500;
+      transition: all 0.2s;
+    }
+
+    .nav-link:hover { background: rgba(255, 255, 255, 0.25); }
+
+    .top-bar {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      padding: 2rem 0;
+      margin-bottom: 2rem;
+    }
+
+    .container {
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 0 2rem;
+    }
+
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .header h1 {
+      color: white;
+      font-size: 2.5rem;
+      font-weight: 800;
+    }
+
+    .main-content {
+      padding: 0 2rem 2rem 2rem;
+      max-width: 1400px;
+      margin: 0 auto;
+    }
+
+    .stats-row {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+      gap: 1rem;
+      margin-bottom: 2rem;
+    }
+
+    .stat-card {
+      background: white;
+      border-radius: 12px;
+      padding: 1.25rem;
+      text-align: center;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+    }
+
+    .stat-card .number {
+      font-size: 2rem;
+      font-weight: 800;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .stat-card .label {
+      color: #64748b;
+      font-size: 0.8125rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .section-card {
+      background: white;
+      border-radius: 16px;
+      padding: 2rem;
+      margin-bottom: 2rem;
+      box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
+    }
+
+    .section-title {
+      font-size: 1.25rem;
+      font-weight: 700;
+      color: #0f172a;
+      margin-bottom: 1.5rem;
+      padding-bottom: 0.75rem;
+      border-bottom: 2px solid #e2e8f0;
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+
+    .form-row {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 1rem;
+      margin-bottom: 1rem;
+    }
+
+    .form-group {
+      margin-bottom: 1rem;
+    }
+
+    .form-group label {
+      display: block;
+      color: #475569;
+      font-weight: 600;
+      margin-bottom: 0.5rem;
+      font-size: 0.875rem;
+    }
+
+    .form-group input,
+    .form-group select,
+    .form-group textarea {
+      width: 100%;
+      padding: 0.75rem 1rem;
+      border: 2px solid #e2e8f0;
+      border-radius: 8px;
+      font-family: inherit;
+      font-size: 1rem;
+      transition: border-color 0.2s;
+    }
+
+    .form-group input:focus,
+    .form-group select:focus,
+    .form-group textarea:focus {
+      outline: none;
+      border-color: #667eea;
+    }
+
+    .form-group textarea {
+      min-height: 120px;
+      resize: vertical;
+    }
+
+    .btn {
+      padding: 0.75rem 1.5rem;
+      border-radius: 8px;
+      border: none;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-size: 0.9375rem;
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+    }
+
+    .btn-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+    }
+
+    .btn-secondary {
+      background: #f1f5f9;
+      color: #475569;
+      border: 2px solid #e2e8f0;
+    }
+
+    .btn-danger {
+      background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+      color: white;
+    }
+
+    .btn-sm {
+      padding: 0.5rem 0.75rem;
+      font-size: 0.8125rem;
+    }
+
+    .filters {
+      display: flex;
+      gap: 1rem;
+      margin-bottom: 1.5rem;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+
+    .filters select {
+      padding: 0.5rem 1rem;
+      border: 2px solid #e2e8f0;
+      border-radius: 8px;
+      font-size: 0.875rem;
+    }
+
+    .report-list {
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+    }
+
+    .report-item {
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: 12px;
+      padding: 1.25rem;
+      transition: all 0.2s;
+    }
+
+    .report-item:hover {
+      border-color: #667eea;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+    }
+
+    .report-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 1rem;
+      margin-bottom: 0.75rem;
+    }
+
+    .report-title {
+      font-weight: 700;
+      color: #0f172a;
+      font-size: 1.0625rem;
+    }
+
+    .report-meta {
+      display: flex;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+
+    .badge {
+      padding: 0.25rem 0.625rem;
+      border-radius: 9999px;
+      font-size: 0.6875rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.03em;
+    }
+
+    .report-description {
+      color: #475569;
+      font-size: 0.9375rem;
+      line-height: 1.6;
+      margin-bottom: 0.75rem;
+    }
+
+    .report-footer {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding-top: 0.75rem;
+      border-top: 1px solid #e2e8f0;
+      font-size: 0.8125rem;
+      color: #64748b;
+    }
+
+    .report-actions {
+      display: flex;
+      gap: 0.5rem;
+    }
+
+    .report-url {
+      color: #667eea;
+      text-decoration: none;
+      font-size: 0.8125rem;
+    }
+
+    .report-url:hover {
+      text-decoration: underline;
+    }
+
+    .screenshot-preview {
+      max-width: 200px;
+      max-height: 150px;
+      border-radius: 8px;
+      margin-top: 0.75rem;
+      cursor: pointer;
+      border: 1px solid #e2e8f0;
+    }
+
+    .empty-state {
+      text-align: center;
+      padding: 3rem;
+      color: #64748b;
+    }
+
+    .empty-state i {
+      font-size: 3rem;
+      margin-bottom: 1rem;
+      opacity: 0.5;
+    }
+
+    .toast {
+      position: fixed;
+      bottom: 2rem;
+      right: 2rem;
+      padding: 1rem 1.5rem;
+      border-radius: 8px;
+      color: white;
+      font-weight: 500;
+      z-index: 1000;
+      animation: slideIn 0.3s ease;
+    }
+
+    .toast-success { background: #10b981; }
+    .toast-error { background: #ef4444; }
+
+    @keyframes slideIn {
+      from { transform: translateX(100%); opacity: 0; }
+      to { transform: translateX(0); opacity: 1; }
+    }
+
+    /* Modal */
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.5);
+      backdrop-filter: blur(4px);
+      z-index: 1000;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .modal-overlay.active { display: flex; }
+
+    .modal-content {
+      background: white;
+      border-radius: 16px;
+      max-width: 600px;
+      width: 90%;
+      max-height: 80vh;
+      overflow: auto;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+    }
+
+    .modal-header {
+      padding: 1.5rem 2rem;
+      border-bottom: 1px solid #e2e8f0;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .modal-header h2 {
+      font-size: 1.25rem;
+      font-weight: 700;
+    }
+
+    .modal-close {
+      background: none;
+      border: none;
+      font-size: 1.5rem;
+      cursor: pointer;
+      color: #64748b;
+    }
+
+    .modal-body { padding: 2rem; }
+
+    .modal-footer {
+      padding: 1.5rem 2rem;
+      border-top: 1px solid #e2e8f0;
+      display: flex;
+      justify-content: flex-end;
+      gap: 1rem;
+    }
+
+    .admin-notes {
+      background: #fffbeb;
+      border: 1px solid #fcd34d;
+      border-radius: 8px;
+      padding: 0.75rem 1rem;
+      margin-top: 0.75rem;
+      font-size: 0.875rem;
+    }
+
+    .admin-notes strong {
+      color: #92400e;
+    }
+  </style>
+  {% include "admin/partials/dark_mode_apply.html" %}
+</head>
+<body>
+  <div class="nav-links">
+    <a href="{% url 'admin_home' %}" class="nav-link"><i class="fas fa-arrow-left"></i> Back to Dashboard</a>
+  </div>
+
+  <div class="top-bar">
+    <div class="container">
+      <div class="header">
+        <h1><i class="fas fa-bug"></i> Bug Reports</h1>
+        <button class="btn" onclick="openSubmitModal()" style="background: rgba(255,255,255,0.2); backdrop-filter: blur(10px); color: white; border: 1px solid rgba(255,255,255,0.2);">
+          <i class="fas fa-plus"></i> Submit Report
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <div class="main-content">
+    <!-- Stats -->
+    <div class="stats-row">
+      <div class="stat-card">
+        <div class="number">{{ stats.total }}</div>
+        <div class="label">Total Reports</div>
+      </div>
+      <div class="stat-card">
+        <div class="number" style="background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%); -webkit-background-clip: text;">{{ stats.open }}</div>
+        <div class="label">Open</div>
+      </div>
+      <div class="stat-card">
+        <div class="number" style="background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); -webkit-background-clip: text;">{{ stats.in_progress }}</div>
+        <div class="label">In Progress</div>
+      </div>
+      <div class="stat-card">
+        <div class="number" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); -webkit-background-clip: text;">{{ stats.resolved }}</div>
+        <div class="label">Resolved</div>
+      </div>
+    </div>
+
+    <!-- Email Settings -->
+    <div class="section-card" style="margin-bottom: 1.5rem;">
+      <div style="display: flex; align-items: center; gap: 1rem; flex-wrap: wrap;">
+        <div style="display: flex; align-items: center; gap: 0.5rem;">
+          <i class="fas fa-envelope" style="color: #667eea;"></i>
+          <label style="font-weight: 600; color: #475569; white-space: nowrap;">Notification Email:</label>
+        </div>
+        <input type="email" id="bugReportEmail" value="{{ bug_report_email }}"
+               placeholder="Enter email for bug report notifications"
+               style="flex: 1; min-width: 250px; padding: 0.5rem 0.75rem; border: 2px solid #e2e8f0; border-radius: 8px; font-size: 0.9375rem;">
+        <button class="btn btn-primary btn-sm" onclick="saveEmailSetting()">
+          <i class="fas fa-save"></i> Save
+        </button>
+        <span style="font-size: 0.8125rem; {% if not bug_report_email %}color: #f59e0b;{% else %}color: #64748b;{% endif %}">
+          {% if bug_report_email %}
+            <i class="fas fa-check-circle" style="color: #10b981;"></i> Notifications enabled
+          {% else %}
+            <i class="fas fa-bell-slash"></i> Notifications disabled (set email to enable)
+          {% endif %}
+        </span>
+      </div>
+    </div>
+
+    <!-- Reports List -->
+    <div class="section-card">
+      <h2 class="section-title">
+        <i class="fas fa-list"></i> All Reports
+      </h2>
+
+      <!-- Filters -->
+      <div class="filters">
+        <select id="statusFilter" onchange="applyFilters()">
+          <option value="">All Statuses</option>
+          {% for value, label in status_choices %}
+          <option value="{{ value }}" {% if status_filter == value %}selected{% endif %}>{{ label }}</option>
+          {% endfor %}
+        </select>
+        <select id="priorityFilter" onchange="applyFilters()">
+          <option value="">All Priorities</option>
+          {% for value, label in priority_choices %}
+          <option value="{{ value }}" {% if priority_filter == value %}selected{% endif %}>{{ label }}</option>
+          {% endfor %}
+        </select>
+        {% if status_filter or priority_filter %}
+        <a href="{% url 'admin_bug_reports' %}" class="btn btn-sm btn-secondary">Clear Filters</a>
+        {% endif %}
+      </div>
+
+      <div class="report-list">
+        {% for report in reports %}
+        <div class="report-item" data-report-id="{{ report.id }}">
+          <div class="report-header">
+            <div class="report-title">{{ report.title }}</div>
+            <div class="report-meta">
+              <span class="badge" style="background: {{ report.priority_color }}20; color: {{ report.priority_color }};">{{ report.get_priority_display }}</span>
+              <span class="badge" style="background: {{ report.status_color }}20; color: {{ report.status_color }};">{{ report.get_status_display }}</span>
+            </div>
+          </div>
+          <div class="report-description">{{ report.description|truncatewords:50 }}</div>
+          {% if report.page_url %}
+          <a href="{{ report.page_url }}" target="_blank" class="report-url"><i class="fas fa-external-link-alt"></i> {{ report.page_url|truncatechars:50 }}</a>
+          {% endif %}
+          {% if report.screenshot %}
+          <img src="{{ report.screenshot.url }}" alt="Screenshot" class="screenshot-preview" onclick="window.open('{{ report.screenshot.url }}', '_blank')">
+          {% endif %}
+          {% if report.admin_notes %}
+          <div class="admin-notes">
+            <strong><i class="fas fa-sticky-note"></i> Notes:</strong> {{ report.admin_notes|truncatewords:30 }}
+          </div>
+          {% endif %}
+          <div class="report-footer">
+            <div>
+              <span>Submitted by <strong>{{ report.submitted_by.username|default:"Unknown" }}</strong></span>
+              <span style="margin-left: 1rem;">{{ report.created_at|timesince }} ago</span>
+            </div>
+            <div class="report-actions">
+              <select class="btn btn-sm btn-secondary" onchange="updateStatus({{ report.id }}, this.value)" style="padding: 0.375rem 0.5rem;">
+                {% for value, label in status_choices %}
+                <option value="{{ value }}" {% if report.status == value %}selected{% endif %}>{{ label }}</option>
+                {% endfor %}
+              </select>
+              <button class="btn btn-sm btn-secondary" onclick="openNotesModal({{ report.id }}, '{{ report.admin_notes|escapejs }}')">
+                <i class="fas fa-sticky-note"></i>
+              </button>
+              <button class="btn btn-sm btn-danger" onclick="deleteReport({{ report.id }})">
+                <i class="fas fa-trash"></i>
+              </button>
+            </div>
+          </div>
+        </div>
+        {% empty %}
+        <div class="empty-state">
+          <i class="fas fa-bug"></i>
+          <p>No bug reports yet. Click "Submit Report" to create one.</p>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+
+  <!-- Submit Report Modal -->
+  <div id="submitModal" class="modal-overlay" onclick="closeSubmitModal()">
+    <div class="modal-content" onclick="event.stopPropagation()">
+      <div class="modal-header">
+        <h2><i class="fas fa-bug"></i> Submit Bug Report</h2>
+        <button class="modal-close" onclick="closeSubmitModal()">&times;</button>
+      </div>
+      <form id="submitForm" onsubmit="submitReport(event)">
+        <div class="modal-body">
+          <div class="form-group">
+            <label for="bugTitle"><i class="fas fa-heading"></i> Title</label>
+            <input type="text" id="bugTitle" name="title" placeholder="Brief summary of the bug" required>
+          </div>
+          <div class="form-group">
+            <label for="bugDescription"><i class="fas fa-align-left"></i> Description</label>
+            <textarea id="bugDescription" name="description" placeholder="Describe the bug in detail. What were you doing? What happened? What did you expect to happen?" required></textarea>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label for="bugUrl"><i class="fas fa-link"></i> Page URL (optional)</label>
+              <input type="text" id="bugUrl" name="page_url" placeholder="Where did the bug occur?">
+            </div>
+            <div class="form-group">
+              <label for="bugPriority"><i class="fas fa-flag"></i> Priority</label>
+              <select id="bugPriority" name="priority">
+                <option value="low">Low</option>
+                <option value="medium" selected>Medium</option>
+                <option value="high">High</option>
+                <option value="critical">Critical</option>
+              </select>
+            </div>
+          </div>
+          <div class="form-group">
+            <label for="bugScreenshot"><i class="fas fa-camera"></i> Screenshot (optional)</label>
+            <input type="file" id="bugScreenshot" name="screenshot" accept="image/*">
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" onclick="closeSubmitModal()">Cancel</button>
+          <button type="submit" class="btn btn-primary">
+            <i class="fas fa-paper-plane"></i> Submit Report
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Notes Modal -->
+  <div id="notesModal" class="modal-overlay" onclick="closeNotesModal()">
+    <div class="modal-content" onclick="event.stopPropagation()" style="max-width: 500px;">
+      <div class="modal-header">
+        <h2><i class="fas fa-sticky-note"></i> Admin Notes</h2>
+        <button class="modal-close" onclick="closeNotesModal()">&times;</button>
+      </div>
+      <div class="modal-body">
+        <input type="hidden" id="notesReportId">
+        <div class="form-group">
+          <label for="adminNotes">Notes (internal only)</label>
+          <textarea id="adminNotes" placeholder="Add internal notes about this bug..."></textarea>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" onclick="closeNotesModal()">Cancel</button>
+        <button type="button" class="btn btn-primary" onclick="saveNotes()">
+          <i class="fas fa-save"></i> Save Notes
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const csrfToken = '{{ csrf_token }}';
+
+    function openSubmitModal() {
+      document.getElementById('submitModal').classList.add('active');
+      // Auto-fill current page URL
+      document.getElementById('bugUrl').value = document.referrer || '';
+    }
+
+    function closeSubmitModal() {
+      document.getElementById('submitModal').classList.remove('active');
+      document.getElementById('submitForm').reset();
+    }
+
+    function openNotesModal(reportId, notes) {
+      document.getElementById('notesReportId').value = reportId;
+      document.getElementById('adminNotes').value = notes;
+      document.getElementById('notesModal').classList.add('active');
+    }
+
+    function closeNotesModal() {
+      document.getElementById('notesModal').classList.remove('active');
+    }
+
+    async function submitReport(event) {
+      event.preventDefault();
+
+      const submitBtn = event.target.querySelector('button[type="submit"]');
+      if (submitBtn.disabled) return;
+
+      // Disable button and show loading state
+      submitBtn.disabled = true;
+      const originalText = submitBtn.innerHTML;
+      submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Submitting...';
+
+      const form = document.getElementById('submitForm');
+      const formData = new FormData(form);
+      formData.append('action', 'submit_report');
+
+      try {
+        const response = await fetch('{% url "admin_bug_reports" %}', {
+          method: 'POST',
+          headers: {
+            'X-Requested-With': 'XMLHttpRequest',
+            'X-CSRFToken': csrfToken
+          },
+          body: formData
+        });
+
+        const data = await response.json();
+        if (data.success) {
+          showToast('Bug report submitted!', 'success');
+          closeSubmitModal();
+          setTimeout(() => location.reload(), 1000);
+        } else {
+          showToast('Error: ' + data.error, 'error');
+          submitBtn.disabled = false;
+          submitBtn.innerHTML = originalText;
+        }
+      } catch (error) {
+        showToast('Error: ' + error.message, 'error');
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = originalText;
+      }
+    }
+
+    async function updateStatus(reportId, status) {
+      try {
+        const response = await fetch('{% url "admin_bug_reports" %}', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-Requested-With': 'XMLHttpRequest',
+            'X-CSRFToken': csrfToken
+          },
+          body: JSON.stringify({
+            action: 'update_status',
+            id: reportId,
+            status: status
+          })
+        });
+
+        const data = await response.json();
+        if (data.success) {
+          showToast('Status updated', 'success');
+          setTimeout(() => location.reload(), 500);
+        } else {
+          showToast('Error: ' + data.error, 'error');
+        }
+      } catch (error) {
+        showToast('Error: ' + error.message, 'error');
+      }
+    }
+
+    async function saveNotes() {
+      const reportId = document.getElementById('notesReportId').value;
+      const notes = document.getElementById('adminNotes').value;
+
+      try {
+        const response = await fetch('{% url "admin_bug_reports" %}', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-Requested-With': 'XMLHttpRequest',
+            'X-CSRFToken': csrfToken
+          },
+          body: JSON.stringify({
+            action: 'add_notes',
+            id: reportId,
+            notes: notes
+          })
+        });
+
+        const data = await response.json();
+        if (data.success) {
+          showToast('Notes saved', 'success');
+          closeNotesModal();
+          setTimeout(() => location.reload(), 500);
+        } else {
+          showToast('Error: ' + data.error, 'error');
+        }
+      } catch (error) {
+        showToast('Error: ' + error.message, 'error');
+      }
+    }
+
+    async function deleteReport(reportId) {
+      if (!confirm('Delete this bug report?')) return;
+
+      try {
+        const response = await fetch('{% url "admin_bug_reports" %}', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-Requested-With': 'XMLHttpRequest',
+            'X-CSRFToken': csrfToken
+          },
+          body: JSON.stringify({
+            action: 'delete_report',
+            id: reportId
+          })
+        });
+
+        const data = await response.json();
+        if (data.success) {
+          showToast('Report deleted', 'success');
+          document.querySelector(`.report-item[data-report-id="${reportId}"]`).remove();
+        } else {
+          showToast('Error: ' + data.error, 'error');
+        }
+      } catch (error) {
+        showToast('Error: ' + error.message, 'error');
+      }
+    }
+
+    function applyFilters() {
+      const status = document.getElementById('statusFilter').value;
+      const priority = document.getElementById('priorityFilter').value;
+      const params = new URLSearchParams();
+      if (status) params.set('status', status);
+      if (priority) params.set('priority', priority);
+      window.location.href = '{% url "admin_bug_reports" %}' + (params.toString() ? '?' + params.toString() : '');
+    }
+
+    function showToast(message, type) {
+      const existing = document.querySelector('.toast');
+      if (existing) existing.remove();
+
+      const toast = document.createElement('div');
+      toast.className = `toast toast-${type}`;
+      toast.innerHTML = `<i class="fas fa-${type === 'success' ? 'check-circle' : 'exclamation-circle'}"></i> ${message}`;
+      document.body.appendChild(toast);
+
+      setTimeout(() => toast.remove(), 3000);
+    }
+
+    async function saveEmailSetting() {
+      const email = document.getElementById('bugReportEmail').value.trim();
+
+      try {
+        const response = await fetch('{% url "admin_bug_reports" %}', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-Requested-With': 'XMLHttpRequest',
+            'X-CSRFToken': csrfToken
+          },
+          body: JSON.stringify({
+            action: 'save_email_setting',
+            email: email
+          })
+        });
+
+        const data = await response.json();
+        if (data.success) {
+          showToast('Email setting saved', 'success');
+          setTimeout(() => location.reload(), 500);
+        } else {
+          showToast('Error: ' + data.error, 'error');
+        }
+      } catch (error) {
+        showToast('Error: ' + error.message, 'error');
+      }
+    }
+  </script>
+</body>
+</html>

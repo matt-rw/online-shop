@@ -7,6 +7,7 @@
   <title>Admin Dashboard - Blueprint Apparel</title>
   <link rel="icon" type="image/svg+xml" href="{% static 'admin-favicon.svg' %}">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
   <style>
     * {
       margin: 0;
@@ -671,7 +672,7 @@
       </div>
 
       <div id="quickSendContent" class="quick-send-content">
-        <form id="quickSendForm" onsubmit="sendQuickMessage(event)">
+        <form id="quickSendForm" onsubmit="sendQuickMessage(event)" autocomplete="off">
           {% csrf_token %}
           <!-- Message Type Toggle -->
           <div style="display: inline-flex; gap: 0.25rem; margin-bottom: 0.75rem; background: #f1f5f9; padding: 0.25rem; border-radius: 6px;">
@@ -711,6 +712,17 @@
 
         <input type="hidden" name="draft_id" id="draftId" value="">
 
+        <!-- Schedule (optional) -->
+        <div style="margin-bottom: 1rem;">
+          <div style="display: flex; align-items: center; gap: 0.75rem;">
+            <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer; color: #64748b; font-size: 0.875rem;">
+              <input type="checkbox" id="scheduleToggle" onchange="toggleScheduleField()" style="width: 16px; height: 16px; accent-color: #667eea;">
+              Schedule for later
+            </label>
+            <input type="datetime-local" name="scheduled_for" id="scheduledFor" style="display: none; padding: 0.5rem 0.75rem; border: 2px solid #e2e8f0; border-radius: 8px; font-size: 0.875rem; transition: border-color 0.2s;" onfocus="this.style.borderColor='#667eea'" onblur="this.style.borderColor='#e2e8f0'">
+          </div>
+        </div>
+
         <!-- Send Button -->
         <div style="display: flex; justify-content: space-between; align-items: center;">
           <span id="recipientCount" style="color: #64748b; font-size: 0.875rem;">
@@ -721,7 +733,7 @@
               Save Draft
             </button>
             <button type="submit" id="sendBtn" class="btn-primary" style="padding: 0.75rem 2rem; display: flex; align-items: center; gap: 0.5rem;">
-              <span>Send Now</span>
+              <span id="sendBtnText">Send Now</span>
               <span>→</span>
             </button>
           </div>
@@ -890,6 +902,59 @@
         <h3>Django Admin</h3>
         <p>Advanced site administration and database management.</p>
       </a>
+
+      <a href="{% url 'admin_bug_reports' %}" class="admin-card">
+        <div class="icon">🐛</div>
+        <h3>Bug Reports</h3>
+        <p>Submit and track bug reports. View status and history.</p>
+      </a>
+    </div>
+
+    <!-- Quick Links Section -->
+    <div class="section-header">
+      <h2>🔗 Quick Links</h2>
+    </div>
+
+    <div class="quick-links-grid" style="display: flex; flex-wrap: wrap; gap: 0.75rem; margin-bottom: 2rem;">
+      {% for link in quick_links %}
+      <a href="{{ link.url }}" target="_blank" rel="noopener noreferrer" class="quick-link-btn" style="
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.625rem 1rem;
+        background: white;
+        border: 1px solid #e2e8f0;
+        border-radius: 10px;
+        text-decoration: none;
+        color: #1e293b;
+        font-size: 0.9375rem;
+        font-weight: 500;
+        transition: all 0.2s ease;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+      " onmouseover="this.style.borderColor='#667eea'; this.style.boxShadow='0 4px 12px rgba(102, 126, 234, 0.15)'; this.style.transform='translateY(-2px)';" onmouseout="this.style.borderColor='#e2e8f0'; this.style.boxShadow='0 1px 3px rgba(0,0,0,0.05)'; this.style.transform='none';">
+        <i class="fa-brands {{ link.icon }}" style="color: #667eea; font-size: 1.125rem;"></i>
+        <span>{{ link.name }}</span>
+        <span style="color: #94a3b8; font-size: 0.75rem;">↗</span>
+      </a>
+      {% empty %}
+      <span style="color: #94a3b8; font-size: 0.875rem; padding: 0.5rem 0;">No quick links configured yet.</span>
+      {% endfor %}
+      <a href="{% url 'admin_quick_links' %}" class="quick-link-btn" style="
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.625rem 1rem;
+        background: #f8fafc;
+        border: 1px dashed #cbd5e1;
+        border-radius: 10px;
+        text-decoration: none;
+        color: #64748b;
+        font-size: 0.875rem;
+        font-weight: 500;
+        transition: all 0.2s ease;
+      " onmouseover="this.style.borderColor='#667eea'; this.style.color='#667eea';" onmouseout="this.style.borderColor='#cbd5e1'; this.style.color='#64748b';">
+        <span>+ Add Links</span>
+      </a>
     </div>
   </div>
 
@@ -972,7 +1037,7 @@
       return new Promise((resolve) => {
         confirmResolve = resolve;
         const modal = document.getElementById('confirmModal');
-        document.getElementById('confirmModalMessage').textContent = message;
+        document.getElementById('confirmModalMessage').innerHTML = message;
         document.getElementById('confirmModalIcon').textContent = options.icon || '📨';
         document.getElementById('confirmModalTitle').textContent = options.title || 'Confirm';
         document.getElementById('confirmModalConfirm').textContent = options.confirmText || 'Confirm';
@@ -1278,6 +1343,20 @@
     // Initialize widgets on page load
     document.addEventListener('DOMContentLoaded', renderWidgets);
 
+    // Initialize form state on page load (sync with browser-restored checkbox states)
+    document.addEventListener('DOMContentLoaded', function() {
+      // Sync test mode toggle with UI
+      const testModeCheckbox = document.getElementById('testModeToggle');
+      if (testModeCheckbox && testModeCheckbox.checked) {
+        toggleTestMode();
+      }
+      // Sync schedule toggle with UI
+      const scheduleCheckbox = document.getElementById('scheduleToggle');
+      if (scheduleCheckbox && scheduleCheckbox.checked) {
+        toggleScheduleField();
+      }
+    });
+
     // Quick Send functionality
     let currentMessageType = 'email';
     let testMode = false;
@@ -1298,8 +1377,51 @@
           const defaultValue = currentMessageType === 'email' ? defaultTestEmail : defaultTestPhone;
           if (defaultValue) testRecipient.value = defaultValue;
         }
+        // Hide scheduling when in test mode
+        document.getElementById('scheduleToggle').checked = false;
+        toggleScheduleField();
       }
       updateRecipientCount();
+      updateSendButton();
+    }
+
+    function toggleScheduleField() {
+      const isScheduled = document.getElementById('scheduleToggle').checked;
+      const scheduleInput = document.getElementById('scheduledFor');
+      scheduleInput.style.display = isScheduled ? 'inline-block' : 'none';
+
+      // Always update minimum datetime to now
+      const now = new Date();
+      const nowLocal = new Date(now.getTime() - now.getTimezoneOffset() * 60000);
+      const minValue = nowLocal.toISOString().slice(0, 16);
+      scheduleInput.min = minValue;
+
+      if (isScheduled) {
+        // If current value is in the past, clear it
+        if (scheduleInput.value && scheduleInput.value < minValue) {
+          scheduleInput.value = '';
+        }
+      } else {
+        scheduleInput.value = '';
+      }
+      updateSendButton();
+    }
+
+    function updateSendButton() {
+      const sendBtn = document.getElementById('sendBtn');
+      const sendBtnText = document.getElementById('sendBtnText');
+      const isScheduled = document.getElementById('scheduleToggle').checked && !testMode;
+
+      // Skip if button is in "Sending..." state (no sendBtnText element)
+      if (!sendBtnText) return;
+
+      if (isScheduled) {
+        sendBtnText.textContent = 'Schedule';
+        sendBtn.style.background = 'linear-gradient(135deg, #8b5cf6 0%, #6366f1 100%)';
+      } else {
+        sendBtnText.textContent = 'Send Now';
+        sendBtn.style.background = '';
+      }
     }
 
     function updateRecipientCount() {
@@ -1390,20 +1512,41 @@
 
       let confirmMsg;
       let confirmTitle;
+      let confirmText;
       const icon = currentMessageType === 'email' ? '📧' : '💬';
+      const isScheduled = document.getElementById('scheduleToggle').checked && !testMode;
+      const scheduledFor = document.getElementById('scheduledFor').value;
+
       if (testMode) {
         confirmMsg = `Send a test ${currentMessageType} to ${testRecipient}?`;
         confirmTitle = 'Send Test Message';
+        confirmText = 'Send Test';
+      } else if (isScheduled) {
+        if (!scheduledFor) {
+          showAlert('Please select a date and time for scheduling', { icon: '⚠️', title: 'Missing Schedule Time' });
+          return;
+        }
+        const scheduleDate = new Date(scheduledFor);
+        if (scheduleDate <= new Date()) {
+          showAlert('Schedule time must be in the future', { icon: '⚠️', title: 'Invalid Time' });
+          return;
+        }
+        const count = currentMessageType === 'email' ? emailCount : smsCount;
+        const formattedTime = scheduleDate.toLocaleString('en-US', { dateStyle: 'medium', timeStyle: 'short' });
+        confirmMsg = `Schedule ${currentMessageType} to ${count} subscriber${count !== 1 ? 's' : ''} for <strong>${formattedTime}</strong>?`;
+        confirmTitle = 'Confirm Schedule';
+        confirmText = 'Schedule';
       } else {
         const count = currentMessageType === 'email' ? emailCount : smsCount;
         confirmMsg = `This will send your ${currentMessageType} to ${count} active subscriber${count !== 1 ? 's' : ''}.`;
         confirmTitle = 'Confirm Send';
+        confirmText = 'Send Now';
       }
 
       const confirmed = await showConfirm(confirmMsg, {
         icon: icon,
         title: confirmTitle,
-        confirmText: testMode ? 'Send Test' : 'Send Now'
+        confirmText: confirmText
       });
 
       if (!confirmed) {
@@ -1425,6 +1568,10 @@
           }
         });
 
+        if (!response.ok) {
+          throw new Error(`Server error: ${response.status} ${response.statusText}`);
+        }
+
         const result = await response.json();
 
         if (result.success) {
@@ -1443,15 +1590,32 @@
             }
           }
 
-          const successMsg = result.failed_count > 0
-            ? `<strong>${result.sent_count}</strong> message${result.sent_count !== 1 ? 's' : ''} sent successfully.<br><span style="color: #dc2626;">${result.failed_count} failed</span>`
-            : `<strong>${result.sent_count}</strong> message${result.sent_count !== 1 ? 's' : ''} sent successfully!`;
-          await showAlert(successMsg, { icon: '✅', title: 'Message Sent' });
+          let successMsg;
+          let successTitle;
+          let successIcon;
+          if (result.scheduled) {
+            const scheduleDate = new Date(result.scheduled_for);
+            const formattedTime = scheduleDate.toLocaleString('en-US', { dateStyle: 'medium', timeStyle: 'short' });
+            successMsg = `Your ${currentMessageType} to <strong>${result.recipient_count}</strong> subscriber${result.recipient_count !== 1 ? 's' : ''} has been scheduled for <strong>${formattedTime}</strong>`;
+            successTitle = 'Message Scheduled';
+            successIcon = '📅';
+          } else if (result.failed_count > 0) {
+            successMsg = `<strong>${result.sent_count}</strong> message${result.sent_count !== 1 ? 's' : ''} sent successfully.<br><span style="color: #dc2626;">${result.failed_count} failed</span>`;
+            successTitle = 'Message Sent';
+            successIcon = '✅';
+          } else {
+            successMsg = `<strong>${result.sent_count}</strong> message${result.sent_count !== 1 ? 's' : ''} sent successfully!`;
+            successTitle = 'Message Sent';
+            successIcon = '✅';
+          }
+          await showAlert(successMsg, { icon: successIcon, title: successTitle });
 
           // Clear form
           document.getElementById('quickContent').value = '';
           document.getElementById('quickSubject').value = '';
           document.getElementById('draftId').value = '';
+          document.getElementById('scheduleToggle').checked = false;
+          toggleScheduleField();
           clearDraftSelection();
         } else {
           showAlert(result.error || 'Failed to send message', { icon: '❌', title: 'Error' });
@@ -1460,7 +1624,8 @@
         showAlert('Error sending message: ' + error.message, { icon: '❌', title: 'Error' });
       } finally {
         sendBtn.disabled = false;
-        sendBtn.innerHTML = '<span>Send Now</span><span>→</span>';
+        const btnText = document.getElementById('scheduleToggle').checked && !testMode ? 'Schedule' : 'Send Now';
+        sendBtn.innerHTML = `<span id="sendBtnText">${btnText}</span><span>→</span>`;
       }
     }
 
@@ -1525,6 +1690,9 @@
         formData.append('content', content);
         formData.append('csrfmiddlewaretoken', document.querySelector('[name=csrfmiddlewaretoken]').value);
         if (draftId) formData.append('draft_id', draftId);
+        // Include scheduled time if set
+        const scheduledFor = document.getElementById('scheduledFor').value;
+        if (scheduledFor) formData.append('scheduled_for', scheduledFor);
 
         const response = await fetch('{% url "admin_home" %}', {
           method: 'POST',
@@ -1616,6 +1784,28 @@
           document.getElementById('quickContent').value = draft.content || '';
           setMessageType(draft.message_type);
 
+          // Restore scheduled time if set and in the future
+          const scheduleToggle = document.getElementById('scheduleToggle');
+          const scheduledForInput = document.getElementById('scheduledFor');
+          if (draft.scheduled_for) {
+            const scheduledDate = new Date(draft.scheduled_for);
+            // Only restore if the time is in the future
+            if (scheduledDate > new Date()) {
+              const localIso = new Date(scheduledDate.getTime() - scheduledDate.getTimezoneOffset() * 60000).toISOString().slice(0, 16);
+              scheduledForInput.value = localIso;
+              scheduleToggle.checked = true;
+            } else {
+              // Past time - clear it
+              scheduledForInput.value = '';
+              scheduleToggle.checked = false;
+            }
+            toggleScheduleField();
+          } else {
+            scheduledForInput.value = '';
+            scheduleToggle.checked = false;
+            toggleScheduleField();
+          }
+
           // Highlight loaded draft
           clearDraftSelection();
           const selectedItem = document.querySelector(`.draft-item[data-draft-id="${draftId}"]`);
@@ -1638,6 +1828,8 @@
       document.getElementById('draftId').value = '';
       document.getElementById('quickSubject').value = '';
       document.getElementById('quickContent').value = '';
+      document.getElementById('scheduleToggle').checked = false;
+      toggleScheduleField();
       clearDraftSelection();
       updateNewButton();
     }
@@ -1704,6 +1896,18 @@
       document.getElementById('quickSubject').value = '{{ load_draft.subject|escapejs }}';
       document.getElementById('quickContent').value = '{{ load_draft.content|escapejs }}';
       setMessageType('{{ load_draft.message_type }}');
+
+      // Restore scheduled time if set and in the future
+      {% if load_draft.scheduled_for %}
+      const scheduledDate = new Date('{{ load_draft.scheduled_for.isoformat }}');
+      if (scheduledDate > new Date()) {
+        const localIso = new Date(scheduledDate.getTime() - scheduledDate.getTimezoneOffset() * 60000).toISOString().slice(0, 16);
+        document.getElementById('scheduledFor').value = localIso;
+        document.getElementById('scheduleToggle').checked = true;
+        toggleScheduleField();
+      }
+      {% endif %}
+
       updateNewButton();
       // Highlight the loaded draft
       const selectedItem = document.querySelector('.draft-item[data-draft-id="{{ load_draft.id }}"]');

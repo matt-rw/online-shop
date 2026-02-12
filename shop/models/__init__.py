@@ -8,6 +8,7 @@ from .finance import Expense, ExpenseCategory, Revenue
 from .messaging import QuickMessage
 from .product import *
 from .profile import SavedAddress, UserProfile
-from .settings import SiteSettings
+from .settings import QuickLink, SiteSettings
 from .shipment import Shipment, ShipmentItem
 from .sms import *
+from .bug_report import BugReport

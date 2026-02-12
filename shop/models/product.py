@@ -37,6 +37,12 @@ class Category(models.Model):
         help_text="Common custom fields that products in this category typically have",
     )
 
+    # Visibility
+    is_hidden = models.BooleanField(
+        default=False,
+        help_text="Hide this category from the storefront (products remain but category won't show in filters/navigation)"
+    )
+
     created_at = models.DateTimeField(auto_now_add=True, null=True)
     updated_at = models.DateTimeField(auto_now=True)
 

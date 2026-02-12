@@ -16,6 +16,7 @@ class QuickMessage(models.Model):
 
     STATUS_CHOICES = [
         ("draft", "Draft"),
+        ("scheduled", "Scheduled"),
         ("sending", "Sending"),
         ("sent", "Sent"),
         ("partial", "Partially Sent"),
@@ -45,6 +46,13 @@ class QuickMessage(models.Model):
     )
     notes = models.TextField(blank=True, help_text="Internal notes")
 
+    # Scheduling
+    scheduled_for = models.DateTimeField(
+        null=True,
+        blank=True,
+        help_text="Schedule message to be sent at this time (leave empty to send immediately)",
+    )
+
     class Meta:
         verbose_name = "Quick Message"
         verbose_name_plural = "Quick Messages"
@@ -53,6 +61,8 @@ class QuickMessage(models.Model):
             models.Index(fields=["-created_at"], name="quickmsg_created_idx"),
             models.Index(fields=["status"], name="quickmsg_status_idx"),
             models.Index(fields=["message_type", "-created_at"], name="quickmsg_type_idx"),
+            # Index for scheduler query: status + scheduled_for
+            models.Index(fields=["status", "scheduled_for"], name="quickmsg_scheduled_idx"),
         ]
 
     def __str__(self):
