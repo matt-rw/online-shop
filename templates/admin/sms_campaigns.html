@@ -250,9 +250,9 @@
       <h1>📱 SMS Campaigns</h1>
       <p>Create and manage your SMS marketing campaigns</p>
       <div class="nav-links">
-        <a href="/admin/">← Admin Home</a>
-        <a href="/admin/sms/">SMS Dashboard</a>
-        <a href="/admin/sms/templates/">Manage Templates</a>
+        <a href="/bp-manage/">← Admin Home</a>
+        <a href="/bp-manage/sms/">SMS Dashboard</a>
+        <a href="/bp-manage/sms/templates/">Manage Templates</a>
       </div>
     </div>
 
@@ -282,7 +282,7 @@
               <option value="{{ template.id }}">{{ template.name }} ({{ template.get_template_type_display }})</option>
             {% endfor %}
           </select>
-          <small>Choose a template or <a href="/admin/sms/templates/">create a new one</a></small>
+          <small>Choose a template or <a href="/bp-manage/sms/templates/">create a new one</a></small>
         </div>
 
         <div class="form-group">
@@ -337,7 +337,7 @@
                 <td>
                   <div class="action-buttons">
                     {% if campaign.status == 'draft' or campaign.status == 'scheduled' %}
-                      <form method="POST" action="/admin/sms/" style="display: inline;">
+                      <form method="POST" action="/bp-manage/sms/" style="display: inline;">
                         {% csrf_token %}
                         <input type="hidden" name="action" value="send_campaign">
                         <input type="hidden" name="campaign_id" value="{{ campaign.id }}">

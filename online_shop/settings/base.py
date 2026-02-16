@@ -250,6 +250,19 @@ ACCOUNT_SESSION_REMEMBER = True  # Remember me by default
 ACCOUNT_LOGIN_METHODS = {"email"}  # Login via email only
 ACCOUNT_SIGNUP_FIELDS = ["email*", "password1*", "password2*"]  # Email required, no username
 
+# Allauth rate limiting (bot protection)
+# Limits login/signup attempts to prevent brute force and credential stuffing attacks
+ACCOUNT_RATE_LIMITS = {
+    # Limit login attempts: 5 per minute, 20 per hour per IP
+    "login_failed": "5/m,20/h",
+    # Limit signup attempts: 5 per minute per IP
+    "signup": "5/m",
+    # Limit password reset requests: 5 per minute per IP
+    "reset_password": "5/m",
+    # Limit email confirmation resend: 3 per hour per IP
+    "confirm_email": "3/h",
+}
+
 # GEOIP SETTINGS
 # Path to GeoLite2 database for visitor location tracking
 GEOIP_PATH = os.path.join(BASE_DIR, "geoip")

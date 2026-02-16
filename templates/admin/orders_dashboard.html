@@ -583,7 +583,7 @@
       }
 
       try {
-        const response = await fetch(`/admin/orders/${orderId}/generate-label/`, {
+        const response = await fetch(`/bp-manage/orders/${orderId}/generate-label/`, {
           method: 'GET',
           headers: {
             'X-CSRFToken': getCookie('csrftoken')
@@ -628,7 +628,7 @@
         formData.append('tracking_number', trackingNumber);
         formData.append('carrier', carrier);
 
-        const response = await fetch(`/admin/orders/${orderId}/manual-tracking/`, {
+        const response = await fetch(`/bp-manage/orders/${orderId}/manual-tracking/`, {
           method: 'POST',
           headers: {
             'X-CSRFToken': getCookie('csrftoken')

@@ -28,8 +28,6 @@ The admin system is the core of this project — a complete back-office solution
 - Cost tracking at product, variant, and shipment levels
 
 ![Products Dashboard](screenshots/06-products-inventory.jpg)
-![Edit Product](screenshots/16-product-edit.jpg)
-![Edit Variant](screenshots/17-variant-edit.jpg)
 
 ### Shipments
 - Track incoming inventory shipments

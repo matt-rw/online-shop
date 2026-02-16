@@ -2083,7 +2083,7 @@
     window.openCreateModal = openCreateModal;
 
     function openEditModal(templateId) {
-      window.location.href = `/admin/email/templates/?edit=${templateId}`;
+      window.location.href = `/bp-manage/email/templates/?edit=${templateId}`;
     }
 
     function closeModal() {
@@ -2829,7 +2829,7 @@
 
       if (selectedChannel === 'sms') {
         // For SMS templates, submit to SMS templates endpoint
-        form.action = '/admin/sms/templates/';
+        form.action = '/bp-manage/sms/templates/';
         form.submit();
       } else {
         // For Email templates, export from Unlayer first

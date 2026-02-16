@@ -3745,7 +3745,7 @@
       selector.classList.remove('active');
 
       // Navigate to campaign edit with date and type
-      let url = `/admin/campaigns/${campaignId}/edit/?add=${messageType}`;
+      let url = `/bp-manage/campaigns/${campaignId}/edit/?add=${messageType}`;
       if (selectedDate && selectedCampaignId === campaignId) {
         const dateStr = selectedDate.toISOString().split('T')[0];
         url += `&date=${dateStr}`;
@@ -4129,7 +4129,7 @@
       const campaignId = bubble.dataset.campaignId;
 
       // Fetch message data via AJAX
-      fetch(`/admin/campaigns/?action=get_message&message_id=${messageId}`, {
+      fetch(`/bp-manage/campaigns/?action=get_message&message_id=${messageId}`, {
         headers: {
           'X-Requested-With': 'XMLHttpRequest'
         }

@@ -235,9 +235,9 @@
       <h1>📋 All Campaigns</h1>
       <p>Manage all email and SMS marketing campaigns • {{ cst_time|date:"F j, Y g:i A" }} CST</p>
       <div class="nav-links">
-        <a href="/admin/">← Admin Home</a>
-        <a href="/admin/email/campaigns/">Email Campaigns</a>
-        <a href="/admin/sms/campaigns/">SMS Campaigns</a>
+        <a href="/bp-manage/">← Admin Home</a>
+        <a href="/bp-manage/email/campaigns/">Email Campaigns</a>
+        <a href="/bp-manage/sms/campaigns/">SMS Campaigns</a>
       </div>
     </div>
 
@@ -251,10 +251,10 @@
     <div class="section">
       <h2>Quick Actions</h2>
       <div class="quick-actions">
-        <a href="/admin/email/campaigns/" class="btn btn-primary">+ New Email Campaign</a>
-        <a href="/admin/sms/campaigns/" class="btn btn-primary">+ New SMS Campaign</a>
-        <a href="/admin/email/templates/" class="btn btn-success">Email Templates</a>
-        <a href="/admin/sms/templates/" class="btn btn-success">SMS Templates</a>
+        <a href="/bp-manage/email/campaigns/" class="btn btn-primary">+ New Email Campaign</a>
+        <a href="/bp-manage/sms/campaigns/" class="btn btn-primary">+ New SMS Campaign</a>
+        <a href="/bp-manage/email/templates/" class="btn btn-success">Email Templates</a>
+        <a href="/bp-manage/sms/templates/" class="btn btn-success">SMS Templates</a>
       </div>
     </div>
 
@@ -305,14 +305,14 @@
                 <td>
                   <div class="action-buttons">
                     {% if campaign.status == 'draft' or campaign.status == 'scheduled' %}
-                      <form method="POST" action="{% if campaign.type == 'email' %}/admin/email/{% else %}/admin/sms/{% endif %}" style="display: inline;">
+                      <form method="POST" action="{% if campaign.type == 'email' %}/bp-manage/email/{% else %}/bp-manage/sms/{% endif %}" style="display: inline;">
                         {% csrf_token %}
                         <input type="hidden" name="action" value="send_campaign">
                         <input type="hidden" name="campaign_id" value="{{ campaign.id }}">
                         <button type="submit" class="btn btn-success" onclick="return confirm('Send this campaign now?')">Send</button>
                       </form>
                     {% endif %}
-                    <a href="{% if campaign.type == 'email' %}/admin/email/campaigns/{% else %}/admin/sms/campaigns/{% endif %}" class="btn btn-primary">View</a>
+                    <a href="{% if campaign.type == 'email' %}/bp-manage/email/campaigns/{% else %}/bp-manage/sms/campaigns/{% endif %}" class="btn btn-primary">View</a>
                   </div>
                 </td>
               </tr>

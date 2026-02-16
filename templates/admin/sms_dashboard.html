@@ -208,10 +208,10 @@
       <h1>📱 SMS Marketing Dashboard</h1>
       <p>Manage subscribers, templates, and campaigns • {{ cst_time|date:"F j, Y g:i A" }} CST</p>
       <div class="nav-links">
-        <a href="/admin/">← Admin Home</a>
-        <a href="/admin/subscribers/">Subscribers</a>
-        <a href="/admin/sms/campaigns/" style="background: #667eea; color: white;">📋 Campaigns</a>
-        <a href="/admin/sms/templates/">Templates</a>
+        <a href="/bp-manage/">← Admin Home</a>
+        <a href="/bp-manage/subscribers/">Subscribers</a>
+        <a href="/bp-manage/sms/campaigns/" style="background: #667eea; color: white;">📋 Campaigns</a>
+        <a href="/bp-manage/sms/templates/">Templates</a>
       </div>
     </div>
 
@@ -306,7 +306,7 @@
             </tr>
           {% empty %}
             <tr>
-              <td colspan="5" style="text-align: center; color: #a0aec0;">No templates yet. <a href="/admin/sms/templates/">Create one</a></td>
+              <td colspan="5" style="text-align: center; color: #a0aec0;">No templates yet. <a href="/bp-manage/sms/templates/">Create one</a></td>
             </tr>
           {% endfor %}
         </tbody>
@@ -360,7 +360,7 @@
             </tr>
           {% empty %}
             <tr>
-              <td colspan="6" style="text-align: center; color: #a0aec0;">No campaigns yet. <a href="/admin/sms/campaigns/">Create one</a></td>
+              <td colspan="6" style="text-align: center; color: #a0aec0;">No campaigns yet. <a href="/bp-manage/sms/campaigns/">Create one</a></td>
             </tr>
           {% endfor %}
         </tbody>

@@ -13,6 +13,8 @@ from django.http import JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.views.decorators.http import require_http_methods, require_POST
 
+from django_ratelimit.decorators import ratelimit
+
 import stripe
 
 from .cart_utils import (
@@ -56,11 +58,13 @@ def _get_safe_referer(request, default="/"):
         return default
 
 
+@ratelimit(key="ip", rate="30/m", method="POST", block=True)
 @require_POST
 def add_to_cart_view(request):
     """
     Add a product variant to the cart.
     Expects POST data: variant_id OR product_id, quantity (optional, defaults to 1)
+    Rate limited: 30 requests per minute per IP.
     """
     variant_id = request.POST.get("variant_id")
     product_id = request.POST.get("product_id")
@@ -185,6 +189,7 @@ def cart_view(request):
     return render(request, "shop/cart.html", context)
 
 
+@ratelimit(key="ip", rate="60/m", method="POST", block=True)
 @require_POST
 def update_cart_item_view(request, item_id):
     """
@@ -227,6 +232,7 @@ def update_cart_item_view(request, item_id):
         return redirect("shop:cart")
 
 
+@ratelimit(key="ip", rate="60/m", method="POST", block=True)
 @require_POST
 def remove_from_cart_view(request, item_id):
     """
@@ -265,6 +271,7 @@ def remove_from_cart_view(request, item_id):
 # BUNDLE CART VIEWS #
 
 
+@ratelimit(key="ip", rate="30/m", method="POST", block=True)
 @require_POST
 def add_bundle_to_cart_view(request):
     """
@@ -308,6 +315,7 @@ def add_bundle_to_cart_view(request):
         return redirect(_get_safe_referer(request))
 
 
+@ratelimit(key="ip", rate="60/m", method="POST", block=True)
 @require_POST
 def update_bundle_item_view(request, item_id):
     """
@@ -348,6 +356,7 @@ def update_bundle_item_view(request, item_id):
         return redirect("shop:cart")
 
 
+@ratelimit(key="ip", rate="60/m", method="POST", block=True)
 @require_POST
 def remove_bundle_from_cart_view(request, item_id):
     """
@@ -450,6 +459,7 @@ def checkout_view(request):
     return render(request, "shop/checkout.html", context)
 
 
+@ratelimit(key="ip", rate="20/m", method="POST", block=True)
 @require_POST
 def get_shipping_rates_view(request):
     """
@@ -591,6 +601,7 @@ def get_shipping_rates_view(request):
     })
 
 
+@ratelimit(key="ip", rate="10/m", method="POST", block=True)
 @require_POST
 def create_checkout_session(request):
     """

@@ -412,9 +412,20 @@
             </label>
           </div>
           {% if bot_stats.total_bots_30d > 0 %}
-          <div style="background: rgba(255,255,255,0.1); padding: 0.5rem 0.75rem; border-radius: 8px; color: white; font-size: 0.75rem;">
-            <i class="fa-solid fa-shield-halved"></i>
-            <span style="font-weight: 600;">{{ bot_stats.total_bots_30d }}</span> bots blocked (30d)
+          <div style="background: rgba(255,255,255,0.1); padding: 0.5rem 0.75rem; border-radius: 8px; color: white; font-size: 0.75rem; display: flex; align-items: center; gap: 1rem;">
+            <span>
+              <i class="fa-solid fa-shield-halved"></i>
+              <span style="font-weight: 600;">{{ bot_stats.total_bots_30d }}</span> bots (30d)
+            </span>
+            <span style="opacity: 0.7;">|</span>
+            <span>
+              <i class="fa-solid fa-calendar-day"></i>
+              <span style="font-weight: 600;">{{ bot_stats.bots_today }}</span> today
+            </span>
+            <span style="opacity: 0.7;">|</span>
+            <span>
+              <span style="font-weight: 600;">{{ bot_stats.bot_session_percent }}%</span> of traffic
+            </span>
           </div>
           {% endif %}
         </div>
@@ -423,6 +434,35 @@
   </div>
 
   <div class="main-content">
+    <!-- Bot Filter Banner (shown when hiding bots) -->
+    {% if hide_bots and bot_stats.total_bots_30d > 0 %}
+    <div style="background: linear-gradient(135deg, #e0e7ff 0%, #c7d2fe 100%); border: 1px solid #a5b4fc; border-radius: 12px; padding: 1rem 1.5rem; margin-bottom: 1.5rem; margin-top: -2rem; position: relative; z-index: 5;">
+      <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
+        <div style="display: flex; align-items: center; gap: 0.75rem;">
+          <i class="fa-solid fa-robot" style="color: #4338ca; font-size: 1.25rem;"></i>
+          <div>
+            <div style="color: #3730a3; font-weight: 600; font-size: 0.875rem;">
+              Filtering {{ bot_stats.total_bots_30d }} bot sessions ({{ bot_stats.bot_session_percent }}% of traffic)
+            </div>
+            <div style="color: #5b21b6; font-size: 0.75rem;">
+              {{ bot_stats.bot_pageviews_30d }} page views from bots excluded from stats below
+            </div>
+          </div>
+        </div>
+        {% if bot_stats.top_bot_agents %}
+        <div style="display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap;">
+          <span style="color: #4338ca; font-size: 0.75rem; font-weight: 600;">Top bots:</span>
+          {% for agent in bot_stats.top_bot_agents|slice:":3" %}
+          <span style="background: white; color: #4338ca; padding: 0.25rem 0.5rem; border-radius: 4px; font-size: 0.7rem; font-family: monospace; max-width: 150px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="{{ agent.user_agent }}">
+            {{ agent.user_agent|truncatechars:25 }} ({{ agent.count }})
+          </span>
+          {% endfor %}
+        </div>
+        {% endif %}
+      </div>
+    </div>
+    {% endif %}
+
     <!-- Quick Stats -->
     <div class="quick-stats">
       <div class="stat-box">
@@ -916,13 +956,15 @@
       initChart();
     });
 
-    // Bot filter toggle
+    // Bot filter toggle (bots hidden by default)
     function toggleBotFilter(hideBots) {
       const url = new URL(window.location.href);
       if (hideBots) {
-        url.searchParams.set('hide_bots', 'true');
-      } else {
+        // Hide bots is the default, so remove the param
         url.searchParams.delete('hide_bots');
+      } else {
+        // Explicitly show bots
+        url.searchParams.set('hide_bots', 'false');
       }
       window.location.href = url.toString();
     }

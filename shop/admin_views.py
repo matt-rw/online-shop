@@ -2280,7 +2280,7 @@ def bug_reports_dashboard(request):
                         <p><strong>Description:</strong></p>
                         <p>{report.description}</p>
                         <hr>
-                        <p><a href="https://blueprnt.store/admin/bug-reports/">View all bug reports</a></p>
+                        <p><a href="https://blueprnt.store/bp-manage/bug-reports/">View all bug reports</a></p>
                         </body></html>
                         """
 
@@ -2427,8 +2427,8 @@ def visitors_dashboard(request):
     last_30d = now - timedelta(days=30)
     last_30min = now - timedelta(minutes=30)
 
-    # Check if we should hide bots
-    hide_bots = request.GET.get("hide_bots", "false") == "true"
+    # Check if we should hide bots (hidden by default for cleaner analytics)
+    hide_bots = request.GET.get("hide_bots", "true") != "false"
 
     # Base querysets - optionally exclude bots
     if hide_bots:
@@ -2438,10 +2438,32 @@ def visitors_dashboard(request):
         session_qs = VisitorSession.objects.all()
         pageview_qs = PageView.objects.all()
 
-    # Bot counts for display
+    # Bot counts for display (always calculated from full dataset, not filtered)
+    total_sessions_30d = VisitorSession.objects.filter(first_seen__gte=last_30d).count()
+    total_pageviews_30d = PageView.objects.filter(viewed_at__gte=last_30d).count()
+    bot_sessions_30d = VisitorSession.objects.filter(first_seen__gte=last_30d, device_type="bot").count()
+    bot_pageviews_30d = PageView.objects.filter(viewed_at__gte=last_30d, device_type="bot").count()
+    bot_sessions_today = VisitorSession.objects.filter(first_seen__gte=today_start, device_type="bot").count()
+
+    # Calculate bot percentage
+    bot_session_percent = (bot_sessions_30d / total_sessions_30d * 100) if total_sessions_30d > 0 else 0
+    bot_pageview_percent = (bot_pageviews_30d / total_pageviews_30d * 100) if total_pageviews_30d > 0 else 0
+
+    # Get top bot user agents
+    top_bot_agents = (
+        PageView.objects.filter(viewed_at__gte=last_30d, device_type="bot")
+        .values("user_agent")
+        .annotate(count=Count("id"))
+        .order_by("-count")[:5]
+    )
+
     bot_stats = {
-        "total_bots_30d": VisitorSession.objects.filter(first_seen__gte=last_30d, device_type="bot").count(),
-        "bot_pageviews_30d": PageView.objects.filter(viewed_at__gte=last_30d, device_type="bot").count(),
+        "total_bots_30d": bot_sessions_30d,
+        "bot_pageviews_30d": bot_pageviews_30d,
+        "bots_today": bot_sessions_today,
+        "bot_session_percent": round(bot_session_percent, 1),
+        "bot_pageview_percent": round(bot_pageview_percent, 1),
+        "top_bot_agents": list(top_bot_agents),
     }
 
     # Quick stats

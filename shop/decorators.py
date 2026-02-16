@@ -33,7 +33,7 @@ def two_factor_required(view_func):
             # Redirect to 2FA verification with next parameter
             # URL-encode the path to prevent injection attacks
             next_url = quote(request.get_full_path(), safe='')
-            return redirect(f"/admin/2fa/verify/?next={next_url}")
+            return redirect(f"/bp-manage/2fa/verify/?next={next_url}")
 
         # User is authenticated and 2FA verified
         return view_func(request, *args, **kwargs)

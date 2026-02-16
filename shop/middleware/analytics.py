@@ -44,8 +44,8 @@ class VisitorTrackingMiddleware:
     def _should_skip_tracking(self, path):
         """Determine if this path should be skipped."""
         skip_prefixes = [
-            "/admin/",
-            "/django-admin/",
+            "/bp-manage/",
+            "/bp-djadmin/",
             "/static/",
             "/media/",
             "/__reload__/",
