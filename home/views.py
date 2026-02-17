@@ -22,10 +22,17 @@ def home_page(request):
     # Get gallery images
     gallery_images = site_settings.gallery_images or []
 
+    # Get slideshow settings with defaults
+    slideshow_settings = site_settings.slideshow_settings or {}
+    slideshow_settings.setdefault('duration', 5000)
+    slideshow_settings.setdefault('autoplay', True)
+    slideshow_settings.setdefault('transition', 'fade')
+
     context = {
         "site_settings": site_settings,
         "featured_products": featured_products,
         "hero_slides": hero_slides,
         "gallery_images": gallery_images,
+        "slideshow_settings": slideshow_settings,
     }
     return render(request, "home/home_page.html", context)

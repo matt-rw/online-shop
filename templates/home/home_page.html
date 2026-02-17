@@ -747,9 +747,14 @@
 {% endblock %}
 
 {% block extra_js %}
+  {{ slideshow_settings|json_script:"slideshow-settings" }}
   <!-- AOS (Animate On Scroll) Initialization -->
   <script src="https://unpkg.com/aos@2.3.4/dist/aos.js"></script>
   <script>
+      // Slideshow settings from database
+      const slideshowSettings = JSON.parse(document.getElementById('slideshow-settings').textContent);
+      const slideDuration = slideshowSettings.duration || 5000;
+      const slideAutoplay = slideshowSettings.autoplay !== false;
       // Apply hero slide image positioning
       document.querySelectorAll('.hero-slide-img').forEach(function(el) {
           const zoom = parseFloat(el.dataset.zoom) || 100;
@@ -1079,11 +1084,14 @@
           currentHeroSlide = slideNum;
       }
 
-      // Auto-advance slideshow every 8 seconds
-      let slideInterval = setInterval(() => {
-          const nextSlide = currentHeroSlide < totalSlides ? currentHeroSlide + 1 : 1;
-          changeHeroSlide(nextSlide);
-      }, 8000);
+      // Auto-advance slideshow
+      let slideInterval = null;
+      if (slideAutoplay && totalSlides > 1) {
+          slideInterval = setInterval(() => {
+              const nextSlide = currentHeroSlide < totalSlides ? currentHeroSlide + 1 : 1;
+              changeHeroSlide(nextSlide);
+          }, slideDuration);
+      }
 
       // ============================================
       // SWIPE & DRAG SUPPORT FOR HERO SLIDESHOW
@@ -1119,17 +1127,18 @@
       }
 
       function resumeAutoAdvance() {
+          if (!slideAutoplay || totalSlides <= 1) return;
           clearInterval(slideInterval);
           slideInterval = setInterval(() => {
               const nextSlide = currentHeroSlide < totalSlides ? currentHeroSlide + 1 : 1;
               changeHeroSlide(nextSlide);
-          }, 8000);
+          }, slideDuration);
       }
 
       // Mobile touch support
       heroSection.addEventListener('touchstart', (e) => {
           startX = e.changedTouches[0].screenX;
-          clearInterval(slideInterval);
+          if (slideInterval) clearInterval(slideInterval);
       }, { passive: true });
 
       heroSection.addEventListener('touchend', (e) => {
@@ -1142,7 +1151,7 @@
           isDragging = true;
           startX = e.screenX;
           heroSection.style.cursor = 'grabbing';
-          clearInterval(slideInterval);
+          if (slideInterval) clearInterval(slideInterval);
           e.preventDefault();
       });
 
