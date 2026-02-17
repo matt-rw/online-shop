@@ -458,6 +458,161 @@
     .content-card h2 {
       color: #0f172a;
     }
+
+    /* Product Search Styles for Manual Order */
+    .product-search-container {
+      position: relative;
+      margin-bottom: 1rem;
+    }
+
+    .product-search-input {
+      width: 100%;
+      padding: 0.625rem 0.875rem;
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+      font-size: 0.875rem;
+    }
+
+    .product-search-results {
+      position: absolute;
+      top: 100%;
+      left: 0;
+      right: 0;
+      background: white;
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+      max-height: 250px;
+      overflow-y: auto;
+      z-index: 100;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+      display: none;
+    }
+
+    .product-search-results.active {
+      display: block;
+    }
+
+    .product-result-item {
+      padding: 0.75rem 1rem;
+      cursor: pointer;
+      border-bottom: 1px solid #f1f5f9;
+      transition: background 0.15s;
+    }
+
+    .product-result-item:hover {
+      background: #f8fafc;
+    }
+
+    .product-result-item:last-child {
+      border-bottom: none;
+    }
+
+    .product-result-name {
+      font-weight: 500;
+      color: #0f172a;
+    }
+
+    .product-result-details {
+      font-size: 0.75rem;
+      color: #64748b;
+      margin-top: 0.25rem;
+    }
+
+    .line-items-container {
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+      margin-bottom: 1rem;
+      max-height: 200px;
+      overflow-y: auto;
+    }
+
+    .line-item-row {
+      display: flex;
+      align-items: center;
+      padding: 0.75rem 1rem;
+      border-bottom: 1px solid #f1f5f9;
+      gap: 0.75rem;
+    }
+
+    .line-item-row:last-child {
+      border-bottom: none;
+    }
+
+    .line-item-info {
+      flex: 1;
+    }
+
+    .line-item-name {
+      font-weight: 500;
+      font-size: 0.875rem;
+    }
+
+    .line-item-sku {
+      font-size: 0.75rem;
+      color: #64748b;
+    }
+
+    .line-item-qty {
+      width: 60px;
+      padding: 0.375rem;
+      border: 1px solid #e2e8f0;
+      border-radius: 4px;
+      text-align: center;
+    }
+
+    .line-item-price {
+      font-weight: 500;
+      min-width: 70px;
+      text-align: right;
+    }
+
+    .line-item-remove {
+      color: #ef4444;
+      cursor: pointer;
+      padding: 0.25rem;
+    }
+
+    .line-item-remove:hover {
+      color: #dc2626;
+    }
+
+    .calculated-totals {
+      background: #f8fafc;
+      padding: 1rem;
+      border-radius: 8px;
+      margin-bottom: 1rem;
+    }
+
+    .total-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0.25rem 0;
+    }
+
+    .total-row.grand-total {
+      font-weight: 700;
+      font-size: 1.1rem;
+      border-top: 1px solid #e2e8f0;
+      padding-top: 0.5rem;
+      margin-top: 0.5rem;
+    }
+
+    .mode-toggle {
+      display: flex;
+      gap: 1rem;
+      margin-bottom: 1.5rem;
+      padding: 1rem;
+      background: #f8fafc;
+      border-radius: 8px;
+    }
+
+    .mode-toggle label {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      cursor: pointer;
+    }
   </style>
   {% include "admin/partials/dark_mode_apply.html" %}
 </head>
@@ -839,13 +994,184 @@
     });
 
     // Manual Order Modal Functions
+    let manualOrderLineItems = [];
+    let searchTimeout = null;
+
     function openManualOrderModal() {
       document.getElementById('manualOrderModal').style.display = 'flex';
+      // Reset form and state
+      manualOrderLineItems = [];
+      document.getElementById('manualOrderForm').reset();
+      document.getElementById('useLineItems').value = 'true';
+      renderLineItems();
+      updateCalculatedTotals();
+      toggleOrderMode('products');
     }
 
     function closeManualOrderModal() {
       document.getElementById('manualOrderModal').style.display = 'none';
-      document.getElementById('manualOrderForm').reset();
+      manualOrderLineItems = [];
+    }
+
+    function toggleOrderMode(mode) {
+      const productSection = document.getElementById('productSelectionSection');
+      const totalsSection = document.getElementById('manualTotalsSection');
+      const useLineItems = document.getElementById('useLineItems');
+      const radios = document.querySelectorAll('input[name="order_mode"]');
+
+      radios.forEach(radio => {
+        radio.checked = radio.value === mode;
+      });
+
+      if (mode === 'products') {
+        productSection.style.display = 'block';
+        totalsSection.style.display = 'none';
+        useLineItems.value = 'true';
+      } else {
+        productSection.style.display = 'none';
+        totalsSection.style.display = 'block';
+        useLineItems.value = 'false';
+      }
+    }
+
+    // Product Search
+    document.addEventListener('DOMContentLoaded', function() {
+      const searchInput = document.getElementById('productSearchInput');
+      const resultsContainer = document.getElementById('productSearchResults');
+
+      if (searchInput) {
+        searchInput.addEventListener('input', function(e) {
+          const query = e.target.value.trim();
+
+          clearTimeout(searchTimeout);
+
+          if (query.length < 2) {
+            resultsContainer.classList.remove('active');
+            return;
+          }
+
+          searchTimeout = setTimeout(() => searchProducts(query), 300);
+        });
+
+        // Close results when clicking outside
+        document.addEventListener('click', function(e) {
+          if (!e.target.closest('.product-search-container')) {
+            resultsContainer.classList.remove('active');
+          }
+        });
+      }
+    });
+
+    async function searchProducts(query) {
+      const resultsContainer = document.getElementById('productSearchResults');
+
+      try {
+        const response = await fetch(`{% url 'search_variants_for_order' %}?q=${encodeURIComponent(query)}`);
+        const data = await response.json();
+
+        if (data.results && data.results.length > 0) {
+          resultsContainer.innerHTML = data.results.map(item => `
+            <div class="product-result-item" onclick='addLineItem(${JSON.stringify(item)})'>
+              <div class="product-result-name">${item.display_name}</div>
+              <div class="product-result-details">
+                SKU: ${item.sku} | $${item.price.toFixed(2)} | Stock: ${item.stock}
+              </div>
+            </div>
+          `).join('');
+          resultsContainer.classList.add('active');
+        } else {
+          resultsContainer.innerHTML = '<div class="product-result-item" style="cursor: default;">No products found</div>';
+          resultsContainer.classList.add('active');
+        }
+      } catch (error) {
+        console.error('Search error:', error);
+        resultsContainer.innerHTML = '<div class="product-result-item" style="cursor: default;">Error searching products</div>';
+        resultsContainer.classList.add('active');
+      }
+    }
+
+    function addLineItem(item) {
+      // Check if already added
+      const existing = manualOrderLineItems.find(li => li.variant_id === item.id);
+      if (existing) {
+        existing.quantity += 1;
+      } else {
+        manualOrderLineItems.push({
+          variant_id: item.id,
+          product_name: item.product_name,
+          display_name: item.display_name,
+          sku: item.sku,
+          price: item.price,
+          quantity: 1,
+          stock: item.stock,
+        });
+      }
+
+      // Clear search
+      document.getElementById('productSearchInput').value = '';
+      document.getElementById('productSearchResults').classList.remove('active');
+
+      renderLineItems();
+      updateCalculatedTotals();
+    }
+
+    function updateLineItemQuantity(index, quantity) {
+      if (quantity < 1) {
+        removeLineItem(index);
+        return;
+      }
+      manualOrderLineItems[index].quantity = parseInt(quantity);
+      updateCalculatedTotals();
+    }
+
+    function removeLineItem(index) {
+      manualOrderLineItems.splice(index, 1);
+      renderLineItems();
+      updateCalculatedTotals();
+    }
+
+    function renderLineItems() {
+      const container = document.getElementById('lineItemsContainer');
+
+      if (manualOrderLineItems.length === 0) {
+        container.innerHTML = `
+          <div style="padding: 2rem; text-align: center; color: #64748b;">
+            No items added. Search and select products above.
+          </div>
+        `;
+        return;
+      }
+
+      container.innerHTML = manualOrderLineItems.map((item, index) => `
+        <div class="line-item-row">
+          <div class="line-item-info">
+            <div class="line-item-name">${item.display_name}</div>
+            <div class="line-item-sku">SKU: ${item.sku}</div>
+          </div>
+          <input type="number"
+                 class="line-item-qty"
+                 value="${item.quantity}"
+                 min="1"
+                 max="${item.stock}"
+                 onchange="updateLineItemQuantity(${index}, this.value)">
+          <span style="color: #64748b; font-size: 0.75rem;">x $${item.price.toFixed(2)}</span>
+          <span class="line-item-price">$${(item.price * item.quantity).toFixed(2)}</span>
+          <i class="fa-solid fa-trash line-item-remove" onclick="removeLineItem(${index})"></i>
+        </div>
+      `).join('');
+    }
+
+    function updateCalculatedTotals() {
+      const subtotal = manualOrderLineItems.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+      const tax = parseFloat(document.getElementById('taxInput').value) || 0;
+      const shipping = parseFloat(document.getElementById('shippingInput').value) || 0;
+      const total = subtotal + tax + shipping;
+
+      document.getElementById('calcSubtotal').textContent = `$${subtotal.toFixed(2)}`;
+      document.getElementById('calcTotal').textContent = `$${total.toFixed(2)}`;
+
+      // Update hidden JSON
+      document.getElementById('lineItemsJson').value = JSON.stringify(manualOrderLineItems);
     }
 
     async function submitManualOrder(event) {
@@ -853,8 +1179,19 @@
       const form = event.target;
       const formData = new FormData(form);
 
+      // Validate
+      const useLineItems = formData.get('use_line_items') === 'true';
+      if (useLineItems && manualOrderLineItems.length === 0) {
+        alert('Please add at least one product or switch to Manual Totals mode.');
+        return;
+      }
+
+      const submitBtn = document.getElementById('submitOrderBtn');
+      submitBtn.disabled = true;
+      submitBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Creating...';
+
       try {
-        const response = await fetch(form.action, {
+        const response = await fetch('{% url "add_manual_order" %}', {
           method: 'POST',
           body: formData,
           headers: {
@@ -865,80 +1202,153 @@
         const data = await response.json();
 
         if (data.success) {
-          alert('Manual order added successfully!');
+          alert(`Order #${data.order_id} created successfully!${data.items_created > 0 ? ` (${data.items_created} items)` : ''}`);
           closeManualOrderModal();
           location.reload();
         } else {
-          alert('Error: ' + (data.error || 'Failed to add order'));
+          alert('Error: ' + (data.error || 'Failed to create order'));
         }
       } catch (error) {
         alert('Error submitting order: ' + error);
+      } finally {
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = '<i class="fa-solid fa-plus"></i> Create Order';
       }
     }
   </script>
 
   <!-- Manual Order Entry Modal -->
   <div class="modal-overlay" id="manualOrderModal">
-    <div class="modal-content" style="max-width: 600px;">
-      <h2 style="font-size: 1.75rem; font-weight: 700; margin-bottom: 1.5rem;">Add Manual Order</h2>
-      <p style="color: #64748b; margin-bottom: 1.5rem; font-size: 0.875rem;">
-        For historical orders made before this site was created
-      </p>
+    <div class="modal-content" style="max-width: 700px;">
+      <h2 style="font-size: 1.75rem; font-weight: 700; margin-bottom: 1rem;">Add Manual Order</h2>
 
-      <form id="manualOrderForm" action="{% url 'add_manual_order' %}" onsubmit="submitManualOrder(event)">
+      <!-- Mode Toggle -->
+      <div class="mode-toggle">
+        <label>
+          <input type="radio" name="order_mode" value="products" checked onchange="toggleOrderMode('products')">
+          <span>Add Products</span>
+        </label>
+        <label>
+          <input type="radio" name="order_mode" value="totals" onchange="toggleOrderMode('totals')">
+          <span>Manual Totals (Historical Import)</span>
+        </label>
+      </div>
+
+      <form id="manualOrderForm" onsubmit="submitManualOrder(event)">
         {% csrf_token %}
-
-        <div class="form-group">
-          <label for="customerEmail">Customer Email *</label>
-          <input type="email" name="customer_email" id="customerEmail" required placeholder="customer@example.com">
-        </div>
-
-        <div class="form-group">
-          <label for="orderDate">Order Date *</label>
-          <input type="date" name="order_date" id="orderDate" required>
-        </div>
+        <input type="hidden" name="use_line_items" id="useLineItems" value="true">
+        <input type="hidden" name="line_items" id="lineItemsJson" value="[]">
 
         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
           <div class="form-group">
-            <label for="subtotal">Subtotal ($) *</label>
-            <input type="number" name="subtotal" id="subtotal" step="0.01" min="0" required placeholder="0.00">
+            <label for="customerEmail">Customer Email *</label>
+            <input type="email" name="customer_email" id="customerEmail" required placeholder="customer@example.com">
           </div>
-
           <div class="form-group">
-            <label for="tax">Tax ($)</label>
-            <input type="number" name="tax" id="tax" step="0.01" min="0" value="0" placeholder="0.00">
+            <label for="orderDate">Order Date *</label>
+            <input type="date" name="order_date" id="orderDate" required>
           </div>
         </div>
 
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+        <!-- Product Selection Mode -->
+        <div id="productSelectionSection">
           <div class="form-group">
-            <label for="shipping">Shipping ($)</label>
-            <input type="number" name="shipping" id="shipping" step="0.01" min="0" value="0" placeholder="0.00">
+            <label>Search Products</label>
+            <div class="product-search-container">
+              <input type="text"
+                     id="productSearchInput"
+                     class="product-search-input"
+                     placeholder="Search by product name or SKU..."
+                     autocomplete="off">
+              <div id="productSearchResults" class="product-search-results"></div>
+            </div>
           </div>
 
           <div class="form-group">
-            <label for="total">Total ($) *</label>
-            <input type="number" name="total" id="total" step="0.01" min="0" required placeholder="0.00">
+            <label>Line Items</label>
+            <div id="lineItemsContainer" class="line-items-container">
+              <div style="padding: 2rem; text-align: center; color: #64748b;">
+                No items added. Search and select products above.
+              </div>
+            </div>
+          </div>
+
+          <div class="calculated-totals">
+            <div class="total-row">
+              <span>Subtotal:</span>
+              <span id="calcSubtotal">$0.00</span>
+            </div>
+            <div class="total-row">
+              <span>Tax:</span>
+              <input type="number" name="tax" id="taxInput" step="0.01" min="0" value="0"
+                     style="width: 80px; text-align: right; padding: 0.25rem; border: 1px solid #e2e8f0; border-radius: 4px;" onchange="updateCalculatedTotals()">
+            </div>
+            <div class="total-row">
+              <span>Shipping:</span>
+              <input type="number" name="shipping" id="shippingInput" step="0.01" min="0" value="0"
+                     style="width: 80px; text-align: right; padding: 0.25rem; border: 1px solid #e2e8f0; border-radius: 4px;" onchange="updateCalculatedTotals()">
+            </div>
+            <div class="total-row grand-total">
+              <span>Total:</span>
+              <span id="calcTotal">$0.00</span>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label style="display: flex; align-items: center; gap: 0.5rem;">
+              <input type="checkbox" name="decrement_stock" id="decrementStock" value="true">
+              <span>Decrement stock quantities</span>
+            </label>
+            <p style="font-size: 0.75rem; color: #64748b; margin-top: 0.25rem;">
+              Check this to reduce inventory for selected items
+            </p>
+          </div>
+        </div>
+
+        <!-- Manual Totals Mode (Historical Import) -->
+        <div id="manualTotalsSection" style="display: none;">
+          <p style="color: #64748b; margin-bottom: 1rem; font-size: 0.875rem;">
+            For historical orders - enter totals directly without product selection
+          </p>
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+            <div class="form-group">
+              <label for="subtotal">Subtotal ($) *</label>
+              <input type="number" name="subtotal" id="subtotal" step="0.01" min="0" placeholder="0.00">
+            </div>
+            <div class="form-group">
+              <label for="manualTax">Tax ($)</label>
+              <input type="number" name="tax" id="manualTax" step="0.01" min="0" value="0" placeholder="0.00">
+            </div>
+          </div>
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+            <div class="form-group">
+              <label for="manualShipping">Shipping ($)</label>
+              <input type="number" name="shipping" id="manualShipping" step="0.01" min="0" value="0" placeholder="0.00">
+            </div>
+            <div class="form-group">
+              <label for="total">Total ($) *</label>
+              <input type="number" name="total" id="total" step="0.01" min="0" placeholder="0.00">
+            </div>
           </div>
         </div>
 
         <div class="form-group">
           <label for="orderStatus">Status *</label>
           <select name="status" id="orderStatus" required>
-            <option value="paid">Paid</option>
-            <option value="shipped">Shipped</option>
-            <option value="fulfilled">Fulfilled</option>
+            <option value="PAID">Paid</option>
+            <option value="SHIPPED">Shipped</option>
+            <option value="FULFILLED">Fulfilled</option>
           </select>
         </div>
 
         <div class="form-group">
           <label for="notes">Notes (optional)</label>
-          <textarea name="notes" id="notes" rows="3" placeholder="Any additional notes about this order..."></textarea>
+          <textarea name="notes" id="notes" rows="2" placeholder="Any additional notes..."></textarea>
         </div>
 
-        <div style="display: flex; gap: 1rem; margin-top: 2rem;">
-          <button type="submit" class="btn btn-primary">
-            <i class="fa-solid fa-plus"></i> Add Order
+        <div style="display: flex; gap: 1rem; margin-top: 1.5rem;">
+          <button type="submit" class="btn btn-primary" id="submitOrderBtn">
+            <i class="fa-solid fa-plus"></i> Create Order
           </button>
           <button type="button" class="btn btn-secondary" onclick="closeManualOrderModal()">
             Cancel

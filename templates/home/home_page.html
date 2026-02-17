@@ -648,9 +648,14 @@
   <section class="w-full bg-white py-12 md:py-20">
     <div class="max-w-3xl mx-auto px-6">
       {% for img in gallery_images %}
-      <img src="{{ img.image_url }}"
-           alt="{{ img.alt_text|default:'Blueprint Apparel' }}"
-           class="w-full h-auto {% if not forloop.last %}mb-24{% endif %}" />
+      <div class="{% if not forloop.last %}mb-24{% endif %}" style="overflow: hidden;">
+        <img src="{{ img.image_url }}"
+             alt="{{ img.alt_text|default:'Blueprint Apparel' }}"
+             class="w-full h-auto gallery-img"
+             data-zoom="{{ img.zoom|default:100 }}"
+             data-pos-x="{{ img.position_x|default:50 }}"
+             data-pos-y="{{ img.position_y|default:50 }}" />
+      </div>
       {% endfor %}
     </div>
   </section>
@@ -788,6 +793,24 @@
       }
       applyHeroPositioning();
       window.addEventListener('resize', applyHeroPositioning);
+
+      // Apply gallery image positioning
+      function applyGalleryPositioning() {
+          document.querySelectorAll('.gallery-img').forEach(function(el) {
+              const zoom = parseFloat(el.dataset.zoom) || 100;
+              const posX = parseFloat(el.dataset.posX) || 50;
+              const posY = parseFloat(el.dataset.posY) || 50;
+              const scale = zoom / 100;
+
+              el.style.objectFit = 'cover';
+              el.style.objectPosition = posX + '% ' + posY + '%';
+              if (scale !== 1) {
+                  el.style.transform = 'scale(' + scale + ')';
+                  el.style.transformOrigin = posX + '% ' + posY + '%';
+              }
+          });
+      }
+      applyGalleryPositioning();
 
       AOS.init({
           duration: 600,

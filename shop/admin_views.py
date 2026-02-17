@@ -6251,26 +6251,84 @@ def orders_dashboard(request):
 
 
 @staff_member_required
+def search_variants_for_order(request):
+    """
+    AJAX endpoint to search products/variants for manual order creation.
+    Returns variants with product info, SKU, attributes, price, and stock.
+    """
+    from django.http import JsonResponse
+    from django.db.models import Q
+    from shop.models import ProductVariant
+
+    if request.method == "GET":
+        query = request.GET.get("q", "").strip()
+        if len(query) < 2:
+            return JsonResponse({"results": []})
+
+        # Search by product name or SKU
+        variants = ProductVariant.objects.filter(
+            Q(product__name__icontains=query) | Q(sku__icontains=query)
+        ).filter(
+            is_active=True,
+            product__is_active=True
+        ).select_related(
+            "product", "size", "color"
+        ).prefetch_related(
+            "attributes__attribute"
+        )[:20]
+
+        results = []
+        for variant in variants:
+            # Build attribute display string
+            attrs = []
+            for av in variant.attributes.select_related('attribute').order_by('attribute__display_order'):
+                attrs.append(f"{av.attribute.name}: {av.value}")
+            # Fallback to legacy fields
+            if not attrs:
+                if variant.size:
+                    attrs.append(f"Size: {variant.size.label or variant.size.code}")
+                if variant.color:
+                    attrs.append(f"Color: {variant.color.name}")
+
+            results.append({
+                "id": variant.id,
+                "product_name": variant.product.name,
+                "sku": variant.sku or f"V-{variant.id}",
+                "attributes": ", ".join(attrs),
+                "price": float(variant.price),
+                "stock": variant.stock_quantity,
+                "display_name": f"{variant.product.name} - {', '.join(attrs)}" if attrs else variant.product.name,
+            })
+
+        return JsonResponse({"results": results})
+
+    return JsonResponse({"error": "Invalid method"}, status=405)
+
+
+@staff_member_required
 def add_manual_order(request):
     """
-    Add a manual order for historical data (orders made before site was created).
+    Add a manual order with optional product line items.
+    Supports both historical imports (totals only) and new manual orders (with products).
     """
     if request.method == "POST":
         try:
+            import json
             from decimal import Decimal
             from datetime import datetime
             from django.http import JsonResponse
-            from shop.models import Order, OrderStatus, User
+            from shop.models import Order, OrderItem, OrderStatus, User, ProductVariant
 
             # Get form data
             customer_email = request.POST.get("customer_email")
             order_date = request.POST.get("order_date")
-            subtotal = Decimal(request.POST.get("subtotal", "0"))
-            tax = Decimal(request.POST.get("tax", "0"))
-            shipping = Decimal(request.POST.get("shipping", "0"))
-            total = Decimal(request.POST.get("total", "0"))
-            status = request.POST.get("status", "paid")
+            status = request.POST.get("status", "PAID")
             notes = request.POST.get("notes", "")
+
+            # Check if using line items or manual totals
+            use_line_items = request.POST.get("use_line_items") == "true"
+            line_items_json = request.POST.get("line_items", "[]")
+            decrement_stock = request.POST.get("decrement_stock") == "true"
 
             # Try to find the user by email
             try:
@@ -6283,6 +6341,29 @@ def add_manual_order(request):
                 datetime.strptime(order_date, "%Y-%m-%d")
             )
 
+            if use_line_items:
+                # Parse line items and calculate totals
+                line_items = json.loads(line_items_json)
+
+                if not line_items:
+                    return JsonResponse({"success": False, "error": "No line items provided"})
+
+                # Calculate subtotal from line items
+                subtotal = Decimal("0")
+                for item in line_items:
+                    subtotal += Decimal(str(item["price"])) * int(item["quantity"])
+
+                tax = Decimal(request.POST.get("tax", "0"))
+                shipping = Decimal(request.POST.get("shipping", "0"))
+                total = subtotal + tax + shipping
+            else:
+                # Manual totals (historical import)
+                subtotal = Decimal(request.POST.get("subtotal", "0"))
+                tax = Decimal(request.POST.get("tax", "0"))
+                shipping = Decimal(request.POST.get("shipping", "0"))
+                total = Decimal(request.POST.get("total", "0"))
+                line_items = []
+
             # Create the order
             order = Order.objects.create(
                 user=user,
@@ -6294,17 +6375,50 @@ def add_manual_order(request):
                 status=status,
                 created_at=order_datetime,
                 updated_at=timezone.now(),
-                # Add a note that this is a manual entry
-                stripe_payment_intent_id=f"MANUAL_{order_datetime.strftime('%Y%m%d')}",
+                stripe_payment_intent_id=f"MANUAL_{order_datetime.strftime('%Y%m%d')}_{timezone.now().strftime('%H%M%S')}",
             )
 
-            # If there are notes, you could add them to a notes field if you have one
-            # or store them in another way
+            # Create OrderItems if line items provided
+            for item in line_items:
+                variant_id = item.get("variant_id")
+                quantity = int(item["quantity"])
+                price = Decimal(str(item["price"]))
+
+                variant = None
+                sku = item.get("sku", "MANUAL")
+                unit_cost = None
+
+                if variant_id:
+                    try:
+                        variant = ProductVariant.objects.get(id=variant_id)
+                        sku = variant.sku or f"V-{variant.id}"
+                        unit_cost = variant.cost
+
+                        # Optionally decrement stock
+                        if decrement_stock and variant.stock_quantity >= quantity:
+                            variant.stock_quantity -= quantity
+                            variant.save(update_fields=["stock_quantity"])
+                    except ProductVariant.DoesNotExist:
+                        pass
+
+                order_item = OrderItem.objects.create(
+                    order=order,
+                    variant=variant,
+                    sku=sku,
+                    quantity=quantity,
+                    line_total=price * quantity,
+                    unit_cost=unit_cost,
+                )
+
+                # Try to allocate from shipments for cost tracking
+                if variant:
+                    order_item.allocate_from_shipments()
 
             return JsonResponse({
                 "success": True,
                 "order_id": order.id,
-                "message": "Manual order added successfully"
+                "message": f"Manual order #{order.id} created successfully",
+                "items_created": len(line_items),
             })
 
         except Exception as e:

@@ -146,10 +146,14 @@
       width: 100%;
       cursor: pointer;
     }
+    .gallery-image-container {
+      overflow: hidden;
+    }
     .gallery-image-container img {
       width: 100%;
       height: auto;
       display: block;
+      transition: transform 0.1s ease-out;
     }
     .gallery-image-placeholder {
       padding: 3rem;
@@ -900,6 +904,57 @@
     </div>
   </div>
 
+  <!-- Gallery Position Modal -->
+  <div class="position-overlay" id="gallery-position-modal">
+    <div class="position-modal">
+      <div class="position-modal-header">
+        <span class="position-modal-title">Crop & Position</span>
+        <button class="position-modal-close" onclick="closeGalleryPositionModal()">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+      <div class="position-modal-preview" style="padding: 1.5rem;">
+        <div style="overflow: hidden; border-radius: 8px; width: 100%; max-width: 400px; margin: 0 auto;">
+          <img id="gallery-position-preview-img" class="position-preview-img" src="" alt="Preview" style="width: 100%; height: auto; display: block;">
+        </div>
+      </div>
+      <div class="position-modal-controls">
+        <div class="position-control">
+          <div class="position-control-header">
+            <span class="position-control-label">Zoom</span>
+            <span class="position-control-value" id="gallery-modal-zoom-val">100%</span>
+          </div>
+          <input type="range" id="gallery-modal-zoom" min="100" max="200" value="100"
+                 oninput="updateGalleryModalPosition('zoom', this.value)">
+        </div>
+        <div class="position-control">
+          <div class="position-control-header">
+            <span class="position-control-label">Horizontal Position</span>
+            <span class="position-control-value" id="gallery-modal-x-val">50%</span>
+          </div>
+          <input type="range" id="gallery-modal-x" min="0" max="100" value="50"
+                 oninput="updateGalleryModalPosition('x', this.value)">
+        </div>
+        <div class="position-control">
+          <div class="position-control-header">
+            <span class="position-control-label">Vertical Position</span>
+            <span class="position-control-value" id="gallery-modal-y-val">50%</span>
+          </div>
+          <input type="range" id="gallery-modal-y" min="0" max="100" value="50"
+                 oninput="updateGalleryModalPosition('y', this.value)">
+        </div>
+      </div>
+      <div class="position-modal-footer">
+        <button class="btn btn-secondary" onclick="resetGalleryModalPosition()">
+          <i class="fas fa-undo"></i> Reset
+        </button>
+        <button class="btn btn-primary" onclick="closeGalleryPositionModal()">
+          <i class="fas fa-check"></i> Done
+        </button>
+      </div>
+    </div>
+  </div>
+
   <input type="file" id="slide-image-input" accept="image/*" style="display: none;">
   <input type="file" id="gallery-image-input" accept="image/*" style="display: none;">
   <input type="file" id="split-image-input" accept="image/*" style="display: none;">
@@ -1436,14 +1491,22 @@
         card.className = 'gallery-card';
         card.dataset.index = index;
 
+        // Get position values
+        const posX = img.position_x ?? 50;
+        const posY = img.position_y ?? 50;
+        const zoom = img.zoom ?? 100;
+        const scale = zoom / 100;
+        const imageStyle = `object-fit: cover; object-position: ${posX}% ${posY}%; transform: scale(${scale}); transform-origin: ${posX}% ${posY}%;`;
+
         const imageHtml = img.image_url
-          ? `<img src="${img.image_url}" alt="${img.alt_text || ''}">`
+          ? `<img src="${img.image_url}" alt="${img.alt_text || ''}" style="${imageStyle}">`
           : `<div class="gallery-image-placeholder"><i class="fas fa-cloud-upload-alt"></i><span>Click to upload</span></div>`;
 
         card.innerHTML = `
           <div class="gallery-card-header">
             <span class="gallery-card-number">#${index + 1}</span>
             <div class="gallery-card-actions">
+              ${img.image_url ? `<button class="header-btn adjust" onclick="openGalleryPositionModal(${index})" title="Crop & Position"><i class="fas fa-crop-alt"></i></button>` : ''}
               <button class="header-btn gallery-drag-handle" title="Drag to reorder"><i class="fas fa-grip-vertical"></i></button>
               <button class="header-btn delete" onclick="deleteGalleryImage(${index})" title="Delete"><i class="fas fa-trash"></i></button>
             </div>
@@ -1468,7 +1531,10 @@
     function addGalleryImage() {
       galleryImages.push({
         image_url: '',
-        alt_text: ''
+        alt_text: '',
+        position_x: 50,
+        position_y: 50,
+        zoom: 100
       });
       renderGallery();
       markUnsaved();
@@ -1545,6 +1611,121 @@
         btn.disabled = false;
         btn.innerHTML = '<i class="fas fa-save"></i> Save Gallery';
       }
+    }
+
+    // ============================================
+    // GALLERY POSITION MODAL
+    // ============================================
+    let currentGalleryPositionIndex = null;
+
+    function openGalleryPositionModal(index) {
+      currentGalleryPositionIndex = index;
+      const img = galleryImages[index];
+      const modal = document.getElementById('gallery-position-modal');
+      const preview = document.getElementById('gallery-position-preview-img');
+
+      // Set preview image
+      preview.src = img.image_url;
+
+      // Get values
+      const zoom = img.zoom ?? 100;
+      const posX = img.position_x ?? 50;
+      const posY = img.position_y ?? 50;
+
+      // Set slider values
+      document.getElementById('gallery-modal-zoom').value = zoom;
+      document.getElementById('gallery-modal-x').value = posX;
+      document.getElementById('gallery-modal-y').value = posY;
+      document.getElementById('gallery-modal-zoom-val').textContent = zoom + '%';
+      document.getElementById('gallery-modal-x-val').textContent = posX + '%';
+      document.getElementById('gallery-modal-y-val').textContent = posY + '%';
+
+      updateGalleryPreviewPosition();
+      modal.classList.add('open');
+      document.body.style.overflow = 'hidden';
+    }
+
+    function closeGalleryPositionModal() {
+      document.getElementById('gallery-position-modal').classList.remove('open');
+      document.body.style.overflow = '';
+      currentGalleryPositionIndex = null;
+    }
+
+    // Close modal on overlay click
+    document.getElementById('gallery-position-modal').addEventListener('click', function(e) {
+      if (e.target === this) closeGalleryPositionModal();
+    });
+
+    function updateGalleryModalPosition(axis, value) {
+      if (currentGalleryPositionIndex === null) return;
+      const intVal = parseInt(value);
+
+      if (axis === 'x') {
+        galleryImages[currentGalleryPositionIndex].position_x = intVal;
+        document.getElementById('gallery-modal-x-val').textContent = intVal + '%';
+      } else if (axis === 'y') {
+        galleryImages[currentGalleryPositionIndex].position_y = intVal;
+        document.getElementById('gallery-modal-y-val').textContent = intVal + '%';
+      } else if (axis === 'zoom') {
+        galleryImages[currentGalleryPositionIndex].zoom = intVal;
+        document.getElementById('gallery-modal-zoom-val').textContent = intVal + '%';
+      }
+
+      updateGalleryPreviewPosition();
+      updateGalleryCardPosition(currentGalleryPositionIndex);
+      markUnsaved();
+    }
+
+    function updateGalleryPreviewPosition() {
+      if (currentGalleryPositionIndex === null) return;
+      const img = galleryImages[currentGalleryPositionIndex];
+      const preview = document.getElementById('gallery-position-preview-img');
+
+      const x = img.position_x ?? 50;
+      const y = img.position_y ?? 50;
+      const z = img.zoom ?? 100;
+      const scale = z / 100;
+
+      preview.style.objectFit = 'cover';
+      preview.style.objectPosition = `${x}% ${y}%`;
+      preview.style.transform = `scale(${scale})`;
+      preview.style.transformOrigin = `${x}% ${y}%`;
+    }
+
+    function updateGalleryCardPosition(index) {
+      const card = document.querySelector(`.gallery-card[data-index="${index}"]`);
+      if (card) {
+        const imgEl = card.querySelector('.gallery-image-container img');
+        if (imgEl) {
+          const x = galleryImages[index].position_x ?? 50;
+          const y = galleryImages[index].position_y ?? 50;
+          const z = galleryImages[index].zoom ?? 100;
+          const scale = z / 100;
+          imgEl.style.objectFit = 'cover';
+          imgEl.style.objectPosition = `${x}% ${y}%`;
+          imgEl.style.transform = `scale(${scale})`;
+          imgEl.style.transformOrigin = `${x}% ${y}%`;
+        }
+      }
+    }
+
+    function resetGalleryModalPosition() {
+      if (currentGalleryPositionIndex === null) return;
+
+      galleryImages[currentGalleryPositionIndex].position_x = 50;
+      galleryImages[currentGalleryPositionIndex].position_y = 50;
+      galleryImages[currentGalleryPositionIndex].zoom = 100;
+
+      document.getElementById('gallery-modal-zoom').value = 100;
+      document.getElementById('gallery-modal-x').value = 50;
+      document.getElementById('gallery-modal-y').value = 50;
+      document.getElementById('gallery-modal-zoom-val').textContent = '100%';
+      document.getElementById('gallery-modal-x-val').textContent = '50%';
+      document.getElementById('gallery-modal-y-val').textContent = '50%';
+
+      updateGalleryPreviewPosition();
+      updateGalleryCardPosition(currentGalleryPositionIndex);
+      markUnsaved();
     }
   </script>
 </body>

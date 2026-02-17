@@ -17,10 +17,25 @@ def home_page(request):
     # Get hero slides (use database slides if available, otherwise use defaults)
     # Filter to only show active slides (is_active defaults to True if not set)
     all_slides = site_settings.hero_slides or []
-    hero_slides = [s for s in all_slides if s.get('is_active', True)]
+    hero_slides = []
+    for s in all_slides:
+        if s.get('is_active', True):
+            # Ensure position keys exist with defaults
+            s.setdefault('zoom', 100)
+            s.setdefault('position_x', 50)
+            s.setdefault('position_y', 50)
+            s.setdefault('mobile_zoom', s.get('zoom', 100))
+            s.setdefault('mobile_position_x', s.get('position_x', 50))
+            s.setdefault('mobile_position_y', s.get('position_y', 50))
+            hero_slides.append(s)
 
-    # Get gallery images
-    gallery_images = site_settings.gallery_images or []
+    # Get gallery images and ensure position keys exist
+    gallery_images = []
+    for img in (site_settings.gallery_images or []):
+        img.setdefault('zoom', 100)
+        img.setdefault('position_x', 50)
+        img.setdefault('position_y', 50)
+        gallery_images.append(img)
 
     # Get slideshow settings with defaults
     slideshow_settings = site_settings.slideshow_settings or {}
