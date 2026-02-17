@@ -888,97 +888,57 @@
       document.getElementById('split-image-input').click();
     }
 
-    // Handle main image upload
+    // Handle main image upload - store as base64 data URL (same as product images)
     document.getElementById('slide-image-input').addEventListener('change', async function(e) {
       const file = e.target.files[0];
       if (!file || currentUploadSlideIndex === null) return;
 
-      // Check file size (warn if over 5MB)
+      // Check file size (warn if over 2MB, reject if over 5MB)
       if (file.size > 5 * 1024 * 1024) {
-        showToast('Warning: Large image (' + (file.size / 1024 / 1024).toFixed(1) + 'MB). Consider compressing it.', 'warning');
+        showToast('Image too large (' + (file.size / 1024 / 1024).toFixed(1) + 'MB). Please compress to under 5MB.', 'error');
+        e.target.value = '';
+        return;
+      }
+      if (file.size > 2 * 1024 * 1024) {
+        showToast('Large image (' + (file.size / 1024 / 1024).toFixed(1) + 'MB). Consider compressing for faster loading.', 'warning');
       }
 
-      showToast('Uploading image...', 'success');
-
       const reader = new FileReader();
-      reader.onload = async function(event) {
-        const imageData = event.target.result;
-
-        try {
-          // Upload to server
-          const formData = new FormData();
-          formData.append('action', 'upload_slide_image');
-          formData.append('image_data', imageData);
-
-          const response = await fetch('{% url "admin_homepage" %}', {
-            method: 'POST',
-            headers: {
-              'X-Requested-With': 'XMLHttpRequest',
-              'X-CSRFToken': csrfToken
-            },
-            body: formData
-          });
-
-          if (!response.ok) {
-            throw new Error('Server returned ' + response.status + ': ' + response.statusText);
-          }
-
-          const data = await response.json();
-          if (data.success) {
-            slides[currentUploadSlideIndex].image_url = data.url;
-            renderSlides();
-            showToast('Image uploaded successfully', 'success');
-          } else {
-            showToast('Error: ' + (data.error || 'Unknown error'), 'error');
-            console.error('Upload error:', data);
-          }
-        } catch (error) {
-          showToast('Error uploading image: ' + error.message, 'error');
-          console.error('Upload exception:', error);
-        }
+      reader.onload = function(event) {
+        // Store base64 data URL directly (persists in database, works on Render)
+        slides[currentUploadSlideIndex].image_url = event.target.result;
+        renderSlides();
+        showToast('Image added. Click "Save Changes" to persist.', 'success');
       };
       reader.onerror = function(error) {
-        showToast('Error reading file: ' + error.message, 'error');
+        showToast('Error reading file', 'error');
         console.error('FileReader error:', error);
       };
       reader.readAsDataURL(file);
       e.target.value = '';
     });
 
-    // Handle split (second) image upload
+    // Handle split (second) image upload - store as base64 data URL
     document.getElementById('split-image-input').addEventListener('change', async function(e) {
       const file = e.target.files[0];
       if (!file || currentUploadSlideIndex === null) return;
 
+      // Check file size
+      if (file.size > 5 * 1024 * 1024) {
+        showToast('Image too large. Please compress to under 5MB.', 'error');
+        e.target.value = '';
+        return;
+      }
+
       const reader = new FileReader();
-      reader.onload = async function(event) {
-        const imageData = event.target.result;
-
-        try {
-          const formData = new FormData();
-          formData.append('action', 'upload_slide_image');
-          formData.append('image_data', imageData);
-
-          const response = await fetch('{% url "admin_homepage" %}', {
-            method: 'POST',
-            headers: {
-              'X-Requested-With': 'XMLHttpRequest',
-              'X-CSRFToken': csrfToken
-            },
-            body: formData
-          });
-
-          const data = await response.json();
-          if (data.success) {
-            slides[currentUploadSlideIndex].split_image_url = data.url;
-            renderSlides();
-            showToast('Second image uploaded successfully', 'success');
-          } else {
-            showToast('Error: ' + data.error, 'error');
-          }
-        } catch (error) {
-          showToast('Error uploading image: ' + error.message, 'error');
-        }
+      reader.onload = function(event) {
+        // Store base64 data URL directly
+        slides[currentUploadSlideIndex].split_image_url = event.target.result;
+        renderSlides();
+        showToast('Second image added. Click "Save Changes" to persist.', 'success');
+      };
+      reader.onerror = function(error) {
+        showToast('Error reading file', 'error');
       };
       reader.readAsDataURL(file);
       e.target.value = '';
