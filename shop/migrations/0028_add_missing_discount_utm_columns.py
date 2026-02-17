@@ -6,13 +6,19 @@ def add_missing_columns(apps, schema_editor):
     from django.db import connection
 
     with connection.cursor() as cursor:
-        # Check what columns exist
-        cursor.execute("""
-            SELECT column_name
-            FROM information_schema.columns
-            WHERE table_name = 'shop_discount'
-        """)
-        existing_columns = {row[0] for row in cursor.fetchall()}
+        # Check what columns exist (database-agnostic approach)
+        vendor = connection.vendor
+        if vendor == 'sqlite':
+            cursor.execute("PRAGMA table_info(shop_discount)")
+            existing_columns = {row[1] for row in cursor.fetchall()}
+        else:
+            # PostgreSQL and others
+            cursor.execute("""
+                SELECT column_name
+                FROM information_schema.columns
+                WHERE table_name = 'shop_discount'
+            """)
+            existing_columns = {row[0] for row in cursor.fetchall()}
 
         # Define missing columns with their SQL definitions
         missing_columns = {

@@ -196,10 +196,14 @@ DATA_UPLOAD_MAX_MEMORY_SIZE = 10 * 1024 * 1024  # 10MB
 # TAILWIND
 TAILWIND_APP_NAME = "theme"
 
-# STRIPE
+# STRIPE (Production)
 STRIPE_SECRET_KEY = get_env_variable("STRIPE_SECRET_KEY")
 STRIPE_PUBLISHABLE_KEY = get_env_variable("STRIPE_PUBLISHABLE_KEY")
 STRIPE_WEBHOOK_SECRET = get_env_variable("STRIPE_WEBHOOK_SECRET", None)
+
+# STRIPE (Test Mode)
+STRIPE_TEST_SECRET_KEY = get_env_variable("STRIPE_TEST_SECRET_KEY", "")
+STRIPE_TEST_PUBLISHABLE_KEY = get_env_variable("STRIPE_TEST_PUBLISHABLE_KEY", "")
 
 # EMAIL - Using Resend SMTP
 EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"

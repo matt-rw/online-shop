@@ -587,8 +587,8 @@ def shop(request):
     category_slug = request.GET.get("category")
     sort_by = request.GET.get("sort", "newest")
 
-    # Base queryset - active products with prefetched variants
-    products = Product.objects.filter(is_active=True).prefetch_related(
+    # Base queryset - active products with prefetched variants (exclude test products)
+    products = Product.objects.filter(is_active=True).exclude(slug__startswith="test-").prefetch_related(
         Prefetch(
             "variants",
             queryset=ProductVariant.objects.filter(is_active=True),

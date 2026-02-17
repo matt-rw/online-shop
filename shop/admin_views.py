@@ -2041,19 +2041,31 @@ def homepage_settings(request):
             try:
                 image_data = request.POST.get("image_data")
                 if not image_data:
-                    return JsonResponse({"success": False, "error": "No image data provided"})
+                    # Check if data might be in FILES instead
+                    if request.FILES:
+                        return JsonResponse({"success": False, "error": "Received file upload instead of base64 data"})
+                    return JsonResponse({"success": False, "error": "No image data provided. Content length: " + str(request.headers.get('Content-Length', 'unknown'))})
 
                 # Parse base64 data
-                if "base64," in image_data:
-                    format_part, data_part = image_data.split("base64,")
-                    ext = "jpg"
-                    if "png" in format_part:
-                        ext = "png"
-                    elif "webp" in format_part:
-                        ext = "webp"
+                if "base64," not in image_data:
+                    return JsonResponse({"success": False, "error": "Invalid image format - missing base64 header"})
+
+                format_part, data_part = image_data.split("base64,", 1)
+                ext = "jpg"
+                if "png" in format_part:
+                    ext = "png"
+                elif "webp" in format_part:
+                    ext = "webp"
+                elif "gif" in format_part:
+                    ext = "gif"
+
+                try:
                     image_content = base64.b64decode(data_part)
-                else:
-                    return JsonResponse({"success": False, "error": "Invalid image format"})
+                except Exception as decode_err:
+                    return JsonResponse({"success": False, "error": f"Failed to decode base64: {decode_err}"})
+
+                if len(image_content) == 0:
+                    return JsonResponse({"success": False, "error": "Decoded image is empty"})
 
                 # Save image to media folder
                 filename = f"hero_slide_{uuid.uuid4().hex[:8]}.{ext}"
@@ -2063,7 +2075,8 @@ def homepage_settings(request):
 
                 return JsonResponse({"success": True, "url": url})
             except Exception as e:
-                return JsonResponse({"success": False, "error": str(e)})
+                import traceback
+                return JsonResponse({"success": False, "error": f"{str(e)} - {traceback.format_exc()[:200]}"})
 
         elif action == "delete_slide_image":
             try:
@@ -6071,6 +6084,47 @@ def orders_dashboard(request):
             except Exception as e:
                 return JsonResponse({"success": False, "error": str(e)})
 
+        elif action == "process_refund":
+            try:
+                import stripe
+                from django.conf import settings
+                from shop.models import OrderStatus
+
+                order_id = request.POST.get("order_id")
+                order = Order.objects.get(id=order_id)
+
+                # Only paid orders can be refunded
+                if order.status != OrderStatus.PAID:
+                    return JsonResponse({"success": False, "error": "Only PAID orders can be refunded."})
+
+                # Need a payment intent to refund
+                if not order.stripe_payment_intent_id:
+                    return JsonResponse({"success": False, "error": "No payment intent found for this order."})
+
+                # Use production Stripe keys
+                stripe.api_key = settings.STRIPE_SECRET_KEY
+
+                # Create refund in Stripe
+                refund = stripe.Refund.create(
+                    payment_intent=order.stripe_payment_intent_id,
+                )
+
+                # Update order status
+                order.status = OrderStatus.REFUNDED
+                order.save()
+
+                return JsonResponse({
+                    "success": True,
+                    "refund_id": refund.id,
+                    "message": f"Refund processed successfully. Order #{order.id} is now REFUNDED.",
+                })
+            except Order.DoesNotExist:
+                return JsonResponse({"success": False, "error": "Order not found"})
+            except stripe.StripeError as e:
+                return JsonResponse({"success": False, "error": str(e)})
+            except Exception as e:
+                return JsonResponse({"success": False, "error": str(e)})
+
         elif action == "get_order_items":
             try:
                 order_id = request.POST.get("order_id")
@@ -6106,19 +6160,25 @@ def orders_dashboard(request):
             except Exception as e:
                 return JsonResponse({"success": False, "error": str(e)})
 
-    # Get all orders
-    orders = Order.objects.all().select_related("user").prefetch_related("items")
+    # Check if we should show test orders (hidden by default)
+    show_test_orders = request.GET.get("show_test", "false").lower() == "true"
 
-    # Calculate stats using OrderStatus choices
+    # Get orders (exclude test orders by default)
+    orders = Order.objects.all().select_related("user").prefetch_related("items")
+    if not show_test_orders:
+        orders = orders.filter(is_test=False)
+
+    # Calculate stats using OrderStatus choices (always exclude test orders from stats)
     from shop.models import OrderStatus
 
+    real_orders = Order.objects.filter(is_test=False)
     stats = {
-        "total": orders.count(),
-        "pending": orders.filter(status=OrderStatus.CREATED).count(),
-        "processing": orders.filter(status=OrderStatus.AWAITING_PAYMENT).count(),
-        "shipped": orders.filter(status=OrderStatus.SHIPPED).count(),
-        "delivered": orders.filter(status=OrderStatus.FULFILLED).count(),
-        "total_revenue": orders.filter(status=OrderStatus.PAID).aggregate(Sum("total"))[
+        "total": real_orders.count(),
+        "pending": real_orders.filter(status=OrderStatus.CREATED).count(),
+        "processing": real_orders.filter(status=OrderStatus.AWAITING_PAYMENT).count(),
+        "shipped": real_orders.filter(status=OrderStatus.SHIPPED).count(),
+        "delivered": real_orders.filter(status=OrderStatus.FULFILLED).count(),
+        "total_revenue": real_orders.filter(status=OrderStatus.PAID).aggregate(Sum("total"))[
             "total__sum"
         ]
         or 0,
@@ -6162,10 +6222,15 @@ def orders_dashboard(request):
             }
         )
 
+    # Count test orders for the toggle display
+    test_orders_count = Order.objects.filter(is_test=True).count()
+
     context = {
         "orders": orders_data,
         "orders_json": json.dumps(orders_data),
         "stats": stats,
+        "show_test_orders": show_test_orders,
+        "test_orders_count": test_orders_count,
         "cst_time": timezone.now().astimezone(pytz.timezone("America/Chicago")),
     }
 
@@ -6348,20 +6413,410 @@ def users_dashboard(request):
 @staff_member_required
 def returns_dashboard(request):
     """
-    Returns and exchanges management dashboard (placeholder).
+    Customer returns management dashboard.
+    Supports creating returns, updating status, adding tracking, and processing refunds.
     """
-    # For now, just show a placeholder since we don't have Return model yet
+    import json
+    from decimal import Decimal
+
+    from django.http import JsonResponse
+
+    from shop.models import (
+        Order,
+        OrderItem,
+        OrderStatus,
+        Return,
+        ReturnItem,
+        ReturnReason,
+        ReturnStatus,
+    )
+
+    if request.method == "POST":
+        action = request.POST.get("action")
+
+        if action == "create_return":
+            try:
+                order_id = request.POST.get("order_id")
+                reason = request.POST.get("reason")
+                customer_notes = request.POST.get("customer_notes", "")
+                item_ids = request.POST.getlist("item_ids")
+                quantities = request.POST.getlist("quantities")
+
+                order = Order.objects.get(id=order_id)
+
+                # Create the return
+                return_request = Return.objects.create(
+                    order=order,
+                    reason=reason,
+                    customer_notes=customer_notes,
+                    status=ReturnStatus.REQUESTED,
+                )
+
+                # Create return items
+                for item_id, qty in zip(item_ids, quantities):
+                    qty = int(qty)
+                    if qty > 0:
+                        order_item = OrderItem.objects.get(id=item_id)
+                        # Calculate refund amount per item
+                        unit_price = order_item.line_total / order_item.quantity
+                        refund_amount = unit_price * qty
+                        ReturnItem.objects.create(
+                            return_request=return_request,
+                            order_item=order_item,
+                            quantity=qty,
+                            refund_amount=refund_amount,
+                        )
+
+                return JsonResponse({
+                    "success": True,
+                    "return_id": return_request.id,
+                    "message": f"Return #{return_request.id} created successfully.",
+                })
+            except Order.DoesNotExist:
+                return JsonResponse({"success": False, "error": "Order not found"})
+            except Exception as e:
+                return JsonResponse({"success": False, "error": str(e)})
+
+        elif action == "update_status":
+            try:
+                return_id = request.POST.get("return_id")
+                new_status = request.POST.get("status")
+
+                return_request = Return.objects.get(id=return_id)
+                old_status = return_request.status
+                return_request.status = new_status
+
+                # Set timestamps based on status transitions
+                if new_status == ReturnStatus.APPROVED and old_status != ReturnStatus.APPROVED:
+                    return_request.approved_at = timezone.now()
+                elif new_status == ReturnStatus.RECEIVED and old_status != ReturnStatus.RECEIVED:
+                    return_request.received_at = timezone.now()
+                    # Mark all items as received
+                    return_request.items.update(received=True)
+                elif new_status == ReturnStatus.REFUNDED and old_status != ReturnStatus.REFUNDED:
+                    return_request.refunded_at = timezone.now()
+
+                return_request.save()
+
+                return JsonResponse({
+                    "success": True,
+                    "message": f"Return #{return_id} status updated to {new_status}.",
+                })
+            except Return.DoesNotExist:
+                return JsonResponse({"success": False, "error": "Return not found"})
+            except Exception as e:
+                return JsonResponse({"success": False, "error": str(e)})
+
+        elif action == "add_tracking":
+            try:
+                return_id = request.POST.get("return_id")
+                tracking_number = request.POST.get("tracking_number")
+                carrier = request.POST.get("carrier")
+
+                return_request = Return.objects.get(id=return_id)
+                return_request.tracking_number = tracking_number
+                return_request.carrier = carrier
+
+                # Optionally update status to IN_TRANSIT
+                if return_request.status in [ReturnStatus.APPROVED, ReturnStatus.AWAITING_SHIPMENT]:
+                    return_request.status = ReturnStatus.IN_TRANSIT
+
+                return_request.save()
+
+                return JsonResponse({
+                    "success": True,
+                    "message": f"Tracking info added to Return #{return_id}.",
+                })
+            except Return.DoesNotExist:
+                return JsonResponse({"success": False, "error": "Return not found"})
+            except Exception as e:
+                return JsonResponse({"success": False, "error": str(e)})
+
+        elif action == "generate_label":
+            try:
+                import easypost
+                from django.conf import settings
+
+                return_id = request.POST.get("return_id")
+                return_request = Return.objects.get(id=return_id)
+                order = return_request.order
+
+                if not order.shipping_address:
+                    return JsonResponse({"success": False, "error": "Order has no shipping address"})
+
+                # Initialize EasyPost
+                client = easypost.EasyPostClient(settings.EASYPOST_API_KEY)
+
+                # Create return shipment (swap from/to addresses)
+                # Customer is sending back to us
+                from_address = client.address.create(
+                    name=order.shipping_address.full_name,
+                    street1=order.shipping_address.line1,
+                    street2=order.shipping_address.line2 or "",
+                    city=order.shipping_address.city,
+                    state=order.shipping_address.region,
+                    zip=order.shipping_address.postal_code,
+                    country=order.shipping_address.country,
+                )
+
+                # Our return address (from site settings or default)
+                to_address = client.address.create(
+                    company="Blueprint Apparel",
+                    street1="123 Main St",
+                    city="Austin",
+                    state="TX",
+                    zip="78701",
+                    country="US",
+                )
+
+                # Create parcel (default small package)
+                parcel = client.parcel.create(
+                    length=10,
+                    width=8,
+                    height=4,
+                    weight=16,
+                )
+
+                # Create shipment
+                shipment = client.shipment.create(
+                    from_address=from_address,
+                    to_address=to_address,
+                    parcel=parcel,
+                    is_return=True,
+                )
+
+                # Buy cheapest rate
+                lowest_rate = shipment.lowest_rate()
+                bought_shipment = client.shipment.buy(shipment.id, rate=lowest_rate)
+
+                # Update return with tracking info
+                return_request.tracking_number = bought_shipment.tracking_code
+                return_request.carrier = lowest_rate.carrier
+                return_request.return_label_url = bought_shipment.postage_label.label_url
+                return_request.status = ReturnStatus.AWAITING_SHIPMENT
+                return_request.save()
+
+                return JsonResponse({
+                    "success": True,
+                    "tracking_number": bought_shipment.tracking_code,
+                    "carrier": lowest_rate.carrier,
+                    "label_url": bought_shipment.postage_label.label_url,
+                    "cost": str(lowest_rate.rate),
+                    "message": f"Return label generated. Cost: ${lowest_rate.rate}",
+                })
+            except Return.DoesNotExist:
+                return JsonResponse({"success": False, "error": "Return not found"})
+            except Exception as e:
+                return JsonResponse({"success": False, "error": str(e)})
+
+        elif action == "mark_item_received":
+            try:
+                return_item_id = request.POST.get("return_item_id")
+                condition_notes = request.POST.get("condition_notes", "")
+
+                return_item = ReturnItem.objects.get(id=return_item_id)
+                return_item.received = True
+                return_item.condition_notes = condition_notes
+                return_item.save()
+
+                # Check if all items received
+                return_request = return_item.return_request
+                if return_request.all_items_received:
+                    return_request.status = ReturnStatus.RECEIVED
+                    return_request.received_at = timezone.now()
+                    return_request.save()
+
+                return JsonResponse({
+                    "success": True,
+                    "all_received": return_request.all_items_received,
+                    "message": f"Item marked as received.",
+                })
+            except ReturnItem.DoesNotExist:
+                return JsonResponse({"success": False, "error": "Return item not found"})
+            except Exception as e:
+                return JsonResponse({"success": False, "error": str(e)})
+
+        elif action == "process_refund":
+            try:
+                import stripe
+                from django.conf import settings
+
+                return_id = request.POST.get("return_id")
+                custom_amount = request.POST.get("refund_amount")
+
+                return_request = Return.objects.get(id=return_id)
+                order = return_request.order
+
+                if not order.stripe_payment_intent_id:
+                    return JsonResponse({"success": False, "error": "No payment intent found for this order."})
+
+                # Calculate refund amount
+                if custom_amount:
+                    refund_amount = Decimal(custom_amount)
+                else:
+                    refund_amount = return_request.total_refund_amount
+
+                # Convert to cents for Stripe
+                refund_amount_cents = int(refund_amount * 100)
+
+                # Initialize Stripe
+                stripe.api_key = settings.STRIPE_SECRET_KEY
+
+                # Create refund
+                refund = stripe.Refund.create(
+                    payment_intent=order.stripe_payment_intent_id,
+                    amount=refund_amount_cents,
+                )
+
+                # Update return
+                return_request.refund_amount = refund_amount
+                return_request.stripe_refund_id = refund.id
+                return_request.status = ReturnStatus.REFUNDED
+                return_request.refunded_at = timezone.now()
+                return_request.save()
+
+                return JsonResponse({
+                    "success": True,
+                    "refund_id": refund.id,
+                    "amount": str(refund_amount),
+                    "message": f"Refund of ${refund_amount} processed successfully.",
+                })
+            except Return.DoesNotExist:
+                return JsonResponse({"success": False, "error": "Return not found"})
+            except stripe.StripeError as e:
+                return JsonResponse({"success": False, "error": str(e)})
+            except Exception as e:
+                return JsonResponse({"success": False, "error": str(e)})
+
+        elif action == "add_notes":
+            try:
+                return_id = request.POST.get("return_id")
+                admin_notes = request.POST.get("admin_notes")
+
+                return_request = Return.objects.get(id=return_id)
+                return_request.admin_notes = admin_notes
+                return_request.save()
+
+                return JsonResponse({
+                    "success": True,
+                    "message": "Notes saved.",
+                })
+            except Return.DoesNotExist:
+                return JsonResponse({"success": False, "error": "Return not found"})
+            except Exception as e:
+                return JsonResponse({"success": False, "error": str(e)})
+
+        elif action == "get_order_items":
+            try:
+                order_id = request.POST.get("order_id")
+                order = Order.objects.get(id=order_id)
+
+                items_data = []
+                for item in order.items.select_related("variant", "variant__product"):
+                    product_name = ""
+                    if item.variant and item.variant.product:
+                        product_name = item.variant.product.name
+                    items_data.append({
+                        "id": item.id,
+                        "sku": item.sku,
+                        "product_name": product_name,
+                        "quantity": item.quantity,
+                        "line_total": str(item.line_total),
+                        "unit_price": str(item.line_total / item.quantity) if item.quantity > 0 else "0",
+                    })
+
+                return JsonResponse({
+                    "success": True,
+                    "items": items_data,
+                })
+            except Order.DoesNotExist:
+                return JsonResponse({"success": False, "error": "Order not found"})
+            except Exception as e:
+                return JsonResponse({"success": False, "error": str(e)})
+
+    # GET request - display dashboard
+    returns = Return.objects.select_related("order").prefetch_related(
+        "items__order_item__variant__product"
+    ).all()
+
+    # Get orders for create return dropdown (paid, shipped, or fulfilled orders)
+    eligible_orders = Order.objects.filter(
+        status__in=[OrderStatus.PAID, OrderStatus.SHIPPED, OrderStatus.FULFILLED]
+    ).order_by("-created_at")[:100]
+
+    # Build return data for template
+    returns_data = []
+    for r in returns:
+        items_list = []
+        for item in r.items.all():
+            product_name = ""
+            if item.order_item.variant and item.order_item.variant.product:
+                product_name = item.order_item.variant.product.name
+            items_list.append({
+                "id": item.id,
+                "sku": item.order_item.sku,
+                "product_name": product_name,
+                "quantity": item.quantity,
+                "refund_amount": str(item.refund_amount),
+                "received": item.received,
+                "condition_notes": item.condition_notes,
+            })
+
+        returns_data.append({
+            "id": r.id,
+            "order_id": r.order_id,
+            "order_number": f"#{r.order_id}",
+            "status": r.status,
+            "reason": r.reason,
+            "reason_display": r.get_reason_display(),
+            "customer_notes": r.customer_notes,
+            "admin_notes": r.admin_notes,
+            "tracking_number": r.tracking_number,
+            "carrier": r.carrier,
+            "return_label_url": r.return_label_url,
+            "refund_amount": str(r.refund_amount) if r.refund_amount else None,
+            "total_refund_amount": str(r.total_refund_amount),
+            "stripe_refund_id": r.stripe_refund_id,
+            "created_at": r.created_at.isoformat(),
+            "approved_at": r.approved_at.isoformat() if r.approved_at else None,
+            "received_at": r.received_at.isoformat() if r.received_at else None,
+            "refunded_at": r.refunded_at.isoformat() if r.refunded_at else None,
+            "items": items_list,
+            "all_items_received": r.all_items_received,
+            "customer_email": r.order.email,
+        })
+
+    # Calculate stats
+    stats = {
+        "total": returns.count(),
+        "requested": returns.filter(status=ReturnStatus.REQUESTED).count(),
+        "approved": returns.filter(status=ReturnStatus.APPROVED).count(),
+        "awaiting_shipment": returns.filter(status=ReturnStatus.AWAITING_SHIPMENT).count(),
+        "in_transit": returns.filter(status=ReturnStatus.IN_TRANSIT).count(),
+        "received": returns.filter(status=ReturnStatus.RECEIVED).count(),
+        "refunded": returns.filter(status=ReturnStatus.REFUNDED).count(),
+    }
+
+    # Prepare orders for dropdown
+    orders_data = []
+    for order in eligible_orders:
+        orders_data.append({
+            "id": order.id,
+            "order_number": f"#{order.id}",
+            "email": order.email,
+            "total": str(order.total),
+            "status": order.status,
+            "created_at": order.created_at.strftime("%b %d, %Y"),
+        })
+
     context = {
-        "returns": [],
-        "returns_json": "[]",
-        "stats": {
-            "total": 0,
-            "requested": 0,
-            "approved": 0,
-            "received": 0,
-            "refunded": 0,
-            "exchanged": 0,
-        },
+        "returns": returns_data,
+        "returns_json": json.dumps(returns_data),
+        "orders": orders_data,
+        "orders_json": json.dumps(orders_data),
+        "stats": stats,
+        "return_statuses": ReturnStatus.choices,
+        "return_reasons": ReturnReason.choices,
         "cst_time": timezone.now().astimezone(pytz.timezone("America/Chicago")),
     }
 
@@ -7413,3 +7868,456 @@ def bundles_dashboard(request):
     }
 
     return render(request, "admin/bundles_dashboard.html", context)
+
+
+@staff_member_required
+@two_factor_required
+def test_center(request):
+    """
+    Test Center for testing Stripe purchases, discounts, and refunds.
+    Uses Stripe test keys to create real test transactions.
+    """
+    from decimal import Decimal
+
+    import stripe
+    from django.conf import settings
+
+    from shop.models import Discount, Order, OrderStatus, Product
+
+    # Check if test keys are configured
+    test_secret_key = settings.STRIPE_TEST_SECRET_KEY
+    test_publishable_key = settings.STRIPE_TEST_PUBLISHABLE_KEY
+
+    if not test_secret_key:
+        messages.error(request, "STRIPE_TEST_SECRET_KEY not configured. Add it to your environment variables.")
+        return redirect("admin_finance")
+
+    # Use test keys for all Stripe operations in this view
+    stripe.api_key = test_secret_key
+
+    # Get test orders
+    test_orders = Order.objects.filter(is_test=True).order_by("-created_at")[:20]
+
+    # Get products for the dropdown
+    products = Product.objects.filter(is_active=True).order_by("name")
+
+    # Get active discount codes
+    discounts = Discount.objects.filter(is_active=True).order_by("name")
+
+    # Handle POST actions
+    if request.method == "POST":
+        action = request.POST.get("action")
+
+        if action == "create_test_order":
+            try:
+                amount = Decimal(request.POST.get("amount", "10.00"))
+                product_id = request.POST.get("product_id")
+                description = request.POST.get("description", "Test order")
+                auto_pay = request.POST.get("auto_pay") == "true"
+                payment_method = request.POST.get("payment_method", "pm_card_visa")
+
+                # Create Stripe PaymentIntent
+                intent_params = {
+                    "amount": int(amount * 100),  # Convert to cents
+                    "currency": "usd",
+                    "description": f"Test Center: {description}",
+                    "metadata": {
+                        "test_center": "true",
+                        "product_id": product_id or "",
+                    },
+                    "payment_method_types": ["card"],  # Only accept cards, no redirects
+                }
+
+                # If auto_pay, use a test payment method and confirm immediately
+                if auto_pay:
+                    intent_params["payment_method"] = payment_method
+                    intent_params["confirm"] = True
+
+                intent = stripe.PaymentIntent.create(**intent_params)
+
+                # Determine order status based on payment
+                if auto_pay and intent.status == "succeeded":
+                    order_status = OrderStatus.PAID
+                else:
+                    order_status = OrderStatus.AWAITING_PAYMENT
+
+                # Create test order
+                order = Order.objects.create(
+                    email="test@testcenter.local",
+                    status=order_status,
+                    subtotal=amount,
+                    shipping=Decimal("0.00"),
+                    tax=Decimal("0.00"),
+                    total=amount,
+                    stripe_payment_intent_id=intent.id,
+                    is_test=True,
+                )
+
+                if auto_pay and intent.status == "succeeded":
+                    return JsonResponse({
+                        "success": True,
+                        "auto_paid": True,
+                        "order_id": order.id,
+                        "payment_intent_id": intent.id,
+                        "message": f"Test order #{order.id} created and paid!",
+                    })
+                else:
+                    return JsonResponse({
+                        "success": True,
+                        "auto_paid": False,
+                        "order_id": order.id,
+                        "payment_intent_id": intent.id,
+                        "client_secret": intent.client_secret,
+                        "message": f"Test order #{order.id} created. Use Stripe test card to complete payment.",
+                    })
+
+            except stripe.StripeError as e:
+                # For card errors, extract the user-friendly message
+                error_msg = str(e)
+                if hasattr(e, 'user_message'):
+                    error_msg = e.user_message
+                return JsonResponse({"success": False, "error": error_msg, "declined": True})
+            except Exception as e:
+                return JsonResponse({"success": False, "error": str(e)})
+
+        elif action == "confirm_test_payment":
+            try:
+                payment_intent_id = request.POST.get("payment_intent_id")
+                order_id = request.POST.get("order_id")
+
+                # Retrieve the PaymentIntent to check status
+                intent = stripe.PaymentIntent.retrieve(payment_intent_id)
+
+                order = Order.objects.get(id=order_id, is_test=True)
+
+                if intent.status == "succeeded":
+                    order.status = OrderStatus.PAID
+                    order.save()
+                    return JsonResponse({
+                        "success": True,
+                        "message": f"Payment confirmed! Order #{order.id} is now PAID.",
+                    })
+                else:
+                    return JsonResponse({
+                        "success": False,
+                        "error": f"Payment not yet succeeded. Status: {intent.status}",
+                    })
+
+            except Order.DoesNotExist:
+                return JsonResponse({"success": False, "error": "Test order not found"})
+            except stripe.StripeError as e:
+                return JsonResponse({"success": False, "error": str(e)})
+
+        elif action == "apply_discount":
+            try:
+                discount_code = request.POST.get("discount_code", "").strip().upper()
+                cart_total = Decimal(request.POST.get("cart_total", "100.00"))
+
+                # Find the discount
+                try:
+                    discount = Discount.objects.get(code__iexact=discount_code, is_active=True)
+                except Discount.DoesNotExist:
+                    return JsonResponse({"success": False, "error": f"Discount code '{discount_code}' not found or inactive."})
+
+                # Check validity
+                now = timezone.now()
+                if discount.valid_from > now:
+                    return JsonResponse({"success": False, "error": "Discount code is not yet active."})
+                if discount.valid_until and discount.valid_until < now:
+                    return JsonResponse({"success": False, "error": "Discount code has expired."})
+                if discount.min_purchase_amount and cart_total < discount.min_purchase_amount:
+                    return JsonResponse({
+                        "success": False,
+                        "error": f"Minimum purchase of ${discount.min_purchase_amount} required."
+                    })
+                if discount.max_uses and discount.times_used >= discount.max_uses:
+                    return JsonResponse({"success": False, "error": "Discount code has reached its usage limit."})
+
+                # Calculate discount
+                if discount.discount_type == "percentage":
+                    discount_amount = cart_total * (discount.value / 100)
+                    discount_display = f"{discount.value}% off"
+                elif discount.discount_type == "fixed":
+                    discount_amount = min(discount.value, cart_total)
+                    discount_display = f"${discount.value} off"
+                elif discount.discount_type == "free_shipping":
+                    discount_amount = Decimal("0.00")  # Would affect shipping
+                    discount_display = "Free shipping"
+                else:
+                    discount_amount = Decimal("0.00")
+                    discount_display = discount.discount_type
+
+                final_total = cart_total - discount_amount
+
+                return JsonResponse({
+                    "success": True,
+                    "discount_name": discount.name,
+                    "discount_type": discount.discount_type,
+                    "discount_display": discount_display,
+                    "discount_amount": float(discount_amount),
+                    "original_total": float(cart_total),
+                    "final_total": float(final_total),
+                    "times_used": discount.times_used,
+                    "max_uses": discount.max_uses,
+                })
+
+            except Exception as e:
+                return JsonResponse({"success": False, "error": str(e)})
+
+        elif action == "process_refund":
+            try:
+                order_id = request.POST.get("order_id")
+                order = Order.objects.get(id=order_id, is_test=True)
+
+                if not order.stripe_payment_intent_id:
+                    return JsonResponse({"success": False, "error": "No Stripe payment intent found for this order."})
+
+                if order.status != OrderStatus.PAID:
+                    return JsonResponse({"success": False, "error": "Only PAID orders can be refunded."})
+
+                # Create refund in Stripe
+                refund = stripe.Refund.create(
+                    payment_intent=order.stripe_payment_intent_id,
+                )
+
+                # Update order status
+                order.status = OrderStatus.REFUNDED
+                order.save()
+
+                return JsonResponse({
+                    "success": True,
+                    "refund_id": refund.id,
+                    "message": f"Refund processed successfully. Order #{order.id} is now REFUNDED.",
+                })
+
+            except Order.DoesNotExist:
+                return JsonResponse({"success": False, "error": "Test order not found"})
+            except stripe.StripeError as e:
+                return JsonResponse({"success": False, "error": str(e)})
+
+        elif action == "delete_test_order":
+            try:
+                order_id = request.POST.get("order_id")
+                order = Order.objects.get(id=order_id, is_test=True)
+                order.delete()
+                return JsonResponse({
+                    "success": True,
+                    "message": f"Test order #{order_id} deleted.",
+                })
+            except Order.DoesNotExist:
+                return JsonResponse({"success": False, "error": "Test order not found"})
+
+        elif action == "create_test_product":
+            try:
+                import uuid
+                from shop.models import Color, OrderItem, Product, ProductVariant, Size
+
+                name = request.POST.get("name", "Test Item")
+                price = Decimal(request.POST.get("price", "1.00"))
+                create_order = request.POST.get("create_order") == "true"
+
+                # Generate unique slug
+                unique_id = str(uuid.uuid4())[:8]
+                slug = f"test-product-{unique_id}"
+
+                # Get or create Size M
+                size_m, _ = Size.objects.get_or_create(
+                    code="M",
+                    defaults={"label": "Medium"}
+                )
+
+                # Get or create Color Black
+                color_black, _ = Color.objects.get_or_create(
+                    name="Black"
+                )
+
+                # Placeholder image (gray box with package icon)
+                placeholder_svg = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='400' viewBox='0 0 400 400'%3E%3Crect fill='%23e2e8f0' width='400' height='400'/%3E%3Cpath d='M200 120l60 35v70l-60 35-60-35v-70l60-35z' fill='none' stroke='%2394a3b8' stroke-width='8'/%3E%3Cpath d='M200 155v70M140 155l60 35 60-35' fill='none' stroke='%2394a3b8' stroke-width='8'/%3E%3C/svg%3E"
+
+                # Create the product
+                product = Product.objects.create(
+                    name=name,
+                    slug=slug,
+                    description="",
+                    base_price=price,
+                    is_active=True,
+                    available_for_purchase=True,
+                    images=[placeholder_svg],
+                )
+
+                # Create variant with stock
+                variant = ProductVariant.objects.create(
+                    product=product,
+                    size=size_m,
+                    color=color_black,
+                    stock_quantity=100,
+                    price=price,
+                )
+                variant.refresh_from_db()  # Get auto-generated SKU
+
+                response_data = {
+                    "success": True,
+                    "message": f"Test product '{name}' created!",
+                    "product_id": product.id,
+                    "product_name": product.name,
+                    "variant_id": variant.id,
+                    "variant_sku": variant.sku,
+                }
+
+                # Optionally create a paid test order
+                if create_order:
+                    # Create Stripe PaymentIntent and auto-pay
+                    intent = stripe.PaymentIntent.create(
+                        amount=int(price * 100),
+                        currency="usd",
+                        description=f"Test Center: {name}",
+                        metadata={"test_center": "true", "product_id": str(product.id)},
+                        payment_method_types=["card"],
+                        payment_method="pm_card_visa",
+                        confirm=True,
+                    )
+
+                    # Create test order
+                    order = Order.objects.create(
+                        email="test@testcenter.local",
+                        status=OrderStatus.PAID,
+                        subtotal=price,
+                        shipping=Decimal("0.00"),
+                        tax=Decimal("0.00"),
+                        total=price,
+                        stripe_payment_intent_id=intent.id,
+                        is_test=True,
+                    )
+
+                    # Create order item
+                    OrderItem.objects.create(
+                        order=order,
+                        variant=variant,
+                        sku=variant.sku,
+                        quantity=1,
+                        line_total=price,
+                    )
+
+                    response_data["order_id"] = order.id
+                    response_data["message"] = f"Test product '{name}' and paid order #{order.id} created!"
+
+                return JsonResponse(response_data)
+
+            except Exception as e:
+                return JsonResponse({"success": False, "error": str(e)})
+
+        elif action == "delete_test_product":
+            try:
+                from shop.models import CartItem, Product
+
+                product_id = request.POST.get("product_id")
+                product = Product.objects.get(id=product_id)
+
+                # Check it's a test product (slug starts with test-product-)
+                if not product.slug.startswith("test-product-"):
+                    return JsonResponse({"success": False, "error": "Can only delete test products"})
+
+                # Delete cart items referencing this product's variants
+                variant_ids = product.variants.values_list("id", flat=True)
+                deleted_cart_items = CartItem.objects.filter(variant_id__in=variant_ids).delete()[0]
+
+                # Now delete the product (cascades to variants)
+                product_name = product.name
+                product.delete()
+
+                msg = f"Deleted '{product_name}'"
+                if deleted_cart_items:
+                    msg += f" and {deleted_cart_items} cart item(s)"
+
+                return JsonResponse({"success": True, "message": msg})
+
+            except Product.DoesNotExist:
+                return JsonResponse({"success": False, "error": "Product not found"})
+            except Exception as e:
+                return JsonResponse({"success": False, "error": str(e)})
+
+    # Prepare test orders data
+    test_orders_data = []
+    for order in test_orders:
+        test_orders_data.append({
+            "id": order.id,
+            "total": float(order.total),
+            "status": order.status,
+            "stripe_payment_intent_id": order.stripe_payment_intent_id,
+            "created_at": order.created_at.isoformat(),
+        })
+
+    # Get test products (slug starts with test-product-)
+    test_products = Product.objects.filter(slug__startswith="test-product-").order_by("-id")[:20]
+
+    context = {
+        "test_orders": test_orders_data,
+        "test_orders_json": json.dumps(test_orders_data),
+        "products": products,
+        "test_products": test_products,
+        "discounts": discounts,
+        "stripe_publishable_key": test_publishable_key,
+        "test_keys_configured": bool(test_secret_key and test_publishable_key),
+        "cst_time": timezone.now().astimezone(pytz.timezone("America/Chicago")),
+    }
+
+    return render(request, "admin/test_center.html", context)
+
+
+@staff_member_required
+def test_checkout(request):
+    """
+    Quick test checkout - creates a $1 test product, adds to cart, redirects to checkout.
+    Staff only.
+    """
+    from decimal import Decimal
+    from django.shortcuts import redirect
+
+    from shop.cart_utils import add_to_cart, get_or_create_cart
+    from shop.models import Color, Product, ProductVariant, Size
+
+    # Find or create the reusable test product
+    test_product = Product.objects.filter(slug="test-checkout-item").first()
+
+    if not test_product:
+        # Create Size M and Color Black if needed
+        size_m, _ = Size.objects.get_or_create(code="M", defaults={"label": "Medium"})
+        color_black, _ = Color.objects.get_or_create(name="Black")
+
+        # Placeholder image
+        placeholder_svg = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='400' viewBox='0 0 400 400'%3E%3Crect fill='%23e2e8f0' width='400' height='400'/%3E%3Cpath d='M200 120l60 35v70l-60 35-60-35v-70l60-35z' fill='none' stroke='%2394a3b8' stroke-width='8'/%3E%3Cpath d='M200 155v70M140 155l60 35 60-35' fill='none' stroke='%2394a3b8' stroke-width='8'/%3E%3C/svg%3E"
+
+        test_product = Product.objects.create(
+            name="Test Item",
+            slug="test-checkout-item",
+            description="",
+            base_price=Decimal("1.00"),
+            is_active=True,
+            available_for_purchase=True,
+            images=[placeholder_svg],
+        )
+
+        ProductVariant.objects.create(
+            product=test_product,
+            size=size_m,
+            color=color_black,
+            stock_quantity=9999,
+            price=Decimal("1.00"),
+            images=[placeholder_svg],
+        )
+
+    # Get the variant and ensure it has placeholder image
+    variant = test_product.variants.first()
+    placeholder_svg = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='400' viewBox='0 0 400 400'%3E%3Crect fill='%23e2e8f0' width='400' height='400'/%3E%3Cpath d='M200 120l60 35v70l-60 35-60-35v-70l60-35z' fill='none' stroke='%2394a3b8' stroke-width='8'/%3E%3Cpath d='M200 155v70M140 155l60 35 60-35' fill='none' stroke='%2394a3b8' stroke-width='8'/%3E%3C/svg%3E"
+    if not variant.images:
+        variant.images = [placeholder_svg]
+        variant.save()
+
+    # Clear cart and add test item
+    cart = get_or_create_cart(request)
+    cart.items.all().delete()
+    cart.bundle_items.all().delete()
+    add_to_cart(request, variant.id, quantity=1)
+
+    # Redirect to checkout
+    return redirect("shop:checkout")

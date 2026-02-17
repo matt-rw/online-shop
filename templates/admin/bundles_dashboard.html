@@ -526,6 +526,10 @@
             {% if bundle.featured %}
             <span class="meta-item"><i class="fas fa-star" style="color: #eab308;"></i> Featured</span>
             {% endif %}
+            <span class="meta-item" title="Show Includes on bundle page">
+              <i class="fas fa-list" style="color: {% if bundle.show_includes %}#10b981{% else %}#94a3b8{% endif %};"></i>
+              {% if bundle.show_includes %}Includes{% else %}No includes{% endif %}
+            </span>
           </div>
         </div>
         <div class="bundle-actions">

@@ -4,7 +4,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Returns &amp; Exchanges - Blueprint Apparel</title>
+  <title>Returns & Refunds - Blueprint Apparel</title>
   <link rel="icon" type="image/svg+xml" href="{% static 'admin-favicon.svg' %}">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
@@ -50,6 +50,7 @@
       transform: translateY(-1px);
       box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
     }
+
     .top-bar {
       background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
       padding: 2rem 0;
@@ -77,6 +78,12 @@
       letter-spacing: -0.02em;
     }
 
+    .header-subtitle {
+      color: rgba(255, 255, 255, 0.8);
+      font-size: 1rem;
+      margin-top: 0.25rem;
+    }
+
     .btn-primary {
       background: white;
       color: #ef4444;
@@ -98,15 +105,17 @@
       transform: translateY(-2px);
       box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
     }
+
     .main-content {
       padding: 0 2rem 2rem 2rem;
       max-width: 1600px;
       margin: 0 auto;
     }
+
     .stats-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-      gap: 1.5rem;
+      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+      gap: 1rem;
       margin-bottom: 3rem;
       margin-top: -4rem;
       position: relative;
@@ -116,7 +125,7 @@
     .stat-card {
       background: white;
       border-radius: 16px;
-      padding: 1.75rem;
+      padding: 1.5rem;
       box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
       text-align: center;
       border: 1px solid rgba(226, 232, 240, 0.8);
@@ -148,11 +157,11 @@
 
     .stat-card h3 {
       color: #64748b;
-      font-size: 0.75rem;
+      font-size: 0.7rem;
       font-weight: 600;
       text-transform: uppercase;
       letter-spacing: 0.08em;
-      margin-bottom: 0.75rem;
+      margin-bottom: 0.5rem;
     }
 
     .stat-card .number {
@@ -160,16 +169,17 @@
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
       background-clip: text;
-      font-size: 2.25rem;
+      font-size: 2rem;
       font-weight: 800;
       letter-spacing: -0.02em;
     }
 
     .stat-card .icon {
-      font-size: 1.75rem;
-      margin-bottom: 0.75rem;
+      font-size: 1.5rem;
+      margin-bottom: 0.5rem;
       color: #ef4444;
     }
+
     .btn {
       padding: 0.5rem 1rem;
       border-radius: 8px;
@@ -182,10 +192,49 @@
       align-items: center;
       gap: 0.5rem;
     }
+
     .btn-sm {
       padding: 0.375rem 0.75rem;
       font-size: 0.8125rem;
     }
+
+    .btn-secondary {
+      background: #f1f5f9;
+      color: #64748b;
+      border: 1px solid #e2e8f0;
+    }
+
+    .btn-secondary:hover {
+      background: #e2e8f0;
+    }
+
+    .btn-success {
+      background: #10b981;
+      color: white;
+    }
+
+    .btn-success:hover {
+      background: #059669;
+    }
+
+    .btn-warning {
+      background: #f59e0b;
+      color: white;
+    }
+
+    .btn-warning:hover {
+      background: #d97706;
+    }
+
+    .btn-danger {
+      background: #ef4444;
+      color: white;
+    }
+
+    .btn-danger:hover {
+      background: #dc2626;
+    }
+
     .return-card {
       background: white;
       border-radius: 12px;
@@ -194,10 +243,15 @@
       box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
       border-left: 4px solid;
     }
-    .return-card.pending { border-left-color: #f59e0b; }
-    .return-card.in-transit { border-left-color: #3b82f6; }
-    .return-card.delivered { border-left-color: #ef4444; }
-    .return-card.delayed { border-left-color: #ef4444; }
+
+    .return-card.requested { border-left-color: #f59e0b; }
+    .return-card.approved { border-left-color: #3b82f6; }
+    .return-card.awaiting_shipment { border-left-color: #8b5cf6; }
+    .return-card.in_transit { border-left-color: #06b6d4; }
+    .return-card.received { border-left-color: #10b981; }
+    .return-card.refunded { border-left-color: #6b7280; }
+    .return-card.rejected { border-left-color: #ef4444; }
+
     .status-badge {
       display: inline-block;
       padding: 0.25rem 0.75rem;
@@ -207,22 +261,71 @@
       text-transform: uppercase;
       letter-spacing: 0.05em;
     }
-    .status-badge.pending {
-      background: #fef3c7;
-      color: #92400e;
+
+    .status-badge.requested { background: #fef3c7; color: #92400e; }
+    .status-badge.approved { background: #dbeafe; color: #1e40af; }
+    .status-badge.awaiting_shipment { background: #ede9fe; color: #5b21b6; }
+    .status-badge.in_transit { background: #cffafe; color: #0e7490; }
+    .status-badge.received { background: #d1fae5; color: #065f46; }
+    .status-badge.refunded { background: #f3f4f6; color: #374151; }
+    .status-badge.rejected { background: #fee2e2; color: #991b1b; }
+
+    .return-items {
+      background: #f8fafc;
+      border-radius: 8px;
+      padding: 1rem;
+      margin-top: 1rem;
     }
-    .status-badge.in-transit {
-      background: #dbeafe;
-      color: #1e40af;
+
+    .return-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0.5rem 0;
+      border-bottom: 1px solid #e2e8f0;
     }
-    .status-badge.delivered {
+
+    .return-item:last-child {
+      border-bottom: none;
+    }
+
+    .return-item-info {
+      flex: 1;
+    }
+
+    .return-item-name {
+      font-weight: 500;
+      color: #0f172a;
+    }
+
+    .return-item-details {
+      font-size: 0.875rem;
+      color: #64748b;
+    }
+
+    .return-item-price {
+      font-weight: 600;
+      color: #0f172a;
+    }
+
+    .received-badge {
       background: #d1fae5;
       color: #065f46;
+      padding: 0.25rem 0.5rem;
+      border-radius: 4px;
+      font-size: 0.75rem;
+      font-weight: 500;
+      margin-left: 0.5rem;
     }
-    .status-badge.delayed {
-      background: #fee2e2;
-      color: #991b1b;
+
+    .tracking-info {
+      background: #f0fdf4;
+      border: 1px solid #bbf7d0;
+      border-radius: 8px;
+      padding: 1rem;
+      margin-top: 1rem;
     }
+
     .modal-overlay {
       display: none;
       position: fixed;
@@ -235,22 +338,26 @@
       align-items: center;
       justify-content: center;
     }
+
     .modal-overlay.active {
       display: flex;
     }
+
     .modal-content {
       background: white;
       border-radius: 16px;
       padding: 2rem;
-      max-width: 600px;
+      max-width: 700px;
       width: 90%;
       max-height: 90vh;
       overflow-y: auto;
       box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
     }
+
     .form-group {
       margin-bottom: 1.5rem;
     }
+
     .form-group label {
       display: block;
       font-weight: 500;
@@ -258,6 +365,7 @@
       color: #0f172a;
       font-size: 0.875rem;
     }
+
     .form-group input,
     .form-group select,
     .form-group textarea {
@@ -268,13 +376,44 @@
       font-size: 0.875rem;
       font-family: 'Inter', sans-serif;
     }
-    .btn-secondary {
-      background: #f1f5f9;
-      color: #64748b;
-      border: 1px solid #e2e8f0;
+
+    .form-group textarea {
+      min-height: 80px;
+      resize: vertical;
     }
-    .btn-secondary:hover {
-      background: #e2e8f0;
+
+    .order-items-select {
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+      padding: 0.5rem;
+      max-height: 250px;
+      overflow-y: auto;
+    }
+
+    .order-item-row {
+      display: flex;
+      align-items: center;
+      padding: 0.75rem;
+      border-bottom: 1px solid #f1f5f9;
+      gap: 1rem;
+    }
+
+    .order-item-row:last-child {
+      border-bottom: none;
+    }
+
+    .order-item-checkbox {
+      width: 18px;
+      height: 18px;
+      accent-color: #ef4444;
+    }
+
+    .order-item-qty {
+      width: 60px;
+      padding: 0.375rem;
+      border: 1px solid #e2e8f0;
+      border-radius: 4px;
+      text-align: center;
     }
 
     .content-card {
@@ -285,19 +424,89 @@
     .content-card h2 {
       color: #0f172a;
     }
+
+    .action-buttons {
+      display: flex;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+      margin-top: 1rem;
+    }
+
+    .notes-section {
+      background: #fffbeb;
+      border: 1px solid #fcd34d;
+      border-radius: 8px;
+      padding: 1rem;
+      margin-top: 1rem;
+    }
+
+    .notes-section.admin {
+      background: #f0f9ff;
+      border-color: #7dd3fc;
+    }
+
+    .success-message {
+      background: #d1fae5;
+      color: #065f46;
+      padding: 0.75rem 1rem;
+      border-radius: 8px;
+      margin-bottom: 1rem;
+    }
+
+    .error-message {
+      background: #fee2e2;
+      color: #991b1b;
+      padding: 0.75rem 1rem;
+      border-radius: 8px;
+      margin-bottom: 1rem;
+    }
+
+    .filter-tabs {
+      display: flex;
+      gap: 0.5rem;
+      margin-bottom: 1.5rem;
+      flex-wrap: wrap;
+    }
+
+    .filter-tab {
+      padding: 0.5rem 1rem;
+      border-radius: 8px;
+      font-size: 0.875rem;
+      font-weight: 500;
+      background: #f1f5f9;
+      color: #64748b;
+      border: none;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .filter-tab:hover {
+      background: #e2e8f0;
+    }
+
+    .filter-tab.active {
+      background: #ef4444;
+      color: white;
+    }
   </style>
   {% include "admin/partials/dark_mode_apply.html" %}
 </head>
 <body>
   <div class="nav-links">
-    <a href="{% url 'admin_home' %}" class="nav-link">← Back</a>
+    <a href="{% url 'admin_home' %}" class="nav-link"><i class="fa-solid fa-arrow-left"></i> Back</a>
+    <a href="{% url 'admin_orders' %}" class="nav-link"><i class="fa-solid fa-shopping-cart"></i> Orders</a>
   </div>
 
   <div class="top-bar">
     <div class="container">
       <div class="header">
-        <h1>Returns & Exchanges</h1>
-        <button class="btn-primary" onclick="openCreateReturnModal()">+ Add Return</button>
+        <div>
+          <h1>Returns & Refunds</h1>
+          <p class="header-subtitle">Manage customer returns and process refunds</p>
+        </div>
+        <button class="btn-primary" onclick="openCreateReturnModal()">
+          <i class="fa-solid fa-plus"></i> Create Return
+        </button>
       </div>
     </div>
   </div>
@@ -305,127 +514,335 @@
   <div class="main-content">
     <!-- Stats Grid -->
     <div class="stats-grid">
-      <div class="stat-card pending">
-        <div class="icon"><i class="fa-solid fa-clock"></i></div>
-        <h3>Pending</h3>
-        <div class="number">{{ stats.pending }}</div>
+      <div class="stat-card">
+        <div class="icon"><i class="fa-solid fa-inbox"></i></div>
+        <h3>Requested</h3>
+        <div class="number">{{ stats.requested }}</div>
       </div>
-      <div class="stat-card in-transit">
-        <div class="icon"><i class="fa-solid fa-truck-arrow-right"></i></div>
+      <div class="stat-card">
+        <div class="icon"><i class="fa-solid fa-check"></i></div>
+        <h3>Approved</h3>
+        <div class="number">{{ stats.approved }}</div>
+      </div>
+      <div class="stat-card">
+        <div class="icon"><i class="fa-solid fa-tag"></i></div>
+        <h3>Awaiting Ship</h3>
+        <div class="number">{{ stats.awaiting_shipment }}</div>
+      </div>
+      <div class="stat-card">
+        <div class="icon"><i class="fa-solid fa-truck"></i></div>
         <h3>In Transit</h3>
         <div class="number">{{ stats.in_transit }}</div>
       </div>
-      <div class="stat-card delivered">
-        <div class="icon"><i class="fa-solid fa-circle-check"></i></div>
-        <h3>Delivered</h3>
-        <div class="number">{{ stats.delivered }}</div>
+      <div class="stat-card">
+        <div class="icon"><i class="fa-solid fa-box-open"></i></div>
+        <h3>Received</h3>
+        <div class="number">{{ stats.received }}</div>
       </div>
-      <div class="stat-card delayed">
-        <div class="icon"><i class="fa-solid fa-exclamation-circle"></i></div>
-        <h3>Delayed</h3>
-        <div class="number">{{ stats.delayed }}</div>
+      <div class="stat-card">
+        <div class="icon"><i class="fa-solid fa-dollar-sign"></i></div>
+        <h3>Refunded</h3>
+        <div class="number">{{ stats.refunded }}</div>
       </div>
+    </div>
+
+    <!-- Filter Tabs -->
+    <div class="filter-tabs">
+      <button class="filter-tab active" data-status="all">All ({{ stats.total }})</button>
+      <button class="filter-tab" data-status="REQUESTED">Requested</button>
+      <button class="filter-tab" data-status="APPROVED">Approved</button>
+      <button class="filter-tab" data-status="AWAITING_SHIPMENT">Awaiting Shipment</button>
+      <button class="filter-tab" data-status="IN_TRANSIT">In Transit</button>
+      <button class="filter-tab" data-status="RECEIVED">Received</button>
+      <button class="filter-tab" data-status="REFUNDED">Refunded</button>
     </div>
 
     <!-- Returns List -->
     <div class="content-card" style="border-radius: 16px; padding: 2rem; box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);">
-      <h2 style="font-size: 1.5rem; font-weight: 700; margin-bottom: 1.5rem;">All Returns ({{ returns|length }})</h2>
+      <h2 style="font-size: 1.5rem; font-weight: 700; margin-bottom: 1.5rem;">All Returns</h2>
 
-      {% if returns %}
-        {% for return in returns %}
-        <div class="return-card {{ return.status }}">
-          <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 1rem;">
-            <div>
-              <h3 style="font-size: 1.125rem; font-weight: 700; color: #0f172a; margin-bottom: 0.5rem;">
-                {{ return.tracking_number }}
-              </h3>
-              <span class="status-badge {{ return.status }}">{{ return.status|title }}</span>
+      <div id="returnsList">
+        {% if returns %}
+          {% for return in returns %}
+          <div class="return-card {{ return.status|lower }}" data-status="{{ return.status }}">
+            <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 1rem;">
+              <div>
+                <h3 style="font-size: 1.125rem; font-weight: 700; color: #0f172a; margin-bottom: 0.5rem;">
+                  Return #{{ return.id }} - Order {{ return.order_number }}
+                </h3>
+                <span class="status-badge {{ return.status|lower }}">{{ return.status|title }}</span>
+                <span style="margin-left: 0.5rem; color: #64748b; font-size: 0.875rem;">
+                  {{ return.reason_display }}
+                </span>
+              </div>
+              <div style="text-align: right; font-size: 0.875rem; color: #64748b;">
+                {{ return.customer_email }}
+              </div>
             </div>
-            <button class="btn btn-secondary btn-sm" onclick="openEditReturnModal({{ return.id }})">
-              <i class="fa-solid fa-edit"></i> Edit
-            </button>
-          </div>
 
-          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin-top: 1rem;">
-            <div>
-              <div style="font-size: 0.75rem; color: #64748b; font-weight: 600; text-transform: uppercase; margin-bottom: 0.25rem;">Supplier</div>
-              <div style="color: #0f172a; font-weight: 500;">{{ return.supplier }}</div>
+            <!-- Return Items -->
+            <div class="return-items">
+              <div style="font-size: 0.75rem; color: #64748b; font-weight: 600; text-transform: uppercase; margin-bottom: 0.5rem;">
+                Items to Return
+              </div>
+              {% for item in return.items %}
+              <div class="return-item">
+                <div class="return-item-info">
+                  <div class="return-item-name">
+                    {% if item.product_name %}{{ item.product_name }}{% else %}{{ item.sku }}{% endif %}
+                    {% if item.received %}<span class="received-badge"><i class="fa-solid fa-check"></i> Received</span>{% endif %}
+                  </div>
+                  <div class="return-item-details">SKU: {{ item.sku }} | Qty: {{ item.quantity }}</div>
+                </div>
+                <div class="return-item-price">${{ item.refund_amount }}</div>
+              </div>
+              {% endfor %}
+              <div style="display: flex; justify-content: space-between; padding-top: 0.75rem; border-top: 2px solid #e2e8f0; margin-top: 0.5rem;">
+                <strong>Total Refund:</strong>
+                <strong>${{ return.total_refund_amount }}</strong>
+              </div>
             </div>
-            <div>
-              <div style="font-size: 0.75rem; color: #64748b; font-weight: 600; text-transform: uppercase; margin-bottom: 0.25rem;">Expected Date</div>
-              <div style="color: #0f172a; font-weight: 500;">{{ return.expected_date|date:"M d, Y" }}</div>
-            </div>
-            <div>
-              <div style="font-size: 0.75rem; color: #64748b; font-weight: 600; text-transform: uppercase; margin-bottom: 0.25rem;">Items</div>
-              <div style="color: #0f172a; font-weight: 500;">{{ return.item_count }} items</div>
-            </div>
-          </div>
 
-          {% if return.notes %}
-          <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid #e2e8f0;">
-            <div style="font-size: 0.75rem; color: #64748b; font-weight: 600; text-transform: uppercase; margin-bottom: 0.25rem;">Notes</div>
-            <div style="color: #64748b; font-size: 0.875rem;">{{ return.notes }}</div>
+            <!-- Tracking Info -->
+            {% if return.tracking_number %}
+            <div class="tracking-info">
+              <div style="font-size: 0.75rem; color: #15803d; font-weight: 600; text-transform: uppercase; margin-bottom: 0.25rem;">
+                <i class="fa-solid fa-truck"></i> Return Shipping
+              </div>
+              <div style="color: #0f172a; font-weight: 600;">{{ return.tracking_number }}</div>
+              <div style="font-size: 0.875rem; color: #64748b;">Carrier: {{ return.carrier }}</div>
+              {% if return.return_label_url %}
+              <a href="{{ return.return_label_url }}" target="_blank" style="font-size: 0.875rem; color: #10b981; text-decoration: none; font-weight: 500;">
+                <i class="fa-solid fa-download"></i> Download Label
+              </a>
+              {% endif %}
+            </div>
+            {% endif %}
+
+            <!-- Notes -->
+            {% if return.customer_notes %}
+            <div class="notes-section">
+              <div style="font-size: 0.75rem; color: #92400e; font-weight: 600; text-transform: uppercase; margin-bottom: 0.25rem;">
+                <i class="fa-solid fa-comment"></i> Customer Notes
+              </div>
+              <div style="color: #78350f; font-size: 0.875rem;">{{ return.customer_notes }}</div>
+            </div>
+            {% endif %}
+
+            {% if return.admin_notes %}
+            <div class="notes-section admin">
+              <div style="font-size: 0.75rem; color: #0369a1; font-weight: 600; text-transform: uppercase; margin-bottom: 0.25rem;">
+                <i class="fa-solid fa-clipboard"></i> Admin Notes
+              </div>
+              <div style="color: #0c4a6e; font-size: 0.875rem;">{{ return.admin_notes }}</div>
+            </div>
+            {% endif %}
+
+            <!-- Refund Info -->
+            {% if return.stripe_refund_id %}
+            <div style="background: #f3f4f6; border-radius: 8px; padding: 1rem; margin-top: 1rem;">
+              <div style="font-size: 0.75rem; color: #374151; font-weight: 600; text-transform: uppercase; margin-bottom: 0.25rem;">
+                <i class="fa-solid fa-circle-check"></i> Refund Processed
+              </div>
+              <div style="color: #0f172a; font-weight: 600;">${{ return.refund_amount }}</div>
+              <div style="font-size: 0.875rem; color: #64748b;">Stripe: {{ return.stripe_refund_id }}</div>
+            </div>
+            {% endif %}
+
+            <!-- Action Buttons -->
+            <div class="action-buttons">
+              {% if return.status == 'REQUESTED' %}
+                <button class="btn btn-success btn-sm" onclick="updateStatus({{ return.id }}, 'APPROVED')">
+                  <i class="fa-solid fa-check"></i> Approve
+                </button>
+                <button class="btn btn-danger btn-sm" onclick="updateStatus({{ return.id }}, 'REJECTED')">
+                  <i class="fa-solid fa-times"></i> Reject
+                </button>
+              {% endif %}
+
+              {% if return.status == 'APPROVED' %}
+                <button class="btn btn-warning btn-sm" onclick="openTrackingModal({{ return.id }})">
+                  <i class="fa-solid fa-pen"></i> Add Tracking
+                </button>
+                <button class="btn btn-sm" style="background: #8b5cf6; color: white;" onclick="generateLabel({{ return.id }})">
+                  <i class="fa-solid fa-tag"></i> Generate Label
+                </button>
+              {% endif %}
+
+              {% if return.status == 'IN_TRANSIT' or return.status == 'AWAITING_SHIPMENT' %}
+                <button class="btn btn-success btn-sm" onclick="updateStatus({{ return.id }}, 'RECEIVED')">
+                  <i class="fa-solid fa-box-open"></i> Mark Received
+                </button>
+              {% endif %}
+
+              {% if return.status == 'RECEIVED' and not return.stripe_refund_id %}
+                <button class="btn btn-danger btn-sm" onclick="openRefundModal({{ return.id }}, '{{ return.total_refund_amount }}')">
+                  <i class="fa-solid fa-dollar-sign"></i> Process Refund
+                </button>
+              {% endif %}
+
+              <button class="btn btn-secondary btn-sm" onclick="openNotesModal({{ return.id }}, '{{ return.admin_notes|escapejs }}')">
+                <i class="fa-solid fa-clipboard"></i> Notes
+              </button>
+            </div>
           </div>
-          {% endif %}
-        </div>
-        {% endfor %}
-      {% else %}
-        <div style="text-align: center; padding: 4rem 2rem; color: #64748b;">
-          <i class="fa-solid fa-box-open" style="font-size: 4rem; opacity: 0.3; margin-bottom: 1rem;"></i>
-          <p>No returns yet. Add your first return to get started.</p>
-        </div>
-      {% endif %}
+          {% endfor %}
+        {% else %}
+          <div style="text-align: center; padding: 4rem 2rem; color: #64748b;">
+            <i class="fa-solid fa-inbox" style="font-size: 4rem; opacity: 0.3; margin-bottom: 1rem;"></i>
+            <p>No returns yet. Click "Create Return" to get started.</p>
+          </div>
+        {% endif %}
+      </div>
     </div>
   </div>
 
-  <!-- Return Modal -->
-  <div class="modal-overlay" id="returnModal">
+  <!-- Create Return Modal -->
+  <div class="modal-overlay" id="createReturnModal">
     <div class="modal-content">
-      <h2 id="modalTitle" style="font-size: 1.75rem; font-weight: 700; margin-bottom: 1.5rem;">Add Return</h2>
+      <h2 style="font-size: 1.75rem; font-weight: 700; margin-bottom: 1.5rem;">Create Return</h2>
 
-      <form id="returnForm">
-        <input type="hidden" id="returnId">
+      <div id="createReturnMessage"></div>
 
+      <form id="createReturnForm">
         <div class="form-group">
-          <label for="trackingNumber">Tracking Number *</label>
-          <input type="text" id="trackingNumber" required>
+          <label for="orderSelect">Select Order *</label>
+          <select id="orderSelect" required onchange="loadOrderItems()">
+            <option value="">Choose an order...</option>
+            {% for order in orders %}
+            <option value="{{ order.id }}">{{ order.order_number }} - {{ order.email }} - ${{ order.total }} ({{ order.created_at }})</option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <div class="form-group" id="itemsContainer" style="display: none;">
+          <label>Select Items to Return *</label>
+          <div class="order-items-select" id="orderItemsList">
+            <!-- Populated by JavaScript -->
+          </div>
         </div>
 
         <div class="form-group">
-          <label for="supplier">Supplier *</label>
-          <input type="text" id="supplier" required>
-        </div>
-
-        <div class="form-group">
-          <label for="status">Status *</label>
-          <select id="status" required>
-            <option value="pending">Pending</option>
-            <option value="in-transit">In Transit</option>
-            <option value="delivered">Delivered</option>
-            <option value="delayed">Delayed</option>
+          <label for="returnReason">Reason *</label>
+          <select id="returnReason" required>
+            {% for value, label in return_reasons %}
+            <option value="{{ value }}">{{ label }}</option>
+            {% endfor %}
           </select>
         </div>
 
         <div class="form-group">
-          <label for="expectedDate">Expected Delivery Date *</label>
-          <input type="date" id="expectedDate" required>
-        </div>
-
-        <div class="form-group">
-          <label for="itemCount">Number of Items *</label>
-          <input type="number" id="itemCount" min="1" required>
-        </div>
-
-        <div class="form-group">
-          <label for="notes">Notes</label>
-          <textarea id="notes" rows="3"></textarea>
+          <label for="customerNotes">Customer Notes</label>
+          <textarea id="customerNotes" placeholder="Any additional details about the return..."></textarea>
         </div>
 
         <div style="display: flex; gap: 1rem; margin-top: 2rem;">
           <button type="submit" class="btn btn-primary">
-            <i class="fa-solid fa-save"></i> Save Return
+            <i class="fa-solid fa-plus"></i> Create Return
           </button>
-          <button type="button" class="btn btn-secondary" onclick="closeReturnModal()">
+          <button type="button" class="btn btn-secondary" onclick="closeCreateReturnModal()">
+            Cancel
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Add Tracking Modal -->
+  <div class="modal-overlay" id="trackingModal">
+    <div class="modal-content" style="max-width: 450px;">
+      <h2 style="font-size: 1.5rem; font-weight: 700; margin-bottom: 1.5rem;">Add Return Tracking</h2>
+
+      <div id="trackingMessage"></div>
+
+      <form id="trackingForm">
+        <input type="hidden" id="trackingReturnId">
+
+        <div class="form-group">
+          <label for="returnTrackingNumber">Tracking Number *</label>
+          <input type="text" id="returnTrackingNumber" required placeholder="e.g., 1Z999AA10123456784">
+        </div>
+
+        <div class="form-group">
+          <label for="returnCarrier">Carrier *</label>
+          <select id="returnCarrier" required>
+            <option value="">Select carrier...</option>
+            <option value="USPS">USPS</option>
+            <option value="UPS">UPS</option>
+            <option value="FedEx">FedEx</option>
+            <option value="DHL">DHL</option>
+            <option value="Other">Other</option>
+          </select>
+        </div>
+
+        <div style="display: flex; gap: 1rem; margin-top: 2rem;">
+          <button type="submit" class="btn btn-primary">
+            <i class="fa-solid fa-save"></i> Save
+          </button>
+          <button type="button" class="btn btn-secondary" onclick="closeTrackingModal()">
+            Cancel
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Process Refund Modal -->
+  <div class="modal-overlay" id="refundModal">
+    <div class="modal-content" style="max-width: 450px;">
+      <h2 style="font-size: 1.5rem; font-weight: 700; margin-bottom: 1rem; color: #ef4444;">
+        <i class="fa-solid fa-dollar-sign"></i> Process Refund
+      </h2>
+
+      <div id="refundMessage"></div>
+
+      <form id="refundForm">
+        <input type="hidden" id="refundReturnId">
+
+        <div class="form-group">
+          <label for="refundAmount">Refund Amount ($) *</label>
+          <input type="number" id="refundAmount" step="0.01" min="0.01" required>
+          <p style="font-size: 0.8rem; color: #64748b; margin-top: 0.5rem;">
+            Calculated from return items. Adjust if needed.
+          </p>
+        </div>
+
+        <p style="color: #991b1b; font-size: 0.875rem; background: #fef2f2; padding: 0.75rem; border-radius: 8px; margin-bottom: 1.5rem;">
+          <i class="fa-solid fa-info-circle"></i> This will issue a partial refund via Stripe. This action cannot be undone.
+        </p>
+
+        <div style="display: flex; gap: 1rem;">
+          <button type="submit" class="btn btn-danger" id="refundSubmitBtn">
+            <i class="fa-solid fa-dollar-sign"></i> Process Refund
+          </button>
+          <button type="button" class="btn btn-secondary" onclick="closeRefundModal()">
+            Cancel
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Admin Notes Modal -->
+  <div class="modal-overlay" id="notesModal">
+    <div class="modal-content" style="max-width: 450px;">
+      <h2 style="font-size: 1.5rem; font-weight: 700; margin-bottom: 1.5rem;">Admin Notes</h2>
+
+      <div id="notesMessage"></div>
+
+      <form id="notesForm">
+        <input type="hidden" id="notesReturnId">
+
+        <div class="form-group">
+          <label for="adminNotes">Notes</label>
+          <textarea id="adminNotes" placeholder="Internal notes about this return..." rows="4"></textarea>
+        </div>
+
+        <div style="display: flex; gap: 1rem; margin-top: 1.5rem;">
+          <button type="submit" class="btn btn-primary">
+            <i class="fa-solid fa-save"></i> Save
+          </button>
+          <button type="button" class="btn btn-secondary" onclick="closeNotesModal()">
             Cancel
           </button>
         </div>
@@ -434,73 +851,352 @@
   </div>
 
   <script>
-    let returnsData = {{ returns_json|safe }};
+    const ordersData = {{ orders_json|safe }};
+    const returnsData = {{ returns_json|safe }};
 
+    function getCookie(name) {
+      let cookieValue = null;
+      if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+          const cookie = cookies[i].trim();
+          if (cookie.substring(0, name.length + 1) === (name + '=')) {
+            cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+            break;
+          }
+        }
+      }
+      return cookieValue;
+    }
+
+    // Filter tabs
+    document.querySelectorAll('.filter-tab').forEach(tab => {
+      tab.addEventListener('click', function() {
+        document.querySelectorAll('.filter-tab').forEach(t => t.classList.remove('active'));
+        this.classList.add('active');
+
+        const status = this.dataset.status;
+        document.querySelectorAll('.return-card').forEach(card => {
+          if (status === 'all' || card.dataset.status === status) {
+            card.style.display = 'block';
+          } else {
+            card.style.display = 'none';
+          }
+        });
+      });
+    });
+
+    // Create Return Modal
     function openCreateReturnModal() {
-      document.getElementById('modalTitle').textContent = 'Add Return';
-      document.getElementById('returnForm').reset();
-      document.getElementById('returnId').value = '';
-      document.getElementById('returnModal').classList.add('active');
+      document.getElementById('createReturnForm').reset();
+      document.getElementById('itemsContainer').style.display = 'none';
+      document.getElementById('orderItemsList').innerHTML = '';
+      document.getElementById('createReturnMessage').innerHTML = '';
+      document.getElementById('createReturnModal').classList.add('active');
     }
 
-    function openEditReturnModal(returnId) {
-      const return = returnsData.find(s => s.id === returnId);
-      if (!return) return;
-
-      document.getElementById('modalTitle').textContent = 'Edit Return';
-      document.getElementById('returnId').value = return.id;
-      document.getElementById('trackingNumber').value = return.tracking_number;
-      document.getElementById('supplier').value = return.supplier;
-      document.getElementById('status').value = return.status;
-      document.getElementById('expectedDate').value = return.expected_date;
-      document.getElementById('itemCount').value = return.item_count;
-      document.getElementById('notes').value = return.notes || '';
-
-      document.getElementById('returnModal').classList.add('active');
+    function closeCreateReturnModal() {
+      document.getElementById('createReturnModal').classList.remove('active');
     }
 
-    function closeReturnModal() {
-      document.getElementById('returnModal').classList.remove('active');
+    async function loadOrderItems() {
+      const orderId = document.getElementById('orderSelect').value;
+      const container = document.getElementById('itemsContainer');
+      const itemsList = document.getElementById('orderItemsList');
+
+      if (!orderId) {
+        container.style.display = 'none';
+        itemsList.innerHTML = '';
+        return;
+      }
+
+      try {
+        const formData = new FormData();
+        formData.append('action', 'get_order_items');
+        formData.append('order_id', orderId);
+
+        const response = await fetch('{% url "admin_returns" %}', {
+          method: 'POST',
+          headers: { 'X-CSRFToken': getCookie('csrftoken') },
+          body: formData
+        });
+
+        const data = await response.json();
+
+        if (data.success) {
+          itemsList.innerHTML = data.items.map(item => `
+            <div class="order-item-row">
+              <input type="checkbox" class="order-item-checkbox" name="item_ids" value="${item.id}" checked>
+              <div style="flex: 1;">
+                <div style="font-weight: 500;">${item.product_name || item.sku}</div>
+                <div style="font-size: 0.8rem; color: #64748b;">SKU: ${item.sku} | $${item.unit_price} each</div>
+              </div>
+              <input type="number" class="order-item-qty" name="quantities" value="${item.quantity}" min="1" max="${item.quantity}">
+              <div style="font-weight: 500; min-width: 60px; text-align: right;">$${item.line_total}</div>
+            </div>
+          `).join('');
+          container.style.display = 'block';
+        } else {
+          itemsList.innerHTML = `<p style="color: #ef4444; padding: 1rem;">Error: ${data.error}</p>`;
+          container.style.display = 'block';
+        }
+      } catch (error) {
+        console.error('Error:', error);
+        itemsList.innerHTML = `<p style="color: #ef4444; padding: 1rem;">Error loading items</p>`;
+        container.style.display = 'block';
+      }
     }
 
-    document.getElementById('returnForm').addEventListener('submit', async function(e) {
+    document.getElementById('createReturnForm').addEventListener('submit', async function(e) {
       e.preventDefault();
 
-      const returnId = document.getElementById('returnId').value;
       const formData = new FormData();
+      formData.append('action', 'create_return');
+      formData.append('order_id', document.getElementById('orderSelect').value);
+      formData.append('reason', document.getElementById('returnReason').value);
+      formData.append('customer_notes', document.getElementById('customerNotes').value);
 
-      formData.append('action', returnId ? 'update_return' : 'create_return');
-      if (returnId) formData.append('return_id', returnId);
-      formData.append('tracking_number', document.getElementById('trackingNumber').value);
-      formData.append('supplier', document.getElementById('supplier').value);
-      formData.append('status', document.getElementById('status').value);
-      formData.append('expected_date', document.getElementById('expectedDate').value);
-      formData.append('item_count', document.getElementById('itemCount').value);
-      formData.append('notes', document.getElementById('notes').value);
-      formData.append('csrfmiddlewaretoken', '{{ csrf_token }}');
+      // Get selected items and quantities
+      document.querySelectorAll('.order-item-row').forEach(row => {
+        const checkbox = row.querySelector('input[type="checkbox"]');
+        const qtyInput = row.querySelector('input[type="number"]');
+        if (checkbox.checked) {
+          formData.append('item_ids', checkbox.value);
+          formData.append('quantities', qtyInput.value);
+        }
+      });
 
       try {
         const response = await fetch('{% url "admin_returns" %}', {
           method: 'POST',
+          headers: { 'X-CSRFToken': getCookie('csrftoken') },
           body: formData
         });
 
-        if (response.ok) {
-          location.reload();
+        const data = await response.json();
+
+        if (data.success) {
+          document.getElementById('createReturnMessage').innerHTML =
+            `<div class="success-message">${data.message}</div>`;
+          setTimeout(() => location.reload(), 1500);
         } else {
-          alert('Error saving return');
+          document.getElementById('createReturnMessage').innerHTML =
+            `<div class="error-message">Error: ${data.error}</div>`;
         }
       } catch (error) {
         console.error('Error:', error);
-        alert('Error saving return');
+        document.getElementById('createReturnMessage').innerHTML =
+          `<div class="error-message">Error creating return</div>`;
       }
     });
 
-    // Close modal on overlay click
-    document.getElementById('returnModal').addEventListener('click', function(e) {
-      if (e.target === this) {
-        closeReturnModal();
+    // Update Status
+    async function updateStatus(returnId, newStatus) {
+      if (!confirm(`Are you sure you want to change the status to ${newStatus}?`)) return;
+
+      try {
+        const formData = new FormData();
+        formData.append('action', 'update_status');
+        formData.append('return_id', returnId);
+        formData.append('status', newStatus);
+
+        const response = await fetch('{% url "admin_returns" %}', {
+          method: 'POST',
+          headers: { 'X-CSRFToken': getCookie('csrftoken') },
+          body: formData
+        });
+
+        const data = await response.json();
+
+        if (data.success) {
+          location.reload();
+        } else {
+          alert('Error: ' + data.error);
+        }
+      } catch (error) {
+        console.error('Error:', error);
+        alert('Error updating status');
       }
+    }
+
+    // Tracking Modal
+    function openTrackingModal(returnId) {
+      document.getElementById('trackingReturnId').value = returnId;
+      document.getElementById('trackingForm').reset();
+      document.getElementById('trackingReturnId').value = returnId;
+      document.getElementById('trackingMessage').innerHTML = '';
+      document.getElementById('trackingModal').classList.add('active');
+    }
+
+    function closeTrackingModal() {
+      document.getElementById('trackingModal').classList.remove('active');
+    }
+
+    document.getElementById('trackingForm').addEventListener('submit', async function(e) {
+      e.preventDefault();
+
+      const formData = new FormData();
+      formData.append('action', 'add_tracking');
+      formData.append('return_id', document.getElementById('trackingReturnId').value);
+      formData.append('tracking_number', document.getElementById('returnTrackingNumber').value);
+      formData.append('carrier', document.getElementById('returnCarrier').value);
+
+      try {
+        const response = await fetch('{% url "admin_returns" %}', {
+          method: 'POST',
+          headers: { 'X-CSRFToken': getCookie('csrftoken') },
+          body: formData
+        });
+
+        const data = await response.json();
+
+        if (data.success) {
+          document.getElementById('trackingMessage').innerHTML =
+            `<div class="success-message">${data.message}</div>`;
+          setTimeout(() => location.reload(), 1500);
+        } else {
+          document.getElementById('trackingMessage').innerHTML =
+            `<div class="error-message">Error: ${data.error}</div>`;
+        }
+      } catch (error) {
+        console.error('Error:', error);
+        document.getElementById('trackingMessage').innerHTML =
+          `<div class="error-message">Error saving tracking info</div>`;
+      }
+    });
+
+    // Generate Label
+    async function generateLabel(returnId) {
+      if (!confirm('Generate return shipping label? This will charge your EasyPost account.')) return;
+
+      try {
+        const formData = new FormData();
+        formData.append('action', 'generate_label');
+        formData.append('return_id', returnId);
+
+        const response = await fetch('{% url "admin_returns" %}', {
+          method: 'POST',
+          headers: { 'X-CSRFToken': getCookie('csrftoken') },
+          body: formData
+        });
+
+        const data = await response.json();
+
+        if (data.success) {
+          alert(`Label generated!\n\nTracking: ${data.tracking_number}\nCarrier: ${data.carrier}\nCost: $${data.cost}`);
+          location.reload();
+        } else {
+          alert('Error: ' + data.error);
+        }
+      } catch (error) {
+        console.error('Error:', error);
+        alert('Error generating label');
+      }
+    }
+
+    // Refund Modal
+    function openRefundModal(returnId, amount) {
+      document.getElementById('refundReturnId').value = returnId;
+      document.getElementById('refundAmount').value = amount;
+      document.getElementById('refundMessage').innerHTML = '';
+      document.getElementById('refundModal').classList.add('active');
+    }
+
+    function closeRefundModal() {
+      document.getElementById('refundModal').classList.remove('active');
+    }
+
+    document.getElementById('refundForm').addEventListener('submit', async function(e) {
+      e.preventDefault();
+
+      const submitBtn = document.getElementById('refundSubmitBtn');
+      submitBtn.disabled = true;
+      submitBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Processing...';
+
+      const formData = new FormData();
+      formData.append('action', 'process_refund');
+      formData.append('return_id', document.getElementById('refundReturnId').value);
+      formData.append('refund_amount', document.getElementById('refundAmount').value);
+
+      try {
+        const response = await fetch('{% url "admin_returns" %}', {
+          method: 'POST',
+          headers: { 'X-CSRFToken': getCookie('csrftoken') },
+          body: formData
+        });
+
+        const data = await response.json();
+
+        if (data.success) {
+          document.getElementById('refundMessage').innerHTML =
+            `<div class="success-message">${data.message}</div>`;
+          setTimeout(() => location.reload(), 1500);
+        } else {
+          document.getElementById('refundMessage').innerHTML =
+            `<div class="error-message">Error: ${data.error}</div>`;
+          submitBtn.disabled = false;
+          submitBtn.innerHTML = '<i class="fa-solid fa-dollar-sign"></i> Process Refund';
+        }
+      } catch (error) {
+        console.error('Error:', error);
+        document.getElementById('refundMessage').innerHTML =
+          `<div class="error-message">Error processing refund</div>`;
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = '<i class="fa-solid fa-dollar-sign"></i> Process Refund';
+      }
+    });
+
+    // Notes Modal
+    function openNotesModal(returnId, existingNotes) {
+      document.getElementById('notesReturnId').value = returnId;
+      document.getElementById('adminNotes').value = existingNotes || '';
+      document.getElementById('notesMessage').innerHTML = '';
+      document.getElementById('notesModal').classList.add('active');
+    }
+
+    function closeNotesModal() {
+      document.getElementById('notesModal').classList.remove('active');
+    }
+
+    document.getElementById('notesForm').addEventListener('submit', async function(e) {
+      e.preventDefault();
+
+      const formData = new FormData();
+      formData.append('action', 'add_notes');
+      formData.append('return_id', document.getElementById('notesReturnId').value);
+      formData.append('admin_notes', document.getElementById('adminNotes').value);
+
+      try {
+        const response = await fetch('{% url "admin_returns" %}', {
+          method: 'POST',
+          headers: { 'X-CSRFToken': getCookie('csrftoken') },
+          body: formData
+        });
+
+        const data = await response.json();
+
+        if (data.success) {
+          document.getElementById('notesMessage').innerHTML =
+            `<div class="success-message">${data.message}</div>`;
+          setTimeout(() => location.reload(), 1000);
+        } else {
+          document.getElementById('notesMessage').innerHTML =
+            `<div class="error-message">Error: ${data.error}</div>`;
+        }
+      } catch (error) {
+        console.error('Error:', error);
+        document.getElementById('notesMessage').innerHTML =
+          `<div class="error-message">Error saving notes</div>`;
+      }
+    });
+
+    // Close modals on overlay click
+    document.querySelectorAll('.modal-overlay').forEach(modal => {
+      modal.addEventListener('click', function(e) {
+        if (e.target === this) {
+          this.classList.remove('active');
+        }
+      });
     });
   </script>
 </body>

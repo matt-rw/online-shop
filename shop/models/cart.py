@@ -77,6 +77,7 @@ class OrderStatus(models.TextChoices):
     PAID = "PAID", "Paid"
     FAILED = "FAILED", "Failed"
     CANCELED = "CANCELED", "Canceled"
+    REFUNDED = "REFUNDED", "Refunded"
     SHIPPED = "SHIPPED", "Shipped"
     FULFILLED = "FULFILLED", "Fulfilled"
 
@@ -103,6 +104,13 @@ class Order(models.Model):
 
     stripe_checkout_id = models.CharField(max_length=255, blank=True, db_index=True)
     stripe_payment_intent_id = models.CharField(max_length=255, blank=True, db_index=True)
+
+    # Test order flag
+    is_test = models.BooleanField(
+        default=False,
+        db_index=True,
+        help_text="Test orders created via Test Center"
+    )
 
     # Shipping label tracking
     tracking_number = models.CharField(max_length=255, blank=True)

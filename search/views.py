@@ -9,13 +9,13 @@ def search(request):
     search_query = request.GET.get("query", None)
     page = request.GET.get("page", 1)
 
-    # Search across Product models
+    # Search across Product models (exclude test products)
     if search_query:
         search_results = Product.objects.filter(
             Q(name__icontains=search_query)
             | Q(description__icontains=search_query)
             | Q(category_obj__name__icontains=search_query)
-        )
+        ).exclude(slug__startswith="test-")
     else:
         search_results = Product.objects.none()
 
