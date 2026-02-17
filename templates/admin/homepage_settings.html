@@ -299,10 +299,46 @@
       background: #1e293b;
     }
     .slide-image-container {
-      aspect-ratio: 21/9;  /* Matches typical desktop viewport with 75vh hero */
+      aspect-ratio: 21/9;  /* Desktop: typical viewport with 75vh hero */
       position: relative;
       overflow: hidden;
       cursor: pointer;
+      transition: aspect-ratio 0.3s ease;
+    }
+    .slide-image-container.mobile-preview {
+      aspect-ratio: 9/16;  /* Mobile: portrait */
+    }
+
+    /* Device Toggle */
+    .device-toggle {
+      display: inline-flex;
+      background: #f1f5f9;
+      border-radius: 8px;
+      padding: 4px;
+      gap: 4px;
+      margin-left: auto;
+    }
+    .device-toggle button {
+      padding: 0.5rem 1rem;
+      border: none;
+      background: transparent;
+      border-radius: 6px;
+      font-size: 0.8125rem;
+      font-weight: 500;
+      color: #64748b;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 0.375rem;
+      transition: all 0.2s;
+    }
+    .device-toggle button.active {
+      background: white;
+      color: #0f172a;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    }
+    .device-toggle button:hover:not(.active) {
+      color: #0f172a;
     }
     .slide-image-container img {
       position: absolute;
@@ -354,8 +390,11 @@
       border-radius: 16px;
       width: 90%;
       max-width: 500px;
+      max-height: 90vh;
       box-shadow: 0 20px 60px rgba(0,0,0,0.3);
       overflow: hidden;
+      display: flex;
+      flex-direction: column;
     }
     .position-modal-header {
       display: flex;
@@ -388,14 +427,27 @@
       background: #1e293b;
       padding: 1rem;
       overflow: hidden;
+      flex-shrink: 1;
+      min-height: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
     }
     .position-preview-wrapper {
       overflow: hidden;
       border-radius: 8px;
+      width: 100%;
+      aspect-ratio: 21/9;
+      transition: aspect-ratio 0.3s ease;
+    }
+    .position-preview-wrapper.mobile-preview {
+      aspect-ratio: 9/16;
+      width: 50%;
+      margin: 0 auto;
     }
     .position-preview-img {
       width: 100%;
-      aspect-ratio: 21/9;  /* Matches typical desktop viewport with 75vh hero */
+      height: 100%;
       object-fit: cover;
       display: block;
     }
@@ -691,7 +743,15 @@
     <div class="section-card">
       <h2 class="section-title">
         <i class="fas fa-images"></i> Hero Slideshow
-        <span id="slide-count" style="margin-left: auto; font-size: 0.875rem; font-weight: 500; color: #64748b;"></span>
+        <span id="slide-count" style="font-size: 0.875rem; font-weight: 500; color: #64748b; margin-left: 1rem;"></span>
+        <div class="device-toggle">
+          <button type="button" id="desktop-toggle" class="active" onclick="setPreviewMode('desktop')">
+            <i class="fas fa-desktop"></i> Desktop
+          </button>
+          <button type="button" id="mobile-toggle" onclick="setPreviewMode('mobile')">
+            <i class="fas fa-mobile-alt"></i> Mobile
+          </button>
+        </div>
       </h2>
 
       <div class="slides-grid" id="slides-container"></div>
@@ -790,7 +850,10 @@
   <div class="position-overlay" id="position-modal">
     <div class="position-modal">
       <div class="position-modal-header">
-        <span class="position-modal-title">Crop & Position</span>
+        <span class="position-modal-title">
+          Crop & Position
+          <span id="modal-device-label" style="font-weight: 400; color: #64748b; font-size: 0.875rem; margin-left: 0.5rem;"></span>
+        </span>
         <button class="position-modal-close" onclick="closePositionModal()">
           <i class="fas fa-times"></i>
         </button>
@@ -861,6 +924,7 @@
     let uploadType = 'main';
     let sortableInstance = null;
     let hasUnsavedChanges = false;
+    let previewMode = 'desktop';  // 'desktop' or 'mobile'
 
     document.addEventListener('DOMContentLoaded', function() {
       // Load settings
@@ -895,6 +959,20 @@
       document.getElementById('unsaved-badge').classList.remove('show');
     }
 
+    function setPreviewMode(mode) {
+      previewMode = mode;
+      document.getElementById('desktop-toggle').classList.toggle('active', mode === 'desktop');
+      document.getElementById('mobile-toggle').classList.toggle('active', mode === 'mobile');
+
+      // Update all slide previews
+      document.querySelectorAll('.slide-image-container').forEach(container => {
+        container.classList.toggle('mobile-preview', mode === 'mobile');
+      });
+
+      // Re-render to show correct positioning
+      renderSlides();
+    }
+
     function initSortable() {
       const container = document.getElementById('slides-container');
       if (sortableInstance) sortableInstance.destroy();
@@ -924,9 +1002,10 @@
 
       slides.forEach((slide, index) => {
         const isActive = slide.is_active !== false;
-        const posX = slide.position_x ?? 50;
-        const posY = slide.position_y ?? 50;
-        const zoom = slide.zoom ?? 100;
+        // Use mobile values if in mobile mode, fallback to desktop values
+        const posX = previewMode === 'mobile' ? (slide.mobile_position_x ?? slide.position_x ?? 50) : (slide.position_x ?? 50);
+        const posY = previewMode === 'mobile' ? (slide.mobile_position_y ?? slide.position_y ?? 50) : (slide.position_y ?? 50);
+        const zoom = previewMode === 'mobile' ? (slide.mobile_zoom ?? slide.zoom ?? 100) : (slide.zoom ?? 100);
 
         const card = document.createElement('div');
         card.className = 'slide-card' + (isActive ? '' : ' inactive');
@@ -955,7 +1034,7 @@
           </div>
 
           <div class="slide-image-wrapper">
-            <div class="slide-image-container" onclick="triggerUpload(${index}, 'main')">
+            <div class="slide-image-container${previewMode === 'mobile' ? ' mobile-preview' : ''}" onclick="triggerUpload(${index}, 'main')">
               ${imageHtml}
               ${!isActive ? '<div class="inactive-overlay"><i class="fas fa-eye-slash"></i> Hidden</div>' : ''}
             </div>
@@ -1024,18 +1103,28 @@
       const modal = document.getElementById('position-modal');
       const preview = document.getElementById('position-preview-img');
 
-      // Set preview image
+      // Set preview image and mode
       preview.src = slide.image_url;
-      updatePreviewPosition();
+      preview.parentElement.classList.toggle('mobile-preview', previewMode === 'mobile');
+      document.getElementById('modal-device-label').innerHTML =
+        previewMode === 'mobile'
+          ? '<i class="fas fa-mobile-alt"></i> Mobile'
+          : '<i class="fas fa-desktop"></i> Desktop';
+
+      // Get values based on mode
+      const zoom = previewMode === 'mobile' ? (slide.mobile_zoom ?? slide.zoom ?? 100) : (slide.zoom ?? 100);
+      const posX = previewMode === 'mobile' ? (slide.mobile_position_x ?? slide.position_x ?? 50) : (slide.position_x ?? 50);
+      const posY = previewMode === 'mobile' ? (slide.mobile_position_y ?? slide.position_y ?? 50) : (slide.position_y ?? 50);
 
       // Set slider values
-      document.getElementById('modal-zoom').value = slide.zoom ?? 100;
-      document.getElementById('modal-x').value = slide.position_x ?? 50;
-      document.getElementById('modal-y').value = slide.position_y ?? 50;
-      document.getElementById('modal-zoom-val').textContent = (slide.zoom ?? 100) + '%';
-      document.getElementById('modal-x-val').textContent = (slide.position_x ?? 50) + '%';
-      document.getElementById('modal-y-val').textContent = (slide.position_y ?? 50) + '%';
+      document.getElementById('modal-zoom').value = zoom;
+      document.getElementById('modal-x').value = posX;
+      document.getElementById('modal-y').value = posY;
+      document.getElementById('modal-zoom-val').textContent = zoom + '%';
+      document.getElementById('modal-x-val').textContent = posX + '%';
+      document.getElementById('modal-y-val').textContent = posY + '%';
 
+      updatePreviewPosition();
       modal.classList.add('open');
       document.body.style.overflow = 'hidden';
     }
@@ -1059,15 +1148,28 @@
     function updateModalPosition(axis, value) {
       if (currentPositionIndex === null) return;
       const intVal = parseInt(value);
+      const isMobile = previewMode === 'mobile';
 
       if (axis === 'x') {
-        slides[currentPositionIndex].position_x = intVal;
+        if (isMobile) {
+          slides[currentPositionIndex].mobile_position_x = intVal;
+        } else {
+          slides[currentPositionIndex].position_x = intVal;
+        }
         document.getElementById('modal-x-val').textContent = intVal + '%';
       } else if (axis === 'y') {
-        slides[currentPositionIndex].position_y = intVal;
+        if (isMobile) {
+          slides[currentPositionIndex].mobile_position_y = intVal;
+        } else {
+          slides[currentPositionIndex].position_y = intVal;
+        }
         document.getElementById('modal-y-val').textContent = intVal + '%';
       } else if (axis === 'zoom') {
-        slides[currentPositionIndex].zoom = intVal;
+        if (isMobile) {
+          slides[currentPositionIndex].mobile_zoom = intVal;
+        } else {
+          slides[currentPositionIndex].zoom = intVal;
+        }
         document.getElementById('modal-zoom-val').textContent = intVal + '%';
       }
 
@@ -1080,10 +1182,13 @@
       if (currentPositionIndex === null) return;
       const slide = slides[currentPositionIndex];
       const preview = document.getElementById('position-preview-img');
-      const x = slide.position_x ?? 50;
-      const y = slide.position_y ?? 50;
-      const z = slide.zoom ?? 100;
+      const isMobile = previewMode === 'mobile';
+
+      const x = isMobile ? (slide.mobile_position_x ?? slide.position_x ?? 50) : (slide.position_x ?? 50);
+      const y = isMobile ? (slide.mobile_position_y ?? slide.position_y ?? 50) : (slide.position_y ?? 50);
+      const z = isMobile ? (slide.mobile_zoom ?? slide.zoom ?? 100) : (slide.zoom ?? 100);
       const scale = z / 100;
+
       preview.style.objectPosition = `${x}% ${y}%`;
       preview.style.transform = `scale(${scale})`;
       preview.style.transformOrigin = `${x}% ${y}%`;
@@ -1094,9 +1199,10 @@
       if (card) {
         const img = card.querySelector('.slide-image-container img');
         if (img) {
-          const x = slides[index].position_x ?? 50;
-          const y = slides[index].position_y ?? 50;
-          const z = slides[index].zoom ?? 100;
+          const isMobile = previewMode === 'mobile';
+          const x = isMobile ? (slides[index].mobile_position_x ?? slides[index].position_x ?? 50) : (slides[index].position_x ?? 50);
+          const y = isMobile ? (slides[index].mobile_position_y ?? slides[index].position_y ?? 50) : (slides[index].position_y ?? 50);
+          const z = isMobile ? (slides[index].mobile_zoom ?? slides[index].zoom ?? 100) : (slides[index].zoom ?? 100);
           const scale = z / 100;
           img.style.objectPosition = `${x}% ${y}%`;
           img.style.transform = `scale(${scale})`;
@@ -1107,9 +1213,17 @@
 
     function resetModalPosition() {
       if (currentPositionIndex === null) return;
-      slides[currentPositionIndex].position_x = 50;
-      slides[currentPositionIndex].position_y = 50;
-      slides[currentPositionIndex].zoom = 100;
+      const isMobile = previewMode === 'mobile';
+
+      if (isMobile) {
+        slides[currentPositionIndex].mobile_position_x = 50;
+        slides[currentPositionIndex].mobile_position_y = 50;
+        slides[currentPositionIndex].mobile_zoom = 100;
+      } else {
+        slides[currentPositionIndex].position_x = 50;
+        slides[currentPositionIndex].position_y = 50;
+        slides[currentPositionIndex].zoom = 100;
+      }
 
       document.getElementById('modal-zoom').value = 100;
       document.getElementById('modal-x').value = 50;

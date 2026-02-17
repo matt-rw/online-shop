@@ -283,6 +283,9 @@
                      data-zoom="{{ slide.zoom|default:100 }}"
                      data-pos-x="{{ slide.position_x|default:50 }}"
                      data-pos-y="{{ slide.position_y|default:50 }}"
+                     data-mobile-zoom="{{ slide.mobile_zoom|default:slide.zoom|default:100 }}"
+                     data-mobile-pos-x="{{ slide.mobile_position_x|default:slide.position_x|default:50 }}"
+                     data-mobile-pos-y="{{ slide.mobile_position_y|default:slide.position_y|default:50 }}"
                      style="background-image: url('{{ slide.image_url }}'); background-size: cover;">
                 </div>
               </div>
@@ -297,6 +300,9 @@
                    data-zoom="{{ slide.zoom|default:100 }}"
                    data-pos-x="{{ slide.position_x|default:50 }}"
                    data-pos-y="{{ slide.position_y|default:50 }}"
+                   data-mobile-zoom="{{ slide.mobile_zoom|default:slide.zoom|default:100 }}"
+                   data-mobile-pos-x="{{ slide.mobile_position_x|default:slide.position_x|default:50 }}"
+                   data-mobile-pos-y="{{ slide.mobile_position_y|default:slide.position_y|default:50 }}"
                    style="background-image: url('{{ slide.image_url }}'); background-size: cover;">
               </div>
             </div>
@@ -755,19 +761,33 @@
       const slideshowSettings = JSON.parse(document.getElementById('slideshow-settings').textContent);
       const slideDuration = slideshowSettings.duration || 5000;
       const slideAutoplay = slideshowSettings.autoplay !== false;
-      // Apply hero slide image positioning
-      document.querySelectorAll('.hero-slide-img').forEach(function(el) {
-          const zoom = parseFloat(el.dataset.zoom) || 100;
-          const posX = parseFloat(el.dataset.posX) || 50;
-          const posY = parseFloat(el.dataset.posY) || 50;
-          const scale = zoom / 100;
+      // Apply hero slide image positioning (responsive)
+      function applyHeroPositioning() {
+          const isMobile = window.innerWidth < 768;
+          document.querySelectorAll('.hero-slide-img').forEach(function(el) {
+              const zoom = isMobile
+                  ? (parseFloat(el.dataset.mobileZoom) || parseFloat(el.dataset.zoom) || 100)
+                  : (parseFloat(el.dataset.zoom) || 100);
+              const posX = isMobile
+                  ? (parseFloat(el.dataset.mobilePosX) || parseFloat(el.dataset.posX) || 50)
+                  : (parseFloat(el.dataset.posX) || 50);
+              const posY = isMobile
+                  ? (parseFloat(el.dataset.mobilePosY) || parseFloat(el.dataset.posY) || 50)
+                  : (parseFloat(el.dataset.posY) || 50);
+              const scale = zoom / 100;
 
-          el.style.backgroundPosition = posX + '% ' + posY + '%';
-          if (scale !== 1) {
-              el.style.transform = 'scale(' + scale + ')';
-              el.style.transformOrigin = posX + '% ' + posY + '%';
-          }
-      });
+              el.style.backgroundPosition = posX + '% ' + posY + '%';
+              if (scale !== 1) {
+                  el.style.transform = 'scale(' + scale + ')';
+                  el.style.transformOrigin = posX + '% ' + posY + '%';
+              } else {
+                  el.style.transform = '';
+                  el.style.transformOrigin = '';
+              }
+          });
+      }
+      applyHeroPositioning();
+      window.addEventListener('resize', applyHeroPositioning);
 
       AOS.init({
           duration: 600,
