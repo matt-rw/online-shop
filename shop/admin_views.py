@@ -2031,7 +2031,9 @@ def homepage_settings(request):
             try:
                 data = json.loads(request.body)
                 slides = data.get("slides", [])
+                slideshow_settings = data.get("slideshow_settings", {})
                 site_settings.hero_slides = slides
+                site_settings.slideshow_settings = slideshow_settings
                 site_settings.save()
                 return JsonResponse({"success": True})
             except Exception as e:
@@ -2092,6 +2094,16 @@ def homepage_settings(request):
             except Exception as e:
                 return JsonResponse({"success": False, "error": str(e)})
 
+        elif action == "save_gallery":
+            try:
+                data = json.loads(request.body)
+                gallery_images = data.get("gallery_images", [])
+                site_settings.gallery_images = gallery_images
+                site_settings.save()
+                return JsonResponse({"success": True})
+            except Exception as e:
+                return JsonResponse({"success": False, "error": str(e)})
+
         return JsonResponse({"success": False, "error": "Unknown action"})
 
     if request.method == "POST":
@@ -2119,6 +2131,7 @@ def homepage_settings(request):
     context = {
         "site_settings": site_settings,
         "hero_slides": site_settings.hero_slides or [],
+        "gallery_images": site_settings.gallery_images or [],
         "cst_time": timezone.now().astimezone(pytz.timezone("America/Chicago")),
     }
 

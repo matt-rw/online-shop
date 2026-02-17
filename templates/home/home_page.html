@@ -278,12 +278,28 @@
           {% if slide.is_split %}
             <!-- Split view: two images side by side -->
             <div class="absolute inset-0 flex gap-0">
-              <div class="hidden md:block" style="width: 70%; background-image: url('{{ slide.image_url }}'); background-size: cover; background-position: 85% {% if slide.position == 'top' %}20%{% elif slide.position == 'bottom' %}80%{% else %}center{% endif %}; background-repeat: no-repeat;"></div>
-              <div class="w-full md:w-[30%]" style="background-image: url('{{ slide.split_image_url|default:slide.image_url }}'); background-size: cover; background-position: 10% {% if slide.position == 'top' %}20%{% elif slide.position == 'bottom' %}80%{% else %}center{% endif %}; background-repeat: no-repeat;"></div>
+              <div class="hidden md:block overflow-hidden" style="width: 70%;">
+                <div class="w-full h-full hero-slide-img"
+                     data-zoom="{{ slide.zoom|default:100 }}"
+                     data-pos-x="{{ slide.position_x|default:50 }}"
+                     data-pos-y="{{ slide.position_y|default:50 }}"
+                     style="background-image: url('{{ slide.image_url }}'); background-size: cover;">
+                </div>
+              </div>
+              <div class="w-full md:w-[30%] overflow-hidden">
+                <div class="w-full h-full" style="background-image: url('{{ slide.split_image_url|default:slide.image_url }}'); background-size: cover; background-position: center;"></div>
+              </div>
             </div>
           {% else %}
             <!-- Single image -->
-            <div class="absolute inset-0" style="background-image: url('{{ slide.image_url }}'); background-size: cover; background-position: center {% if slide.position == 'top' %}20%{% elif slide.position == 'bottom' %}80%{% else %}center{% endif %}; background-repeat: no-repeat;"></div>
+            <div class="absolute inset-0 overflow-hidden">
+              <div class="w-full h-full hero-slide-img"
+                   data-zoom="{{ slide.zoom|default:100 }}"
+                   data-pos-x="{{ slide.position_x|default:50 }}"
+                   data-pos-y="{{ slide.position_y|default:50 }}"
+                   style="background-image: url('{{ slide.image_url }}'); background-size: cover;">
+              </div>
+            </div>
           {% endif %}
           {% if slide.link_url %}
             <a href="{{ slide.link_url }}" class="absolute inset-0 z-10"></a>
@@ -622,6 +638,17 @@
   <!-- ============================================ -->
   <!-- LIFESTYLE IMAGE SECTION -->
   <!-- ============================================ -->
+  {% if gallery_images %}
+  <section class="w-full bg-white py-12 md:py-20">
+    <div class="max-w-3xl mx-auto px-6">
+      {% for img in gallery_images %}
+      <img src="{{ img.image_url }}"
+           alt="{{ img.alt_text|default:'Blueprint Apparel' }}"
+           class="w-full h-auto {% if not forloop.last %}mb-24{% endif %}" />
+      {% endfor %}
+    </div>
+  </section>
+  {% else %}
   <section class="w-full bg-white py-12 md:py-20">
     <div class="max-w-3xl mx-auto px-6">
       <img src="{% static 'images/hollywood_shots/black-tee-front-closeup.jpeg' %}"
@@ -632,6 +659,7 @@
            class="w-full h-auto" />
     </div>
   </section>
+  {% endif %}
 
 {% endblock %}
 
@@ -722,6 +750,20 @@
   <!-- AOS (Animate On Scroll) Initialization -->
   <script src="https://unpkg.com/aos@2.3.4/dist/aos.js"></script>
   <script>
+      // Apply hero slide image positioning
+      document.querySelectorAll('.hero-slide-img').forEach(function(el) {
+          const zoom = parseFloat(el.dataset.zoom) || 100;
+          const posX = parseFloat(el.dataset.posX) || 50;
+          const posY = parseFloat(el.dataset.posY) || 50;
+          const scale = zoom / 100;
+
+          el.style.backgroundPosition = posX + '% ' + posY + '%';
+          if (scale !== 1) {
+              el.style.transform = 'scale(' + scale + ')';
+              el.style.transformOrigin = posX + '% ' + posY + '%';
+          }
+      });
+
       AOS.init({
           duration: 600,
           easing: 'ease-out',

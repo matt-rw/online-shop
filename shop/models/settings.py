@@ -56,6 +56,14 @@ class SiteSettings(models.Model):
         default=list, blank=True,
         help_text="Hero slideshow slides. Each slide has: image_url, alt_text, link_url (optional)"
     )
+    slideshow_settings = models.JSONField(
+        default=dict, blank=True,
+        help_text="Slideshow settings: duration, transition, autoplay"
+    )
+    gallery_images = models.JSONField(
+        default=list, blank=True,
+        help_text="Gallery images below products. Each has: image_url, alt_text"
+    )
 
     # Site metadata
     site_name = models.CharField(max_length=100, default="Blueprint Apparel")

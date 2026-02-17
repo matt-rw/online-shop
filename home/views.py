@@ -19,9 +19,13 @@ def home_page(request):
     all_slides = site_settings.hero_slides or []
     hero_slides = [s for s in all_slides if s.get('is_active', True)]
 
+    # Get gallery images
+    gallery_images = site_settings.gallery_images or []
+
     context = {
         "site_settings": site_settings,
         "featured_products": featured_products,
         "hero_slides": hero_slides,
+        "gallery_images": gallery_images,
     }
     return render(request, "home/home_page.html", context)

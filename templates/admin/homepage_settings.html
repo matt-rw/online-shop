@@ -4,25 +4,19 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Homepage Settings - Blueprint Apparel</title>
+  <title>Homepage - Blueprint Apparel</title>
   <link rel="icon" type="image/svg+xml" href="{% static 'admin-favicon.svg' %}">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
   <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
   <style>
     {% include "admin/partials/dark_mode_styles.html" %}
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
 
     body {
       font-family: 'Inter', sans-serif;
       background: #f1f5f9;
       min-height: 100vh;
-      -webkit-font-smoothing: antialiased;
-      -moz-osx-font-smoothing: grayscale;
     }
 
     .nav-links {
@@ -32,68 +26,74 @@
       gap: 0.75rem;
       align-items: center;
     }
-
     .nav-link {
-      background: rgba(255, 255, 255, 0.15);
-      backdrop-filter: blur(10px);
+      background: rgba(255,255,255,0.15);
       color: white;
       padding: 0.5rem 1rem;
       border-radius: 8px;
       text-decoration: none;
       font-size: 0.875rem;
       font-weight: 500;
-      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-      border: 1px solid rgba(255, 255, 255, 0.1);
+      transition: all 0.2s;
     }
-
-    .nav-link:hover {
-      background: rgba(255, 255, 255, 0.25);
-      transform: translateY(-1px);
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-    }
+    .nav-link:hover { background: rgba(255,255,255,0.25); }
 
     .top-bar {
       background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
       padding: 2rem 0;
-      box-shadow: 0 4px 20px rgba(102, 126, 234, 0.15);
       margin-bottom: 2rem;
     }
+    .container { max-width: 1600px; margin: 0 auto; padding: 0 2rem; }
+    .header { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem; }
+    .header h1 { color: white; font-size: 2rem; font-weight: 800; }
+    .header-actions { display: flex; gap: 0.75rem; align-items: center; }
 
-    .container {
-      max-width: 1600px;
-      margin: 0 auto;
-      padding: 0 2rem;
-    }
-
-    .header {
-      display: flex;
-      justify-content: space-between;
+    .unsaved-badge {
+      background: #fef3c7;
+      color: #b45309;
+      padding: 0.5rem 1rem;
+      border-radius: 8px;
+      font-size: 0.875rem;
+      font-weight: 600;
+      display: none;
       align-items: center;
+      gap: 0.5rem;
+      animation: pulse 2s infinite;
+    }
+    .unsaved-badge.show { display: flex; }
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.7; }
     }
 
-    .header h1 {
-      color: white;
-      font-size: 2.5rem;
-      font-weight: 800;
-      letter-spacing: -0.02em;
+    .btn-header {
+      background: white;
+      color: #667eea;
+      padding: 0.625rem 1.25rem;
+      border-radius: 8px;
+      text-decoration: none;
+      font-weight: 600;
+      font-size: 0.875rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      border: none;
+      cursor: pointer;
+      transition: all 0.2s;
     }
+    .btn-header:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,0,0,0.15); }
 
-    .main-content {
-      padding: 0 2rem 2rem 2rem;
-      max-width: 1600px;
-      margin: 0 auto;
-    }
+    .main-content { padding: 0 2rem 2rem; max-width: 1600px; margin: 0 auto; }
 
     .section-card {
       background: white;
       border-radius: 16px;
       padding: 2rem;
       margin-bottom: 2rem;
-      box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
+      box-shadow: 0 2px 12px rgba(0,0,0,0.06);
     }
-
     .section-title {
-      font-size: 1.5rem;
+      font-size: 1.25rem;
       font-weight: 700;
       color: #0f172a;
       margin-bottom: 1.5rem;
@@ -104,198 +104,167 @@
       gap: 0.75rem;
     }
 
-    .form-group {
-      margin-bottom: 1.5rem;
-    }
-
-    .form-group label {
-      display: block;
-      color: #475569;
-      font-weight: 600;
-      margin-bottom: 0.5rem;
-      font-size: 0.875rem;
-    }
-
-    .form-group input[type="text"],
-    .form-group input[type="file"],
-    .form-group textarea {
-      width: 100%;
-      padding: 0.75rem 1rem;
-      border: 2px solid #e2e8f0;
-      border-radius: 8px;
-      font-family: inherit;
-      font-size: 1rem;
-      transition: border-color 0.2s;
-    }
-
-    .form-group input:focus,
-    .form-group textarea:focus {
-      outline: none;
-      border-color: #667eea;
-      box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
-    }
-
-    .form-group textarea {
-      min-height: 100px;
-      resize: vertical;
-    }
-
-    .form-group small {
-      display: block;
-      color: #64748b;
-      font-size: 0.8125rem;
-      margin-top: 0.375rem;
-    }
-
-    .current-image {
-      max-width: 100%;
-      border-radius: 12px;
-      margin: 1rem 0;
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-    }
-
-    .image-preview {
-      background: #f8fafc;
-      border: 2px dashed #cbd5e1;
-      border-radius: 12px;
-      padding: 2rem;
-      text-align: center;
-      margin-bottom: 1rem;
-      transition: all 0.2s;
-    }
-
-    .image-preview:hover {
-      border-color: #667eea;
-      background: #f1f5f9;
-    }
-
-    .info-box {
-      background: linear-gradient(135deg, #eff6ff 0%, #f0f9ff 100%);
-      border-left: 4px solid #3b82f6;
-      padding: 1rem 1.25rem;
-      border-radius: 8px;
-      margin-bottom: 1.5rem;
-    }
-
-    .info-box p {
-      color: #1e40af;
-      font-size: 0.875rem;
-      line-height: 1.6;
-      margin: 0;
-    }
-
-    .btn {
-      padding: 0.875rem 1.5rem;
-      border-radius: 8px;
-      border: none;
-      font-weight: 600;
-      cursor: pointer;
-      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-      text-decoration: none;
-      display: inline-flex;
-      align-items: center;
-      gap: 0.5rem;
-      font-size: 1rem;
-    }
-
-    .btn-primary {
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-      color: white;
-      box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
-    }
-
-    .btn-primary:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
-    }
-
-    .btn-secondary {
-      background: #f1f5f9;
-      color: #475569;
-      border: 2px solid #e2e8f0;
-    }
-
-    .btn-secondary:hover {
-      background: #e2e8f0;
-    }
-
-    .btn-danger {
-      background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
-      color: white;
-      box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
-    }
-
-    .btn-danger:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 6px 20px rgba(239, 68, 68, 0.4);
-    }
-
-    .btn-sm {
-      padding: 0.5rem 1rem;
-      font-size: 0.875rem;
-    }
-
-    .alert {
-      padding: 1rem 1.25rem;
-      border-radius: 8px;
-      margin-bottom: 1.5rem;
-      font-weight: 500;
-    }
-
-    .alert-success {
-      background: #d1fae5;
-      color: #065f46;
-      border-left: 4px solid #10b981;
-    }
-
-    .alert-error {
-      background: #fee2e2;
-      color: #991b1b;
-      border-left: 4px solid #ef4444;
-    }
-
-    .button-group {
+    /* Gallery Grid */
+    .gallery-grid {
       display: flex;
+      flex-direction: column;
       gap: 1rem;
-      flex-wrap: wrap;
-    }
-
-    /* Hero Slideshow Styles */
-    .slides-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-      gap: 1.5rem;
       margin-bottom: 1.5rem;
+      max-width: 768px;
     }
 
-    .slide-card {
-      background: #f8fafc;
+    .gallery-card {
+      background: white;
       border: 2px solid #e2e8f0;
       border-radius: 12px;
       overflow: hidden;
       transition: all 0.2s;
+    }
+    .gallery-card:hover { border-color: #667eea; }
+    .gallery-card.sortable-ghost { opacity: 0.4; }
+
+    .gallery-card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0.5rem 0.75rem;
+      background: #f8fafc;
+      border-bottom: 1px solid #e2e8f0;
+    }
+    .gallery-card-number {
+      font-weight: 600;
+      color: #64748b;
+      font-size: 0.875rem;
+    }
+    .gallery-card-actions {
+      display: flex;
+      gap: 0.25rem;
+    }
+
+    .gallery-image-container {
+      position: relative;
+      width: 100%;
+      cursor: pointer;
+    }
+    .gallery-image-container img {
+      width: 100%;
+      height: auto;
+      display: block;
+    }
+    .gallery-image-placeholder {
+      padding: 3rem;
+      text-align: center;
+      background: #f1f5f9;
+      color: #64748b;
+    }
+    .gallery-image-placeholder i { font-size: 2rem; margin-bottom: 0.5rem; display: block; }
+
+    .gallery-card-footer {
+      padding: 0.75rem;
+      display: flex;
+      gap: 0.75rem;
+      align-items: center;
+    }
+    .gallery-card-footer input {
+      flex: 1;
+      padding: 0.5rem 0.75rem;
+      border: 1px solid #e2e8f0;
+      border-radius: 6px;
+      font-size: 0.875rem;
+    }
+    .gallery-card-footer input:focus { outline: none; border-color: #667eea; }
+
+    /* Slideshow Settings Box */
+    .slideshow-settings-box {
+      background: white;
+      border: 2px solid #e2e8f0;
+      border-radius: 12px;
+      padding: 1.25rem;
+      margin-top: 1.5rem;
+    }
+    .settings-box-title {
+      font-size: 0.875rem;
+      font-weight: 700;
+      color: #475569;
+      margin-bottom: 1rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    .slideshow-controls {
+      display: flex;
+      gap: 2rem;
+      flex-wrap: wrap;
+    }
+    .control-group {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+    .control-group label {
+      font-size: 0.75rem;
+      font-weight: 700;
+      color: #475569;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+    .control-group select {
+      padding: 0.75rem 1rem;
+      border: 2px solid #e2e8f0;
+      border-radius: 8px;
+      font-size: 1rem;
+      font-weight: 500;
+      background: white;
+      min-width: 160px;
+      cursor: pointer;
+    }
+    .control-group select:focus {
+      outline: none;
+      border-color: #667eea;
+    }
+
+    /* Slides Grid */
+    .slides-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 1.5rem;
+      margin-bottom: 1.5rem;
+    }
+    @media (max-width: 1200px) {
+      .slides-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .slide-card {
+      background: white;
+      border: 2px solid #e2e8f0;
+      border-radius: 16px;
+      overflow: hidden;
+      transition: all 0.2s;
       position: relative;
     }
+    .slide-card:hover { border-color: #667eea; box-shadow: 0 8px 24px rgba(0,0,0,0.08); }
+    .slide-card.inactive { opacity: 0.6; border-style: dashed; }
+    .slide-card.sortable-ghost { opacity: 0.4; }
 
-    .slide-card:hover {
-      border-color: #667eea;
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    .slide-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0.75rem 1rem;
+      background: #f8fafc;
+      border-bottom: 1px solid #e2e8f0;
     }
-
-    .slide-card.sortable-ghost {
-      opacity: 0.4;
+    .slide-number {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-weight: 700;
+      color: #475569;
     }
-
-    .slide-card.sortable-chosen {
-      border-color: #667eea;
-      box-shadow: 0 8px 24px rgba(102, 126, 234, 0.3);
-    }
-
-    .slide-order-badge {
-      position: absolute;
-      top: 0.75rem;
-      left: 0.75rem;
-      background: rgba(0, 0, 0, 0.7);
+    .slide-number span {
+      background: #667eea;
       color: white;
       width: 28px;
       height: 28px;
@@ -303,166 +272,375 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 0.75rem;
-      font-weight: 700;
-      z-index: 10;
+      font-size: 0.875rem;
     }
-
-    .slide-drag-handle {
-      position: absolute;
-      top: 0.75rem;
-      right: 0.75rem;
-      background: rgba(0, 0, 0, 0.7);
-      color: white;
-      width: 28px;
-      height: 28px;
+    .slide-header-actions { display: flex; gap: 0.25rem; }
+    .header-btn {
+      width: 32px;
+      height: 32px;
+      border: none;
       border-radius: 6px;
+      cursor: pointer;
       display: flex;
       align-items: center;
       justify-content: center;
-      cursor: grab;
-      z-index: 10;
       transition: all 0.2s;
+      background: transparent;
+      color: #64748b;
     }
+    .header-btn:hover { background: #e2e8f0; color: #0f172a; }
+    .header-btn.drag-handle { cursor: grab; }
+    .header-btn.drag-handle:active { cursor: grabbing; }
+    .header-btn.delete:hover { background: #fee2e2; color: #dc2626; }
 
-    .slide-drag-handle:hover {
-      background: rgba(0, 0, 0, 0.9);
+    /* Image Container with Position Controls */
+    .slide-image-wrapper {
+      position: relative;
+      background: #1e293b;
     }
-
-    .slide-drag-handle:active {
-      cursor: grabbing;
-    }
-
     .slide-image-container {
       aspect-ratio: 16/9;
-      background: #e2e8f0;
       position: relative;
       overflow: hidden;
+      cursor: pointer;
     }
-
     .slide-image-container img {
+      position: absolute;
       width: 100%;
       height: 100%;
       object-fit: cover;
+      pointer-events: none;
+      transition: transform 0.1s ease-out;
     }
-
     .slide-image-placeholder {
       display: flex;
       flex-direction: column;
       align-items: center;
       justify-content: center;
       height: 100%;
-      color: #94a3b8;
+      color: #64748b;
+      background: linear-gradient(135deg, #e2e8f0 0%, #cbd5e1 100%);
+    }
+    .slide-image-placeholder i { font-size: 3rem; margin-bottom: 0.75rem; opacity: 0.5; }
+
+    .inactive-overlay {
+      position: absolute;
+      inset: 0;
+      background: rgba(0,0,0,0.5);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-weight: 600;
+      gap: 0.5rem;
     }
 
-    .slide-image-placeholder i {
-      font-size: 2.5rem;
+    /* Position Adjuster - Modal Style */
+    .header-btn.adjust { color: #667eea; }
+    .header-btn.adjust.active { background: #667eea; color: white; }
+
+    .position-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.5);
+      z-index: 100;
+      backdrop-filter: blur(2px);
+    }
+    .position-overlay.open { display: flex; align-items: center; justify-content: center; }
+
+    .position-modal {
+      background: white;
+      border-radius: 16px;
+      width: 90%;
+      max-width: 500px;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+      overflow: hidden;
+    }
+    .position-modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 1rem 1.25rem;
+      border-bottom: 1px solid #e2e8f0;
+    }
+    .position-modal-title {
+      font-size: 1rem;
+      font-weight: 700;
+      color: #0f172a;
+    }
+    .position-modal-close {
+      background: #f1f5f9;
+      border: none;
+      width: 32px;
+      height: 32px;
+      border-radius: 8px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #64748b;
+      transition: all 0.2s;
+    }
+    .position-modal-close:hover { background: #e2e8f0; color: #0f172a; }
+
+    .position-modal-preview {
+      background: #1e293b;
+      padding: 1rem;
+      overflow: hidden;
+    }
+    .position-preview-wrapper {
+      overflow: hidden;
+      border-radius: 8px;
+    }
+    .position-preview-img {
+      width: 100%;
+      aspect-ratio: 16/9;
+      object-fit: cover;
+      display: block;
+    }
+
+    .position-modal-controls {
+      padding: 1.25rem;
+    }
+    .position-control {
+      margin-bottom: 1.25rem;
+    }
+    .position-control:last-child { margin-bottom: 0; }
+    .position-control-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
       margin-bottom: 0.5rem;
     }
-
-    .slide-content {
-      padding: 1rem;
+    .position-control-label {
+      font-size: 0.8125rem;
+      font-weight: 600;
+      color: #475569;
+    }
+    .position-control-value {
+      font-size: 0.8125rem;
+      font-weight: 600;
+      color: #667eea;
+      font-family: monospace;
+    }
+    .position-control input[type="range"] {
+      width: 100%;
+      height: 8px;
+      -webkit-appearance: none;
+      background: #e2e8f0;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    .position-control input[type="range"]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      width: 20px;
+      height: 20px;
+      background: #667eea;
+      border-radius: 50%;
+      cursor: pointer;
+      box-shadow: 0 2px 6px rgba(102,126,234,0.4);
+    }
+    .position-control input[type="range"]::-moz-range-thumb {
+      width: 20px;
+      height: 20px;
+      background: #667eea;
+      border-radius: 50%;
+      cursor: pointer;
+      border: none;
     }
 
-    .slide-input {
+    .position-modal-footer {
+      display: flex;
+      gap: 0.75rem;
+      padding: 1rem 1.25rem;
+      border-top: 1px solid #e2e8f0;
+      background: #f8fafc;
+    }
+    .position-modal-footer .btn { flex: 1; justify-content: center; }
+
+    .slide-content { padding: 1rem; }
+
+    /* Toggle */
+    .slide-toggle-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1rem;
+    }
+    .toggle-label-wrap {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      cursor: pointer;
+    }
+    .toggle-label-wrap input { display: none; }
+    .toggle-track {
+      width: 44px;
+      height: 24px;
+      background: #cbd5e1;
+      border-radius: 12px;
+      position: relative;
+      transition: all 0.2s;
+    }
+    .toggle-track::after {
+      content: '';
+      position: absolute;
+      top: 2px;
+      left: 2px;
+      width: 20px;
+      height: 20px;
+      background: white;
+      border-radius: 50%;
+      transition: all 0.2s;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+    }
+    .toggle-label-wrap input:checked + .toggle-track { background: #10b981; }
+    .toggle-label-wrap input:checked + .toggle-track::after { left: 22px; }
+    .toggle-text { font-size: 0.875rem; font-weight: 600; color: #64748b; }
+    .toggle-label-wrap input:checked ~ .toggle-text { color: #10b981; }
+
+    .upload-btn {
+      background: #667eea;
+      color: white;
+      border: none;
+      padding: 0.5rem 1rem;
+      border-radius: 6px;
+      font-size: 0.8125rem;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 0.375rem;
+      transition: all 0.2s;
+    }
+    .upload-btn:hover { background: #5a67d8; }
+
+    /* Form Fields */
+    .slide-fields {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0.75rem;
+    }
+    .slide-field label {
+      font-size: 0.6875rem;
+      font-weight: 600;
+      color: #64748b;
+      text-transform: uppercase;
+      margin-bottom: 0.25rem;
+      display: block;
+    }
+    .slide-field input {
       width: 100%;
       padding: 0.5rem 0.75rem;
       border: 1px solid #e2e8f0;
       border-radius: 6px;
       font-size: 0.875rem;
-      margin-bottom: 0.5rem;
     }
+    .slide-field input:focus { outline: none; border-color: #667eea; }
 
-    .slide-input:focus {
-      outline: none;
-      border-color: #667eea;
-    }
-
-    .slide-input-label {
-      font-size: 0.75rem;
-      color: #64748b;
-      font-weight: 500;
-      margin-bottom: 0.25rem;
-      display: block;
-    }
-
-    .slide-actions {
-      display: flex;
-      gap: 0.5rem;
-      margin-top: 0.75rem;
-      padding-top: 0.75rem;
+    /* Split View */
+    .split-section {
+      margin-top: 1rem;
+      padding-top: 1rem;
       border-top: 1px solid #e2e8f0;
     }
-
-    .slide-btn {
-      flex: 1;
-      padding: 0.5rem;
-      border: none;
-      border-radius: 6px;
-      font-size: 0.75rem;
-      font-weight: 600;
+    .split-toggle-row {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
       cursor: pointer;
-      transition: all 0.2s;
+      margin-bottom: 0.75rem;
+    }
+    .split-toggle-row input { display: none; }
+    .checkbox-box {
+      width: 18px;
+      height: 18px;
+      border: 2px solid #cbd5e1;
+      border-radius: 4px;
       display: flex;
       align-items: center;
       justify-content: center;
-      gap: 0.375rem;
-    }
-
-    .slide-btn-upload {
-      background: #e0e7ff;
-      color: #4338ca;
-    }
-
-    .slide-btn-upload:hover {
-      background: #c7d2fe;
-    }
-
-    .slide-btn-delete {
-      background: #fee2e2;
-      color: #dc2626;
-    }
-
-    .slide-btn-delete:hover {
-      background: #fecaca;
-    }
-
-    .add-slide-card {
-      background: #f8fafc;
-      border: 2px dashed #cbd5e1;
-      border-radius: 12px;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      min-height: 280px;
-      cursor: pointer;
       transition: all 0.2s;
     }
-
-    .add-slide-card:hover {
+    .split-toggle-row input:checked + .checkbox-box {
+      background: #667eea;
       border-color: #667eea;
-      background: #f1f5f9;
     }
-
-    .add-slide-card i {
-      font-size: 3rem;
-      color: #94a3b8;
-      margin-bottom: 1rem;
+    .split-toggle-row input:checked + .checkbox-box::after {
+      content: '\f00c';
+      font-family: 'Font Awesome 6 Free';
+      font-weight: 900;
+      font-size: 0.625rem;
+      color: white;
     }
+    .split-toggle-row span { font-size: 0.8125rem; color: #475569; }
 
-    .add-slide-card span {
-      color: #64748b;
+    .split-image-row {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      padding: 0.75rem;
+      background: #f8fafc;
+      border-radius: 8px;
+    }
+    .split-preview {
+      width: 80px;
+      height: 50px;
+      background: #e2e8f0;
+      border-radius: 6px;
+      overflow: hidden;
+      flex-shrink: 0;
+    }
+    .split-preview img { width: 100%; height: 100%; object-fit: cover; }
+    .split-info { flex: 1; }
+    .split-info p { font-size: 0.75rem; color: #64748b; margin-bottom: 0.375rem; }
+
+    /* Buttons */
+    .btn {
+      padding: 0.875rem 1.5rem;
+      border-radius: 8px;
+      border: none;
       font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-size: 1rem;
+      text-decoration: none;
     }
+    .btn-primary { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; }
+    .btn-primary:hover { transform: translateY(-2px); }
+    .btn-primary:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+    .btn-secondary { background: #f1f5f9; color: #475569; border: 2px solid #e2e8f0; }
+    .btn-secondary:hover { background: #e2e8f0; }
+    .btn-sm { padding: 0.5rem 1rem; font-size: 0.875rem; }
+    .button-group { display: flex; gap: 1rem; flex-wrap: wrap; margin-top: 1.5rem; }
 
-    /* Toast Notification */
+    /* Form Group */
+    .form-group { margin-bottom: 1.5rem; }
+    .form-group label { display: block; color: #475569; font-weight: 600; margin-bottom: 0.5rem; font-size: 0.875rem; }
+    .form-group input[type="text"],
+    .form-group textarea {
+      width: 100%;
+      padding: 0.75rem 1rem;
+      border: 2px solid #e2e8f0;
+      border-radius: 8px;
+      font-family: inherit;
+      font-size: 1rem;
+    }
+    .form-group input:focus, .form-group textarea:focus { outline: none; border-color: #667eea; }
+    .form-group textarea { min-height: 100px; resize: vertical; }
+    .form-group small { display: block; color: #64748b; font-size: 0.8125rem; margin-top: 0.375rem; }
+
+    /* Toast */
     .toast {
       position: fixed;
       bottom: 2rem;
       right: 2rem;
       padding: 1rem 1.5rem;
-      border-radius: 8px;
+      border-radius: 12px;
       color: white;
       font-weight: 500;
       z-index: 1000;
@@ -470,264 +648,269 @@
       display: flex;
       align-items: center;
       gap: 0.75rem;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.2);
     }
-
-    .toast-success {
-      background: #10b981;
-    }
-
-    .toast-error {
-      background: #ef4444;
-    }
-
-    .toast-warning {
-      background: #f59e0b;
-    }
-
+    .toast-success { background: linear-gradient(135deg, #10b981 0%, #059669 100%); }
+    .toast-error { background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%); }
+    .toast-warning { background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); }
     @keyframes slideIn {
-      from {
-        transform: translateX(100%);
-        opacity: 0;
-      }
-      to {
-        transform: translateX(0);
-        opacity: 1;
-      }
+      from { transform: translateX(100%); opacity: 0; }
+      to { transform: translateX(0); opacity: 1; }
     }
 
-    /* Split View Indicator */
-    .split-view-toggle {
-      display: flex;
-      align-items: center;
-      gap: 0.5rem;
-      margin-bottom: 0.5rem;
-    }
-
-    .split-view-toggle label {
-      font-size: 0.75rem;
-      color: #64748b;
-      display: flex;
-      align-items: center;
-      gap: 0.375rem;
-      cursor: pointer;
-    }
-
-    .split-view-toggle input[type="checkbox"] {
-      width: 14px;
-      height: 14px;
-    }
-
-    /* Inactive slide styling */
-    .slide-card.inactive {
-      opacity: 0.5;
-      border-style: dashed;
-      border-color: #94a3b8;
-      background: #f1f5f9;
-    }
-
-    .slide-card.inactive .slide-image-container {
-      position: relative;
-    }
-
-    .slide-card.inactive .slide-image-container::after {
-      content: '';
-      position: absolute;
-      inset: 0;
-      background: rgba(148, 163, 184, 0.4);
-      pointer-events: none;
-    }
-
-    .slide-card.inactive .slide-image-container img {
-      filter: grayscale(100%);
-    }
-
-    .slide-inactive-badge {
-      position: absolute;
-      top: 0.75rem;
-      left: 50%;
-      transform: translateX(-50%);
-      background: rgba(245, 158, 11, 0.9);
-      color: white;
-      padding: 0.25rem 0.75rem;
-      border-radius: 9999px;
-      font-size: 0.6875rem;
-      font-weight: 600;
-      z-index: 10;
-      display: flex;
-      align-items: center;
-      gap: 0.375rem;
-    }
-
-    .slide-active-toggle {
-      margin-bottom: 0.75rem;
-      padding-bottom: 0.75rem;
-      border-bottom: 1px solid #e2e8f0;
-    }
-
-    .slide-active-toggle label {
-      display: flex;
-      align-items: center;
-      gap: 0.5rem;
-      cursor: pointer;
-      font-size: 0.8125rem;
-      font-weight: 600;
-    }
-
-    .slide-active-toggle input[type="checkbox"] {
-      width: 16px;
-      height: 16px;
-      accent-color: #10b981;
-    }
-
-    .slide-active-toggle .toggle-label {
-      color: #10b981;
-    }
-
-    .slide-card.inactive .slide-active-toggle .toggle-label {
-      color: #f59e0b;
-    }
   </style>
   {% include "admin/partials/dark_mode_apply.html" %}
 </head>
 <body>
   <div class="nav-links">
     <a href="{% url 'admin_home' %}" class="nav-link"><i class="fas fa-arrow-left"></i> Back</a>
+    <a href="{% url 'home' %}" class="nav-link" target="_blank"><i class="fas fa-external-link-alt"></i> View Site</a>
   </div>
 
   <div class="top-bar">
     <div class="container">
       <div class="header">
-        <h1><i class="fas fa-home"></i> Homepage Settings</h1>
+        <h1>Homepage</h1>
+        <div class="header-actions">
+          <div class="unsaved-badge" id="unsaved-badge">
+            <i class="fas fa-exclamation-circle"></i> Unsaved
+          </div>
+          <button class="btn-header" onclick="saveSlides()" id="save-btn">
+            <i class="fas fa-save"></i> Save Changes
+          </button>
+          <a href="{% url 'home' %}" target="_blank" class="btn-header">
+            <i class="fas fa-eye"></i> Preview
+          </a>
+        </div>
       </div>
     </div>
   </div>
 
   <div class="main-content">
-    {% if messages %}
-      {% for message in messages %}
-        <div class="alert alert-{{ message.tags }}">
-          <i class="fas fa-check-circle"></i> {{ message }}
-        </div>
-      {% endfor %}
-    {% endif %}
-
-    <!-- Hero Slideshow Settings -->
+    <!-- Hero Slideshow -->
     <div class="section-card">
       <h2 class="section-title">
         <i class="fas fa-images"></i> Hero Slideshow
-        <span id="slide-count" style="margin-left: 0.75rem; font-size: 0.75rem; font-weight: 600; padding: 0.25rem 0.5rem; background: #e0e7ff; color: #4338ca; border-radius: 9999px;"></span>
-        <span style="margin-left: auto; font-size: 0.875rem; font-weight: 500; color: #64748b;">
-          Drag to reorder
-        </span>
+        <span id="slide-count" style="margin-left: auto; font-size: 0.875rem; font-weight: 500; color: #64748b;"></span>
       </h2>
 
-      <div class="info-box">
-        <p><i class="fas fa-info-circle"></i> Manage the hero slideshow images. Drag cards to reorder. The first slide is shown by default.</p>
-        <details style="margin-top: 0.75rem;">
-          <summary style="cursor: pointer; font-weight: 600; font-size: 0.8125rem; color: #1e40af;">
-            <i class="fas fa-lightbulb"></i> Image size recommendations & tips
-          </summary>
-          <div style="margin-top: 0.5rem; padding-left: 0.5rem; border-left: 2px solid #93c5fd;">
-            <p style="margin-top: 0.5rem;"><strong>Recommended dimensions:</strong></p>
-            <ul style="margin-top: 0.25rem; margin-left: 1.25rem; font-size: 0.8125rem;">
-              <li><strong>Single image:</strong> 1920×1080px or larger (16:9 aspect ratio)</li>
-              <li><strong>Split view - Left (70%):</strong> ~1350×1080px</li>
-              <li><strong>Split view - Right (30%):</strong> ~580×1080px (shown on mobile)</li>
-            </ul>
-            <p style="margin-top: 0.75rem;"><strong>Recommended file sizes:</strong></p>
-            <ul style="margin-top: 0.25rem; margin-left: 1.25rem; font-size: 0.8125rem;">
-              <li><strong>Target:</strong> 150–400 KB per image (ideal for fast loading)</li>
-              <li><strong>Maximum:</strong> 1 MB (larger files slow down page load)</li>
-              <li><strong>Format:</strong> WebP (smallest), JPG (photos), PNG (transparency only)</li>
-            </ul>
-            <p style="margin-top: 0.5rem; font-size: 0.8125rem;"><strong>Tip:</strong> Use <a href="https://squoosh.app" target="_blank" style="color: #2563eb;">squoosh.app</a> or <a href="https://tinypng.com" target="_blank" style="color: #2563eb;">tinypng.com</a> to compress images before uploading.</p>
+      <div class="slides-grid" id="slides-container"></div>
+
+      <!-- Slideshow Settings -->
+      <div class="slideshow-settings-box">
+        <h3 class="settings-box-title"><i class="fas fa-cog"></i> Slideshow Settings</h3>
+        <div class="slideshow-controls">
+          <div class="control-group">
+            <label><i class="fas fa-clock"></i> Slide Duration</label>
+            <select id="slide-duration" onchange="markUnsaved()">
+              <option value="3000">3 seconds</option>
+              <option value="5000" selected>5 seconds</option>
+              <option value="7000">7 seconds</option>
+              <option value="10000">10 seconds</option>
+              <option value="15000">15 seconds</option>
+            </select>
           </div>
-        </details>
+          <div class="control-group">
+            <label><i class="fas fa-magic"></i> Transition</label>
+            <select id="slide-transition" onchange="markUnsaved()">
+              <option value="fade" selected>Crossfade</option>
+              <option value="slide">Slide</option>
+              <option value="none">Instant</option>
+            </select>
+          </div>
+          <div class="control-group">
+            <label><i class="fas fa-play"></i> Auto-play</label>
+            <select id="slide-autoplay" onchange="markUnsaved()">
+              <option value="true" selected>Enabled</option>
+              <option value="false">Paused</option>
+            </select>
+          </div>
+        </div>
       </div>
 
-      <div class="slides-grid" id="slides-container">
-        <!-- Slides will be loaded here via JavaScript -->
-      </div>
-
-      <div class="button-group" style="margin-top: 1rem;">
+      <div class="button-group">
         <button type="button" class="btn btn-primary" onclick="addNewSlide()">
           <i class="fas fa-plus"></i> Add Slide
         </button>
-        <button type="button" class="btn btn-secondary" onclick="saveSlides()">
+        <button type="button" class="btn btn-primary" onclick="saveSlides()" id="save-btn-bottom">
           <i class="fas fa-save"></i> Save Changes
         </button>
+        <a href="{% url 'home' %}" target="_blank" class="btn btn-secondary">
+          <i class="fas fa-external-link-alt"></i> Preview Homepage
+        </a>
       </div>
     </div>
 
-    <!-- Hero Text Settings -->
+    <!-- Hero Text -->
     <div class="section-card">
-      <h2 class="section-title"><i class="fas fa-font"></i> Hero Text</h2>
-
-      <form method="POST" enctype="multipart/form-data">
+      <h2 class="section-title"><i class="fas fa-font"></i> Hero Text Overlay</h2>
+      <form method="POST">
         {% csrf_token %}
-
         <div class="form-group">
-          <label for="hero_title"><i class="fas fa-heading"></i> Hero Title</label>
+          <label for="hero_title">Title</label>
           <input type="text" name="hero_title" id="hero_title" value="{{ site_settings.hero_title }}" placeholder="Welcome to Blueprint Apparel">
-          <small>Main headline displayed on the hero section (optional)</small>
+          <small>Main headline on the hero (optional)</small>
         </div>
-
         <div class="form-group">
-          <label for="hero_subtitle"><i class="fas fa-align-left"></i> Hero Subtitle</label>
-          <textarea name="hero_subtitle" id="hero_subtitle" placeholder="Discover our latest collection of premium apparel">{{ site_settings.hero_subtitle }}</textarea>
-          <small>Supporting text displayed below the title (optional)</small>
+          <label for="hero_subtitle">Subtitle</label>
+          <textarea name="hero_subtitle" id="hero_subtitle" placeholder="Discover our collection">{{ site_settings.hero_subtitle }}</textarea>
+          <small>Supporting text below title (optional)</small>
         </div>
-
-        <div class="button-group">
-          <button type="submit" class="btn btn-primary">
-            <i class="fas fa-save"></i> Save Text
-          </button>
-        </div>
+        <button type="submit" class="btn btn-primary">
+          <i class="fas fa-save"></i> Save Text
+        </button>
       </form>
     </div>
 
+    <!-- Gallery Images -->
+    <div class="section-card">
+      <h2 class="section-title">
+        <i class="fas fa-images"></i> Gallery Images
+        <span id="gallery-count" style="margin-left: auto; font-size: 0.875rem; font-weight: 500; color: #64748b;"></span>
+      </h2>
+
+      <p style="color: #64748b; font-size: 0.875rem; margin-bottom: 1.5rem;">
+        Images displayed below the products section. Drag to reorder.
+      </p>
+
+      <div class="gallery-grid" id="gallery-container"></div>
+
+      <div class="button-group">
+        <button type="button" class="btn btn-primary" onclick="addGalleryImage()">
+          <i class="fas fa-plus"></i> Add Image
+        </button>
+        <button type="button" class="btn btn-primary" onclick="saveGallery()" id="save-gallery-btn">
+          <i class="fas fa-save"></i> Save Gallery
+        </button>
+      </div>
+    </div>
   </div>
 
-  <!-- Hidden file inputs for slide image uploads -->
+  <!-- Position Modal -->
+  <div class="position-overlay" id="position-modal">
+    <div class="position-modal">
+      <div class="position-modal-header">
+        <span class="position-modal-title">Crop & Position</span>
+        <button class="position-modal-close" onclick="closePositionModal()">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+      <div class="position-modal-preview">
+        <div class="position-preview-wrapper">
+          <img id="position-preview-img" class="position-preview-img" src="" alt="Preview">
+        </div>
+      </div>
+      <div class="position-modal-controls">
+        <div class="position-control">
+          <div class="position-control-header">
+            <span class="position-control-label">Zoom</span>
+            <span class="position-control-value" id="modal-zoom-val">100%</span>
+          </div>
+          <input type="range" id="modal-zoom" min="100" max="200" value="100"
+                 oninput="updateModalPosition('zoom', this.value)">
+        </div>
+        <div class="position-control">
+          <div class="position-control-header">
+            <span class="position-control-label">Horizontal Position</span>
+            <span class="position-control-value" id="modal-x-val">50%</span>
+          </div>
+          <input type="range" id="modal-x" min="0" max="100" value="50"
+                 oninput="updateModalPosition('x', this.value)">
+        </div>
+        <div class="position-control">
+          <div class="position-control-header">
+            <span class="position-control-label">Vertical Position</span>
+            <span class="position-control-value" id="modal-y-val">50%</span>
+          </div>
+          <input type="range" id="modal-y" min="0" max="100" value="50"
+                 oninput="updateModalPosition('y', this.value)">
+        </div>
+      </div>
+      <div class="position-modal-footer">
+        <button class="btn btn-secondary" onclick="resetModalPosition()">
+          <i class="fas fa-undo"></i> Reset
+        </button>
+        <button class="btn btn-primary" onclick="closePositionModal()">
+          <i class="fas fa-check"></i> Done
+        </button>
+      </div>
+    </div>
+  </div>
+
   <input type="file" id="slide-image-input" accept="image/*" style="display: none;">
+  <input type="file" id="gallery-image-input" accept="image/*" style="display: none;">
   <input type="file" id="split-image-input" accept="image/*" style="display: none;">
 
   {{ hero_slides|json_script:"hero-slides-data" }}
+  {{ site_settings.slideshow_settings|json_script:"slideshow-settings-data" }}
+  {{ gallery_images|json_script:"gallery-images-data" }}
 
   <script>
     const csrfToken = '{{ csrf_token }}';
-    let slides = JSON.parse(document.getElementById('hero-slides-data').textContent) || [];
-    let currentUploadSlideIndex = null;
-    let sortableInstance = null;
+    let slides = [];
+    try {
+      slides = JSON.parse(document.getElementById('hero-slides-data').textContent) || [];
+    } catch(e) { slides = []; }
 
-    // Initialize on page load
+    let slideshowSettings = {};
+    try {
+      slideshowSettings = JSON.parse(document.getElementById('slideshow-settings-data').textContent) || {};
+    } catch(e) { slideshowSettings = {}; }
+
+    let currentUploadIndex = null;
+    let uploadType = 'main';
+    let sortableInstance = null;
+    let hasUnsavedChanges = false;
+
     document.addEventListener('DOMContentLoaded', function() {
+      // Load settings
+      if (slideshowSettings.duration) {
+        document.getElementById('slide-duration').value = slideshowSettings.duration;
+      }
+      if (slideshowSettings.transition) {
+        document.getElementById('slide-transition').value = slideshowSettings.transition;
+      }
+      if (slideshowSettings.autoplay !== undefined) {
+        document.getElementById('slide-autoplay').value = String(slideshowSettings.autoplay);
+      }
+
       renderSlides();
       initSortable();
+
+      window.addEventListener('beforeunload', function(e) {
+        if (hasUnsavedChanges) {
+          e.preventDefault();
+          e.returnValue = '';
+        }
+      });
     });
+
+    function markUnsaved() {
+      hasUnsavedChanges = true;
+      document.getElementById('unsaved-badge').classList.add('show');
+    }
+
+    function markSaved() {
+      hasUnsavedChanges = false;
+      document.getElementById('unsaved-badge').classList.remove('show');
+    }
 
     function initSortable() {
       const container = document.getElementById('slides-container');
-      if (sortableInstance) {
-        sortableInstance.destroy();
-      }
+      if (sortableInstance) sortableInstance.destroy();
       sortableInstance = Sortable.create(container, {
         animation: 150,
-        handle: '.slide-drag-handle',
+        handle: '.drag-handle',
         ghostClass: 'sortable-ghost',
-        chosenClass: 'sortable-chosen',
-        onEnd: function(evt) {
-          // Reorder slides array based on new positions
+        onEnd: function() {
           const newSlides = [];
-          const cards = container.querySelectorAll('.slide-card');
-          cards.forEach((card, index) => {
-            const slideIndex = parseInt(card.dataset.slideIndex);
-            if (slides[slideIndex]) {
-              newSlides.push(slides[slideIndex]);
-            }
+          container.querySelectorAll('.slide-card').forEach(card => {
+            const idx = parseInt(card.dataset.index);
+            if (slides[idx]) newSlides.push(slides[idx]);
           });
           slides = newSlides;
           renderSlides();
+          markUnsaved();
         }
       });
     }
@@ -736,215 +919,320 @@
       const container = document.getElementById('slides-container');
       container.innerHTML = '';
 
-      // Update slide count badge
-      const countBadge = document.getElementById('slide-count');
       const activeCount = slides.filter(s => s.is_active !== false).length;
-      countBadge.textContent = `${activeCount} active / ${slides.length} total`;
-      if (slides.length > RECOMMENDED_MAX) {
-        countBadge.style.background = '#fef3c7';
-        countBadge.style.color = '#b45309';
-      } else {
-        countBadge.style.background = '#e0e7ff';
-        countBadge.style.color = '#4338ca';
-      }
+      document.getElementById('slide-count').textContent = `${activeCount} active / ${slides.length} total`;
 
       slides.forEach((slide, index) => {
-        const isActive = slide.is_active !== false; // Default to true if not set
+        const isActive = slide.is_active !== false;
+        const posX = slide.position_x ?? 50;
+        const posY = slide.position_y ?? 50;
+        const zoom = slide.zoom ?? 100;
+
         const card = document.createElement('div');
         card.className = 'slide-card' + (isActive ? '' : ' inactive');
-        card.dataset.slideIndex = index;
+        card.dataset.index = index;
+
+        // Calculate transform origin based on position
+        const scale = zoom / 100;
+        const imageStyle = `object-position: ${posX}% ${posY}%; transform: scale(${scale}); transform-origin: ${posX}% ${posY}%;`;
 
         const imageHtml = slide.image_url
-          ? `<img src="${slide.image_url}" alt="${slide.alt_text || 'Hero slide'}">`
-          : `<div class="slide-image-placeholder"><i class="fas fa-image"></i><span>Click to upload</span></div>`;
+          ? `<img src="${slide.image_url}" alt="${slide.alt_text || ''}" style="${imageStyle}">`
+          : `<div class="slide-image-placeholder"><i class="fas fa-cloud-upload-alt"></i><span>Click to upload</span></div>`;
 
         card.innerHTML = `
-          <div class="slide-order-badge">${index + 1}</div>
-          ${!isActive ? '<div class="slide-inactive-badge"><i class="fas fa-eye-slash"></i> Hidden</div>' : ''}
-          <div class="slide-drag-handle"><i class="fas fa-grip-vertical"></i></div>
-          <div class="slide-image-container" onclick="triggerImageUpload(${index})">${imageHtml}</div>
+          <div class="slide-header">
+            <div class="slide-number">
+              <span>${index + 1}</span>
+              Slide
+            </div>
+            <div class="slide-header-actions">
+              ${slide.image_url ? `<button class="header-btn adjust" onclick="openPositionModal(${index})" title="Crop & Position"><i class="fas fa-crop-alt"></i></button>` : ''}
+              <button class="header-btn" onclick="duplicateSlide(${index})" title="Duplicate"><i class="fas fa-copy"></i></button>
+              <button class="header-btn drag-handle" title="Drag to reorder"><i class="fas fa-grip-vertical"></i></button>
+              <button class="header-btn delete" onclick="deleteSlide(${index})" title="Delete"><i class="fas fa-trash"></i></button>
+            </div>
+          </div>
+
+          <div class="slide-image-wrapper">
+            <div class="slide-image-container" onclick="triggerUpload(${index}, 'main')">
+              ${imageHtml}
+              ${!isActive ? '<div class="inactive-overlay"><i class="fas fa-eye-slash"></i> Hidden</div>' : ''}
+            </div>
+          </div>
+
           <div class="slide-content">
-            <div class="slide-active-toggle">
-              <label>
-                <input type="checkbox" ${isActive ? 'checked' : ''}
-                       onchange="updateSlide(${index}, 'is_active', this.checked)">
-                <span class="toggle-label">${isActive ? 'Active' : 'Hidden'}</span>
+            <div class="slide-toggle-row">
+              <label class="toggle-label-wrap">
+                <input type="checkbox" ${isActive ? 'checked' : ''} onchange="updateSlide(${index}, 'is_active', this.checked)">
+                <div class="toggle-track"></div>
+                <span class="toggle-text">${isActive ? 'Active' : 'Hidden'}</span>
               </label>
+              <button class="upload-btn" onclick="triggerUpload(${index}, 'main')">
+                <i class="fas fa-upload"></i> ${slide.image_url ? 'Replace' : 'Upload'}
+              </button>
             </div>
-            <label class="slide-input-label">Alt Text</label>
-            <input type="text" class="slide-input" placeholder="Describe this image..."
-                   value="${slide.alt_text || ''}"
-                   onchange="updateSlide(${index}, 'alt_text', this.value)">
-            <label class="slide-input-label">Link URL (optional)</label>
-            <input type="text" class="slide-input" placeholder="/shop or https://..."
-                   value="${slide.link_url || ''}"
-                   onchange="updateSlide(${index}, 'link_url', this.value)">
-            <label class="slide-input-label">Vertical Position</label>
-            <select class="slide-input" onchange="updateSlide(${index}, 'position', this.value)" style="margin-bottom: 0.75rem;">
-              <option value="top" ${slide.position === 'top' ? 'selected' : ''}>Top</option>
-              <option value="center" ${!slide.position || slide.position === 'center' ? 'selected' : ''}>Center (default)</option>
-              <option value="bottom" ${slide.position === 'bottom' ? 'selected' : ''}>Bottom</option>
-            </select>
-            <div class="split-view-toggle">
-              <label>
-                <input type="checkbox" ${slide.is_split ? 'checked' : ''}
-                       onchange="updateSlide(${index}, 'is_split', this.checked)">
-                Split view (left 70% + right 30%)
-              </label>
-            </div>
-            ${slide.is_split ? '<p style="font-size: 0.7rem; color: #94a3b8; margin-bottom: 0.5rem;">Main image = left side (desktop only). Second image = right side (mobile shows this).</p>' : ''}
-            ${slide.is_split ? `
-              <label class="slide-input-label">Second Image (right side, 30%)</label>
-              <div style="display: flex; gap: 0.5rem; align-items: center; margin-bottom: 0.5rem;">
-                ${slide.split_image_url ? `<img src="${slide.split_image_url}" style="width: 60px; height: 40px; object-fit: cover; border-radius: 4px; border: 1px solid #e2e8f0;">` : '<span style="color: #94a3b8; font-size: 0.75rem;">No image</span>'}
-                <button type="button" class="slide-btn slide-btn-upload" style="flex: 0; padding: 0.375rem 0.75rem;" onclick="triggerSplitImageUpload(${index})">
-                  <i class="fas fa-upload"></i> Upload
-                </button>
+
+            <div class="slide-fields">
+              <div class="slide-field">
+                <label>Alt Text</label>
+                <input type="text" value="${slide.alt_text || ''}" placeholder="Describe image..."
+                       onchange="updateSlide(${index}, 'alt_text', this.value)">
               </div>
-            ` : ''}
-            <div class="slide-actions">
-              <button class="slide-btn slide-btn-upload" onclick="triggerImageUpload(${index})">
-                <i class="fas fa-upload"></i> Upload
-              </button>
-              <button class="slide-btn slide-btn-delete" onclick="deleteSlide(${index})">
-                <i class="fas fa-trash"></i> Delete
-              </button>
+              <div class="slide-field">
+                <label>Link URL</label>
+                <input type="text" value="${slide.link_url || ''}" placeholder="/shop"
+                       onchange="updateSlide(${index}, 'link_url', this.value)">
+              </div>
+            </div>
+
+            <div class="split-section">
+              <label class="split-toggle-row" onclick="toggleSplit(${index})">
+                <input type="checkbox" ${slide.is_split ? 'checked' : ''}>
+                <div class="checkbox-box"></div>
+                <span>Split view (70/30 desktop layout)</span>
+              </label>
+              ${slide.is_split ? `
+              <div class="split-image-row">
+                <div class="split-preview">
+                  ${slide.split_image_url
+                    ? `<img src="${slide.split_image_url}">`
+                    : `<div style="display:flex;align-items:center;justify-content:center;height:100%;color:#94a3b8;"><i class="fas fa-image"></i></div>`}
+                </div>
+                <div class="split-info">
+                  <p>Right side (30%) - shown on mobile</p>
+                  <button class="btn btn-sm btn-secondary" onclick="triggerUpload(${index}, 'split')">
+                    <i class="fas fa-upload"></i> Upload
+                  </button>
+                </div>
+              </div>
+              ` : ''}
             </div>
           </div>
         `;
         container.appendChild(card);
       });
 
-      // Re-initialize sortable after render
       initSortable();
     }
 
-    const MAX_SLIDES = 10;
-    const RECOMMENDED_MAX = 6;
+    let currentPositionIndex = null;
 
-    function addNewSlide() {
-      if (slides.length >= MAX_SLIDES) {
-        showToast(`Maximum ${MAX_SLIDES} slides allowed`, 'error');
-        return;
+    function openPositionModal(index) {
+      currentPositionIndex = index;
+      const slide = slides[index];
+      const modal = document.getElementById('position-modal');
+      const preview = document.getElementById('position-preview-img');
+
+      // Set preview image
+      preview.src = slide.image_url;
+      updatePreviewPosition();
+
+      // Set slider values
+      document.getElementById('modal-zoom').value = slide.zoom ?? 100;
+      document.getElementById('modal-x').value = slide.position_x ?? 50;
+      document.getElementById('modal-y').value = slide.position_y ?? 50;
+      document.getElementById('modal-zoom-val').textContent = (slide.zoom ?? 100) + '%';
+      document.getElementById('modal-x-val').textContent = (slide.position_x ?? 50) + '%';
+      document.getElementById('modal-y-val').textContent = (slide.position_y ?? 50) + '%';
+
+      modal.classList.add('open');
+      document.body.style.overflow = 'hidden';
+    }
+
+    function closePositionModal() {
+      document.getElementById('position-modal').classList.remove('open');
+      document.body.style.overflow = '';
+      currentPositionIndex = null;
+    }
+
+    // Close modal on overlay click
+    document.getElementById('position-modal').addEventListener('click', function(e) {
+      if (e.target === this) closePositionModal();
+    });
+
+    // Close modal on escape
+    document.addEventListener('keydown', function(e) {
+      if (e.key === 'Escape' && currentPositionIndex !== null) closePositionModal();
+    });
+
+    function updateModalPosition(axis, value) {
+      if (currentPositionIndex === null) return;
+      const intVal = parseInt(value);
+
+      if (axis === 'x') {
+        slides[currentPositionIndex].position_x = intVal;
+        document.getElementById('modal-x-val').textContent = intVal + '%';
+      } else if (axis === 'y') {
+        slides[currentPositionIndex].position_y = intVal;
+        document.getElementById('modal-y-val').textContent = intVal + '%';
+      } else if (axis === 'zoom') {
+        slides[currentPositionIndex].zoom = intVal;
+        document.getElementById('modal-zoom-val').textContent = intVal + '%';
       }
 
+      updatePreviewPosition();
+      updateSlideCardPosition(currentPositionIndex);
+      markUnsaved();
+    }
+
+    function updatePreviewPosition() {
+      if (currentPositionIndex === null) return;
+      const slide = slides[currentPositionIndex];
+      const preview = document.getElementById('position-preview-img');
+      const x = slide.position_x ?? 50;
+      const y = slide.position_y ?? 50;
+      const z = slide.zoom ?? 100;
+      const scale = z / 100;
+      preview.style.objectPosition = `${x}% ${y}%`;
+      preview.style.transform = `scale(${scale})`;
+      preview.style.transformOrigin = `${x}% ${y}%`;
+    }
+
+    function updateSlideCardPosition(index) {
+      const card = document.querySelector(`.slide-card[data-index="${index}"]`);
+      if (card) {
+        const img = card.querySelector('.slide-image-container img');
+        if (img) {
+          const x = slides[index].position_x ?? 50;
+          const y = slides[index].position_y ?? 50;
+          const z = slides[index].zoom ?? 100;
+          const scale = z / 100;
+          img.style.objectPosition = `${x}% ${y}%`;
+          img.style.transform = `scale(${scale})`;
+          img.style.transformOrigin = `${x}% ${y}%`;
+        }
+      }
+    }
+
+    function resetModalPosition() {
+      if (currentPositionIndex === null) return;
+      slides[currentPositionIndex].position_x = 50;
+      slides[currentPositionIndex].position_y = 50;
+      slides[currentPositionIndex].zoom = 100;
+
+      document.getElementById('modal-zoom').value = 100;
+      document.getElementById('modal-x').value = 50;
+      document.getElementById('modal-y').value = 50;
+      document.getElementById('modal-zoom-val').textContent = '100%';
+      document.getElementById('modal-x-val').textContent = '50%';
+      document.getElementById('modal-y-val').textContent = '50%';
+
+      updatePreviewPosition();
+      updateSlideCardPosition(currentPositionIndex);
+      markUnsaved();
+    }
+
+    function resetPosition(index) {
+      slides[index].position_x = 50;
+      slides[index].position_y = 50;
+      slides[index].zoom = 100;
+      updateSlideCardPosition(index);
+      markUnsaved();
+    }
+
+    function toggleSplit(index) {
+      slides[index].is_split = !slides[index].is_split;
+      renderSlides();
+      markUnsaved();
+    }
+
+    function addNewSlide() {
+      if (slides.length >= 10) {
+        showToast('Maximum 10 slides allowed', 'error');
+        return;
+      }
       slides.push({
         image_url: '',
         alt_text: '',
         link_url: '',
-        position: 'center',
+        position_x: 50,
+        position_y: 50,
+        zoom: 100,
         is_split: false,
         split_image_url: '',
         is_active: true
       });
       renderSlides();
+      markUnsaved();
+      showToast('Slide added', 'success');
+    }
 
-      if (slides.length > RECOMMENDED_MAX) {
-        showToast(`Slide added. Note: ${slides.length} slides may slow page load.`, 'warning');
-      } else {
-        showToast('Slide added. Upload an image and save changes.', 'success');
+    function duplicateSlide(index) {
+      if (slides.length >= 10) {
+        showToast('Maximum 10 slides', 'error');
+        return;
       }
+      const copy = JSON.parse(JSON.stringify(slides[index]));
+      slides.splice(index + 1, 0, copy);
+      renderSlides();
+      markUnsaved();
+      showToast('Slide duplicated', 'success');
     }
 
     function deleteSlide(index) {
       if (!confirm('Delete this slide?')) return;
-
-      const slide = slides[index];
-      // Optionally delete the image file
-      if (slide.image_url && slide.image_url.includes('/media/')) {
-        fetch('{% url "admin_homepage" %}', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'X-Requested-With': 'XMLHttpRequest',
-            'X-CSRFToken': csrfToken
-          },
-          body: JSON.stringify({
-            action: 'delete_slide_image',
-            image_url: slide.image_url
-          })
-        });
-      }
-
       slides.splice(index, 1);
       renderSlides();
+      markUnsaved();
       showToast('Slide deleted', 'success');
     }
 
     function updateSlide(index, field, value) {
       slides[index][field] = value;
-      if (field === 'is_split' || field === 'is_active') {
-        renderSlides();
-      }
+      markUnsaved();
+      if (field === 'is_active') renderSlides();
     }
 
-    function triggerImageUpload(index) {
-      currentUploadSlideIndex = index;
-      document.getElementById('slide-image-input').click();
+    function triggerUpload(index, type) {
+      currentUploadIndex = index;
+      uploadType = type;
+      document.getElementById(type === 'split' ? 'split-image-input' : 'slide-image-input').click();
     }
 
-    function triggerSplitImageUpload(index) {
-      currentUploadSlideIndex = index;
-      document.getElementById('split-image-input').click();
-    }
-
-    // Handle main image upload - store as base64 data URL (same as product images)
-    document.getElementById('slide-image-input').addEventListener('change', async function(e) {
-      const file = e.target.files[0];
-      if (!file || currentUploadSlideIndex === null) return;
-
-      // Check file size (warn if over 2MB, reject if over 5MB)
-      if (file.size > 5 * 1024 * 1024) {
-        showToast('Image too large (' + (file.size / 1024 / 1024).toFixed(1) + 'MB). Please compress to under 5MB.', 'error');
-        e.target.value = '';
-        return;
-      }
-      if (file.size > 2 * 1024 * 1024) {
-        showToast('Large image (' + (file.size / 1024 / 1024).toFixed(1) + 'MB). Consider compressing for faster loading.', 'warning');
-      }
-
-      const reader = new FileReader();
-      reader.onload = function(event) {
-        // Store base64 data URL directly (persists in database, works on Render)
-        slides[currentUploadSlideIndex].image_url = event.target.result;
-        renderSlides();
-        showToast('Image added. Click "Save Changes" to persist.', 'success');
-      };
-      reader.onerror = function(error) {
-        showToast('Error reading file', 'error');
-        console.error('FileReader error:', error);
-      };
-      reader.readAsDataURL(file);
-      e.target.value = '';
+    document.getElementById('slide-image-input').addEventListener('change', function(e) {
+      handleImageUpload(e, 'image_url');
     });
 
-    // Handle split (second) image upload - store as base64 data URL
-    document.getElementById('split-image-input').addEventListener('change', async function(e) {
-      const file = e.target.files[0];
-      if (!file || currentUploadSlideIndex === null) return;
+    document.getElementById('split-image-input').addEventListener('change', function(e) {
+      handleImageUpload(e, 'split_image_url');
+    });
 
-      // Check file size
+    function handleImageUpload(e, field) {
+      const file = e.target.files[0];
+      if (!file || currentUploadIndex === null) return;
+
       if (file.size > 5 * 1024 * 1024) {
-        showToast('Image too large. Please compress to under 5MB.', 'error');
+        showToast('Image too large (max 5MB)', 'error');
         e.target.value = '';
         return;
       }
 
       const reader = new FileReader();
       reader.onload = function(event) {
-        // Store base64 data URL directly
-        slides[currentUploadSlideIndex].split_image_url = event.target.result;
+        slides[currentUploadIndex][field] = event.target.result;
         renderSlides();
-        showToast('Second image added. Click "Save Changes" to persist.', 'success');
+        markUnsaved();
+        showToast('Image added', 'success');
       };
-      reader.onerror = function(error) {
-        showToast('Error reading file', 'error');
-      };
+      reader.onerror = () => showToast('Error reading file', 'error');
       reader.readAsDataURL(file);
       e.target.value = '';
-    });
+    }
 
     async function saveSlides() {
+      const btns = document.querySelectorAll('#save-btn, #save-btn-bottom');
+      btns.forEach(btn => {
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
+      });
+
+      const settings = {
+        duration: parseInt(document.getElementById('slide-duration').value),
+        transition: document.getElementById('slide-transition').value,
+        autoplay: document.getElementById('slide-autoplay').value === 'true'
+      };
+
       try {
         const response = await fetch('{% url "admin_homepage" %}', {
           method: 'POST',
@@ -955,37 +1243,194 @@
           },
           body: JSON.stringify({
             action: 'save_slides',
-            slides: slides
+            slides: slides,
+            slideshow_settings: settings
           })
         });
 
         const data = await response.json();
         if (data.success) {
-          showToast('Slideshow saved successfully!', 'success');
+          markSaved();
+          showToast('Saved!', 'success');
         } else {
           showToast('Error: ' + data.error, 'error');
         }
       } catch (error) {
-        showToast('Error saving: ' + error.message, 'error');
+        showToast('Error: ' + error.message, 'error');
+      } finally {
+        btns.forEach(btn => {
+          btn.disabled = false;
+          btn.innerHTML = '<i class="fas fa-save"></i> Save Changes';
+        });
       }
     }
 
     function showToast(message, type) {
-      const existing = document.querySelector('.toast');
-      if (existing) existing.remove();
-
-      const icons = {
-        success: 'check-circle',
-        error: 'exclamation-circle',
-        warning: 'exclamation-triangle'
-      };
-
+      document.querySelectorAll('.toast').forEach(t => t.remove());
+      const icons = { success: 'check-circle', error: 'exclamation-circle', warning: 'exclamation-triangle' };
       const toast = document.createElement('div');
       toast.className = `toast toast-${type}`;
-      toast.innerHTML = `<i class="fas fa-${icons[type] || 'info-circle'}"></i> ${message}`;
+      toast.innerHTML = `<i class="fas fa-${icons[type]}"></i> ${message}`;
       document.body.appendChild(toast);
+      setTimeout(() => toast.remove(), 3000);
+    }
 
-      setTimeout(() => toast.remove(), 4000);
+    // ============================================
+    // GALLERY IMAGES
+    // ============================================
+    let galleryImages = [];
+    try {
+      galleryImages = JSON.parse(document.getElementById('gallery-images-data').textContent) || [];
+    } catch(e) { galleryImages = []; }
+
+    let gallerySortable = null;
+    let currentGalleryUploadIndex = null;
+
+    document.addEventListener('DOMContentLoaded', function() {
+      renderGallery();
+      initGallerySortable();
+    });
+
+    function initGallerySortable() {
+      const container = document.getElementById('gallery-container');
+      if (gallerySortable) gallerySortable.destroy();
+      gallerySortable = Sortable.create(container, {
+        animation: 150,
+        handle: '.gallery-drag-handle',
+        ghostClass: 'sortable-ghost',
+        onEnd: function() {
+          const newImages = [];
+          container.querySelectorAll('.gallery-card').forEach(card => {
+            const idx = parseInt(card.dataset.index);
+            if (galleryImages[idx]) newImages.push(galleryImages[idx]);
+          });
+          galleryImages = newImages;
+          renderGallery();
+          markUnsaved();
+        }
+      });
+    }
+
+    function renderGallery() {
+      const container = document.getElementById('gallery-container');
+      container.innerHTML = '';
+
+      document.getElementById('gallery-count').textContent = `${galleryImages.length} image${galleryImages.length !== 1 ? 's' : ''}`;
+
+      galleryImages.forEach((img, index) => {
+        const card = document.createElement('div');
+        card.className = 'gallery-card';
+        card.dataset.index = index;
+
+        const imageHtml = img.image_url
+          ? `<img src="${img.image_url}" alt="${img.alt_text || ''}">`
+          : `<div class="gallery-image-placeholder"><i class="fas fa-cloud-upload-alt"></i><span>Click to upload</span></div>`;
+
+        card.innerHTML = `
+          <div class="gallery-card-header">
+            <span class="gallery-card-number">#${index + 1}</span>
+            <div class="gallery-card-actions">
+              <button class="header-btn gallery-drag-handle" title="Drag to reorder"><i class="fas fa-grip-vertical"></i></button>
+              <button class="header-btn delete" onclick="deleteGalleryImage(${index})" title="Delete"><i class="fas fa-trash"></i></button>
+            </div>
+          </div>
+          <div class="gallery-image-container" onclick="triggerGalleryUpload(${index})">
+            ${imageHtml}
+          </div>
+          <div class="gallery-card-footer">
+            <input type="text" value="${img.alt_text || ''}" placeholder="Alt text (optional)"
+                   onchange="updateGalleryImage(${index}, 'alt_text', this.value)">
+            <button class="btn btn-sm btn-secondary" onclick="triggerGalleryUpload(${index})">
+              <i class="fas fa-upload"></i>
+            </button>
+          </div>
+        `;
+        container.appendChild(card);
+      });
+
+      initGallerySortable();
+    }
+
+    function addGalleryImage() {
+      galleryImages.push({
+        image_url: '',
+        alt_text: ''
+      });
+      renderGallery();
+      markUnsaved();
+    }
+
+    function deleteGalleryImage(index) {
+      if (!confirm('Delete this image?')) return;
+      galleryImages.splice(index, 1);
+      renderGallery();
+      markUnsaved();
+    }
+
+    function updateGalleryImage(index, field, value) {
+      galleryImages[index][field] = value;
+      markUnsaved();
+    }
+
+    function triggerGalleryUpload(index) {
+      currentGalleryUploadIndex = index;
+      document.getElementById('gallery-image-input').click();
+    }
+
+    document.getElementById('gallery-image-input').addEventListener('change', function(e) {
+      const file = e.target.files[0];
+      if (!file || currentGalleryUploadIndex === null) return;
+
+      if (file.size > 5 * 1024 * 1024) {
+        showToast('Image too large (max 5MB)', 'error');
+        e.target.value = '';
+        return;
+      }
+
+      const reader = new FileReader();
+      reader.onload = function(event) {
+        galleryImages[currentGalleryUploadIndex].image_url = event.target.result;
+        renderGallery();
+        markUnsaved();
+        showToast('Image added', 'success');
+      };
+      reader.onerror = () => showToast('Error reading file', 'error');
+      reader.readAsDataURL(file);
+      e.target.value = '';
+    });
+
+    async function saveGallery() {
+      const btn = document.getElementById('save-gallery-btn');
+      btn.disabled = true;
+      btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
+
+      try {
+        const response = await fetch('{% url "admin_homepage" %}', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-Requested-With': 'XMLHttpRequest',
+            'X-CSRFToken': csrfToken
+          },
+          body: JSON.stringify({
+            action: 'save_gallery',
+            gallery_images: galleryImages
+          })
+        });
+
+        const data = await response.json();
+        if (data.success) {
+          markSaved();
+          showToast('Gallery saved!', 'success');
+        } else {
+          showToast('Error: ' + data.error, 'error');
+        }
+      } catch (error) {
+        showToast('Error: ' + error.message, 'error');
+      } finally {
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fas fa-save"></i> Save Gallery';
+      }
     }
   </script>
 </body>
