@@ -1,7 +1,12 @@
+import base64
 import csv
 import io
 import json
+import logging
+import uuid
 from datetime import datetime, timedelta
+
+logger = logging.getLogger(__name__)
 
 from django.contrib import messages
 from django.contrib.admin.views.decorators import staff_member_required
@@ -349,11 +354,11 @@ def admin_home(request):
         "new_email_subs_24h": EmailSubscription.objects.filter(subscribed_at__gte=last_24h).count(),
         "new_sms_subs_24h": SMSSubscription.objects.filter(subscribed_at__gte=last_24h).count(),
 
-        # Products & Inventory
-        "total_products": Product.objects.count(),
-        "active_products": Product.objects.filter(is_active=True).count(),
-        "low_stock_items": ProductVariant.objects.filter(stock_quantity__lte=10, stock_quantity__gt=0).count(),
-        "out_of_stock": ProductVariant.objects.filter(stock_quantity=0).count(),
+        # Products & Inventory (exclude test products)
+        "total_products": Product.objects.exclude(slug="test-checkout-item").count(),
+        "active_products": Product.objects.filter(is_active=True).exclude(slug="test-checkout-item").count(),
+        "low_stock_items": ProductVariant.objects.exclude(product__slug="test-checkout-item").filter(stock_quantity__lte=10, stock_quantity__gt=0).count(),
+        "out_of_stock": ProductVariant.objects.exclude(product__slug="test-checkout-item").filter(stock_quantity=0).count(),
 
         # Orders & Sales
         "total_orders": total_orders,
@@ -2123,9 +2128,17 @@ def homepage_settings(request):
                 messages.success(request, "Hero image removed successfully!")
                 return redirect("admin_homepage")
 
-        # Handle hero image upload
+        # Handle hero image upload (with optimization)
         if "hero_image" in request.FILES:
-            site_settings.hero_image = request.FILES["hero_image"]
+            from django.core.files.base import ContentFile
+            from shop.utils.image_optimizer import optimize_image
+
+            uploaded_file = request.FILES["hero_image"]
+            optimized_content, filename, content_type = optimize_image(
+                uploaded_file,
+                filename=uploaded_file.name
+            )
+            site_settings.hero_image.save(filename, ContentFile(optimized_content), save=False)
 
         # Update text fields
         site_settings.hero_title = request.POST.get("hero_title", site_settings.hero_title)
@@ -2290,7 +2303,18 @@ def bug_reports_dashboard(request):
                 description = request.POST.get("description", "").strip()
                 page_url = request.POST.get("page_url", "").strip()
                 priority = request.POST.get("priority", "medium")
-                screenshot = request.FILES.get("screenshot")
+                screenshot_file = request.FILES.get("screenshot")
+
+                # Optimize screenshot if provided
+                optimized_screenshot = None
+                if screenshot_file:
+                    from django.core.files.base import ContentFile
+                    from shop.utils.image_optimizer import optimize_image
+                    optimized_content, filename, content_type = optimize_image(
+                        screenshot_file,
+                        filename=screenshot_file.name
+                    )
+                    optimized_screenshot = ContentFile(optimized_content, name=filename)
 
                 if not title or not description:
                     return JsonResponse({"success": False, "error": "Title and description are required"})
@@ -2300,7 +2324,7 @@ def bug_reports_dashboard(request):
                     description=description,
                     page_url=page_url,
                     priority=priority,
-                    screenshot=screenshot,
+                    screenshot=optimized_screenshot,
                     submitted_by=request.user,
                 )
 
@@ -2958,6 +2982,48 @@ def products_dashboard(request):
                 return JsonResponse({"success": True, "is_active": product.is_active})
             except Product.DoesNotExist:
                 return JsonResponse({"success": False, "error": "Product not found"})
+
+        elif action == "upload_product_image":
+            # Upload and optimize product image
+            from django.core.files.base import ContentFile
+            from shop.utils.image_optimizer import optimize_image
+            import io
+
+            try:
+                image_data = request.POST.get("image_data")
+                if not image_data:
+                    return JsonResponse({"success": False, "error": "No image data provided"})
+
+                # Parse base64 data
+                if "base64," not in image_data:
+                    return JsonResponse({"success": False, "error": "Invalid image format"})
+
+                format_part, data_part = image_data.split("base64,", 1)
+                image_content = base64.b64decode(data_part)
+
+                if len(image_content) == 0:
+                    return JsonResponse({"success": False, "error": "Empty image"})
+
+                # Optimize image (resize, convert to WebP, compress)
+                original_size = len(image_content)
+                optimized_content, filename, content_type = optimize_image(
+                    io.BytesIO(image_content),
+                    filename=f"product_{uuid.uuid4().hex[:8]}"
+                )
+                optimized_size = len(optimized_content)
+
+                # Save to media folder
+                from django.core.files.storage import default_storage
+                path = default_storage.save(f"products/{filename}", ContentFile(optimized_content))
+                url = default_storage.url(path)
+
+                # Log optimization
+                savings = round((1 - optimized_size / original_size) * 100, 1) if original_size > 0 else 0
+                logger.info(f"Product image optimized: {original_size} -> {optimized_size} bytes ({savings}% reduction)")
+
+                return JsonResponse({"success": True, "url": url})
+            except Exception as e:
+                return JsonResponse({"success": False, "error": str(e)})
 
         elif action == "create_product":
             import json
@@ -3691,7 +3757,8 @@ def products_dashboard(request):
     from django.db.models import Max, Min
 
     # Get all products with variant data in a single query (optimized)
-    products = Product.objects.select_related("category_obj").annotate(
+    # Exclude test checkout item from inventory reports
+    products = Product.objects.exclude(slug="test-checkout-item").select_related("category_obj").annotate(
         variants_count=Count("variants"),
         stock_total=Sum("variants__stock_quantity"),
         variants_active=Count("variants", filter=Q(variants__is_active=True)),
@@ -3761,7 +3828,8 @@ def products_dashboard(request):
     active_products = sum(1 for p in products_data if p.get("is_active", True))
 
     # Get variant stats in a single query instead of 4 separate queries
-    variant_stats = ProductVariant.objects.aggregate(
+    # Exclude test checkout item from stats
+    variant_stats = ProductVariant.objects.exclude(product__slug="test-checkout-item").aggregate(
         total_variants=Count("id"),
         total_stock=Sum("stock_quantity"),
         low_stock_count=Count("id", filter=Q(stock_quantity__lt=10, stock_quantity__gt=0)),
@@ -6387,7 +6455,7 @@ def add_manual_order(request):
             from decimal import Decimal
             from datetime import datetime
             from django.http import JsonResponse
-            from shop.models import Order, OrderItem, OrderStatus, User, ProductVariant
+            from shop.models import Address, Order, OrderItem, OrderStatus, User, ProductVariant
 
             # Get form data
             customer_name = request.POST.get("customer_name", "").strip()
@@ -6396,6 +6464,14 @@ def add_manual_order(request):
             order_date = request.POST.get("order_date")
             status = request.POST.get("status", "PAID")
             notes = request.POST.get("notes", "")
+
+            # Get shipping address fields
+            shipping_line1 = request.POST.get("shipping_line1", "").strip()
+            shipping_line2 = request.POST.get("shipping_line2", "").strip()
+            shipping_city = request.POST.get("shipping_city", "").strip()
+            shipping_region = request.POST.get("shipping_region", "").strip()
+            shipping_postal = request.POST.get("shipping_postal", "").strip()
+            shipping_country = request.POST.get("shipping_country", "US").strip()
 
             # Check if using line items or manual totals
             use_line_items = request.POST.get("use_line_items") == "true"
@@ -6436,12 +6512,27 @@ def add_manual_order(request):
                 total = Decimal(request.POST.get("total", "0"))
                 line_items = []
 
+            # Create shipping address if provided
+            shipping_address = None
+            if shipping_line1 and shipping_city and shipping_postal:
+                shipping_address = Address.objects.create(
+                    full_name=customer_name or "Customer",
+                    line1=shipping_line1,
+                    line2=shipping_line2,
+                    city=shipping_city,
+                    region=shipping_region,
+                    postal_code=shipping_postal,
+                    country=shipping_country,
+                    email=customer_email,
+                )
+
             # Create the order
             order = Order.objects.create(
                 user=user,
                 customer_name=customer_name,
                 email=customer_email,
                 phone=customer_phone,
+                shipping_address=shipping_address,
                 subtotal=subtotal,
                 tax=tax,
                 shipping=shipping,
@@ -7901,7 +7992,47 @@ def bundles_dashboard(request):
     if request.method == "POST":
         action = request.POST.get("action")
 
-        if action == "create":
+        if action == "upload_bundle_image":
+            # Upload and optimize bundle image
+            from django.core.files.base import ContentFile
+            from shop.utils.image_optimizer import optimize_image
+            import io
+
+            try:
+                image_data = request.POST.get("image_data")
+                if not image_data:
+                    return JsonResponse({"success": False, "error": "No image data provided"})
+
+                if "base64," not in image_data:
+                    return JsonResponse({"success": False, "error": "Invalid image format"})
+
+                format_part, data_part = image_data.split("base64,", 1)
+                image_content = base64.b64decode(data_part)
+
+                if len(image_content) == 0:
+                    return JsonResponse({"success": False, "error": "Empty image"})
+
+                # Optimize image
+                original_size = len(image_content)
+                optimized_content, filename, content_type = optimize_image(
+                    io.BytesIO(image_content),
+                    filename=f"bundle_{uuid.uuid4().hex[:8]}"
+                )
+                optimized_size = len(optimized_content)
+
+                # Save to media folder
+                from django.core.files.storage import default_storage
+                path = default_storage.save(f"bundles/{filename}", ContentFile(optimized_content))
+                url = default_storage.url(path)
+
+                savings = round((1 - optimized_size / original_size) * 100, 1) if original_size > 0 else 0
+                logger.info(f"Bundle image optimized: {original_size} -> {optimized_size} bytes ({savings}% reduction)")
+
+                return JsonResponse({"success": True, "url": url})
+            except Exception as e:
+                return JsonResponse({"success": False, "error": str(e)})
+
+        elif action == "create":
             import json
             name = request.POST.get("name")
             price = request.POST.get("price")
@@ -8491,6 +8622,11 @@ def test_checkout(request):
     # Find or create the reusable test product
     test_product = Product.objects.filter(slug="test-checkout-item").first()
 
+    # Ensure existing test product is hidden from inventory
+    if test_product and test_product.is_active:
+        test_product.is_active = False
+        test_product.save(update_fields=["is_active"])
+
     if not test_product:
         # Create Size M and Color Black if needed
         size_m, _ = Size.objects.get_or_create(code="M", defaults={"label": "Medium"})
@@ -8500,11 +8636,11 @@ def test_checkout(request):
         placeholder_svg = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='400' viewBox='0 0 400 400'%3E%3Crect fill='%23e2e8f0' width='400' height='400'/%3E%3Cpath d='M200 120l60 35v70l-60 35-60-35v-70l60-35z' fill='none' stroke='%2394a3b8' stroke-width='8'/%3E%3Cpath d='M200 155v70M140 155l60 35 60-35' fill='none' stroke='%2394a3b8' stroke-width='8'/%3E%3C/svg%3E"
 
         test_product = Product.objects.create(
-            name="Test Item",
+            name="Test Checkout Item",
             slug="test-checkout-item",
-            description="",
+            description="System test product - excluded from inventory",
             base_price=Decimal("1.00"),
-            is_active=True,
+            is_active=False,  # Hidden from shop and inventory reports
             available_for_purchase=True,
             images=[placeholder_svg],
         )
@@ -8513,7 +8649,7 @@ def test_checkout(request):
             product=test_product,
             size=size_m,
             color=color_black,
-            stock_quantity=9999,
+            stock_quantity=100,  # Minimal stock for testing
             price=Decimal("1.00"),
             images=[placeholder_svg],
         )

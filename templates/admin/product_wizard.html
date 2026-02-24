@@ -1262,13 +1262,39 @@
     }
 
     // Photo handling functions
-    function handleSharedPhotos(files) {
+    async function handleSharedPhotos(files) {
+      const csrfToken = document.querySelector('meta[name="csrf-token"]').content;
+
       for (const file of files) {
         if (!file.type.startsWith('image/')) continue;
         const reader = new FileReader();
-        reader.onload = (e) => {
-          productData.sharedPhotos.push({ file, preview: e.target.result });
-          renderSharedPhotos();
+        reader.onload = async (e) => {
+          // Upload and optimize the image
+          try {
+            const formData = new FormData();
+            formData.append('action', 'upload_product_image');
+            formData.append('image_data', e.target.result);
+
+            const response = await fetch('{% url "admin_products" %}', {
+              method: 'POST',
+              headers: {
+                'X-CSRFToken': csrfToken
+              },
+              body: formData
+            });
+
+            const data = await response.json();
+            if (data.success) {
+              // Store the optimized URL instead of base64
+              productData.sharedPhotos.push({ file, preview: data.url });
+              renderSharedPhotos();
+            } else {
+              alert('Failed to upload image: ' + data.error);
+            }
+          } catch (error) {
+            console.error('Upload error:', error);
+            alert('Failed to upload image');
+          }
         };
         reader.readAsDataURL(file);
       }
@@ -1350,17 +1376,43 @@
       }).filter(v => !productData.excludedVariants.has(v.key));
     }
 
-    function handleVariantPhotos(variantKey, files) {
+    async function handleVariantPhotos(variantKey, files) {
       if (!productData.variantPhotos[variantKey]) {
         productData.variantPhotos[variantKey] = [];
       }
 
+      const csrfToken = document.querySelector('meta[name="csrf-token"]').content;
+
       for (const file of files) {
         if (!file.type.startsWith('image/')) continue;
         const reader = new FileReader();
-        reader.onload = (e) => {
-          productData.variantPhotos[variantKey].push({ file, preview: e.target.result });
-          renderVariantPhotos(variantKey);
+        reader.onload = async (e) => {
+          // Upload and optimize the image
+          try {
+            const formData = new FormData();
+            formData.append('action', 'upload_product_image');
+            formData.append('image_data', e.target.result);
+
+            const response = await fetch('{% url "admin_products" %}', {
+              method: 'POST',
+              headers: {
+                'X-CSRFToken': csrfToken
+              },
+              body: formData
+            });
+
+            const data = await response.json();
+            if (data.success) {
+              // Store the optimized URL instead of base64
+              productData.variantPhotos[variantKey].push({ file, preview: data.url });
+              renderVariantPhotos(variantKey);
+            } else {
+              alert('Failed to upload image: ' + data.error);
+            }
+          } catch (error) {
+            console.error('Upload error:', error);
+            alert('Failed to upload image');
+          }
         };
         reader.readAsDataURL(file);
       }

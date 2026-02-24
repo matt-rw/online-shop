@@ -1760,13 +1760,36 @@
       document.getElementById('editModal').classList.add('active');
     }
 
-    function handleProductImageUpload(event) {
+    async function handleProductImageUpload(event) {
       const files = event.target.files;
       for (let file of files) {
         const reader = new FileReader();
-        reader.onload = function(e) {
-          productImages.push(e.target.result);
-          displayProductImages();
+        reader.onload = async function(e) {
+          // Upload and optimize the image
+          try {
+            const formData = new FormData();
+            formData.append('action', 'upload_product_image');
+            formData.append('image_data', e.target.result);
+
+            const response = await fetch('{% url "admin_products" %}', {
+              method: 'POST',
+              headers: {
+                'X-CSRFToken': '{{ csrf_token }}'
+              },
+              body: formData
+            });
+
+            const data = await response.json();
+            if (data.success) {
+              productImages.push(data.url);
+              displayProductImages();
+            } else {
+              alert('Failed to upload image: ' + data.error);
+            }
+          } catch (error) {
+            console.error('Upload error:', error);
+            alert('Failed to upload image');
+          }
         };
         reader.readAsDataURL(file);
       }
@@ -3235,13 +3258,38 @@
     }
 
     // Image handling functions
-    function handleVariantImageUpload(event) {
+    async function handleVariantImageUpload(event) {
       const files = event.target.files;
+      const csrftoken = getCookie('csrftoken');
+
       for (let file of files) {
         const reader = new FileReader();
-        reader.onload = function(e) {
-          variantImages.push(e.target.result);
-          displayVariantImages();
+        reader.onload = async function(e) {
+          // Upload and optimize the image
+          try {
+            const formData = new FormData();
+            formData.append('action', 'upload_product_image');
+            formData.append('image_data', e.target.result);
+
+            const response = await fetch('{% url "admin_products" %}', {
+              method: 'POST',
+              headers: {
+                'X-CSRFToken': csrftoken
+              },
+              body: formData
+            });
+
+            const data = await response.json();
+            if (data.success) {
+              variantImages.push(data.url);
+              displayVariantImages();
+            } else {
+              showToast('Failed to upload image: ' + data.error, 'error');
+            }
+          } catch (error) {
+            console.error('Upload error:', error);
+            showToast('Failed to upload image', 'error');
+          }
         };
         reader.readAsDataURL(file);
       }

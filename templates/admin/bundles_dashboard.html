@@ -866,14 +866,39 @@
     }
 
     // Bundle Image Functions
-    function handleBundleImageUpload(event) {
+    async function handleBundleImageUpload(event) {
       const files = event.target.files;
+      const csrftoken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+
       for (let file of files) {
         const reader = new FileReader();
-        reader.onload = function(e) {
-          bundleImages.push(e.target.result);
-          displayBundleImages();
-          updateAvailableProductImages();
+        reader.onload = async function(e) {
+          // Upload and optimize the image
+          try {
+            const formData = new FormData();
+            formData.append('action', 'upload_bundle_image');
+            formData.append('image_data', e.target.result);
+
+            const response = await fetch('{% url "admin_bundles" %}', {
+              method: 'POST',
+              headers: {
+                'X-CSRFToken': csrftoken
+              },
+              body: formData
+            });
+
+            const data = await response.json();
+            if (data.success) {
+              bundleImages.push(data.url);
+              displayBundleImages();
+              updateAvailableProductImages();
+            } else {
+              alert('Failed to upload image: ' + data.error);
+            }
+          } catch (error) {
+            console.error('Upload error:', error);
+            alert('Failed to upload image');
+          }
         };
         reader.readAsDataURL(file);
       }

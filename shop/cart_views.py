@@ -658,15 +658,23 @@ def get_shipping_rates_view(request):
 
     cart = get_or_create_cart(request)
     cart_items = cart.items.select_related("variant__product").all()
+    bundle_items = cart.bundle_items.all()
 
-    if not cart_items.exists():
+    if not cart_items.exists() and not bundle_items.exists():
         return JsonResponse({"success": False, "error": "Cart is empty"}, status=400)
+
+    # Check if this is a test order
+    is_test_order = (
+        cart_items.count() == 1
+        and not bundle_items.exists()
+        and cart_items.first().variant.product.slug == "test-checkout-item"
+    )
 
     # Calculate cart subtotal for free shipping threshold
     subtotal = get_cart_total(cart)
 
-    # Free shipping on orders $100+
-    if subtotal >= Decimal("100.00"):
+    # Free shipping for test orders or orders $100+
+    if is_test_order or subtotal >= Decimal("100.00"):
         return JsonResponse({
             "success": True,
             "rates": [{
@@ -675,7 +683,7 @@ def get_shipping_rates_view(request):
                 "service": "Free Shipping",
                 "rate": 0.00,
                 "delivery_days": "5-7",
-                "description": "Free standard shipping on orders $100+"
+                "description": "Free shipping" if is_test_order else "Free standard shipping on orders $100+"
             }],
             "free_shipping": True
         })
