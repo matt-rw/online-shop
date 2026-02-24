@@ -270,8 +270,10 @@
       bottom: 0;
       background: rgba(0, 0, 0, 0.5);
       z-index: 1000;
-      align-items: center;
+      align-items: flex-start;
       justify-content: center;
+      overflow-y: auto;
+      padding: 2rem 0;
     }
 
     .modal-overlay.active {
@@ -285,6 +287,9 @@
       max-width: 500px;
       width: 90%;
       box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+      margin: auto;
+      max-height: calc(100vh - 4rem);
+      overflow-y: auto;
     }
 
     .form-group {
@@ -1163,9 +1168,10 @@
 
     function updateCalculatedTotals() {
       const subtotal = manualOrderLineItems.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+      const discount = parseFloat(document.getElementById('discountInput').value) || 0;
       const tax = parseFloat(document.getElementById('taxInput').value) || 0;
       const shipping = parseFloat(document.getElementById('shippingInput').value) || 0;
-      const total = subtotal + tax + shipping;
+      const total = Math.max(0, subtotal - discount + tax + shipping);
 
       document.getElementById('calcSubtotal').textContent = `$${subtotal.toFixed(2)}`;
       document.getElementById('calcTotal').textContent = `$${total.toFixed(2)}`;
@@ -1287,6 +1293,14 @@
             <div class="total-row">
               <span>Subtotal:</span>
               <span id="calcSubtotal">$0.00</span>
+            </div>
+            <div class="total-row" style="color: #dc2626;">
+              <span>Discount:</span>
+              <div style="display: flex; align-items: center; gap: 0.25rem;">
+                <span>-$</span>
+                <input type="number" name="discount" id="discountInput" step="0.01" min="0" value="0"
+                       style="width: 70px; text-align: right; padding: 0.25rem; border: 1px solid #e2e8f0; border-radius: 4px;" onchange="updateCalculatedTotals()">
+              </div>
             </div>
             <div class="total-row">
               <span>Tax:</span>

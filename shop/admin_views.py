@@ -6489,6 +6489,9 @@ def add_manual_order(request):
                 datetime.strptime(order_date, "%Y-%m-%d")
             )
 
+            # Get discount (applies to both modes)
+            discount = Decimal(request.POST.get("discount", "0"))
+
             if use_line_items:
                 # Parse line items and calculate totals
                 line_items = json.loads(line_items_json)
@@ -6503,7 +6506,10 @@ def add_manual_order(request):
 
                 tax = Decimal(request.POST.get("tax", "0"))
                 shipping = Decimal(request.POST.get("shipping", "0"))
-                total = subtotal + tax + shipping
+                total = subtotal - discount + tax + shipping
+                # Ensure total doesn't go negative
+                if total < 0:
+                    total = Decimal("0")
             else:
                 # Manual totals (historical import)
                 subtotal = Decimal(request.POST.get("subtotal", "0"))
