@@ -268,6 +268,20 @@
           </div>
         </div>
 
+        <!-- Express Checkout (Apple Pay / Google Pay) -->
+        {% if product.available_for_purchase and total_stock > 0 %}
+        <div id="express-checkout-section" class="mb-4" style="display: none;">
+          <div id="payment-request-button" class="w-full">
+            <!-- Stripe Payment Request Button will be mounted here -->
+          </div>
+          <div class="flex items-center gap-3 my-4">
+            <span class="flex-1 h-px bg-neutral-200"></span>
+            <span class="text-xs text-neutral-400 uppercase tracking-wider">or</span>
+            <span class="flex-1 h-px bg-neutral-200"></span>
+          </div>
+        </div>
+        {% endif %}
+
         <!-- Add to Cart Button -->
         <form action="{% url 'shop:add_to_cart' %}" method="POST" class="mb-8" id="add-to-cart-form">
           {% csrf_token %}
@@ -349,6 +363,196 @@
 {% endblock %}
 
 {% block extra_js %}
+<!-- Stripe.js for Express Checkout -->
+<script src="https://js.stripe.com/v3/"></script>
+<script>
+  // Express Checkout (Apple Pay / Google Pay)
+  const stripePublicKey = '{{ stripe_publishable_key }}';
+  const productPrice = {{ product.base_price }};
+  const productName = '{{ product.name|escapejs }}';
+  const csrfToken = '{{ csrf_token }}';
+
+  // Initialize Stripe and Payment Request Button
+  async function initExpressCheckout() {
+    if (!stripePublicKey) return;
+
+    const stripe = Stripe(stripePublicKey);
+
+    // Calculate initial total (with shipping)
+    const quantity = parseInt(document.getElementById('quantity')?.value || 1);
+    const subtotal = productPrice * quantity;
+    const shipping = subtotal >= 100 ? 0 : 7.99;
+    const total = subtotal + shipping;
+
+    // Create Payment Request
+    const paymentRequest = stripe.paymentRequest({
+      country: 'US',
+      currency: 'usd',
+      total: {
+        label: productName,
+        amount: Math.round(total * 100), // cents
+      },
+      requestPayerName: true,
+      requestPayerEmail: true,
+      requestShipping: true,
+      shippingOptions: subtotal >= 100 ? [
+        { id: 'free', label: 'Free Shipping', detail: '5-7 business days', amount: 0 }
+      ] : [
+        { id: 'standard', label: 'Standard Shipping', detail: '5-7 business days', amount: 799 }
+      ],
+    });
+
+    // Check if Payment Request is available (Apple Pay, Google Pay, etc.)
+    const canMakePayment = await paymentRequest.canMakePayment();
+
+    if (canMakePayment) {
+      const prButton = stripe.elements().create('paymentRequestButton', {
+        paymentRequest,
+        style: {
+          paymentRequestButton: {
+            type: 'buy',
+            theme: 'dark',
+            height: '48px',
+          },
+        },
+      });
+
+      prButton.mount('#payment-request-button');
+      document.getElementById('express-checkout-section').style.display = 'block';
+
+      // Update payment request when quantity changes
+      window.updateExpressCheckoutAmount = function() {
+        const qty = parseInt(document.getElementById('quantity')?.value || 1);
+        const variantId = document.getElementById('variant-id')?.value;
+        const sub = productPrice * qty;
+        const ship = sub >= 100 ? 0 : 7.99;
+        const tot = sub + ship;
+
+        paymentRequest.update({
+          total: {
+            label: `${productName} x ${qty}`,
+            amount: Math.round(tot * 100),
+          },
+          shippingOptions: sub >= 100 ? [
+            { id: 'free', label: 'Free Shipping', detail: '5-7 business days', amount: 0 }
+          ] : [
+            { id: 'standard', label: 'Standard Shipping', detail: '5-7 business days', amount: 799 }
+          ],
+        });
+      };
+
+      // Handle shipping address changes
+      paymentRequest.on('shippingaddresschange', async (ev) => {
+        const qty = parseInt(document.getElementById('quantity')?.value || 1);
+        const sub = productPrice * qty;
+        const ship = sub >= 100 ? 0 : 7.99;
+
+        ev.updateWith({
+          status: 'success',
+          shippingOptions: sub >= 100 ? [
+            { id: 'free', label: 'Free Shipping', detail: '5-7 business days', amount: 0 }
+          ] : [
+            { id: 'standard', label: 'Standard Shipping', detail: '5-7 business days', amount: 799 }
+          ],
+        });
+      });
+
+      // Handle payment method submission
+      paymentRequest.on('paymentmethod', async (ev) => {
+        const variantId = document.getElementById('variant-id')?.value;
+        const quantity = parseInt(document.getElementById('quantity')?.value || 1);
+
+        if (!variantId) {
+          ev.complete('fail');
+          alert('Please select a size');
+          return;
+        }
+
+        try {
+          // Create PaymentIntent on server
+          const intentResponse = await fetch('{% url "shop:express_checkout_intent" %}', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'X-CSRFToken': csrfToken,
+            },
+            body: JSON.stringify({ variant_id: variantId, quantity }),
+          });
+
+          const intentData = await intentResponse.json();
+
+          if (intentData.error) {
+            ev.complete('fail');
+            alert(intentData.error);
+            return;
+          }
+
+          // Confirm the payment
+          const { error, paymentIntent } = await stripe.confirmCardPayment(
+            intentData.clientSecret,
+            { payment_method: ev.paymentMethod.id },
+            { handleActions: false }
+          );
+
+          if (error) {
+            ev.complete('fail');
+            alert(error.message);
+            return;
+          }
+
+          ev.complete('success');
+
+          if (paymentIntent.status === 'requires_action') {
+            // Handle 3D Secure
+            const { error: actionError } = await stripe.confirmCardPayment(intentData.clientSecret);
+            if (actionError) {
+              alert(actionError.message);
+              return;
+            }
+          }
+
+          // Complete the order
+          const completeResponse = await fetch('{% url "shop:express_checkout_complete" %}', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'X-CSRFToken': csrfToken,
+            },
+            body: JSON.stringify({
+              paymentIntentId: intentData.paymentIntentId,
+              shippingAddress: {
+                name: ev.shippingAddress?.recipient,
+                line1: ev.shippingAddress?.addressLine?.[0],
+                line2: ev.shippingAddress?.addressLine?.[1] || '',
+                city: ev.shippingAddress?.city,
+                state: ev.shippingAddress?.region,
+                postal: ev.shippingAddress?.postalCode,
+                country: ev.shippingAddress?.country,
+                email: ev.payerEmail,
+              },
+            }),
+          });
+
+          const completeData = await completeResponse.json();
+
+          if (completeData.success) {
+            window.location.href = completeData.redirectUrl || '/shop/checkout/success/';
+          } else {
+            alert(completeData.error || 'Order completion failed');
+          }
+
+        } catch (err) {
+          ev.complete('fail');
+          console.error('Express checkout error:', err);
+          alert('Checkout failed. Please try again.');
+        }
+      });
+    }
+  }
+
+  // Initialize on page load
+  document.addEventListener('DOMContentLoaded', initExpressCheckout);
+</script>
 <script>
   // Variant data from server
   const variantData = {{ variant_data_json|safe }};

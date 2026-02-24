@@ -28,6 +28,9 @@ urlpatterns = [
     path("subscribe/", views.subscribe, name="subscribe"),
     # SMS subscription
     path("subscribe/sms/", views.subscribe_sms, name="subscribe_sms"),
+    # Express Checkout (Apple Pay / Google Pay)
+    path("express-checkout/create-intent/", cart_views.create_express_checkout_intent, name="express_checkout_intent"),
+    path("express-checkout/complete/", cart_views.complete_express_checkout, name="express_checkout_complete"),
     # Cart management
     path("cart/", cart_views.cart_view, name="cart"),
     path("cart/add/", cart_views.add_to_cart_view, name="add_to_cart"),

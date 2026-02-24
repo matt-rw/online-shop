@@ -58,6 +58,165 @@ def _get_safe_referer(request, default="/"):
         return default
 
 
+import json
+
+
+@ratelimit(key="ip", rate="30/m", method="POST", block=True)
+@require_POST
+def create_express_checkout_intent(request):
+    """
+    Create a PaymentIntent for Express Checkout (Apple Pay / Google Pay).
+    Used on product pages for one-click purchase.
+    """
+    try:
+        data = json.loads(request.body)
+        variant_id = data.get("variant_id")
+        quantity = int(data.get("quantity", 1))
+
+        if not variant_id:
+            return JsonResponse({"error": "Variant ID required"}, status=400)
+
+        # Get the variant
+        variant = get_object_or_404(ProductVariant, id=variant_id, is_active=True)
+
+        if not variant.product.available_for_purchase:
+            return JsonResponse({"error": "Product not available"}, status=400)
+
+        if variant.stock_quantity < quantity:
+            return JsonResponse({"error": "Insufficient stock"}, status=400)
+
+        # Calculate amounts
+        subtotal = variant.price * quantity
+        # Free shipping over $100, otherwise $7.99
+        shipping = Decimal("0.00") if subtotal >= Decimal("100.00") else Decimal("7.99")
+        total = subtotal + shipping
+
+        # Create PaymentIntent
+        intent = stripe.PaymentIntent.create(
+            amount=int(total * 100),  # Convert to cents
+            currency="usd",
+            automatic_payment_methods={"enabled": True},
+            metadata={
+                "variant_id": str(variant_id),
+                "quantity": str(quantity),
+                "product_name": variant.product.name,
+                "size": str(variant.size) if variant.size else "",
+                "color": str(variant.color) if variant.color else "",
+                "subtotal": str(subtotal),
+                "shipping": str(shipping),
+                "express_checkout": "true",
+            },
+        )
+
+        return JsonResponse({
+            "clientSecret": intent.client_secret,
+            "paymentIntentId": intent.id,
+            "subtotal": float(subtotal),
+            "shipping": float(shipping),
+            "total": float(total),
+        })
+
+    except json.JSONDecodeError:
+        return JsonResponse({"error": "Invalid JSON"}, status=400)
+    except Exception as e:
+        logger.error(f"Express checkout error: {e}")
+        return JsonResponse({"error": str(e)}, status=500)
+
+
+@ratelimit(key="ip", rate="30/m", method="POST", block=True)
+@require_POST
+def complete_express_checkout(request):
+    """
+    Complete an Express Checkout order after payment succeeds.
+    Creates the order record.
+    """
+    try:
+        data = json.loads(request.body)
+        payment_intent_id = data.get("paymentIntentId")
+        shipping_address = data.get("shippingAddress", {})
+
+        if not payment_intent_id:
+            return JsonResponse({"error": "Payment intent ID required"}, status=400)
+
+        # Retrieve PaymentIntent from Stripe
+        intent = stripe.PaymentIntent.retrieve(payment_intent_id)
+
+        if intent.status != "succeeded":
+            return JsonResponse({"error": "Payment not completed"}, status=400)
+
+        # Check if order already exists (idempotency)
+        existing = Order.objects.filter(stripe_payment_intent_id=payment_intent_id).first()
+        if existing:
+            return JsonResponse({
+                "success": True,
+                "orderId": existing.id,
+                "message": "Order already exists",
+            })
+
+        metadata = intent.metadata
+        variant_id = metadata.get("variant_id")
+        quantity = int(metadata.get("quantity", 1))
+        subtotal = Decimal(metadata.get("subtotal", "0"))
+        shipping = Decimal(metadata.get("shipping", "0"))
+
+        # Get variant
+        variant = ProductVariant.objects.select_related("product").get(id=variant_id)
+
+        # Get user if authenticated
+        user = request.user if request.user.is_authenticated else None
+
+        # Get customer email from Stripe or shipping address
+        customer_email = ""
+        if intent.receipt_email:
+            customer_email = intent.receipt_email
+        elif shipping_address.get("email"):
+            customer_email = shipping_address["email"]
+        elif user:
+            customer_email = user.email
+
+        # Create order
+        order = Order.objects.create(
+            user=user,
+            email=customer_email,
+            status="PAID",
+            subtotal=subtotal,
+            shipping=shipping,
+            tax=Decimal("0.00"),  # Tax handled separately if needed
+            total=subtotal + shipping,
+            stripe_payment_intent_id=payment_intent_id,
+        )
+
+        # Create order item
+        order_item = OrderItem.objects.create(
+            order=order,
+            variant=variant,
+            sku=str(variant.id),
+            quantity=quantity,
+            line_total=variant.price * quantity,
+        )
+        order_item.allocate_from_shipments()
+
+        # Deduct stock
+        variant.stock_quantity -= quantity
+        variant.save()
+
+        logger.info(f"Express checkout order {order.id} created for {variant.product.name}")
+
+        return JsonResponse({
+            "success": True,
+            "orderId": order.id,
+            "redirectUrl": f"/shop/checkout/success/?order_id={order.id}",
+        })
+
+    except json.JSONDecodeError:
+        return JsonResponse({"error": "Invalid JSON"}, status=400)
+    except ProductVariant.DoesNotExist:
+        return JsonResponse({"error": "Product not found"}, status=400)
+    except Exception as e:
+        logger.error(f"Express checkout completion error: {e}")
+        return JsonResponse({"error": str(e)}, status=500)
+
+
 @ratelimit(key="ip", rate="30/m", method="POST", block=True)
 @require_POST
 def add_to_cart_view(request):
@@ -723,7 +882,6 @@ def create_checkout_session(request):
         # Order will be created in webhook after successful payment
         # Test orders are exempt from tax
         session = stripe.checkout.Session.create(
-            payment_method_types=["card"],
             line_items=line_items,
             mode="payment",
             automatic_tax={"enabled": not is_test_order},

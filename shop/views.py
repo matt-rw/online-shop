@@ -391,6 +391,7 @@ def product_detail(request, slug):
     """Product detail page."""
     import json
     from collections import OrderedDict
+    from django.conf import settings
     from django.shortcuts import get_object_or_404
 
     from .models import CustomAttribute, Product
@@ -573,6 +574,8 @@ def product_detail(request, slug):
         "total_stock": total_stock,
         "variant_data_json": json.dumps(variant_data),
         "attribute_order_json": json.dumps(attribute_order),
+        # Stripe for Express Checkout
+        "stripe_publishable_key": settings.STRIPE_PUBLISHABLE_KEY,
     }
 
     return render(request, "shop/product_detail.html", context)
