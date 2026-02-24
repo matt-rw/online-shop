@@ -153,9 +153,6 @@
                 {% if item.product.category_obj %}{{ item.product.category_obj.name }}{% else %}Foundation{% endif %}
               </p>
               <h3 class="text-sm font-medium tracking-wide truncate">"{{ item.product.name|upper }}"</h3>
-              {% if item.variant_count > 1 %}
-              <p class="text-xs text-neutral-400 mt-1">{{ item.variant_count }} variants</p>
-              {% endif %}
             </div>
             <span class="text-sm font-medium flex-shrink-0">${{ item.product.base_price }}</span>
           </div>

@@ -234,6 +234,34 @@
       margin-right: 0.25rem;
     }
 
+    .quick-link-notes {
+      font-size: 0.8125rem;
+      color: #6b7280;
+      margin-top: 0.25rem;
+      font-style: italic;
+    }
+
+    .quick-link-notes i {
+      margin-right: 0.25rem;
+    }
+
+    .form-group textarea {
+      width: 100%;
+      padding: 0.75rem 1rem;
+      border: 2px solid #e2e8f0;
+      border-radius: 8px;
+      font-family: inherit;
+      font-size: 1rem;
+      transition: border-color 0.2s;
+      resize: vertical;
+      min-height: 80px;
+    }
+
+    .form-group textarea:focus {
+      outline: none;
+      border-color: #667eea;
+    }
+
     .badge {
       font-size: 0.75rem;
       padding: 0.25rem 0.5rem;
@@ -348,13 +376,16 @@
             {% if link.username %}
             <div class="quick-link-username"><i class="fas fa-user"></i> {{ link.username }}</div>
             {% endif %}
+            {% if link.notes %}
+            <div class="quick-link-notes"><i class="fas fa-sticky-note"></i> {{ link.notes|truncatewords:15 }}</div>
+            {% endif %}
           </div>
           <span class="badge badge-category">{{ link.category }}</span>
           {% if not link.is_active %}
           <span class="badge badge-inactive">inactive</span>
           {% endif %}
           <div class="button-group">
-            <button type="button" class="btn btn-sm btn-secondary" onclick="editQuickLink({{ link.id }}, '{{ link.name|escapejs }}', '{{ link.url|escapejs }}', '{{ link.icon }}', '{{ link.username|default:""|escapejs }}', '{{ link.category }}', {{ link.display_order }}, {{ link.is_active|yesno:'true,false' }})">
+            <button type="button" class="btn btn-sm btn-secondary" onclick="editQuickLink({{ link.id }}, '{{ link.name|escapejs }}', '{{ link.url|escapejs }}', '{{ link.icon }}', '{{ link.username|default:""|escapejs }}', '{{ link.notes|default:""|escapejs }}', '{{ link.category }}', {{ link.display_order }}, {{ link.is_active|yesno:'true,false' }})">
               <i class="fas fa-edit"></i>
             </button>
             <button type="button" class="btn btn-sm btn-danger" onclick="deleteQuickLink({{ link.id }})">
@@ -388,6 +419,11 @@
             <label for="link-username"><i class="fas fa-user"></i> Username/Email</label>
             <input type="text" id="link-username" placeholder="e.g., admin@example.com (optional)">
           </div>
+        </div>
+
+        <div class="form-group">
+          <label for="link-notes"><i class="fas fa-sticky-note"></i> Notes</label>
+          <textarea id="link-notes" placeholder="Any additional notes about this service (optional)"></textarea>
         </div>
 
         <div class="form-row">
@@ -446,12 +482,13 @@
   <script>
     const csrfToken = '{{ csrf_token }}';
 
-    function editQuickLink(id, name, url, icon, username, category, order, active) {
+    function editQuickLink(id, name, url, icon, username, notes, category, order, active) {
       document.getElementById('link-id').value = id;
       document.getElementById('link-name').value = name;
       document.getElementById('link-url').value = url;
       document.getElementById('link-icon').value = icon;
       document.getElementById('link-username').value = username || '';
+      document.getElementById('link-notes').value = notes || '';
       document.getElementById('link-category').value = category;
       document.getElementById('link-order').value = order;
       document.getElementById('link-active').checked = active;
@@ -469,6 +506,7 @@
       document.getElementById('link-url').value = '';
       document.getElementById('link-icon').value = 'fa-link';
       document.getElementById('link-username').value = '';
+      document.getElementById('link-notes').value = '';
       document.getElementById('link-category').value = 'other';
       document.getElementById('link-order').value = '0';
       document.getElementById('link-active').checked = true;
@@ -484,6 +522,7 @@
       const url = document.getElementById('link-url').value.trim();
       const icon = document.getElementById('link-icon').value;
       const username = document.getElementById('link-username').value.trim();
+      const notes = document.getElementById('link-notes').value.trim();
       const category = document.getElementById('link-category').value;
       const order = parseInt(document.getElementById('link-order').value) || 0;
       const active = document.getElementById('link-active').checked;
@@ -508,6 +547,7 @@
             url: url,
             icon: icon,
             username: username,
+            notes: notes,
             category: category,
             display_order: order,
             is_active: active

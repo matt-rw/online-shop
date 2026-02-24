@@ -157,12 +157,28 @@ def cart_view(request):
     bundle_items_with_images = []
     for item in bundle_items:
         image = None
-        if item.bundle.images and item.bundle.images[0]:
-            img = item.bundle.images[0]
-            if not img.startswith(("/", "http")):
-                image = f"/static/{img}"
-            else:
-                image = img
+        # Try bundle images first
+        if item.bundle.images:
+            for img in item.bundle.images:
+                if img:
+                    if not img.startswith(("/", "http", "data:")):
+                        image = f"/static/{img}"
+                    else:
+                        image = img
+                    break
+        # Fallback to first component product image
+        if not image:
+            for bi in item.bundle.items.all():
+                if bi.product.images:
+                    for img in bi.product.images:
+                        if img:
+                            if not img.startswith(("/", "http", "data:")):
+                                image = f"/static/{img}"
+                            else:
+                                image = img
+                            break
+                    if image:
+                        break
         # Get component product names
         components = [bi.product.name for bi in item.bundle.items.all()]
         bundle_items_with_images.append({
@@ -655,14 +671,24 @@ def create_checkout_session(request):
         # Get subtotal and selected shipping cost from form
         subtotal = get_cart_total(cart)
 
+        # Check if this is a test order (only contains test-checkout-item)
+        is_test_order = (
+            cart_items.count() == 1
+            and not bundle_items.exists()
+            and cart_items.first().variant.product.slug == "test-checkout-item"
+        )
+
         # Get shipping cost from form (selected by customer)
         try:
             shipping_cost = Decimal(request.POST.get("shipping_cost", "0"))
         except (ValueError, TypeError):
             shipping_cost = Decimal("0.00")
 
+        # Test orders are exempt from shipping
+        if is_test_order:
+            shipping_cost = Decimal("0.00")
         # Validate shipping - free only if subtotal >= $100
-        if subtotal < Decimal("100.00") and shipping_cost <= 0:
+        elif subtotal < Decimal("100.00") and shipping_cost <= 0:
             # Fallback to standard rate if no shipping selected
             shipping_cost = Decimal("7.99")
 
@@ -692,15 +718,15 @@ def create_checkout_session(request):
                 }
             )
 
-        # Create Stripe checkout session
-        # Note: To enable automatic tax calculation, set up Stripe Tax in your dashboard
-        # and uncomment automatic_tax below
+        # Create Stripe checkout session with automatic tax calculation
+        # Note: Stripe Tax must be enabled in your Stripe Dashboard first
         # Order will be created in webhook after successful payment
+        # Test orders are exempt from tax
         session = stripe.checkout.Session.create(
             payment_method_types=["card"],
             line_items=line_items,
             mode="payment",
-            # automatic_tax={"enabled": True},  # Enable after setting up Stripe Tax
+            automatic_tax={"enabled": not is_test_order},
             success_url=request.build_absolute_uri("/shop/checkout/success/")
             + "?session_id={CHECKOUT_SESSION_ID}",
             cancel_url=request.build_absolute_uri("/shop/checkout/"),
@@ -711,6 +737,7 @@ def create_checkout_session(request):
                 "customer_email": customer_email or "",
                 "subtotal": str(subtotal),
                 "shipping_cost": str(shipping_cost),
+                "is_test_order": "true" if is_test_order else "false",
                 # Shipping address
                 "shipping_name": request.POST.get("shipping_name", ""),
                 "shipping_line1": request.POST.get("shipping_line1", ""),
@@ -799,6 +826,16 @@ def checkout_success_view(request):
                     subtotal = Decimal(metadata.get("subtotal", "0"))
                     shipping_cost = Decimal(metadata.get("shipping_cost", "0"))
 
+                    # Get tax from Stripe (amount is in cents)
+                    tax_amount = Decimal("0.00")
+                    if session.total_details and session.total_details.amount_tax:
+                        tax_amount = Decimal(session.total_details.amount_tax) / 100
+
+                    # Calculate total (use Stripe's amount_total for accuracy)
+                    total = subtotal + shipping_cost + tax_amount
+                    if session.amount_total:
+                        total = Decimal(session.amount_total) / 100
+
                     # Create order
                     order = Order.objects.create(
                         user=user,
@@ -806,8 +843,8 @@ def checkout_success_view(request):
                         status="PAID",
                         subtotal=subtotal,
                         shipping=shipping_cost,
-                        tax=Decimal("0.00"),
-                        total=subtotal + shipping_cost,
+                        tax=tax_amount,
+                        total=total,
                         stripe_checkout_id=session_id,
                         stripe_payment_intent_id=session.payment_intent,
                     )

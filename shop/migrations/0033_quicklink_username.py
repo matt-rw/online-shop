@@ -13,4 +13,9 @@ class Migration(migrations.Migration):
             name='username',
             field=models.CharField(blank=True, help_text='Username or email used for this service (for reference)', max_length=150),
         ),
+        migrations.AddField(
+            model_name='quicklink',
+            name='notes',
+            field=models.TextField(blank=True, help_text='Additional notes about this service'),
+        ),
     ]

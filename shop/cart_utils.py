@@ -273,6 +273,10 @@ def add_bundle_to_cart(request, bundle_id, size_id, quantity=1):
     except Bundle.DoesNotExist:
         raise ValueError("Bundle not found or not available for purchase")
 
+    # Check if all component products are available for purchase
+    if not bundle.all_components_available:
+        raise ValueError("One or more items in this bundle are not available for purchase")
+
     try:
         size = Size.objects.get(id=size_id)
     except Size.DoesNotExist:

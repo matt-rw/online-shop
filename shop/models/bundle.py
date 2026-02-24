@@ -67,6 +67,19 @@ class Bundle(models.Model):
             return int((self.savings / self.component_total) * 100)
         return 0
 
+    @property
+    def all_components_available(self):
+        """Check if all component products are available for purchase."""
+        for item in self.items.select_related("product"):
+            if not item.product.available_for_purchase:
+                return False
+        return True
+
+    @property
+    def is_purchasable(self):
+        """Check if the bundle can be purchased (bundle itself and all components available)."""
+        return self.available_for_purchase and self.all_components_available
+
     def get_available_sizes(self):
         """
         Get sizes that are available for ALL products in the bundle.

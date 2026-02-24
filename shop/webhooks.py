@@ -139,6 +139,17 @@ def handle_checkout_session_completed(event):
         subtotal = Decimal(metadata.get("subtotal", "0"))
         shipping_cost = Decimal(metadata.get("shipping_cost", "0"))
 
+        # Get tax from Stripe (amount is in cents)
+        tax_amount = Decimal("0.00")
+        total_details = session.get("total_details", {})
+        if total_details and total_details.get("amount_tax"):
+            tax_amount = Decimal(total_details["amount_tax"]) / 100
+
+        # Calculate total (use Stripe's amount_total for accuracy)
+        total = subtotal + shipping_cost + tax_amount
+        if session.get("amount_total"):
+            total = Decimal(session["amount_total"]) / 100
+
         # Create the order
         order = Order.objects.create(
             user=user,
@@ -146,8 +157,8 @@ def handle_checkout_session_completed(event):
             status=OrderStatus.PAID,
             subtotal=subtotal,
             shipping=shipping_cost,
-            tax=Decimal("0.00"),
-            total=subtotal + shipping_cost,
+            tax=tax_amount,
+            total=total,
             stripe_checkout_id=checkout_session_id,
             stripe_payment_intent_id=payment_intent_id,
         )

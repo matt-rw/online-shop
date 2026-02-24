@@ -27,6 +27,10 @@ class QuickLink(models.Model):
         blank=True,
         help_text="Username or email used for this service (for reference)"
     )
+    notes = models.TextField(
+        blank=True,
+        help_text="Additional notes about this service"
+    )
     category = models.CharField(
         max_length=20,
         choices=CATEGORY_CHOICES,

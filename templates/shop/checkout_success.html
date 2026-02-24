@@ -61,11 +61,11 @@
         </div>
         <div class="flex justify-between">
           <span class="text-neutral-600">Shipping</span>
-          <span>${{ order.shipping }}</span>
+          <span>{% if order.shipping == 0 %}FREE{% else %}${{ order.shipping }}{% endif %}</span>
         </div>
         <div class="flex justify-between">
           <span class="text-neutral-600">Tax</span>
-          <span>${{ order.tax|floatformat:2 }}</span>
+          <span>{% if order.tax == 0 %}$0.00{% else %}${{ order.tax|floatformat:2 }}{% endif %}</span>
         </div>
         <div class="flex justify-between pt-3 border-t border-black">
           <span class="text-xs tracking-widest uppercase font-medium">Total</span>
