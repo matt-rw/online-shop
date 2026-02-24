@@ -22,6 +22,11 @@ class QuickLink(models.Model):
         default='fa-link',
         help_text="FontAwesome icon class (e.g., 'fa-stripe', 'fa-github', 'fa-server')"
     )
+    username = models.CharField(
+        max_length=150,
+        blank=True,
+        help_text="Username or email used for this service (for reference)"
+    )
     category = models.CharField(
         max_length=20,
         choices=CATEGORY_CHOICES,

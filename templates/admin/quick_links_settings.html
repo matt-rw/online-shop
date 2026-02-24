@@ -224,6 +224,16 @@
       color: #667eea;
     }
 
+    .quick-link-username {
+      font-size: 0.8125rem;
+      color: #059669;
+      margin-top: 0.25rem;
+    }
+
+    .quick-link-username i {
+      margin-right: 0.25rem;
+    }
+
     .badge {
       font-size: 0.75rem;
       padding: 0.25rem 0.5rem;
@@ -335,13 +345,16 @@
           <div class="quick-link-info">
             <div class="quick-link-name">{{ link.name }}</div>
             <a href="{{ link.url }}" target="_blank" class="quick-link-url">{{ link.url }}</a>
+            {% if link.username %}
+            <div class="quick-link-username"><i class="fas fa-user"></i> {{ link.username }}</div>
+            {% endif %}
           </div>
           <span class="badge badge-category">{{ link.category }}</span>
           {% if not link.is_active %}
           <span class="badge badge-inactive">inactive</span>
           {% endif %}
           <div class="button-group">
-            <button type="button" class="btn btn-sm btn-secondary" onclick="editQuickLink({{ link.id }}, '{{ link.name|escapejs }}', '{{ link.url|escapejs }}', '{{ link.icon }}', '{{ link.category }}', {{ link.display_order }}, {{ link.is_active|yesno:'true,false' }})">
+            <button type="button" class="btn btn-sm btn-secondary" onclick="editQuickLink({{ link.id }}, '{{ link.name|escapejs }}', '{{ link.url|escapejs }}', '{{ link.icon }}', '{{ link.username|default:""|escapejs }}', '{{ link.category }}', {{ link.display_order }}, {{ link.is_active|yesno:'true,false' }})">
               <i class="fas fa-edit"></i>
             </button>
             <button type="button" class="btn btn-sm btn-danger" onclick="deleteQuickLink({{ link.id }})">
@@ -370,6 +383,10 @@
           <div class="form-group">
             <label for="link-url"><i class="fas fa-link"></i> URL</label>
             <input type="text" id="link-url" placeholder="dashboard.stripe.com">
+          </div>
+          <div class="form-group">
+            <label for="link-username"><i class="fas fa-user"></i> Username/Email</label>
+            <input type="text" id="link-username" placeholder="e.g., admin@example.com (optional)">
           </div>
         </div>
 
@@ -429,11 +446,12 @@
   <script>
     const csrfToken = '{{ csrf_token }}';
 
-    function editQuickLink(id, name, url, icon, category, order, active) {
+    function editQuickLink(id, name, url, icon, username, category, order, active) {
       document.getElementById('link-id').value = id;
       document.getElementById('link-name').value = name;
       document.getElementById('link-url').value = url;
       document.getElementById('link-icon').value = icon;
+      document.getElementById('link-username').value = username || '';
       document.getElementById('link-category').value = category;
       document.getElementById('link-order').value = order;
       document.getElementById('link-active').checked = active;
@@ -450,6 +468,7 @@
       document.getElementById('link-name').value = '';
       document.getElementById('link-url').value = '';
       document.getElementById('link-icon').value = 'fa-link';
+      document.getElementById('link-username').value = '';
       document.getElementById('link-category').value = 'other';
       document.getElementById('link-order').value = '0';
       document.getElementById('link-active').checked = true;
@@ -464,6 +483,7 @@
       const name = document.getElementById('link-name').value.trim();
       const url = document.getElementById('link-url').value.trim();
       const icon = document.getElementById('link-icon').value;
+      const username = document.getElementById('link-username').value.trim();
       const category = document.getElementById('link-category').value;
       const order = parseInt(document.getElementById('link-order').value) || 0;
       const active = document.getElementById('link-active').checked;
@@ -487,6 +507,7 @@
             name: name,
             url: url,
             icon: icon,
+            username: username,
             category: category,
             display_order: order,
             is_active: active

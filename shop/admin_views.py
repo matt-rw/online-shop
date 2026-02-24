@@ -2165,6 +2165,7 @@ def quick_links_settings(request):
                         "name": link.name,
                         "url": link.url,
                         "icon": link.icon,
+                        "username": link.username,
                         "category": link.category,
                         "display_order": link.display_order,
                         "is_active": link.is_active,
@@ -2180,6 +2181,7 @@ def quick_links_settings(request):
                 name = data.get("name", "").strip()
                 url = data.get("url", "").strip()
                 icon = data.get("icon", "fa-link").strip() or "fa-link"
+                username = data.get("username", "").strip()
                 category = data.get("category", "other")
                 display_order = int(data.get("display_order", 0))
                 is_active = data.get("is_active", True)
@@ -2196,6 +2198,7 @@ def quick_links_settings(request):
                     link.name = name
                     link.url = url
                     link.icon = icon
+                    link.username = username
                     link.category = category
                     link.display_order = display_order
                     link.is_active = is_active
@@ -2205,6 +2208,7 @@ def quick_links_settings(request):
                         name=name,
                         url=url,
                         icon=icon,
+                        username=username,
                         category=category,
                         display_order=display_order,
                         is_active=is_active,
@@ -2217,6 +2221,7 @@ def quick_links_settings(request):
                         "name": link.name,
                         "url": link.url,
                         "icon": link.icon,
+                        "username": link.username,
                         "category": link.category,
                         "display_order": link.display_order,
                         "is_active": link.is_active,
