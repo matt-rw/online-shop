@@ -760,6 +760,8 @@
     if (currentVal < currentStock) {
       input.value = currentVal + 1;
       formInput.value = input.value;
+      // Update Express Checkout amount
+      if (window.updateExpressCheckoutAmount) window.updateExpressCheckoutAmount();
     }
   }
 
@@ -769,6 +771,8 @@
     if (parseInt(input.value) > 1) {
       input.value = parseInt(input.value) - 1;
       formInput.value = input.value;
+      // Update Express Checkout amount
+      if (window.updateExpressCheckoutAmount) window.updateExpressCheckoutAmount();
     }
   }
 </script>

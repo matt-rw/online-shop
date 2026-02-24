@@ -1241,12 +1241,22 @@
 
         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
           <div class="form-group">
-            <label for="customerEmail">Customer Email *</label>
-            <input type="email" name="customer_email" id="customerEmail" required placeholder="customer@example.com">
+            <label for="customerName">Customer Name</label>
+            <input type="text" name="customer_name" id="customerName" placeholder="John Smith">
           </div>
           <div class="form-group">
             <label for="orderDate">Order Date *</label>
             <input type="date" name="order_date" id="orderDate" required>
+          </div>
+        </div>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+          <div class="form-group">
+            <label for="customerEmail">Customer Email</label>
+            <input type="email" name="customer_email" id="customerEmail" placeholder="customer@example.com">
+          </div>
+          <div class="form-group">
+            <label for="customerPhone">Phone Number</label>
+            <input type="tel" name="customer_phone" id="customerPhone" placeholder="(555) 123-4567">
           </div>
         </div>
 
@@ -1335,7 +1345,8 @@
         <div class="form-group">
           <label for="orderStatus">Status *</label>
           <select name="status" id="orderStatus" required>
-            <option value="PAID">Paid</option>
+            <option value="AWAITING_PAYMENT">Awaiting Payment</option>
+            <option value="PAID" selected>Paid</option>
             <option value="SHIPPED">Shipped</option>
             <option value="FULFILLED">Fulfilled</option>
           </select>

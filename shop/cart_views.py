@@ -927,15 +927,27 @@ def checkout_success_view(request):
     """
     Display order confirmation after successful payment.
     Order is created by webhook, but we handle the case where webhook hasn't run yet.
+    Supports both Stripe Checkout (session_id) and Express Checkout (order_id).
     """
     from django.contrib.auth import get_user_model
     User = get_user_model()
+
+    # Handle Express Checkout (order already created)
+    order_id = request.GET.get("order_id")
+    if order_id:
+        try:
+            order = Order.objects.get(id=order_id)
+            context = {"order": order}
+            return render(request, "shop/checkout_success.html", context)
+        except Order.DoesNotExist:
+            messages.error(request, "Order not found.")
+            return redirect("home")
 
     session_id = request.GET.get("session_id")
 
     if not session_id:
         messages.error(request, "Invalid checkout session.")
-        return redirect("home:home")
+        return redirect("home")
 
     try:
         # Retrieve the session from Stripe

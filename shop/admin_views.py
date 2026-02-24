@@ -2041,6 +2041,9 @@ def homepage_settings(request):
 
         elif action == "upload_slide_image":
             try:
+                from shop.utils.image_optimizer import optimize_image
+                import io
+
                 image_data = request.POST.get("image_data")
                 if not image_data:
                     # Check if data might be in FILES instead
@@ -2053,13 +2056,6 @@ def homepage_settings(request):
                     return JsonResponse({"success": False, "error": "Invalid image format - missing base64 header"})
 
                 format_part, data_part = image_data.split("base64,", 1)
-                ext = "jpg"
-                if "png" in format_part:
-                    ext = "png"
-                elif "webp" in format_part:
-                    ext = "webp"
-                elif "gif" in format_part:
-                    ext = "gif"
 
                 try:
                     image_content = base64.b64decode(data_part)
@@ -2069,11 +2065,22 @@ def homepage_settings(request):
                 if len(image_content) == 0:
                     return JsonResponse({"success": False, "error": "Decoded image is empty"})
 
-                # Save image to media folder
-                filename = f"hero_slide_{uuid.uuid4().hex[:8]}.{ext}"
+                # Optimize image (resize, convert to WebP, compress)
+                original_size = len(image_content)
+                optimized_content, filename, content_type = optimize_image(
+                    io.BytesIO(image_content),
+                    filename=f"hero_slide_{uuid.uuid4().hex[:8]}"
+                )
+                optimized_size = len(optimized_content)
+
+                # Save optimized image to media folder
                 from django.core.files.storage import default_storage
-                path = default_storage.save(f"site/hero/{filename}", ContentFile(image_content))
+                path = default_storage.save(f"site/hero/{filename}", ContentFile(optimized_content))
                 url = default_storage.url(path)
+
+                # Log optimization results
+                savings = round((1 - optimized_size / original_size) * 100, 1) if original_size > 0 else 0
+                logger.info(f"Image optimized: {original_size} -> {optimized_size} bytes ({savings}% reduction)")
 
                 return JsonResponse({"success": True, "url": url})
             except Exception as e:
@@ -6383,7 +6390,9 @@ def add_manual_order(request):
             from shop.models import Order, OrderItem, OrderStatus, User, ProductVariant
 
             # Get form data
-            customer_email = request.POST.get("customer_email")
+            customer_name = request.POST.get("customer_name", "").strip()
+            customer_email = request.POST.get("customer_email", "").strip()
+            customer_phone = request.POST.get("customer_phone", "").strip()
             order_date = request.POST.get("order_date")
             status = request.POST.get("status", "PAID")
             notes = request.POST.get("notes", "")
@@ -6430,7 +6439,9 @@ def add_manual_order(request):
             # Create the order
             order = Order.objects.create(
                 user=user,
+                customer_name=customer_name,
                 email=customer_email,
+                phone=customer_phone,
                 subtotal=subtotal,
                 tax=tax,
                 shipping=shipping,
