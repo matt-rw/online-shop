@@ -16,6 +16,7 @@ from django.db.models import Count, Q, Sum
 from django.http import HttpResponse, JsonResponse
 from django.shortcuts import redirect, render
 from django.utils import timezone
+from django.views.decorators.http import require_POST
 
 import pytz
 
@@ -6311,6 +6312,60 @@ def orders_dashboard(request):
             except Exception as e:
                 return JsonResponse({"success": False, "error": str(e)})
 
+    # Handle GET request for order details (for editing)
+    if request.method == "GET" and request.GET.get("get_order"):
+        try:
+            order_id = request.GET.get("get_order")
+            order = Order.objects.get(id=order_id)
+
+            # Get order items
+            items_data = []
+            for item in order.items.select_related("variant__product", "variant__size", "variant__color"):
+                unit_price = float(item.line_total / item.quantity) if item.quantity > 0 else 0
+                items_data.append({
+                    "variant_id": item.variant.id if item.variant else None,
+                    "product_name": item.variant.product.name if item.variant else item.sku,
+                    "display_name": f"{item.variant.product.name} - {item.variant.size.label if item.variant and item.variant.size else ''}" if item.variant else item.sku,
+                    "sku": item.sku,
+                    "quantity": item.quantity,
+                    "unit_price": unit_price,
+                    "line_total": float(item.line_total),
+                })
+
+            # Get shipping address
+            shipping_data = None
+            if order.shipping_address:
+                shipping_data = {
+                    "line1": order.shipping_address.line1,
+                    "line2": order.shipping_address.line2,
+                    "city": order.shipping_address.city,
+                    "region": order.shipping_address.region,
+                    "postal_code": order.shipping_address.postal_code,
+                    "country": order.shipping_address.country,
+                }
+
+            return JsonResponse({
+                "success": True,
+                "order": {
+                    "id": order.id,
+                    "customer_name": order.customer_name,
+                    "email": order.email,
+                    "phone": order.phone,
+                    "status": order.status,
+                    "subtotal": float(order.subtotal),
+                    "tax": float(order.tax),
+                    "shipping": float(order.shipping),
+                    "total": float(order.total),
+                    "created_at": order.created_at.isoformat(),
+                    "items": items_data,
+                    "shipping_address": shipping_data,
+                }
+            })
+        except Order.DoesNotExist:
+            return JsonResponse({"success": False, "error": "Order not found"})
+        except Exception as e:
+            return JsonResponse({"success": False, "error": str(e)})
+
     # Check if we should show test orders (hidden by default)
     show_test_orders = request.GET.get("show_test", "false").lower() == "true"
 
@@ -6337,8 +6392,14 @@ def orders_dashboard(request):
 
     # Prepare orders data
     orders_data = []
-    for order in orders[:50]:  # Limit to 50 most recent
-        user_name = f"{order.user.first_name} {order.user.last_name}" if order.user else "Guest"
+    for order in orders.order_by("-created_at")[:50]:  # Limit to 50 most recent
+        # Use customer_name for manual orders, otherwise use user's name
+        if order.customer_name:
+            user_name = order.customer_name
+        elif order.user:
+            user_name = f"{order.user.first_name} {order.user.last_name}".strip() or order.user.email
+        else:
+            user_name = "Guest"
 
         # Calculate profit for this order
         total_cost = 0
@@ -6356,6 +6417,7 @@ def orders_dashboard(request):
                 "order_number": f"#{order.id}",
                 "customer_name": user_name,
                 "customer_email": order.email or (order.user.email if order.user else ""),
+                "customer_phone": order.phone,
                 "status": order.status,
                 "subtotal": float(order.subtotal),
                 "tax": float(order.tax),
@@ -6599,6 +6661,127 @@ def add_manual_order(request):
             })
 
     return JsonResponse({"success": False, "error": "Invalid request method"})
+
+
+@staff_member_required
+@require_POST
+def update_manual_order(request):
+    """
+    Update an existing manual order.
+    """
+    try:
+        import json
+        from decimal import Decimal
+        from datetime import datetime
+        from django.http import JsonResponse
+        from shop.models import Address, Order, OrderItem, OrderStatus, ProductVariant
+
+        order_id = request.POST.get("edit_order_id")
+        if not order_id:
+            return JsonResponse({"success": False, "error": "No order ID provided"})
+
+        order = Order.objects.get(id=order_id)
+
+        # Only allow editing manual orders
+        if not order.stripe_payment_intent_id.startswith("MANUAL_"):
+            return JsonResponse({"success": False, "error": "Only manual orders can be edited"})
+
+        # Get form data
+        customer_name = request.POST.get("customer_name", "").strip()
+        customer_email = request.POST.get("customer_email", "").strip()
+        customer_phone = request.POST.get("customer_phone", "").strip()
+        order_date = request.POST.get("order_date")
+        status = request.POST.get("status", order.status)
+
+        # Get shipping address fields
+        shipping_line1 = request.POST.get("shipping_line1", "").strip()
+        shipping_line2 = request.POST.get("shipping_line2", "").strip()
+        shipping_city = request.POST.get("shipping_city", "").strip()
+        shipping_region = request.POST.get("shipping_region", "").strip()
+        shipping_postal = request.POST.get("shipping_postal", "").strip()
+        shipping_country = request.POST.get("shipping_country", "US").strip()
+
+        # Update basic fields
+        order.customer_name = customer_name
+        order.email = customer_email
+        order.phone = customer_phone
+        order.status = status
+
+        # Parse and update order date
+        if order_date:
+            order_datetime = timezone.make_aware(
+                datetime.strptime(order_date, "%Y-%m-%d")
+            )
+            order.created_at = order_datetime
+
+        # Update or create shipping address
+        if shipping_line1 and shipping_city and shipping_postal:
+            if order.shipping_address:
+                # Update existing
+                order.shipping_address.full_name = customer_name or "Customer"
+                order.shipping_address.line1 = shipping_line1
+                order.shipping_address.line2 = shipping_line2
+                order.shipping_address.city = shipping_city
+                order.shipping_address.region = shipping_region
+                order.shipping_address.postal_code = shipping_postal
+                order.shipping_address.country = shipping_country
+                order.shipping_address.email = customer_email
+                order.shipping_address.save()
+            else:
+                # Create new
+                order.shipping_address = Address.objects.create(
+                    full_name=customer_name or "Customer",
+                    line1=shipping_line1,
+                    line2=shipping_line2,
+                    city=shipping_city,
+                    region=shipping_region,
+                    postal_code=shipping_postal,
+                    country=shipping_country,
+                    email=customer_email,
+                )
+
+        # Handle totals update
+        use_line_items = request.POST.get("use_line_items") == "true"
+        discount = Decimal(request.POST.get("discount", "0"))
+        tax = Decimal(request.POST.get("tax", "0"))
+        shipping_cost = Decimal(request.POST.get("shipping", "0"))
+
+        if use_line_items:
+            line_items_json = request.POST.get("line_items", "[]")
+            line_items = json.loads(line_items_json)
+
+            # Calculate subtotal from line items
+            subtotal = Decimal("0")
+            for item in line_items:
+                subtotal += Decimal(str(item["price"])) * int(item["quantity"])
+
+            total = subtotal - discount + tax + shipping_cost
+            if total < 0:
+                total = Decimal("0")
+
+            order.subtotal = subtotal
+            order.tax = tax
+            order.shipping = shipping_cost
+            order.total = total
+        else:
+            # Manual totals mode
+            order.subtotal = Decimal(request.POST.get("subtotal", str(order.subtotal)))
+            order.tax = Decimal(request.POST.get("tax", str(order.tax)))
+            order.shipping = Decimal(request.POST.get("shipping", str(order.shipping)))
+            order.total = Decimal(request.POST.get("total", str(order.total)))
+
+        order.save()
+
+        return JsonResponse({
+            "success": True,
+            "order_id": order.id,
+            "message": f"Order #{order.id} updated successfully",
+        })
+
+    except Order.DoesNotExist:
+        return JsonResponse({"success": False, "error": "Order not found"})
+    except Exception as e:
+        return JsonResponse({"success": False, "error": str(e)})
 
 
 @staff_member_required

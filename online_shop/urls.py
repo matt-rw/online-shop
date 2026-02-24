@@ -37,6 +37,7 @@ urlpatterns = [
     path("bp-manage/users/", admin_views.users_dashboard, name="admin_users"),
     path("bp-manage/orders/", admin_views.orders_dashboard, name="admin_orders"),
     path("bp-manage/orders/add-manual/", admin_views.add_manual_order, name="add_manual_order"),
+    path("bp-manage/orders/update-manual/", admin_views.update_manual_order, name="update_manual_order"),
     path("bp-manage/orders/search-variants/", admin_views.search_variants_for_order, name="search_variants_for_order"),
     path(
         "bp-manage/orders/<int:order_id>/generate-label/",
