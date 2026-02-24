@@ -4551,6 +4551,52 @@ def messages_dashboard(request):
         except Exception as e:
             return JsonResponse({"success": False, "error": str(e)})
 
+    # Handle save draft
+    if request.method == "POST" and request.POST.get("action") == "save_draft":
+        from django.http import JsonResponse
+
+        message_type = request.POST.get("message_type", "email")
+        subject = request.POST.get("subject", "")
+        content = request.POST.get("content", "")
+        draft_id = request.POST.get("draft_id")
+        scheduled_for_str = request.POST.get("scheduled_for", "").strip()
+
+        # Parse scheduled_for if provided
+        scheduled_for = None
+        if scheduled_for_str:
+            try:
+                from datetime import datetime
+                scheduled_for = datetime.fromisoformat(scheduled_for_str.replace("Z", "+00:00"))
+                if timezone.is_naive(scheduled_for):
+                    central_tz = pytz.timezone("America/Chicago")
+                    scheduled_for = central_tz.localize(scheduled_for)
+            except ValueError:
+                pass
+
+        try:
+            if draft_id:
+                # Update existing draft
+                draft = QuickMessage.objects.get(id=draft_id, status="draft")
+                draft.message_type = message_type
+                draft.subject = subject
+                draft.content = content
+                draft.scheduled_for = scheduled_for
+                draft.save()
+            else:
+                # Create new draft
+                draft = QuickMessage.objects.create(
+                    message_type=message_type,
+                    subject=subject,
+                    content=content,
+                    status="draft",
+                    scheduled_for=scheduled_for,
+                )
+            return JsonResponse({"success": True, "draft_id": draft.id})
+        except QuickMessage.DoesNotExist:
+            return JsonResponse({"success": False, "error": "Draft not found"})
+        except Exception as e:
+            return JsonResponse({"success": False, "error": str(e)})
+
     # Get filter parameters
     message_type = request.GET.get("type", "all")
     date_range = request.GET.get("range", "30")
@@ -5668,16 +5714,23 @@ def shipments_dashboard(request):
                 # If status changed TO delivered, add received quantities to variant stock
                 if old_status != "delivered" and new_status == "delivered":
                     for item in shipment.items.select_related("variant"):
-                        if item.received_quantity > 0:
-                            item.variant.stock_quantity += item.received_quantity
-                            item.variant.save()
+                        # Use received_quantity if set, otherwise default to quantity
+                        qty_to_add = item.received_quantity if item.received_quantity > 0 else item.quantity
+                        if qty_to_add > 0:
+                            # If received_quantity wasn't set, update it to match quantity
+                            if item.received_quantity == 0:
+                                item.received_quantity = item.quantity
+                                item.save(update_fields=["received_quantity"])
+                            item.variant.stock_quantity += qty_to_add
+                            item.variant.save(update_fields=["stock_quantity"])
 
                 # If status changed FROM delivered to something else, reverse the stock
                 elif old_status == "delivered" and new_status != "delivered":
                     for item in shipment.items.select_related("variant"):
-                        if item.received_quantity > 0:
-                            item.variant.stock_quantity = max(0, item.variant.stock_quantity - item.received_quantity)
-                            item.variant.save()
+                        qty_to_remove = item.received_quantity if item.received_quantity > 0 else item.quantity
+                        if qty_to_remove > 0:
+                            item.variant.stock_quantity = max(0, item.variant.stock_quantity - qty_to_remove)
+                            item.variant.save(update_fields=["stock_quantity"])
 
                 # Update shipment items
                 for key, value in request.POST.items():
@@ -8014,10 +8067,21 @@ def test_center(request):
     # Check if test keys are configured
     test_secret_key = settings.STRIPE_TEST_SECRET_KEY
     test_publishable_key = settings.STRIPE_TEST_PUBLISHABLE_KEY
+    test_keys_configured = bool(test_secret_key and test_publishable_key)
 
-    if not test_secret_key:
-        messages.error(request, "STRIPE_TEST_SECRET_KEY not configured. Add it to your environment variables.")
-        return redirect("admin_finance")
+    # If test keys not configured, render page with message instead of redirecting
+    if not test_keys_configured:
+        context = {
+            "test_orders": [],
+            "test_orders_json": "[]",
+            "products": [],
+            "test_products": [],
+            "discounts": [],
+            "stripe_publishable_key": "",
+            "test_keys_configured": False,
+            "cst_time": timezone.now().astimezone(pytz.timezone("America/Chicago")),
+        }
+        return render(request, "admin/test_center.html", context)
 
     # Use test keys for all Stripe operations in this view
     stripe.api_key = test_secret_key

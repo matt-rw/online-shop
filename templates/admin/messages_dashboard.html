@@ -502,10 +502,16 @@
           <span id="recipientCount" style="color: #64748b; font-size: 0.875rem;">
             Will send to <strong style="color: #667eea;">{{ stats.email_sub_count }}</strong> active email subscribers
           </span>
-          <button type="submit" id="sendBtn" style="padding: 0.75rem 2rem; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 0.5rem; transition: all 0.2s;">
-            <span id="sendBtnText">Send Now</span>
-            <span>→</span>
-          </button>
+          <div style="display: flex; gap: 0.5rem;">
+            <button type="button" id="saveDraftBtn" onclick="saveDraft()" style="padding: 0.75rem 1.25rem; background: #f1f5f9; color: #475569; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 0.5rem; transition: all 0.2s;" onmouseover="this.style.background='#e2e8f0'" onmouseout="this.style.background='#f1f5f9'">
+              <i class="fa-solid fa-floppy-disk"></i>
+              <span id="saveDraftBtnText">Save Draft</span>
+            </button>
+            <button type="submit" id="sendBtn" style="padding: 0.75rem 2rem; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 0.5rem; transition: all 0.2s;">
+              <span id="sendBtnText">Send Now</span>
+              <span>→</span>
+            </button>
+          </div>
         </div>
       </form>
     </div>
@@ -1197,6 +1203,80 @@
         sendBtn.disabled = false;
         const btnText = document.getElementById('scheduleToggle').checked && !testMode ? 'Schedule' : 'Send Now';
         sendBtn.innerHTML = `<span id="sendBtnText">${btnText}</span><span>→</span>`;
+      }
+    }
+
+    async function saveDraft() {
+      const content = document.getElementById('quickContent').value.trim();
+      const subject = document.getElementById('quickSubject').value.trim();
+      const draftId = document.getElementById('draftId').value;
+      const scheduledFor = document.getElementById('scheduledFor').value;
+
+      if (!content) {
+        alert('Please enter a message to save');
+        return;
+      }
+
+      if (currentMessageType === 'email' && !subject) {
+        alert('Please enter a subject line');
+        return;
+      }
+
+      const saveDraftBtn = document.getElementById('saveDraftBtn');
+      saveDraftBtn.disabled = true;
+      saveDraftBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Saving...';
+
+      try {
+        const formData = new FormData();
+        formData.append('action', 'save_draft');
+        formData.append('message_type', currentMessageType);
+        formData.append('subject', subject);
+        formData.append('content', content);
+        formData.append('csrfmiddlewaretoken', '{{ csrf_token }}');
+        if (draftId) {
+          formData.append('draft_id', draftId);
+        }
+        if (scheduledFor) {
+          formData.append('scheduled_for', scheduledFor);
+        }
+
+        const response = await fetch('{% url "messages_dashboard" %}', {
+          method: 'POST',
+          body: formData,
+          headers: {
+            'X-Requested-With': 'XMLHttpRequest'
+          }
+        });
+
+        const result = await response.json();
+
+        if (result.success) {
+          // Update draft_id for future saves
+          document.getElementById('draftId').value = result.draft_id;
+
+          // Show success message briefly
+          saveDraftBtn.innerHTML = '<i class="fa-solid fa-check"></i> Saved!';
+          saveDraftBtn.style.background = '#dcfce7';
+          saveDraftBtn.style.color = '#166534';
+
+          setTimeout(() => {
+            saveDraftBtn.innerHTML = '<i class="fa-solid fa-floppy-disk"></i> <span id="saveDraftBtnText">Save Draft</span>';
+            saveDraftBtn.style.background = '#f1f5f9';
+            saveDraftBtn.style.color = '#475569';
+            saveDraftBtn.disabled = false;
+          }, 1500);
+
+          // Reload to show in drafts list
+          setTimeout(() => window.location.reload(), 1600);
+        } else {
+          alert(result.error || 'Failed to save draft');
+          saveDraftBtn.innerHTML = '<i class="fa-solid fa-floppy-disk"></i> <span id="saveDraftBtnText">Save Draft</span>';
+          saveDraftBtn.disabled = false;
+        }
+      } catch (error) {
+        alert('Error: ' + error.message);
+        saveDraftBtn.innerHTML = '<i class="fa-solid fa-floppy-disk"></i> <span id="saveDraftBtnText">Save Draft</span>';
+        saveDraftBtn.disabled = false;
       }
     }
 

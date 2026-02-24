@@ -459,6 +459,29 @@
   {% endif %}
 
   <div class="main-content">
+    {% if not test_keys_configured %}
+    <!-- Not Configured Message -->
+    <div style="background: white; border-radius: 16px; padding: 3rem; text-align: center; box-shadow: 0 4px 20px rgba(0,0,0,0.08);">
+      <div style="width: 80px; height: 80px; background: #fef3c7; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 1.5rem;">
+        <i class="fa-solid fa-key" style="font-size: 2rem; color: #f59e0b;"></i>
+      </div>
+      <h2 style="font-size: 1.5rem; font-weight: 700; color: #1e293b; margin-bottom: 0.75rem;">Stripe Test Keys Not Configured</h2>
+      <p style="color: #64748b; max-width: 500px; margin: 0 auto 1.5rem; line-height: 1.6;">
+        To use the Test Center, add your Stripe test API keys to your environment variables.
+      </p>
+      <div style="background: #f8fafc; border: 2px dashed #e2e8f0; border-radius: 12px; padding: 1.5rem; max-width: 500px; margin: 0 auto; text-align: left;">
+        <p style="font-size: 0.875rem; font-weight: 600; color: #475569; margin-bottom: 0.75rem;">Required environment variables:</p>
+        <code style="display: block; background: #1e293b; color: #f59e0b; padding: 1rem; border-radius: 8px; font-size: 0.8125rem; line-height: 1.8;">
+          STRIPE_TEST_SECRET_KEY=sk_test_...<br>
+          STRIPE_TEST_PUBLISHABLE_KEY=pk_test_...
+        </code>
+        <p style="font-size: 0.8125rem; color: #64748b; margin-top: 1rem;">
+          <i class="fa-solid fa-circle-info" style="color: #3b82f6;"></i>
+          Find these in your <a href="https://dashboard.stripe.com/test/apikeys" target="_blank" style="color: #667eea; text-decoration: underline;">Stripe Dashboard</a> (Test Mode → API Keys)
+        </p>
+      </div>
+    </div>
+    {% else %}
     <!-- Action Cards -->
     <div class="action-cards">
       <!-- Test Purchase Card -->
@@ -708,6 +731,7 @@
       </div>
       {% endif %}
     </div>
+    {% endif %}
   </div>
 
   {% if stripe_publishable_key %}

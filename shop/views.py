@@ -257,7 +257,7 @@ def account(request):
                 try:
                     from .models import UserProfile
                     profile, created = UserProfile.objects.get_or_create(user=request.user)
-                    profile.phone = request.POST.get("phone", "")
+                    profile.phone_number = request.POST.get("phone", "")
                     profile.save()
                 except Exception:
                     pass
