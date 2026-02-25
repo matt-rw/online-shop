@@ -103,6 +103,7 @@ TEMPLATES = [
                 "django.contrib.auth.context_processors.auth",
                 "django.contrib.messages.context_processors.messages",
                 "shop.context_processors.cart_context",  # Cart info in all templates
+                "shop.context_processors.site_settings_context",  # Site settings in all templates
             ],
         },
     },

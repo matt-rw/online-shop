@@ -21,3 +21,24 @@ def cart_context(request):
         "cart_count": cart_count,
         "cart_total": cart_total,
     }
+
+
+def site_settings_context(request):
+    """
+    Add site settings to all template contexts.
+    """
+    from .models import SiteSettings
+
+    try:
+        site_settings = SiteSettings.load()
+        return {
+            "site_settings": site_settings,
+            "gallery_images": site_settings.gallery_images or [],
+            "hero_slides": site_settings.hero_slides or [],
+        }
+    except:
+        return {
+            "site_settings": None,
+            "gallery_images": [],
+            "hero_slides": [],
+        }

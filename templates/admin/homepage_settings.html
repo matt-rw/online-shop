@@ -107,7 +107,7 @@
     /* Gallery Grid */
     .gallery-grid {
       display: flex;
-      flex-direction: column;
+      flex-wrap: wrap;
       gap: 1rem;
       margin-bottom: 1.5rem;
       max-width: 768px;
@@ -119,9 +119,48 @@
       border-radius: 12px;
       overflow: hidden;
       transition: all 0.2s;
+      width: 100%;
+    }
+    .gallery-card.half-width {
+      width: calc(50% - 0.5rem);
+    }
+    .gallery-card.half-width .gallery-image-container img {
+      aspect-ratio: 1 / 1;
+      object-fit: cover;
     }
     .gallery-card:hover { border-color: #667eea; }
     .gallery-card.sortable-ghost { opacity: 0.4; }
+
+    .layout-toggle {
+      display: flex;
+      gap: 2px;
+      background: #e2e8f0;
+      border-radius: 4px;
+      padding: 2px;
+    }
+    .layout-toggle button {
+      padding: 4px 6px;
+      border: none;
+      background: transparent;
+      border-radius: 3px;
+      cursor: pointer;
+      color: #94a3b8;
+      transition: all 0.15s;
+      display: flex;
+      align-items: center;
+    }
+    .layout-toggle button.active {
+      background: white;
+      color: #667eea;
+      box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+    }
+    .layout-toggle button:hover:not(.active) {
+      color: #64748b;
+    }
+    .layout-toggle svg {
+      width: 18px;
+      height: 12px;
+    }
 
     .gallery-card-header {
       display: flex;
@@ -1488,7 +1527,8 @@
 
       galleryImages.forEach((img, index) => {
         const card = document.createElement('div');
-        card.className = 'gallery-card';
+        const layout = img.layout || 'full';
+        card.className = 'gallery-card' + (layout === 'half' ? ' half-width' : '');
         card.dataset.index = index;
 
         // Get position values
@@ -1506,6 +1546,14 @@
           <div class="gallery-card-header">
             <span class="gallery-card-number">#${index + 1}</span>
             <div class="gallery-card-actions">
+              <div class="layout-toggle" title="Layout: full width or side-by-side">
+                <button class="${layout === 'full' ? 'active' : ''}" onclick="setGalleryLayout(${index}, 'full')" title="Full width">
+                  <svg viewBox="0 0 18 12"><rect x="1" y="2" width="16" height="8" rx="1" fill="currentColor"/></svg>
+                </button>
+                <button class="${layout === 'half' ? 'active' : ''}" onclick="setGalleryLayout(${index}, 'half')" title="Side by side">
+                  <svg viewBox="0 0 18 12"><rect x="1" y="2" width="7" height="8" rx="1" fill="currentColor"/><rect x="10" y="2" width="7" height="8" rx="1" fill="currentColor"/></svg>
+                </button>
+              </div>
               ${img.image_url ? `<button class="header-btn adjust" onclick="openGalleryPositionModal(${index})" title="Crop & Position"><i class="fas fa-crop-alt"></i></button>` : ''}
               <button class="header-btn gallery-drag-handle" title="Drag to reorder"><i class="fas fa-grip-vertical"></i></button>
               <button class="header-btn delete" onclick="deleteGalleryImage(${index})" title="Delete"><i class="fas fa-trash"></i></button>
@@ -1528,13 +1576,20 @@
       initGallerySortable();
     }
 
+    function setGalleryLayout(index, layout) {
+      galleryImages[index].layout = layout;
+      renderGallery();
+      markUnsaved();
+    }
+
     function addGalleryImage() {
       galleryImages.push({
         image_url: '',
         alt_text: '',
         position_x: 50,
         position_y: 50,
-        zoom: 100
+        zoom: 100,
+        layout: 'full'
       });
       renderGallery();
       markUnsaved();
