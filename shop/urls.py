@@ -24,6 +24,8 @@ urlpatterns = [
     path("bundle/<slug:slug>/", views.bundle_detail, name="bundle_detail"),
     # Account
     path("account/", views.account, name="account"),
+    path("account/orders/", views.orders, name="orders"),
+    path("account/orders/<str:order_number>/", views.order_detail, name="order_detail"),
     # Email subscription
     path("subscribe/", views.subscribe, name="subscribe"),
     # SMS subscription

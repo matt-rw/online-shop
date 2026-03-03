@@ -65,6 +65,14 @@
       .card-3d {
         transform: none !important;
       }
+      /* Disable all infinite animations for users who prefer reduced motion */
+      .ticker-animate,
+      .grain-overlay,
+      .shimmer-line,
+      .manifesto-line,
+      .fingerprint-stamp {
+        animation: none !important;
+      }
     }
 
     /* News ticker animation */
@@ -714,13 +722,15 @@
             {% if product.images %}
             <img src="{{ product.images.0 }}"
                  alt="{{ product.name }}"
-                 class="w-full h-full object-cover transition-all duration-700 group-hover:scale-105" />
+                 class="w-full h-full object-cover transition-all duration-700 group-hover:scale-105"
+                 loading="lazy" />
             {% else %}
             {% with first_variant=product.variants.first %}
             {% if first_variant and first_variant.images %}
             <img src="{{ first_variant.images.0 }}"
                  alt="{{ product.name }}"
-                 class="w-full h-full object-cover transition-all duration-700 group-hover:scale-105" />
+                 class="w-full h-full object-cover transition-all duration-700 group-hover:scale-105"
+                 loading="lazy" />
             {% else %}
             <div class="w-full h-full bg-neutral-100 flex items-center justify-center">
               <span class="text-neutral-400">No image</span>
@@ -820,6 +830,7 @@
           <img src="{{ img.image_url }}"
                alt="{{ img.alt_text|default:'Blueprint Apparel' }}"
                class="w-full h-auto gallery-img"
+               loading="lazy"
                data-zoom="{{ img.zoom|default:100 }}"
                data-pos-x="{{ img.position_x|default:50 }}"
                data-pos-y="{{ img.position_y|default:50 }}" />
@@ -862,10 +873,12 @@
     <div class="max-w-3xl mx-auto px-6">
       <img src="{% static 'images/hollywood_shots/black-tee-front-closeup.jpeg' %}"
            alt="Blueprint Apparel - Hollywood Collection"
-           class="w-full h-auto mb-24" />
+           class="w-full h-auto mb-24"
+           loading="lazy" />
       <img src="{% static 'images/nature_shots/full-top-side.jpeg' %}"
            alt="Blueprint Apparel - Foundation Collection"
-           class="w-full h-auto" />
+           class="w-full h-auto"
+           loading="lazy" />
     </div>
   </section>
   {% endif %}

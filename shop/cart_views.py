@@ -28,6 +28,7 @@ from .cart_utils import (
     update_bundle_cart_item,
     update_cart_item_quantity,
 )
+from .context_processors import invalidate_cart_cache
 from .models import Address, Bundle, Cart, CartItem, Order, OrderItem, ProductVariant
 
 logger = logging.getLogger(__name__)
@@ -259,7 +260,8 @@ def add_to_cart_view(request):
     try:
         cart_item, created = add_to_cart(request, variant_id, quantity)
 
-        # Silently add to cart without notification
+        # Invalidate cart cache
+        invalidate_cart_cache(request)
 
         logger.info(f"Added variant {variant_id} to cart (qty: {quantity})")
 
@@ -379,7 +381,8 @@ def update_cart_item_view(request, item_id):
 
         cart_item = update_cart_item_quantity(item_id, quantity, user, session_key)
 
-        # Silently update cart without notification
+        # Invalidate cart cache
+        invalidate_cart_cache(request)
 
         # Return JSON for AJAX requests
         if request.headers.get("X-Requested-With") == "XMLHttpRequest":
@@ -418,7 +421,9 @@ def remove_from_cart_view(request, item_id):
         session_key = request.session.session_key if not user else None
 
         remove_from_cart(item_id, user, session_key)
-        # Silently remove from cart without notification
+
+        # Invalidate cart cache
+        invalidate_cart_cache(request)
 
         # Return JSON for AJAX requests
         if request.headers.get("X-Requested-With") == "XMLHttpRequest":
@@ -464,6 +469,9 @@ def add_bundle_to_cart_view(request):
     try:
         cart_item, created = add_bundle_to_cart(request, bundle_id, size_id, quantity)
 
+        # Invalidate cart cache
+        invalidate_cart_cache(request)
+
         logger.info(f"Added bundle {bundle_id} size {size_id} to cart (qty: {quantity})")
 
         # Return JSON for AJAX requests
@@ -505,6 +513,9 @@ def update_bundle_item_view(request, item_id):
 
         cart_item = update_bundle_cart_item(item_id, quantity, user, session_key)
 
+        # Invalidate cart cache
+        invalidate_cart_cache(request)
+
         # Return JSON for AJAX requests
         if request.headers.get("X-Requested-With") == "XMLHttpRequest":
             cart = get_or_create_cart(request)
@@ -542,6 +553,9 @@ def remove_bundle_from_cart_view(request, item_id):
         session_key = request.session.session_key if not user else None
 
         remove_bundle_from_cart(item_id, user, session_key)
+
+        # Invalidate cart cache
+        invalidate_cart_cache(request)
 
         # Return JSON for AJAX requests
         if request.headers.get("X-Requested-With") == "XMLHttpRequest":

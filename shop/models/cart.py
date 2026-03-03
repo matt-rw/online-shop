@@ -83,6 +83,10 @@ class OrderStatus(models.TextChoices):
 
 
 class Order(models.Model):
+    order_number = models.CharField(
+        max_length=20, unique=True, blank=True,
+        help_text="Professional order number (e.g., BP-10001)"
+    )
     user = models.ForeignKey(User, null=True, blank=True, on_delete=models.SET_NULL)
     customer_name = models.CharField(max_length=255, blank=True, help_text="Customer name (for manual orders)")
     email = models.EmailField(blank=True)
@@ -90,6 +94,20 @@ class Order(models.Model):
     status = models.CharField(
         max_length=20, choices=OrderStatus.choices, default=OrderStatus.CREATED
     )
+
+    def save(self, *args, **kwargs):
+        if not self.order_number:
+            # First save to get the ID if this is a new order
+            if not self.pk:
+                super().save(*args, **kwargs)
+                args = ()  # Clear args after first save
+                kwargs = {}
+            # Generate order number based on actual ID: BP-10001, BP-10002, etc.
+            self.order_number = f"BP-{10000 + self.pk}"
+        super().save(*args, **kwargs)
+
+    def __str__(self):
+        return self.order_number or f"Order #{self.id}"
 
     shipping_address = models.ForeignKey(
         Address, null=True, blank=True, on_delete=models.SET_NULL, related_name="+"  # Required?

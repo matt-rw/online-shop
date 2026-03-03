@@ -6,6 +6,7 @@ from django.core.mail import send_mail
 from django.http import JsonResponse
 from django.shortcuts import redirect, render
 from django.urls import reverse
+from django.utils.http import url_has_allowed_host_and_scheme
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_http_methods
 
@@ -18,12 +19,29 @@ from .utils.validators import validate_and_format_phone_number
 logger = logging.getLogger(__name__)
 
 
+def _get_safe_redirect_url(request, url, default="/"):
+    """
+    Validate redirect URL to prevent open redirect attacks.
+    Only allows relative URLs or URLs to the same host.
+    """
+    if not url:
+        return default
+
+    # Check if URL is safe (relative or same host)
+    if url_has_allowed_host_and_scheme(
+        url,
+        allowed_hosts={request.get_host()},
+        require_https=request.is_secure(),
+    ):
+        return url
+
+    return default
+
+
 @ratelimit(key="ip", rate="10/h", method="POST")
 def subscribe(request):
-    # Get redirect URL from form or default to home
-    redirect_url = request.POST.get("next", "/#subscribe")
-    if not redirect_url:
-        redirect_url = "/#subscribe"
+    # Get redirect URL from form or default to home (validated to prevent open redirect)
+    redirect_url = _get_safe_redirect_url(request, request.POST.get("next"), "/#subscribe")
 
     if request.method == "POST":
         form = SubscribeForm(request.POST)
@@ -72,10 +90,8 @@ def subscribe(request):
 @ratelimit(key="ip", rate="5/h", method="POST")
 def subscribe_sms(request):
     """Handle SMS subscription sign-ups"""
-    # Get redirect URL from form or default to home
-    redirect_url = request.POST.get("next", "/#subscribe")
-    if not redirect_url:
-        redirect_url = "/#subscribe"
+    # Get redirect URL from form or default to home (validated to prevent open redirect)
+    redirect_url = _get_safe_redirect_url(request, request.POST.get("next"), "/#subscribe")
 
     if request.method == "POST":
         phone_number = request.POST.get("phone_number", "").strip()
@@ -344,10 +360,18 @@ def account(request):
                 messages.success(request, "Your password has been updated.")
                 return redirect("shop:account")
 
-        # Try to get orders
+        # Try to get orders (exclude test orders and manual orders)
         try:
             from .models import Order
-            orders = Order.objects.filter(user=request.user).order_by('-created_at')[:5]
+            from django.db.models import Q
+            orders = Order.objects.filter(
+                user=request.user,
+                is_test=False
+            ).exclude(
+                Q(stripe_payment_intent_id__startswith="MANUAL_") |
+                Q(stripe_payment_intent_id__isnull=True) |
+                Q(stripe_payment_intent_id="")
+            ).order_by('-created_at')[:5]
         except Exception:
             pass
 
@@ -365,16 +389,22 @@ def account(request):
         except Exception:
             pass
 
-    # Get email from allauth if not on user model
-    user_email = request.user.email
-    if not user_email and request.user.is_authenticated:
-        try:
-            from allauth.account.models import EmailAddress
-            email_obj = EmailAddress.objects.filter(user=request.user, primary=True).first()
-            if email_obj:
-                user_email = email_obj.email
-        except Exception:
-            pass
+    # Get email - check user model first, then allauth
+    user_email = ""
+    if request.user.is_authenticated:
+        user_email = request.user.email or ""
+        # Try allauth if no email on user model
+        if not user_email:
+            try:
+                from allauth.account.models import EmailAddress
+                email_obj = EmailAddress.objects.filter(user=request.user, primary=True).first()
+                if email_obj:
+                    user_email = email_obj.email
+            except Exception:
+                pass
+        # Fallback to username if it looks like an email
+        if not user_email and request.user.username and "@" in request.user.username:
+            user_email = request.user.username
 
     context = {
         "user": request.user,
@@ -385,6 +415,61 @@ def account(request):
     }
 
     return render(request, "shop/account.html", context)
+
+
+def orders(request):
+    """Orders page - shows all user orders."""
+    from django.contrib.auth.decorators import login_required
+    from django.db.models import Q
+    from .models import Order
+
+    if not request.user.is_authenticated:
+        from django.shortcuts import redirect
+        return redirect('account_login')
+
+    # Get all orders for this user (exclude test and manual orders)
+    orders = Order.objects.filter(
+        user=request.user,
+        is_test=False
+    ).exclude(
+        Q(stripe_payment_intent_id__startswith="MANUAL_") |
+        Q(stripe_payment_intent_id__isnull=True) |
+        Q(stripe_payment_intent_id="")
+    ).order_by('-created_at')
+
+    context = {
+        "orders": orders,
+    }
+
+    return render(request, "shop/orders.html", context)
+
+
+def order_detail(request, order_number):
+    """Order detail page - shows full order information."""
+    from django.shortcuts import get_object_or_404, redirect
+    from django.db.models import Q
+    from .models import Order
+
+    if not request.user.is_authenticated:
+        return redirect('account_login')
+
+    # Get the order (must belong to this user)
+    order = get_object_or_404(
+        Order.objects.exclude(
+            Q(stripe_payment_intent_id__startswith="MANUAL_") |
+            Q(stripe_payment_intent_id__isnull=True) |
+            Q(stripe_payment_intent_id="")
+        ),
+        order_number=order_number,
+        user=request.user,
+        is_test=False
+    )
+
+    context = {
+        "order": order,
+    }
+
+    return render(request, "shop/order_detail.html", context)
 
 
 def product_detail(request, slug):

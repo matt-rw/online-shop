@@ -1,3 +1,4 @@
+from django.core.cache import cache
 from django.db import models
 
 
@@ -119,6 +120,8 @@ class SiteSettings(models.Model):
         # Ensure only one instance exists (singleton)
         self.pk = 1
         super().save(*args, **kwargs)
+        # Invalidate cache when settings change
+        cache.delete("site_settings_context")
 
     @classmethod
     def load(cls):

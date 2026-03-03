@@ -25,7 +25,7 @@
     <!-- Order Number -->
     <p class="text-neutral-600 mb-2">Your order has been placed successfully.</p>
     <p class="text-sm text-neutral-500 mb-8">
-      Order #{{ order.id }} | {{ order.created_at|date:"F j, Y" }}
+      {{ order.order_number }} | {{ order.created_at|date:"F j, Y" }}
     </p>
 
     <!-- Confirmation Email Notice -->

@@ -481,29 +481,68 @@
     /* Product Search Styles for Manual Order */
     .product-search-container {
       position: relative;
-      margin-bottom: 1rem;
+    }
+
+    .product-search-wrapper {
+      position: relative;
     }
 
     .product-search-input {
       width: 100%;
-      padding: 0.625rem 0.875rem;
+      padding: 0.875rem 1rem 0.875rem 2.5rem;
+      border: 2px solid #e2e8f0;
+      border-radius: 10px;
+      font-size: 1rem;
+      background: #f8fafc url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%2394a3b8'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z'/%3E%3C/svg%3E") 0.75rem center / 1.25rem no-repeat;
+      transition: all 0.2s;
+    }
+
+    .product-search-input:focus {
+      outline: none;
+      border-color: #10b981;
+      background-color: white;
+      box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1);
+    }
+
+    .browse-products-btn {
+      position: absolute;
+      right: 0.5rem;
+      top: 50%;
+      transform: translateY(-50%);
+      padding: 0.5rem 0.75rem;
+      background: #f1f5f9;
       border: 1px solid #e2e8f0;
-      border-radius: 8px;
-      font-size: 0.875rem;
+      border-radius: 6px;
+      font-size: 0.75rem;
+      font-weight: 500;
+      color: #64748b;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+
+    .browse-products-btn:hover {
+      background: #e2e8f0;
+      color: #374151;
+    }
+
+    .browse-products-btn.active {
+      background: #10b981;
+      border-color: #10b981;
+      color: white;
     }
 
     .product-search-results {
       position: absolute;
-      top: 100%;
+      top: calc(100% + 4px);
       left: 0;
       right: 0;
       background: white;
-      border: 1px solid #e2e8f0;
-      border-radius: 8px;
-      max-height: 250px;
+      border: 2px solid #e2e8f0;
+      border-radius: 12px;
+      max-height: 320px;
       overflow-y: auto;
       z-index: 100;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+      box-shadow: 0 10px 40px rgba(0,0,0,0.15);
       display: none;
     }
 
@@ -512,29 +551,88 @@
     }
 
     .product-result-item {
-      padding: 0.75rem 1rem;
+      padding: 0.875rem 1rem;
       cursor: pointer;
       border-bottom: 1px solid #f1f5f9;
-      transition: background 0.15s;
+      transition: all 0.15s;
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
     }
 
     .product-result-item:hover {
-      background: #f8fafc;
+      background: linear-gradient(135deg, #f0fdf4 0%, #ecfdf5 100%);
     }
 
     .product-result-item:last-child {
       border-bottom: none;
     }
 
+    .product-result-item:first-child {
+      border-radius: 10px 10px 0 0;
+    }
+
+    .product-result-item:last-child {
+      border-radius: 0 0 10px 10px;
+    }
+
+    .product-result-item:only-child {
+      border-radius: 10px;
+    }
+
+    .product-result-img {
+      width: 40px;
+      height: 40px;
+      border-radius: 6px;
+      object-fit: cover;
+      background: #f1f5f9;
+      flex-shrink: 0;
+    }
+
+    .product-result-info {
+      flex: 1;
+      min-width: 0;
+    }
+
     .product-result-name {
-      font-weight: 500;
+      font-weight: 600;
       color: #0f172a;
+      font-size: 0.9375rem;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
     }
 
     .product-result-details {
       font-size: 0.75rem;
       color: #64748b;
-      margin-top: 0.25rem;
+      margin-top: 0.125rem;
+      display: flex;
+      gap: 0.75rem;
+    }
+
+    .product-result-price {
+      font-weight: 600;
+      color: #10b981;
+      font-size: 0.9375rem;
+      white-space: nowrap;
+    }
+
+    .product-result-add {
+      background: #10b981;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      padding: 0.375rem 0.75rem;
+      font-size: 0.75rem;
+      font-weight: 600;
+      cursor: pointer;
+      opacity: 0;
+      transition: opacity 0.15s;
+    }
+
+    .product-result-item:hover .product-result-add {
+      opacity: 1;
     }
 
     .line-items-container {
@@ -573,10 +671,27 @@
 
     .line-item-qty {
       width: 60px;
-      padding: 0.375rem;
-      border: 1px solid #e2e8f0;
-      border-radius: 4px;
+      padding: 0.5rem 0.625rem;
+      border: 2px solid #e2e8f0;
+      border-radius: 8px;
       text-align: center;
+      font-size: 0.9375rem;
+      font-weight: 500;
+      background: white;
+      transition: all 0.2s;
+      -moz-appearance: textfield;
+    }
+
+    .line-item-qty::-webkit-outer-spin-button,
+    .line-item-qty::-webkit-inner-spin-button {
+      -webkit-appearance: none;
+      margin: 0;
+    }
+
+    .line-item-qty:focus {
+      outline: none;
+      border-color: #10b981;
+      box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1);
     }
 
     .line-item-price {
@@ -597,24 +712,160 @@
 
     .calculated-totals {
       background: #f8fafc;
-      padding: 1rem;
-      border-radius: 8px;
-      margin-bottom: 1rem;
+      padding: 1.25rem;
+      border-radius: 12px;
+      margin-bottom: 1.5rem;
+      border: 2px solid #e2e8f0;
     }
 
-    .total-row {
+    .totals-row {
       display: flex;
-      justify-content: space-between;
       align-items: center;
-      padding: 0.25rem 0;
+      justify-content: space-between;
+      padding: 0.5rem 0;
     }
 
-    .total-row.grand-total {
+    .totals-label {
+      font-size: 0.9375rem;
+      font-weight: 500;
+      color: #374151;
+    }
+
+    .totals-value {
+      font-size: 0.9375rem;
+      font-weight: 600;
+      color: #0f172a;
+      min-width: 100px;
+      text-align: right;
+    }
+
+    .totals-input-wrapper {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      background: white;
+      border: 2px solid #e2e8f0;
+      border-radius: 8px;
+      padding: 0 0.75rem;
+      transition: all 0.2s;
+    }
+
+    .totals-input-wrapper:focus-within {
+      border-color: #10b981;
+      box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1);
+    }
+
+    .totals-input-wrapper .prefix,
+    .totals-input-wrapper .suffix {
+      color: #64748b;
+      font-size: 0.9375rem;
+      font-weight: 500;
+      flex-shrink: 0;
+    }
+
+    .totals-input {
+      width: 70px;
+      padding: 0.625rem 0;
+      border: none;
+      font-size: 0.9375rem;
+      font-weight: 500;
+      text-align: right;
+      background: transparent;
+      -moz-appearance: textfield;
+    }
+
+    .totals-input::-webkit-outer-spin-button,
+    .totals-input::-webkit-inner-spin-button {
+      -webkit-appearance: none;
+      margin: 0;
+    }
+
+    .totals-input:focus {
+      outline: none;
+    }
+
+    .totals-calc {
+      font-size: 0.8125rem;
+      color: #dc2626;
+      font-weight: 500;
+      white-space: nowrap;
+      min-width: 70px;
+      text-align: right;
+    }
+
+    .totals-final {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-top: 1rem;
+      padding-top: 1rem;
+      border-top: 2px solid #e2e8f0;
+      font-size: 1.125rem;
       font-weight: 700;
-      font-size: 1.1rem;
-      border-top: 1px solid #e2e8f0;
-      padding-top: 0.5rem;
+      color: #0f172a;
+    }
+
+    .quick-buttons {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.375rem;
       margin-top: 0.5rem;
+    }
+
+    .quick-btn {
+      padding: 0.375rem 0.625rem;
+      border: 1px solid #e2e8f0;
+      border-radius: 6px;
+      font-size: 0.75rem;
+      font-weight: 500;
+      background: white;
+      color: #374151;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+
+    .quick-btn:hover {
+      background: #f1f5f9;
+      border-color: #cbd5e1;
+    }
+
+    .quick-btn.active {
+      background: #10b981;
+      border-color: #10b981;
+      color: white;
+    }
+
+    .quick-btn.discount {
+      border-color: #fcd34d;
+      color: #92400e;
+      background: #fef9c3;
+    }
+
+    .quick-btn.discount:hover {
+      background: #fef08a;
+    }
+
+    .quick-btn.discount.active {
+      background: #f59e0b;
+      border-color: #f59e0b;
+      color: white;
+    }
+
+    .subtotal-override {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .subtotal-toggle {
+      font-size: 0.75rem;
+      color: #6366f1;
+      cursor: pointer;
+      text-decoration: underline;
+    }
+
+    .subtotal-toggle:hover {
+      color: #4f46e5;
     }
 
     .mode-toggle {
@@ -1210,6 +1461,19 @@
       document.getElementById('editOrderId').value = '';
       document.querySelector('#manualOrderModal h2').textContent = 'Add Manual Order';
       document.getElementById('submitOrderBtn').innerHTML = '<i class="fa-solid fa-plus"></i> Create Order';
+      // Reset subtotal override
+      subtotalOverrideEnabled = false;
+      document.getElementById('subtotalToggle').textContent = 'override';
+      document.getElementById('subtotalOverrideWrapper').style.display = 'none';
+      document.getElementById('calcSubtotal').style.display = 'block';
+      document.getElementById('subtotalOverrideInput').value = '';
+      // Reset browse mode
+      browseMode = false;
+      document.getElementById('browseProductsBtn').classList.remove('active');
+      document.getElementById('productSearchResults').classList.remove('active');
+      // Reset quick buttons
+      highlightActiveDiscount();
+      highlightActiveShipping();
       renderLineItems();
       updateCalculatedTotals();
       toggleOrderMode('products');
@@ -1253,6 +1517,13 @@
           document.getElementById('shippingCountry').value = order.shipping_address.country || 'US';
         }
 
+        // Reset subtotal override state
+        subtotalOverrideEnabled = false;
+        document.getElementById('subtotalToggle').textContent = 'override';
+        document.getElementById('subtotalOverrideWrapper').style.display = 'none';
+        document.getElementById('calcSubtotal').style.display = 'block';
+        document.getElementById('subtotalOverrideInput').value = '';
+
         // Handle line items or manual totals
         if (order.items && order.items.length > 0) {
           toggleOrderMode('products');
@@ -1267,8 +1538,11 @@
             stock: 9999,
           }));
           renderLineItems();
+          document.getElementById('discountInput').value = 0;
           document.getElementById('taxInput').value = order.tax || 0;
           document.getElementById('shippingInput').value = order.shipping || 0;
+          highlightActiveDiscount();
+          highlightActiveShipping();
           updateCalculatedTotals();
         } else {
           toggleOrderMode('totals');
@@ -1321,7 +1595,10 @@
       }
     }
 
-    // Product Search
+    // Product Search and Browse
+    let allProductsCache = null;
+    let browseMode = false;
+
     document.addEventListener('DOMContentLoaded', function() {
       const searchInput = document.getElementById('productSearchInput');
       const resultsContainer = document.getElementById('productSearchResults');
@@ -1333,9 +1610,18 @@
           clearTimeout(searchTimeout);
 
           if (query.length < 2) {
-            resultsContainer.classList.remove('active');
+            // If in browse mode and query is cleared, show all products
+            if (browseMode && query.length === 0) {
+              showAllProducts();
+            } else {
+              resultsContainer.classList.remove('active');
+            }
             return;
           }
+
+          // Exit browse mode when searching
+          browseMode = false;
+          document.getElementById('browseProductsBtn').classList.remove('active');
 
           searchTimeout = setTimeout(() => searchProducts(query), 300);
         });
@@ -1344,10 +1630,53 @@
         document.addEventListener('click', function(e) {
           if (!e.target.closest('.product-search-container')) {
             resultsContainer.classList.remove('active');
+            browseMode = false;
+            document.getElementById('browseProductsBtn').classList.remove('active');
           }
         });
       }
     });
+
+    async function toggleBrowseProducts() {
+      const btn = document.getElementById('browseProductsBtn');
+      const resultsContainer = document.getElementById('productSearchResults');
+
+      browseMode = !browseMode;
+      btn.classList.toggle('active', browseMode);
+
+      if (browseMode) {
+        document.getElementById('productSearchInput').value = '';
+        await showAllProducts();
+      } else {
+        resultsContainer.classList.remove('active');
+      }
+    }
+
+    async function showAllProducts() {
+      const resultsContainer = document.getElementById('productSearchResults');
+
+      // Show loading state
+      resultsContainer.innerHTML = '<div class="product-result-item" style="justify-content: center; cursor: default;"><i class="fa-solid fa-spinner fa-spin" style="margin-right: 0.5rem;"></i> Loading products...</div>';
+      resultsContainer.classList.add('active');
+
+      // Fetch all products (cache for performance)
+      if (!allProductsCache) {
+        try {
+          const response = await fetch(`/bp-manage/orders/search-variants/?all=true`);
+          if (!response.ok) {
+            throw new Error(`HTTP ${response.status}`);
+          }
+          const data = await response.json();
+          allProductsCache = data.results || [];
+        } catch (error) {
+          console.error('Error loading products:', error);
+          resultsContainer.innerHTML = `<div class="product-result-item" style="cursor: default;">Error loading products: ${error.message}</div>`;
+          return;
+        }
+      }
+
+      renderProductResults(allProductsCache);
+    }
 
     async function searchProducts(query) {
       const resultsContainer = document.getElementById('productSearchResults');
@@ -1357,15 +1686,7 @@
         const data = await response.json();
 
         if (data.results && data.results.length > 0) {
-          resultsContainer.innerHTML = data.results.map(item => `
-            <div class="product-result-item" onclick='addLineItem(${JSON.stringify(item)})'>
-              <div class="product-result-name">${item.display_name}</div>
-              <div class="product-result-details">
-                SKU: ${item.sku} | $${item.price.toFixed(2)} | Stock: ${item.stock}
-              </div>
-            </div>
-          `).join('');
-          resultsContainer.classList.add('active');
+          renderProductResults(data.results);
         } else {
           resultsContainer.innerHTML = '<div class="product-result-item" style="cursor: default;">No products found</div>';
           resultsContainer.classList.add('active');
@@ -1375,6 +1696,32 @@
         resultsContainer.innerHTML = '<div class="product-result-item" style="cursor: default;">Error searching products</div>';
         resultsContainer.classList.add('active');
       }
+    }
+
+    function renderProductResults(results) {
+      const resultsContainer = document.getElementById('productSearchResults');
+
+      if (results.length === 0) {
+        resultsContainer.innerHTML = '<div class="product-result-item" style="cursor: default;">No products available</div>';
+        resultsContainer.classList.add('active');
+        return;
+      }
+
+      resultsContainer.innerHTML = results.map(item => `
+        <div class="product-result-item" onclick='addLineItem(${JSON.stringify(item).replace(/'/g, "&#39;")})'>
+          ${item.image_url ? `<img src="${item.image_url}" class="product-result-img" alt="">` : `<div class="product-result-img" style="display:flex;align-items:center;justify-content:center;"><i class="fa-solid fa-box" style="color:#cbd5e1;"></i></div>`}
+          <div class="product-result-info">
+            <div class="product-result-name">${item.display_name}</div>
+            <div class="product-result-details">
+              <span>${item.sku}</span>
+              <span>${item.stock} in stock</span>
+            </div>
+          </div>
+          <div class="product-result-price">$${item.price.toFixed(2)}</div>
+          <button type="button" class="product-result-add">+ Add</button>
+        </div>
+      `).join('');
+      resultsContainer.classList.add('active');
     }
 
     function addLineItem(item) {
@@ -1394,9 +1741,16 @@
         });
       }
 
-      // Clear search
-      document.getElementById('productSearchInput').value = '';
-      document.getElementById('productSearchResults').classList.remove('active');
+      // If in browse mode, keep dropdown open; otherwise clear search
+      if (browseMode) {
+        // Just flash the button to indicate item was added
+        const btn = document.getElementById('browseProductsBtn');
+        btn.style.background = '#059669';
+        setTimeout(() => { btn.style.background = ''; }, 200);
+      } else {
+        document.getElementById('productSearchInput').value = '';
+        document.getElementById('productSearchResults').classList.remove('active');
+      }
 
       renderLineItems();
       updateCalculatedTotals();
@@ -1448,18 +1802,86 @@
       `).join('');
     }
 
+    let subtotalOverrideEnabled = false;
+
+    function toggleSubtotalOverride() {
+      subtotalOverrideEnabled = !subtotalOverrideEnabled;
+      const toggle = document.getElementById('subtotalToggle');
+      const wrapper = document.getElementById('subtotalOverrideWrapper');
+      const display = document.getElementById('calcSubtotal');
+
+      if (subtotalOverrideEnabled) {
+        toggle.textContent = 'use items';
+        wrapper.style.display = 'flex';
+        display.style.display = 'none';
+        // Pre-fill with current subtotal
+        const currentSubtotal = manualOrderLineItems.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+        document.getElementById('subtotalOverrideInput').value = currentSubtotal.toFixed(2);
+      } else {
+        toggle.textContent = 'override';
+        wrapper.style.display = 'none';
+        display.style.display = 'block';
+        document.getElementById('subtotalOverrideInput').value = '';
+      }
+      updateCalculatedTotals();
+    }
+
+    function setDiscount(percent) {
+      document.getElementById('discountInput').value = percent;
+      highlightActiveDiscount();
+      updateCalculatedTotals();
+    }
+
+    function highlightActiveDiscount() {
+      const value = parseFloat(document.getElementById('discountInput').value) || 0;
+      const buttons = document.querySelectorAll('#discountButtons .quick-btn');
+      buttons.forEach(btn => {
+        const btnValue = parseInt(btn.textContent);
+        btn.classList.toggle('active', btnValue === value);
+      });
+    }
+
+    function setShipping(amount) {
+      document.getElementById('shippingInput').value = amount.toFixed(2);
+      highlightActiveShipping();
+      updateCalculatedTotals();
+    }
+
+    function highlightActiveShipping() {
+      const value = parseFloat(document.getElementById('shippingInput').value) || 0;
+      const buttons = document.querySelectorAll('#shippingButtons .quick-btn');
+      buttons.forEach(btn => {
+        let btnValue;
+        if (btn.textContent === 'Free') {
+          btnValue = 0;
+        } else {
+          btnValue = parseFloat(btn.textContent.replace('$', ''));
+        }
+        btn.classList.toggle('active', Math.abs(btnValue - value) < 0.01);
+      });
+    }
+
     function updateCalculatedTotals() {
-      const subtotal = manualOrderLineItems.reduce((sum, item) => sum + (item.price * item.quantity), 0);
-      const discount = parseFloat(document.getElementById('discountInput').value) || 0;
+      let subtotal;
+      if (subtotalOverrideEnabled) {
+        subtotal = parseFloat(document.getElementById('subtotalOverrideInput').value) || 0;
+      } else {
+        subtotal = manualOrderLineItems.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+      }
+
+      const discountPercent = parseFloat(document.getElementById('discountInput').value) || 0;
+      const discountAmount = subtotal * (discountPercent / 100);
       const tax = parseFloat(document.getElementById('taxInput').value) || 0;
       const shipping = parseFloat(document.getElementById('shippingInput').value) || 0;
-      const total = Math.max(0, subtotal - discount + tax + shipping);
+      const total = Math.max(0, subtotal - discountAmount + tax + shipping);
 
       document.getElementById('calcSubtotal').textContent = `$${subtotal.toFixed(2)}`;
+      document.getElementById('calcDiscountAmount').textContent = `-$${discountAmount.toFixed(2)}`;
       document.getElementById('calcTotal').textContent = `$${total.toFixed(2)}`;
 
-      // Update hidden JSON
+      // Update hidden fields
       document.getElementById('lineItemsJson').value = JSON.stringify(manualOrderLineItems);
+      document.getElementById('discountAmountHidden').value = discountAmount.toFixed(2);
     }
 
     async function submitManualOrder(event) {
@@ -1556,13 +1978,19 @@
         <!-- Product Selection Mode -->
         <div id="productSelectionSection">
           <div class="form-group">
-            <label>Search Products</label>
+            <label>Add Products</label>
             <div class="product-search-container">
-              <input type="text"
-                     id="productSearchInput"
-                     class="product-search-input"
-                     placeholder="Search by product name or SKU..."
-                     autocomplete="off">
+              <div class="product-search-wrapper">
+                <input type="text"
+                       id="productSearchInput"
+                       class="product-search-input"
+                       placeholder="Search or browse products..."
+                       autocomplete="off"
+                       style="padding-right: 5.5rem;">
+                <button type="button" class="browse-products-btn" id="browseProductsBtn" onclick="toggleBrowseProducts()">
+                  <i class="fa-solid fa-list"></i> Browse
+                </button>
+              </div>
               <div id="productSearchResults" class="product-search-results"></div>
             </div>
           </div>
@@ -1577,30 +2005,71 @@
           </div>
 
           <div class="calculated-totals">
-            <div class="total-row">
-              <span>Subtotal:</span>
-              <span id="calcSubtotal">$0.00</span>
-            </div>
-            <div class="total-row" style="color: #dc2626;">
-              <span>Discount:</span>
-              <div style="display: flex; align-items: center; gap: 0.25rem;">
-                <span>-$</span>
-                <input type="number" name="discount" id="discountInput" step="0.01" min="0" value="0"
-                       style="width: 70px; text-align: right; padding: 0.25rem; border: 1px solid #e2e8f0; border-radius: 4px;" onchange="updateCalculatedTotals()">
+            <div class="totals-row">
+              <div class="subtotal-override">
+                <span class="totals-label">Subtotal</span>
+                <span class="subtotal-toggle" id="subtotalToggle" onclick="toggleSubtotalOverride()">override</span>
+              </div>
+              <div style="display: flex; align-items: center; gap: 0.5rem;">
+                <span class="totals-value" id="calcSubtotal">$0.00</span>
+                <div class="totals-input-wrapper" id="subtotalOverrideWrapper" style="display: none;">
+                  <span class="prefix">$</span>
+                  <input type="number" name="subtotal_override" id="subtotalOverrideInput" step="0.01" min="0" placeholder="0.00"
+                         class="totals-input" onchange="updateCalculatedTotals()" oninput="updateCalculatedTotals()">
+                </div>
               </div>
             </div>
-            <div class="total-row">
-              <span>Tax:</span>
-              <input type="number" name="tax" id="taxInput" step="0.01" min="0" value="0"
-                     style="width: 80px; text-align: right; padding: 0.25rem; border: 1px solid #e2e8f0; border-radius: 4px;" onchange="updateCalculatedTotals()">
+
+            <div class="totals-row" style="flex-direction: column; align-items: stretch; gap: 0.5rem;">
+              <div style="display: flex; justify-content: space-between; align-items: center;">
+                <label class="totals-label" for="discountInput">Discount</label>
+                <div style="display: flex; align-items: center; gap: 0.75rem;">
+                  <div class="totals-input-wrapper">
+                    <input type="number" name="discount_percent" id="discountInput" step="1" min="0" max="100" value="0" placeholder="0"
+                           class="totals-input" onchange="updateCalculatedTotals(); highlightActiveDiscount();" oninput="updateCalculatedTotals(); highlightActiveDiscount();">
+                    <span class="suffix">%</span>
+                  </div>
+                  <span class="totals-calc" id="calcDiscountAmount">-$0.00</span>
+                  <input type="hidden" name="discount" id="discountAmountHidden" value="0">
+                </div>
+              </div>
+              <div class="quick-buttons" id="discountButtons">
+                <button type="button" class="quick-btn discount active" onclick="setDiscount(0)">0%</button>
+                <button type="button" class="quick-btn discount" onclick="setDiscount(10)">10%</button>
+                <button type="button" class="quick-btn discount" onclick="setDiscount(25)">25%</button>
+                <button type="button" class="quick-btn discount" onclick="setDiscount(50)">50%</button>
+                <button type="button" class="quick-btn discount" onclick="setDiscount(100)">100%</button>
+              </div>
             </div>
-            <div class="total-row">
-              <span>Shipping:</span>
-              <input type="number" name="shipping" id="shippingInput" step="0.01" min="0" value="0"
-                     style="width: 80px; text-align: right; padding: 0.25rem; border: 1px solid #e2e8f0; border-radius: 4px;" onchange="updateCalculatedTotals()">
+
+            <div class="totals-row">
+              <label class="totals-label" for="taxInput">Tax</label>
+              <div class="totals-input-wrapper">
+                <span class="prefix">$</span>
+                <input type="number" name="tax" id="taxInput" step="0.01" min="0" value="0" placeholder="0.00"
+                       class="totals-input" onchange="updateCalculatedTotals()">
+              </div>
             </div>
-            <div class="total-row grand-total">
-              <span>Total:</span>
+
+            <div class="totals-row" style="flex-direction: column; align-items: stretch; gap: 0.5rem;">
+              <div style="display: flex; justify-content: space-between; align-items: center;">
+                <label class="totals-label" for="shippingInput">Shipping</label>
+                <div class="totals-input-wrapper">
+                  <span class="prefix">$</span>
+                  <input type="number" name="shipping" id="shippingInput" step="0.01" min="0" value="0" placeholder="0.00"
+                         class="totals-input" onchange="updateCalculatedTotals(); highlightActiveShipping();">
+                </div>
+              </div>
+              <div class="quick-buttons" id="shippingButtons">
+                <button type="button" class="quick-btn active" onclick="setShipping(0)">Free</button>
+                <button type="button" class="quick-btn" onclick="setShipping(7.99)">$7.99</button>
+                <button type="button" class="quick-btn" onclick="setShipping(12.99)">$12.99</button>
+                <button type="button" class="quick-btn" onclick="setShipping(24.99)">$24.99</button>
+              </div>
+            </div>
+
+            <div class="totals-final">
+              <span>Total</span>
               <span id="calcTotal">$0.00</span>
             </div>
           </div>

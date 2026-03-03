@@ -87,7 +87,7 @@
               <div class="border border-black p-4 hover:bg-neutral-50 transition-colors">
                 <div class="flex justify-between items-start mb-3">
                   <div>
-                    <p class="text-sm font-medium">Order #{{ order.id }}</p>
+                    <p class="text-sm font-medium">{{ order.order_number }}</p>
                     <p class="text-xs text-neutral-500">{{ order.created_at|date:"M d, Y" }}</p>
                   </div>
                   <span class="text-xs tracking-wider uppercase px-2 py-1 border border-black

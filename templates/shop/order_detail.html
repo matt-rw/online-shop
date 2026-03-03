@@ -1,0 +1,202 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ order.order_number }} - Blueprint Apparel{% endblock %}
+
+{% block content %}
+
+<!-- Breadcrumb -->
+<div class="border-b border-black">
+  <div class="max-w-7xl mx-auto px-6 py-3">
+    <nav class="flex items-center text-xs tracking-wider">
+      <a href="{% url 'home' %}" class="text-neutral-500 hover:text-black transition-colors uppercase">Home</a>
+      <span class="mx-3 text-neutral-300">/</span>
+      <a href="{% url 'shop:account' %}" class="text-neutral-500 hover:text-black transition-colors uppercase">Account</a>
+      <span class="mx-3 text-neutral-300">/</span>
+      <a href="{% url 'shop:orders' %}" class="text-neutral-500 hover:text-black transition-colors uppercase">Orders</a>
+      <span class="mx-3 text-neutral-300">/</span>
+      <span class="text-black uppercase">{{ order.order_number }}</span>
+    </nav>
+  </div>
+</div>
+
+<!-- Page Header -->
+<section class="bg-white border-b border-black">
+  <div class="max-w-7xl mx-auto px-6 py-8">
+    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+      <div>
+        <p class="text-xs text-neutral-500 uppercase tracking-wider mb-1">Order placed {{ order.created_at|date:"F j, Y" }}</p>
+        <h1 class="text-2xl md:text-3xl font-bold tracking-tight">{{ order.order_number }}</h1>
+      </div>
+      <span class="inline-block text-sm tracking-wider uppercase px-4 py-2 border self-start
+        {% if order.status == 'FULFILLED' or order.status == 'DELIVERED' %}bg-green-50 border-green-600 text-green-700
+        {% elif order.status == 'SHIPPED' %}bg-blue-50 border-blue-600 text-blue-700
+        {% elif order.status == 'PAID' %}bg-yellow-50 border-yellow-600 text-yellow-700
+        {% elif order.status == 'REFUNDED' %}bg-neutral-100 border-neutral-400 text-neutral-600
+        {% else %}border-black{% endif %}">
+        {{ order.get_status_display }}
+      </span>
+    </div>
+  </div>
+</section>
+
+<!-- Order Content -->
+<section class="bg-white">
+  <div class="max-w-4xl mx-auto px-6 py-8">
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+
+      <!-- Left Column - Order Items -->
+      <div class="lg:col-span-2">
+        <h2 class="text-xs tracking-widest uppercase font-medium mb-4 pb-2 border-b border-black">Items Ordered</h2>
+
+        <div class="space-y-4">
+          {% for item in order.items.all %}
+          <div class="flex gap-4 py-4 {% if not forloop.last %}border-b border-black/10{% endif %}">
+            <!-- Product Image -->
+            <div class="w-24 h-24 bg-neutral-100 border border-black/10 flex-shrink-0">
+              {% if item.variant and item.variant.images %}
+              <img src="{{ item.variant.images.0 }}" alt="{{ item.variant.product.name }}" class="w-full h-full object-cover">
+              {% elif item.variant and item.variant.product.images %}
+              <img src="{{ item.variant.product.images.0 }}" alt="{{ item.variant.product.name }}" class="w-full h-full object-cover">
+              {% endif %}
+            </div>
+
+            <!-- Product Details -->
+            <div class="flex-1 min-w-0">
+              <h3 class="font-medium text-sm mb-1">
+                {% if item.variant %}
+                  {{ item.variant.product.name }}
+                {% else %}
+                  {{ item.product_name|default:"Product" }}
+                {% endif %}
+              </h3>
+              {% if item.variant %}
+              <p class="text-xs text-neutral-500 mb-2">
+                {% for attr in item.variant.attributes.all %}
+                  {{ attr.attribute.name }}: {{ attr.value }}{% if not forloop.last %} / {% endif %}
+                {% empty %}
+                  {% if item.variant.size %}Size: {{ item.variant.size.name }}{% endif %}
+                  {% if item.variant.color %} / Color: {{ item.variant.color.name }}{% endif %}
+                {% endfor %}
+              </p>
+              {% endif %}
+              <p class="text-xs text-neutral-500">Qty: {{ item.quantity }}</p>
+            </div>
+
+            <!-- Price -->
+            <div class="text-right">
+              <p class="font-medium">${{ item.line_total }}</p>
+              {% if item.quantity > 1 %}
+              <p class="text-xs text-neutral-500">${{ item.variant.price }} each</p>
+              {% endif %}
+            </div>
+          </div>
+          {% endfor %}
+        </div>
+
+        <!-- Order Totals -->
+        <div class="mt-6 pt-4 border-t border-black">
+          <div class="space-y-2">
+            <div class="flex justify-between text-sm">
+              <span class="text-neutral-600">Subtotal</span>
+              <span>${{ order.subtotal }}</span>
+            </div>
+            <div class="flex justify-between text-sm">
+              <span class="text-neutral-600">Shipping</span>
+              <span>{% if order.shipping == 0 %}Free{% else %}${{ order.shipping }}{% endif %}</span>
+            </div>
+            <div class="flex justify-between text-sm">
+              <span class="text-neutral-600">Tax</span>
+              <span>${{ order.tax }}</span>
+            </div>
+            <div class="flex justify-between text-lg font-medium pt-2 border-t border-black/10">
+              <span>Total</span>
+              <span>${{ order.total }}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Right Column - Order Info -->
+      <div class="space-y-6">
+
+        <!-- Shipping Status -->
+        {% if order.tracking_number %}
+        <div class="border border-black p-4">
+          <h3 class="text-xs tracking-widest uppercase font-medium mb-3">Shipping</h3>
+          <div class="flex items-center gap-2 mb-2">
+            <svg class="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+            </svg>
+            <span class="font-medium">{{ order.carrier }}</span>
+          </div>
+          <p class="text-sm text-neutral-600 mb-3">{{ order.tracking_number }}</p>
+          {% if order.carrier == 'USPS' %}
+          <a href="https://tools.usps.com/go/TrackConfirmAction?qtc_tLabels1={{ order.tracking_number }}" target="_blank" class="text-sm text-blue-600 hover:underline">Track Package</a>
+          {% elif order.carrier == 'UPS' %}
+          <a href="https://www.ups.com/track?tracknum={{ order.tracking_number }}" target="_blank" class="text-sm text-blue-600 hover:underline">Track Package</a>
+          {% elif order.carrier == 'FedEx' %}
+          <a href="https://www.fedex.com/fedextrack/?trknbr={{ order.tracking_number }}" target="_blank" class="text-sm text-blue-600 hover:underline">Track Package</a>
+          {% endif %}
+        </div>
+        {% endif %}
+
+        <!-- Shipping Address -->
+        {% if order.shipping_address %}
+        <div class="border border-black p-4">
+          <h3 class="text-xs tracking-widest uppercase font-medium mb-3">Shipping Address</h3>
+          <address class="text-sm text-neutral-600 not-italic leading-relaxed">
+            {{ order.shipping_address.full_name }}<br>
+            {{ order.shipping_address.line1 }}<br>
+            {% if order.shipping_address.line2 %}{{ order.shipping_address.line2 }}<br>{% endif %}
+            {{ order.shipping_address.city }}, {{ order.shipping_address.region }} {{ order.shipping_address.postal_code }}<br>
+            {{ order.shipping_address.country }}
+          </address>
+        </div>
+        {% endif %}
+
+        <!-- Order Info -->
+        <div class="border border-black p-4">
+          <h3 class="text-xs tracking-widest uppercase font-medium mb-3">Order Information</h3>
+          <dl class="text-sm space-y-2">
+            <div class="flex justify-between">
+              <dt class="text-neutral-500">Order Date</dt>
+              <dd>{{ order.created_at|date:"M j, Y" }}</dd>
+            </div>
+            <div class="flex justify-between">
+              <dt class="text-neutral-500">Order Number</dt>
+              <dd>{{ order.order_number }}</dd>
+            </div>
+            {% if order.email %}
+            <div class="flex justify-between">
+              <dt class="text-neutral-500">Email</dt>
+              <dd class="truncate ml-4">{{ order.email }}</dd>
+            </div>
+            {% endif %}
+          </dl>
+        </div>
+
+        <!-- Need Help -->
+        <div class="border border-black/20 p-4 bg-neutral-50">
+          <h3 class="text-xs tracking-widest uppercase font-medium mb-2">Need Help?</h3>
+          <p class="text-sm text-neutral-600 mb-3">Questions about your order?</p>
+          <a href="mailto:support@blueprintapparel.co" class="text-sm text-black hover:underline">Contact Support</a>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- Back Link -->
+    <div class="mt-8 pt-6 border-t border-black/10">
+      <a href="{% url 'shop:orders' %}" class="inline-flex items-center gap-2 text-sm text-neutral-600 hover:text-black transition-colors">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
+        </svg>
+        Back to Orders
+      </a>
+    </div>
+
+  </div>
+</section>
+
+{% endblock %}
