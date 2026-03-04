@@ -39,6 +39,42 @@ def admin_home(request):
     Central admin dashboard with quick access to all admin tools.
     Only accessible to admin/staff users.
     """
+    # Handle image upload for quick messages
+    if request.method == "POST" and request.POST.get("action") == "upload_message_image":
+        import base64
+        import uuid
+        from django.core.files.base import ContentFile
+        from django.core.files.storage import default_storage
+
+        try:
+            image_data = request.POST.get("image_data", "")
+            filename = request.POST.get("filename", "image.jpg")
+
+            if not image_data:
+                return JsonResponse({"success": False, "error": "No image data provided"})
+
+            # Parse base64 data
+            if "," in image_data:
+                header, data = image_data.split(",", 1)
+            else:
+                data = image_data
+
+            # Decode base64
+            image_bytes = base64.b64decode(data)
+
+            # Generate unique filename
+            ext = filename.rsplit(".", 1)[-1] if "." in filename else "jpg"
+            unique_filename = f"messages/{uuid.uuid4().hex}.{ext}"
+
+            # Save to media storage
+            path = default_storage.save(unique_filename, ContentFile(image_bytes))
+            url = default_storage.url(path)
+
+            return JsonResponse({"success": True, "url": url})
+
+        except Exception as e:
+            return JsonResponse({"success": False, "error": str(e)})
+
     # Handle quick send POST requests
     if request.method == "POST" and request.POST.get("action") == "quick_send":
         message_type = request.POST.get("message_type", "email")
@@ -120,7 +156,9 @@ def admin_home(request):
                         "recipient_count": recipient_count,
                     })
 
-                html_body = f"<html><body><p>{content.replace(chr(10), '<br>')}</p></body></html>"
+                # Convert newlines to <br> for plain text, but preserve HTML tags like <img>
+                html_content = content.replace(chr(10), '<br>')
+                html_body = f"""<html><body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333;">{html_content}</body></html>"""
 
                 for recipient in recipients:
                     success, _ = send_email(

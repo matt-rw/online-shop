@@ -49,8 +49,9 @@ class Command(BaseCommand):
                     message.recipient_count = subscribers.count()
                     message.save(update_fields=["recipient_count"])
 
-                    # Wrap content in basic HTML
-                    html_body = f"<html><body><p>{message.content.replace(chr(10), '<br>')}</p></body></html>"
+                    # Wrap content in basic HTML (preserves img tags and other HTML)
+                    html_content = message.content.replace(chr(10), '<br>')
+                    html_body = f"""<html><body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333;">{html_content}</body></html>"""
 
                     for sub in subscribers:
                         success, _ = send_email(

@@ -849,6 +849,46 @@ def messages_dashboard(request):
     from shop.models.messaging import QuickMessage
     from shop.models.settings import SiteSettings
 
+    # Handle image upload for email messages
+    if request.method == "POST" and request.POST.get("action") == "upload_message_image":
+        import base64
+        import uuid
+        from django.core.files.base import ContentFile
+        from django.core.files.storage import default_storage
+
+        try:
+            image_data = request.POST.get("image_data", "")
+            if not image_data or "base64," not in image_data:
+                return JsonResponse({"success": False, "error": "Invalid image data"})
+
+            # Parse base64 data
+            format_part, data_part = image_data.split("base64,", 1)
+            image_content = base64.b64decode(data_part)
+
+            if len(image_content) == 0:
+                return JsonResponse({"success": False, "error": "Empty image"})
+
+            if len(image_content) > 2 * 1024 * 1024:
+                return JsonResponse({"success": False, "error": "Image too large (max 2MB)"})
+
+            # Determine file extension from format
+            ext = "jpg"
+            if "png" in format_part.lower():
+                ext = "png"
+            elif "gif" in format_part.lower():
+                ext = "gif"
+            elif "webp" in format_part.lower():
+                ext = "webp"
+
+            # Save to media folder
+            filename = f"messages/msg_{uuid.uuid4().hex[:8]}.{ext}"
+            path = default_storage.save(filename, ContentFile(image_content))
+            url = default_storage.url(path)
+
+            return JsonResponse({"success": True, "url": url})
+        except Exception as e:
+            return JsonResponse({"success": False, "error": str(e)})
+
     # Handle POST request for saving test settings
     if request.method == "POST" and request.POST.get("action") == "save_test_settings":
         from django.http import JsonResponse
