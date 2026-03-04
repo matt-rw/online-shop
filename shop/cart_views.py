@@ -705,18 +705,39 @@ def get_shipping_rates_view(request):
     # Try to get real rates from EasyPost
     try:
         import easypost
+        from shop.models import SiteSettings
+
         easypost_key = getattr(settings, "EASYPOST_API_KEY", None)
 
         if easypost_key:
             client = easypost.EasyPostClient(easypost_key)
 
-            # Calculate parcel based on cart items
-            total_weight = 0
-            for item in cart_items:
-                # Estimate weight: 8oz per item (typical for apparel)
-                total_weight += item.quantity * 8
+            # Get site settings for warehouse address and default weight
+            site_settings = SiteSettings.load()
+            default_weight = float(site_settings.default_product_weight_oz or 8)
 
-            # Create shipment to get rates
+            # Calculate parcel based on cart items using actual product weights
+            total_weight = 0
+            item_count = 0
+            for item in cart_items.select_related('variant__product'):
+                product = item.variant.product
+                # Use product weight if set, otherwise use site default
+                item_weight = float(product.weight_oz) if product.weight_oz else default_weight
+                total_weight += item_weight * item.quantity
+                item_count += item.quantity
+
+            # Minimum weight of 4oz
+            total_weight = max(total_weight, 4)
+
+            # Estimate dimensions based on item count
+            if item_count <= 2:
+                length, width, height = 10, 8, 2
+            elif item_count <= 5:
+                length, width, height = 12, 10, 4
+            else:
+                length, width, height = 14, 12, 6
+
+            # Create shipment to get rates using warehouse from SiteSettings
             shipment = client.shipment.create(
                 to_address={
                     "city": city,
@@ -725,18 +746,18 @@ def get_shipping_rates_view(request):
                     "country": country,
                 },
                 from_address={
-                    "name": getattr(settings, "WAREHOUSE_NAME", "Blueprint Apparel"),
-                    "street1": getattr(settings, "WAREHOUSE_ADDRESS_LINE1", "123 Fashion Ave"),
-                    "city": getattr(settings, "WAREHOUSE_CITY", "New York"),
-                    "state": getattr(settings, "WAREHOUSE_STATE", "NY"),
-                    "zip": getattr(settings, "WAREHOUSE_ZIP", "10001"),
-                    "country": "US",
+                    "name": site_settings.warehouse_name or "Blueprint Apparel",
+                    "street1": site_settings.warehouse_street1 or getattr(settings, "WAREHOUSE_ADDRESS_LINE1", ""),
+                    "city": site_settings.warehouse_city or getattr(settings, "WAREHOUSE_CITY", ""),
+                    "state": site_settings.warehouse_state or getattr(settings, "WAREHOUSE_STATE", ""),
+                    "zip": site_settings.warehouse_zip or getattr(settings, "WAREHOUSE_ZIP", ""),
+                    "country": site_settings.warehouse_country or "US",
                 },
                 parcel={
-                    "length": 12,
-                    "width": 10,
-                    "height": 4,
-                    "weight": max(total_weight, 8),  # Minimum 8oz
+                    "length": length,
+                    "width": width,
+                    "height": height,
+                    "weight": total_weight,
                 }
             )
 

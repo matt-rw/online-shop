@@ -112,27 +112,54 @@ class EasyPostService(ShippingService):
         )
 
     def _get_warehouse_address(self) -> Dict:
-        """Get warehouse/sender address from settings."""
+        """Get warehouse/sender address from SiteSettings (admin configurable)."""
+        from shop.models import SiteSettings
+
+        site_settings = SiteSettings.load()
+
         return {
-            "name": getattr(settings, "WAREHOUSE_NAME", "Blueprint Apparel"),
-            "street1": getattr(settings, "WAREHOUSE_ADDRESS_LINE1", "123 Fashion Ave"),
-            "street2": getattr(settings, "WAREHOUSE_ADDRESS_LINE2", ""),
-            "city": getattr(settings, "WAREHOUSE_CITY", "New York"),
-            "state": getattr(settings, "WAREHOUSE_STATE", "NY"),
-            "zip": getattr(settings, "WAREHOUSE_ZIP", "10001"),
-            "country": getattr(settings, "WAREHOUSE_COUNTRY", "US"),
-            "phone": getattr(settings, "WAREHOUSE_PHONE", ""),
+            "name": site_settings.warehouse_name or "Blueprint Apparel",
+            "street1": site_settings.warehouse_street1 or getattr(settings, "WAREHOUSE_ADDRESS_LINE1", ""),
+            "street2": site_settings.warehouse_street2 or "",
+            "city": site_settings.warehouse_city or getattr(settings, "WAREHOUSE_CITY", ""),
+            "state": site_settings.warehouse_state or getattr(settings, "WAREHOUSE_STATE", ""),
+            "zip": site_settings.warehouse_zip or getattr(settings, "WAREHOUSE_ZIP", ""),
+            "country": site_settings.warehouse_country or "US",
+            "phone": site_settings.warehouse_phone or "",
         }
 
     def _calculate_parcel(self, order) -> Dict:
         """Calculate package dimensions and weight for order."""
-        # TODO: Calculate based on actual order items
-        # For now, use default small package
+        from shop.models import SiteSettings
+
+        site_settings = SiteSettings.load()
+        default_weight = float(site_settings.default_product_weight_oz or 8)
+
+        # Calculate total weight from order items
+        total_weight = 0
+        for item in order.items.select_related('variant__product').all():
+            product = item.variant.product
+            # Use product weight if set, otherwise use site default
+            item_weight = float(product.weight_oz) if product.weight_oz else default_weight
+            total_weight += item_weight * item.quantity
+
+        # Minimum weight of 4oz (packaging)
+        total_weight = max(total_weight, 4)
+
+        # Estimate dimensions based on item count (simple heuristic for apparel)
+        item_count = sum(item.quantity for item in order.items.all())
+        if item_count <= 2:
+            length, width, height = 10, 8, 2
+        elif item_count <= 5:
+            length, width, height = 12, 10, 4
+        else:
+            length, width, height = 14, 12, 6
+
         return {
-            "length": 10,  # inches
-            "width": 8,
-            "height": 4,
-            "weight": 16,  # ounces
+            "length": length,
+            "width": width,
+            "height": height,
+            "weight": total_weight,
         }
 
 

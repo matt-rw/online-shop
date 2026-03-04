@@ -1062,6 +1062,76 @@
       font-weight: 600;
       text-transform: uppercase;
     }
+
+    .shipping-rate-option {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0.625rem 0.75rem;
+      border: 1px solid #e2e8f0;
+      border-radius: 6px;
+      margin-bottom: 0.375rem;
+      cursor: pointer;
+      transition: all 0.15s;
+      background: white;
+    }
+
+    .shipping-rate-option:hover {
+      border-color: #10b981;
+      background: #f0fdf4;
+    }
+
+    .shipping-rate-option.selected {
+      border-color: #10b981;
+      background: #d1fae5;
+    }
+
+    .shipping-rate-info {
+      display: flex;
+      flex-direction: column;
+      gap: 0.125rem;
+    }
+
+    .shipping-rate-carrier {
+      font-weight: 600;
+      font-size: 0.8125rem;
+      color: #0f172a;
+    }
+
+    .shipping-rate-service {
+      font-size: 0.75rem;
+      color: #64748b;
+    }
+
+    .shipping-rate-delivery {
+      font-size: 0.6875rem;
+      color: #10b981;
+    }
+
+    .shipping-rate-price {
+      font-weight: 700;
+      font-size: 0.9375rem;
+      color: #0f172a;
+    }
+
+    .shipping-rates-error {
+      padding: 0.75rem;
+      background: #fef2f2;
+      border: 1px solid #fecaca;
+      border-radius: 6px;
+      color: #991b1b;
+      font-size: 0.8125rem;
+    }
+
+    .shipping-rates-note {
+      padding: 0.5rem 0.75rem;
+      background: #fffbeb;
+      border: 1px solid #fcd34d;
+      border-radius: 6px;
+      color: #92400e;
+      font-size: 0.75rem;
+      margin-bottom: 0.5rem;
+    }
   </style>
   {% include "admin/partials/dark_mode_apply.html" %}
 </head>
@@ -1137,7 +1207,7 @@
           </thead>
           <tbody>
             {% for order in orders %}
-            <tr>
+            <tr onclick="openOrderDetails({{ order.id }}, '{{ order.stripe_payment_intent|slice:":7" }}')" style="cursor: pointer;">
               <td>
                 <span class="order-id">{{ order.order_number }}</span>
                 {% if order.stripe_payment_intent|slice:":7" == "MANUAL_" %}
@@ -1167,11 +1237,11 @@
               </td>
               <td>
                 {% if order.tracking_number %}
-                <a href="#" onclick="showTrackingDetails('{{ order.tracking_number }}', '{{ order.carrier }}', '{{ order.label_url|default:"" }}')" style="color: #10b981; text-decoration: none; font-size: 0.75rem;">
+                <a href="#" onclick="event.stopPropagation(); showTrackingDetails('{{ order.tracking_number }}', '{{ order.carrier }}', '{{ order.label_url|default:"" }}')" style="color: #10b981; text-decoration: none; font-size: 0.75rem;">
                   <i class="fa-solid fa-check-circle"></i> {{ order.carrier }}
                 </a>
                 {% else %}
-                <div style="display: flex; gap: 0.25rem;">
+                <div style="display: flex; gap: 0.25rem;" onclick="event.stopPropagation();">
                   <button class="btn-icon" onclick="generateLabel({{ order.id }})" title="Generate Label">
                     <i class="fa-solid fa-wand-magic-sparkles"></i>
                   </button>
@@ -1181,7 +1251,7 @@
                 </div>
                 {% endif %}
               </td>
-              <td class="actions-cell" style="text-align: right;">
+              <td class="actions-cell" style="text-align: right;" onclick="event.stopPropagation();">
                 <div style="display: flex; gap: 0.25rem; justify-content: flex-end;">
                   {% if order.stripe_payment_intent|slice:":7" == "MANUAL_" %}
                   <button class="btn-icon edit" onclick="editManualOrder({{ order.id }})" title="Edit Order">
@@ -1286,6 +1356,17 @@
   </div>
 
   <script>
+    function openOrderDetails(orderId, paymentIntentPrefix) {
+      // If it's a manual order, open edit modal
+      if (paymentIntentPrefix === 'MANUAL_') {
+        editManualOrder(orderId);
+      } else {
+        // For regular orders, show a details view or edit modal
+        // For now, just load the order in the manual order modal for viewing
+        editManualOrder(orderId);
+      }
+    }
+
     function getCookie(name) {
       let cookieValue = null;
       if (document.cookie && document.cookie !== '') {
@@ -1474,6 +1555,9 @@
       // Reset quick buttons
       highlightActiveDiscount();
       highlightActiveShipping();
+      // Reset calculated rates
+      document.getElementById('calculatedRatesContainer').style.display = 'none';
+      document.getElementById('calculatedRatesList').innerHTML = '';
       renderLineItems();
       updateCalculatedTotals();
       toggleOrderMode('products');
@@ -1884,6 +1968,128 @@
       document.getElementById('discountAmountHidden').value = discountAmount.toFixed(2);
     }
 
+    async function calculateShippingRates() {
+      const container = document.getElementById('calculatedRatesContainer');
+      const loading = document.getElementById('calculatedRatesLoading');
+      const ratesList = document.getElementById('calculatedRatesList');
+      const calcBtn = document.getElementById('calcRatesBtn');
+
+      // Validate we have line items
+      if (manualOrderLineItems.length === 0) {
+        alert('Please add products to calculate shipping rates.');
+        return;
+      }
+
+      // Get shipping address
+      const shippingData = {
+        line1: document.getElementById('shippingLine1').value,
+        line2: document.getElementById('shippingLine2').value,
+        city: document.getElementById('shippingCity').value,
+        region: document.getElementById('shippingRegion').value,
+        postal_code: document.getElementById('shippingPostal').value,
+        country: document.getElementById('shippingCountry').value,
+        name: document.getElementById('customerName').value,
+        email: document.getElementById('customerEmail').value,
+      };
+
+      // Validate address
+      if (!shippingData.line1 || !shippingData.city || !shippingData.region || !shippingData.postal_code) {
+        alert('Please fill in the shipping address (street, city, state, and postal code) to calculate rates.');
+        // Open the shipping details
+        document.querySelector('details.form-group').open = true;
+        return;
+      }
+
+      // Show loading
+      container.style.display = 'block';
+      loading.style.display = 'block';
+      ratesList.innerHTML = '';
+      calcBtn.disabled = true;
+      calcBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i>';
+
+      try {
+        const response = await fetch('{% url "calculate_shipping_rates" %}', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': getCookie('csrftoken')
+          },
+          body: JSON.stringify({
+            shipping_address: shippingData,
+            line_items: manualOrderLineItems.map(item => ({
+              variant_id: item.variant_id,
+              quantity: item.quantity
+            }))
+          })
+        });
+
+        const data = await response.json();
+        loading.style.display = 'none';
+
+        if (data.success && data.rates && data.rates.length > 0) {
+          let html = '';
+
+          // Show note if using fallback rates
+          if (data.source === 'fallback') {
+            html += `<div class="shipping-rates-note">
+              <i class="fa-solid fa-info-circle"></i> Using estimated rates. Configure EasyPost for live carrier rates.
+            </div>`;
+          }
+
+          data.rates.forEach((rate, index) => {
+            const deliveryText = rate.delivery_days
+              ? `${rate.delivery_days} day${rate.delivery_days > 1 ? 's' : ''}`
+              : (rate.note || '');
+
+            html += `
+              <div class="shipping-rate-option" onclick="selectShippingRate(${rate.rate}, this)">
+                <div class="shipping-rate-info">
+                  <span class="shipping-rate-carrier">${rate.carrier}</span>
+                  <span class="shipping-rate-service">${rate.service}</span>
+                  ${deliveryText ? `<span class="shipping-rate-delivery">${deliveryText}</span>` : ''}
+                </div>
+                <span class="shipping-rate-price">$${rate.rate.toFixed(2)}</span>
+              </div>
+            `;
+          });
+
+          ratesList.innerHTML = html;
+        } else if (data.error) {
+          ratesList.innerHTML = `<div class="shipping-rates-error">
+            <i class="fa-solid fa-exclamation-triangle"></i> ${data.error}
+          </div>`;
+        } else {
+          ratesList.innerHTML = `<div class="shipping-rates-error">
+            <i class="fa-solid fa-exclamation-triangle"></i> No shipping rates available
+          </div>`;
+        }
+      } catch (error) {
+        console.error('Error calculating rates:', error);
+        loading.style.display = 'none';
+        ratesList.innerHTML = `<div class="shipping-rates-error">
+          <i class="fa-solid fa-exclamation-triangle"></i> Error calculating rates: ${error.message}
+        </div>`;
+      } finally {
+        calcBtn.disabled = false;
+        calcBtn.innerHTML = '<i class="fa-solid fa-calculator"></i> Calculate';
+      }
+    }
+
+    function selectShippingRate(rate, element) {
+      // Update shipping input
+      document.getElementById('shippingInput').value = rate.toFixed(2);
+
+      // Highlight selected option
+      document.querySelectorAll('.shipping-rate-option').forEach(opt => {
+        opt.classList.remove('selected');
+      });
+      element.classList.add('selected');
+
+      // Update quick buttons and totals
+      highlightActiveShipping();
+      updateCalculatedTotals();
+    }
+
     async function submitManualOrder(event) {
       event.preventDefault();
       const form = event.target;
@@ -2065,6 +2271,15 @@
                 <button type="button" class="quick-btn" onclick="setShipping(7.99)">$7.99</button>
                 <button type="button" class="quick-btn" onclick="setShipping(12.99)">$12.99</button>
                 <button type="button" class="quick-btn" onclick="setShipping(24.99)">$24.99</button>
+                <button type="button" class="quick-btn" style="background: #dbeafe; color: #1e40af; border-color: #93c5fd;" onclick="calculateShippingRates()" id="calcRatesBtn">
+                  <i class="fa-solid fa-calculator"></i> Calculate
+                </button>
+              </div>
+              <div id="calculatedRatesContainer" style="display: none; margin-top: 0.5rem;">
+                <div id="calculatedRatesLoading" style="display: none; padding: 0.75rem; text-align: center; color: #64748b;">
+                  <i class="fa-solid fa-spinner fa-spin"></i> Calculating rates...
+                </div>
+                <div id="calculatedRatesList"></div>
               </div>
             </div>
 

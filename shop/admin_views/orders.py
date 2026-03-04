@@ -210,8 +210,9 @@ def orders_dashboard(request):
     }
 
     # Prepare orders data
+    # Sort by -id for stability (edited orders won't jump around)
     orders_data = []
-    for order in orders.order_by("-created_at")[:50]:  # Limit to 50 most recent
+    for order in orders.order_by("-id")[:50]:  # Limit to 50 most recent
         # Use customer_name for manual orders, otherwise use user's name
         if order.customer_name:
             user_name = order.customer_name
@@ -221,6 +222,8 @@ def orders_dashboard(request):
             user_name = "Guest"
 
         # Calculate profit for this order
+        # Profit = actual product revenue - cost
+        # Actual product revenue = total - shipping - tax (what customer paid for products after discounts)
         total_cost = 0
         items_with_cost = 0
         for item in order.items.all():
@@ -228,7 +231,9 @@ def orders_dashboard(request):
                 total_cost += float(item.unit_cost) * item.quantity
                 items_with_cost += 1
 
-        profit = float(order.subtotal) - total_cost if items_with_cost > 0 else None
+        # Calculate actual revenue received for products (excludes shipping/tax, includes discounts)
+        actual_product_revenue = float(order.total) - float(order.shipping) - float(order.tax)
+        profit = actual_product_revenue - total_cost if items_with_cost > 0 else None
 
         orders_data.append(
             {
@@ -244,7 +249,7 @@ def orders_dashboard(request):
                 "total": float(order.total),
                 "cost": total_cost if items_with_cost > 0 else None,
                 "profit": profit,
-                "profit_margin": (profit / float(order.subtotal) * 100) if profit and order.subtotal > 0 else None,
+                "profit_margin": (profit / actual_product_revenue * 100) if profit and actual_product_revenue > 0 else None,
                 "stripe_payment_intent": order.stripe_payment_intent_id,
                 "tracking_number": order.tracking_number,
                 "carrier": order.carrier,
@@ -1124,4 +1129,171 @@ def manual_tracking(request, order_id):
         logger.error(f"Error saving manual tracking: {e}")
         return JsonResponse({"success": False, "error": str(e)}, status=500)
 
+
+@staff_member_required
+@require_POST
+def calculate_shipping_rates(request):
+    """
+    Calculate shipping rates for manual order creation.
+    Takes shipping address and line items, returns available rates from EasyPost.
+    """
+    import json
+
+    from django.conf import settings
+
+    from shop.models import ProductVariant, SiteSettings
+
+    try:
+        data = json.loads(request.body)
+    except json.JSONDecodeError:
+        return JsonResponse({"success": False, "error": "Invalid JSON"}, status=400)
+
+    # Get shipping address
+    postal_code = data.get("postal_code", "").strip()
+    city = data.get("city", "").strip()
+    state = data.get("state", "").strip()
+    country = data.get("country", "US").strip()
+
+    if not postal_code:
+        return JsonResponse({"success": False, "error": "Postal code is required"}, status=400)
+
+    # Get line items to calculate weight
+    line_items = data.get("line_items", [])
+
+    # Get site settings
+    site_settings = SiteSettings.load()
+    default_weight = float(site_settings.default_product_weight_oz or 8)
+
+    # Check if warehouse address is configured
+    if not site_settings.warehouse_street1 or not site_settings.warehouse_zip:
+        return JsonResponse({
+            "success": True,
+            "rates": [
+                {"id": "flat_free", "carrier": "Standard", "service": "Free Shipping", "rate": 0.00, "delivery_days": "5-7"},
+                {"id": "flat_standard", "carrier": "USPS", "service": "Standard", "rate": 7.99, "delivery_days": "5-7"},
+                {"id": "flat_priority", "carrier": "USPS", "service": "Priority", "rate": 12.99, "delivery_days": "2-3"},
+                {"id": "flat_express", "carrier": "USPS", "service": "Express", "rate": 24.99, "delivery_days": "1-2"},
+            ],
+            "fallback": True,
+            "message": "Using flat rates - configure warehouse address in Site Settings for real-time rates"
+        })
+
+    # Calculate total weight from line items
+    total_weight = 0
+    item_count = 0
+
+    for item in line_items:
+        variant_id = item.get("variant_id")
+        quantity = int(item.get("quantity", 1))
+
+        if variant_id:
+            try:
+                variant = ProductVariant.objects.select_related("product").get(id=variant_id)
+                product = variant.product
+                item_weight = float(product.weight_oz) if product.weight_oz else default_weight
+                total_weight += item_weight * quantity
+                item_count += quantity
+            except ProductVariant.DoesNotExist:
+                total_weight += default_weight * quantity
+                item_count += quantity
+        else:
+            # No variant, use default weight
+            total_weight += default_weight * quantity
+            item_count += quantity
+
+    # Minimum weight
+    total_weight = max(total_weight, 4)
+
+    # Estimate dimensions
+    if item_count <= 2:
+        length, width, height = 10, 8, 2
+    elif item_count <= 5:
+        length, width, height = 12, 10, 4
+    else:
+        length, width, height = 14, 12, 6
+
+    # Try EasyPost
+    try:
+        import easypost
+
+        easypost_key = getattr(settings, "EASYPOST_API_KEY", None)
+
+        if not easypost_key:
+            raise Exception("EasyPost API key not configured")
+
+        client = easypost.EasyPostClient(easypost_key)
+
+        shipment = client.shipment.create(
+            to_address={
+                "city": city,
+                "state": state,
+                "zip": postal_code,
+                "country": country,
+            },
+            from_address={
+                "name": site_settings.warehouse_name,
+                "street1": site_settings.warehouse_street1,
+                "street2": site_settings.warehouse_street2 or "",
+                "city": site_settings.warehouse_city,
+                "state": site_settings.warehouse_state,
+                "zip": site_settings.warehouse_zip,
+                "country": site_settings.warehouse_country or "US",
+            },
+            parcel={
+                "length": length,
+                "width": width,
+                "height": height,
+                "weight": total_weight,
+            }
+        )
+
+        rates = []
+        for rate in shipment.rates:
+            if rate.service in ["Priority", "Ground", "Express", "First", "GroundAdvantage", "PriorityMailExpress"]:
+                rates.append({
+                    "id": rate.id,
+                    "carrier": rate.carrier,
+                    "service": rate.service,
+                    "rate": float(rate.rate),
+                    "delivery_days": rate.delivery_days or "3-7",
+                    "description": f"{rate.carrier} {rate.service}"
+                })
+
+        rates.sort(key=lambda x: x["rate"])
+
+        # Add free shipping option at the top
+        rates.insert(0, {
+            "id": "free",
+            "carrier": "Manual",
+            "service": "Free Shipping",
+            "rate": 0.00,
+            "delivery_days": "-",
+            "description": "Free Shipping (manual)"
+        })
+
+        return JsonResponse({
+            "success": True,
+            "rates": rates,
+            "weight_oz": total_weight,
+            "item_count": item_count
+        })
+
+    except ImportError:
+        logger.warning("EasyPost not installed")
+    except Exception as e:
+        logger.error(f"EasyPost error: {e}")
+
+    # Fallback flat rates
+    return JsonResponse({
+        "success": True,
+        "rates": [
+            {"id": "flat_free", "carrier": "Manual", "service": "Free Shipping", "rate": 0.00, "delivery_days": "-"},
+            {"id": "flat_standard", "carrier": "USPS", "service": "Standard", "rate": 7.99, "delivery_days": "5-7"},
+            {"id": "flat_priority", "carrier": "USPS", "service": "Priority", "rate": 12.99, "delivery_days": "2-3"},
+            {"id": "flat_express", "carrier": "USPS", "service": "Express", "rate": 24.99, "delivery_days": "1-2"},
+        ],
+        "fallback": True,
+        "weight_oz": total_weight,
+        "item_count": item_count
+    })
 

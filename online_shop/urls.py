@@ -49,6 +49,11 @@ urlpatterns = [
         admin_views.manual_tracking,
         name="manual_tracking",
     ),
+    path(
+        "bp-manage/orders/calculate-rates/",
+        admin_views.calculate_shipping_rates,
+        name="calculate_shipping_rates",
+    ),
     path("bp-manage/returns/", admin_views.returns_dashboard, name="admin_returns"),
     path("bp-manage/finance/", admin_views.finance_dashboard, name="admin_finance"),
     path("bp-manage/messages/", admin_views.messages_dashboard, name="admin_messages"),

@@ -24,6 +24,7 @@ from .orders import (
     returns_dashboard,
     generate_shipping_label,
     manual_tracking,
+    calculate_shipping_rates,
 )
 from .products import (
     products_dashboard,
@@ -79,6 +80,7 @@ __all__ = [
     'returns_dashboard',
     'generate_shipping_label',
     'manual_tracking',
+    'calculate_shipping_rates',
     # products
     'products_dashboard',
     'product_wizard',

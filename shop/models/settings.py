@@ -107,6 +107,46 @@ class SiteSettings(models.Model):
         blank=True, help_text="Email address for bug report notifications (falls back to contact email)"
     )
 
+    # Warehouse/Shipping settings
+    warehouse_name = models.CharField(
+        max_length=100, default="Blueprint Apparel",
+        help_text="Business name for shipping labels"
+    )
+    warehouse_street1 = models.CharField(
+        max_length=255, blank=True,
+        help_text="Warehouse street address line 1"
+    )
+    warehouse_street2 = models.CharField(
+        max_length=255, blank=True,
+        help_text="Warehouse street address line 2"
+    )
+    warehouse_city = models.CharField(
+        max_length=100, blank=True,
+        help_text="Warehouse city"
+    )
+    warehouse_state = models.CharField(
+        max_length=50, blank=True,
+        help_text="Warehouse state/province"
+    )
+    warehouse_zip = models.CharField(
+        max_length=20, blank=True,
+        help_text="Warehouse postal code"
+    )
+    warehouse_country = models.CharField(
+        max_length=2, default="US",
+        help_text="Warehouse country code (e.g., US)"
+    )
+    warehouse_phone = models.CharField(
+        max_length=20, blank=True,
+        help_text="Warehouse phone number"
+    )
+
+    # Default shipping weight for products without weight set
+    default_product_weight_oz = models.DecimalField(
+        max_digits=6, decimal_places=2, default=8,
+        help_text="Default product weight in ounces (used when product has no weight set)"
+    )
+
     updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:

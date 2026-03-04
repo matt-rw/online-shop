@@ -110,6 +110,13 @@ class Product(models.Model):
     base_cost = models.DecimalField(
         max_digits=10, decimal_places=2, default=0, help_text="Base cost for this product (used for profit calculations)"
     )
+
+    # Shipping weight in ounces (used for shipping rate calculation)
+    weight_oz = models.DecimalField(
+        max_digits=6, decimal_places=2, null=True, blank=True,
+        help_text="Product weight in ounces for shipping calculations (leave blank to use site default)"
+    )
+
     is_active = models.BooleanField(default=True, db_index=True)
     available_for_purchase = models.BooleanField(
         default=True, help_text="If False, product is visible but shows 'Not Available' instead of Add to Cart"
