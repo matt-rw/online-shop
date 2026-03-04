@@ -349,7 +349,7 @@
       transition: aspect-ratio 0.3s ease;
     }
     .slide-image-container.mobile-preview {
-      aspect-ratio: 9/16;  /* Mobile: portrait */
+      aspect-ratio: 9/14;  /* Mobile: 75vh on typical phone (9:19 screen * 0.75 = 9:14.25) */
     }
 
     /* Device Toggle */
@@ -484,8 +484,8 @@
       transition: aspect-ratio 0.3s ease;
     }
     .position-preview-wrapper.mobile-preview {
-      aspect-ratio: 9/16;
-      width: 50%;
+      aspect-ratio: 9/14;  /* Mobile: 75vh on typical phone */
+      width: 60%;
       margin: 0 auto;
     }
     .position-preview-img {
