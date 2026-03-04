@@ -172,12 +172,16 @@ def orders_dashboard(request):
                     "phone": order.phone,
                     "status": order.status,
                     "subtotal": float(order.subtotal),
+                    "discount": float(order.discount) if order.discount else 0,
+                    "discount_code": order.discount_code or "",
                     "tax": float(order.tax),
                     "shipping": float(order.shipping),
                     "total": float(order.total),
                     "created_at": order.created_at.isoformat(),
                     "items": items_data,
                     "shipping_address": shipping_data,
+                    "tracking_number": order.tracking_number,
+                    "carrier": order.carrier,
                 }
             })
         except Order.DoesNotExist:
@@ -189,7 +193,7 @@ def orders_dashboard(request):
     show_test_orders = request.GET.get("show_test", "false").lower() == "true"
 
     # Get orders (exclude test orders by default)
-    orders = Order.objects.all().select_related("user").prefetch_related("items")
+    orders = Order.objects.all().select_related("user", "shipping_address").prefetch_related("items")
     if not show_test_orders:
         orders = orders.filter(is_test=False)
 
@@ -244,6 +248,8 @@ def orders_dashboard(request):
                 "customer_phone": order.phone,
                 "status": order.status,
                 "subtotal": float(order.subtotal),
+                "discount": float(order.discount) if order.discount else 0,
+                "discount_code": order.discount_code or "",
                 "tax": float(order.tax),
                 "shipping": float(order.shipping),
                 "total": float(order.total),
@@ -445,6 +451,7 @@ def add_manual_order(request):
                 phone=customer_phone,
                 shipping_address=shipping_address,
                 subtotal=subtotal,
+                discount=discount,
                 tax=tax,
                 shipping=shipping,
                 total=total,
@@ -589,6 +596,9 @@ def update_manual_order(request):
         tax = Decimal(request.POST.get("tax", "0"))
         shipping_cost = Decimal(request.POST.get("shipping", "0"))
 
+        # Get discount code
+        discount_code = request.POST.get("discount_code", "").strip()
+
         if use_line_items:
             line_items_json = request.POST.get("line_items", "[]")
             line_items = json.loads(line_items_json)
@@ -609,12 +619,16 @@ def update_manual_order(request):
                 total = Decimal("0")
 
             order.subtotal = subtotal
+            order.discount = discount
+            order.discount_code = discount_code
             order.tax = tax
             order.shipping = shipping_cost
             order.total = total
         else:
             # Manual totals mode
             order.subtotal = Decimal(request.POST.get("subtotal", str(order.subtotal)))
+            order.discount = discount
+            order.discount_code = discount_code
             order.tax = Decimal(request.POST.get("tax", str(order.tax)))
             order.shipping = Decimal(request.POST.get("shipping", str(order.shipping)))
             order.total = Decimal(request.POST.get("total", str(order.total)))
@@ -1148,11 +1162,12 @@ def calculate_shipping_rates(request):
     except json.JSONDecodeError:
         return JsonResponse({"success": False, "error": "Invalid JSON"}, status=400)
 
-    # Get shipping address
-    postal_code = data.get("postal_code", "").strip()
-    city = data.get("city", "").strip()
-    state = data.get("state", "").strip()
-    country = data.get("country", "US").strip()
+    # Get shipping address (handle both nested and flat structure)
+    shipping_address = data.get("shipping_address", {})
+    postal_code = (shipping_address.get("postal_code") or data.get("postal_code", "")).strip()
+    city = (shipping_address.get("city") or data.get("city", "")).strip()
+    state = (shipping_address.get("region") or shipping_address.get("state") or data.get("state", "")).strip()
+    country = (shipping_address.get("country") or data.get("country", "US")).strip()
 
     if not postal_code:
         return JsonResponse({"success": False, "error": "Postal code is required"}, status=400)

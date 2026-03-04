@@ -118,6 +118,8 @@ class Order(models.Model):
 
     # Snapshotted money fields
     subtotal = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    discount = models.DecimalField(max_digits=10, decimal_places=2, default=0, help_text="Discount amount applied")
+    discount_code = models.CharField(max_length=50, blank=True, help_text="Discount/promo code used")
     shipping = models.DecimalField(max_digits=10, decimal_places=2, default=0)
     tax = models.DecimalField(max_digits=10, decimal_places=2, default=0)
     total = models.DecimalField(max_digits=10, decimal_places=2, default=0)

@@ -1199,6 +1199,7 @@
               <th>Customer</th>
               <th>Status</th>
               <th>Total</th>
+              <th>Discount</th>
               <th>Profit</th>
               <th>Date</th>
               <th>Shipping</th>
@@ -1207,21 +1208,41 @@
           </thead>
           <tbody>
             {% for order in orders %}
-            <tr onclick="openOrderDetails({{ order.id }}, '{{ order.stripe_payment_intent|slice:":7" }}')" style="cursor: pointer;">
+            <tr class="order-row" data-order-id="{{ order.id }}" data-is-manual="{% if order.stripe_payment_intent|slice:':7' == 'MANUAL_' %}true{% else %}false{% endif %}" onclick="toggleOrderExpand(this, event)" style="cursor: pointer;">
               <td>
-                <span class="order-id">{{ order.order_number }}</span>
-                {% if order.stripe_payment_intent|slice:":7" == "MANUAL_" %}
-                <span class="manual-order-badge"><i class="fa-solid fa-pen"></i> Manual</span>
-                {% endif %}
+                <div style="display: flex; align-items: center; gap: 0.5rem;">
+                  <i class="fa-solid fa-chevron-right expand-icon" style="color: #94a3b8; font-size: 0.7rem; transition: transform 0.2s;"></i>
+                  <div>
+                    <span class="order-id">{{ order.order_number }}</span>
+                    {% if order.stripe_payment_intent|slice:":7" == "MANUAL_" %}
+                    <span class="manual-order-badge"><i class="fa-solid fa-pen"></i> Manual</span>
+                    {% endif %}
+                  </div>
+                </div>
               </td>
               <td class="customer-cell">
                 <div class="customer-name">{{ order.customer_name|default:"-" }}</div>
                 <div class="customer-email">{{ order.customer_email|default:"" }}{% if order.customer_phone %} · {{ order.customer_phone }}{% endif %}</div>
+                {% if order.shipping_address %}
+                <div class="customer-address" style="font-size: 0.7rem; color: #94a3b8; margin-top: 2px;">
+                  {{ order.shipping_address.city }}{% if order.shipping_address.region %}, {{ order.shipping_address.region }}{% endif %} {{ order.shipping_address.postal_code }}
+                </div>
+                {% endif %}
               </td>
               <td>
                 <span class="status-badge-sm {{ order.status|lower }}">{{ order.status|title }}</span>
               </td>
               <td class="amount-cell">${{ order.total|floatformat:2 }}</td>
+              <td>
+                {% if order.discount and order.discount > 0 %}
+                <span style="color: #10b981; font-weight: 500;">-${{ order.discount|floatformat:2 }}</span>
+                {% if order.discount_code %}
+                <div style="font-size: 0.65rem; color: #64748b;">{{ order.discount_code }}</div>
+                {% endif %}
+                {% else %}
+                <span style="color: #94a3b8;">—</span>
+                {% endif %}
+              </td>
               <td>
                 {% if order.profit != None %}
                 <span class="{% if order.profit > 0 %}profit-positive{% else %}profit-negative{% endif %}">
@@ -1273,6 +1294,16 @@
                     <i class="fa-solid fa-external-link-alt"></i>
                   </a>
                   {% endif %}
+                </div>
+              </td>
+            </tr>
+            <!-- Expandable Order Details Row -->
+            <tr class="order-details-row" id="order-details-row-{{ order.id }}" style="display: none;">
+              <td colspan="9" style="padding: 0; background: #f8fafc; border-bottom: 2px solid #e2e8f0;">
+                <div class="order-details-content" id="order-details-content-{{ order.id }}" style="padding: 1.5rem;">
+                  <div style="text-align: center; color: #64748b;">
+                    <i class="fa-solid fa-spinner fa-spin"></i> Loading...
+                  </div>
                 </div>
               </td>
             </tr>
@@ -1356,14 +1387,129 @@
   </div>
 
   <script>
-    function openOrderDetails(orderId, paymentIntentPrefix) {
-      // If it's a manual order, open edit modal
-      if (paymentIntentPrefix === 'MANUAL_') {
-        editManualOrder(orderId);
+    const loadedOrderDetails = {};
+
+    async function toggleOrderExpand(row, event) {
+      // Don't expand if clicking on action buttons
+      if (event.target.closest('.actions-cell') || event.target.closest('button') || event.target.closest('a')) {
+        return;
+      }
+
+      const orderId = row.dataset.orderId;
+      const isManual = row.dataset.isManual === 'true';
+      const detailsRow = document.getElementById('order-details-row-' + orderId);
+      const expandIcon = row.querySelector('.expand-icon');
+      const isExpanded = detailsRow.style.display !== 'none';
+
+      if (isExpanded) {
+        // Collapse
+        detailsRow.style.display = 'none';
+        expandIcon.style.transform = 'rotate(0deg)';
+        row.style.background = '';
       } else {
-        // For regular orders, show a details view or edit modal
-        // For now, just load the order in the manual order modal for viewing
-        editManualOrder(orderId);
+        // Expand
+        detailsRow.style.display = 'table-row';
+        expandIcon.style.transform = 'rotate(90deg)';
+        row.style.background = '#f8fafc';
+
+        // Load details if not already loaded
+        if (!loadedOrderDetails[orderId]) {
+          await loadOrderDetails(orderId, isManual);
+        }
+      }
+    }
+
+    async function loadOrderDetails(orderId, isManual) {
+      const contentDiv = document.getElementById('order-details-content-' + orderId);
+
+      try {
+        const response = await fetch(`{% url 'admin_orders' %}?get_order=${orderId}`);
+        const data = await response.json();
+
+        if (!data.success) {
+          contentDiv.innerHTML = `<div style="color: #ef4444;">Error: ${data.error}</div>`;
+          return;
+        }
+
+        const order = data.order;
+        loadedOrderDetails[orderId] = true;
+
+        // Build HTML
+        let html = '<div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 1.5rem;">';
+
+        // Column 1: Items
+        html += '<div>';
+        html += '<h4 style="font-size: 0.75rem; text-transform: uppercase; color: #64748b; margin-bottom: 0.75rem; font-weight: 600;">Items</h4>';
+        html += '<div style="background: white; border: 1px solid #e2e8f0; border-radius: 8px; overflow: hidden;">';
+        if (order.items && order.items.length > 0) {
+          order.items.forEach((item, index) => {
+            const bgColor = index % 2 === 0 ? '#fff' : '#f8fafc';
+            html += `
+              <div style="display: flex; justify-content: space-between; align-items: center; padding: 0.625rem 0.875rem; background: ${bgColor}; font-size: 0.875rem;">
+                <div>
+                  <div style="font-weight: 500;">${item.display_name || item.product_name || 'Item'}</div>
+                  <div style="font-size: 0.7rem; color: #64748b;">SKU: ${item.sku || '-'} · Qty: ${item.quantity}</div>
+                </div>
+                <div style="font-weight: 500;">$${parseFloat(item.line_total || 0).toFixed(2)}</div>
+              </div>
+            `;
+          });
+        } else {
+          html += '<div style="padding: 0.75rem; color: #64748b; text-align: center; font-size: 0.875rem;">No items</div>';
+        }
+        html += '</div></div>';
+
+        // Column 2: Shipping Address
+        html += '<div>';
+        html += '<h4 style="font-size: 0.75rem; text-transform: uppercase; color: #64748b; margin-bottom: 0.75rem; font-weight: 600;">Ship To</h4>';
+        html += '<div style="background: white; border: 1px solid #e2e8f0; border-radius: 8px; padding: 0.875rem; font-size: 0.875rem;">';
+        if (order.shipping_address) {
+          const addr = order.shipping_address;
+          html += `<div style="font-weight: 500; margin-bottom: 0.25rem;">${order.customer_name || 'Customer'}</div>`;
+          html += `<div style="color: #64748b;">${addr.line1 || ''}</div>`;
+          if (addr.line2) html += `<div style="color: #64748b;">${addr.line2}</div>`;
+          html += `<div style="color: #64748b;">${addr.city || ''}, ${addr.region || ''} ${addr.postal_code || ''}</div>`;
+          if (addr.country && addr.country !== 'US') html += `<div style="color: #64748b;">${addr.country}</div>`;
+        } else {
+          html += '<div style="color: #94a3b8;">No address</div>';
+        }
+        html += '</div>';
+
+        // Tracking info below address
+        if (order.tracking_number) {
+          html += '<div style="margin-top: 0.75rem; background: #ecfdf5; border: 1px solid #a7f3d0; border-radius: 8px; padding: 0.625rem 0.875rem;">';
+          html += `<div style="font-size: 0.7rem; text-transform: uppercase; color: #059669; font-weight: 600; margin-bottom: 0.25rem;"><i class="fa-solid fa-truck"></i> Tracking</div>`;
+          html += `<div style="font-size: 0.875rem; color: #065f46;">${order.carrier}: ${order.tracking_number}</div>`;
+          html += '</div>';
+        }
+        html += '</div>';
+
+        // Column 3: Totals + Actions
+        html += '<div>';
+        html += '<h4 style="font-size: 0.75rem; text-transform: uppercase; color: #64748b; margin-bottom: 0.75rem; font-weight: 600;">Summary</h4>';
+        html += '<div style="background: white; border: 1px solid #e2e8f0; border-radius: 8px; padding: 0.875rem; font-size: 0.875rem;">';
+        html += `<div style="display: flex; justify-content: space-between; margin-bottom: 0.375rem;"><span style="color: #64748b;">Subtotal</span><span>$${parseFloat(order.subtotal || 0).toFixed(2)}</span></div>`;
+        if (order.discount && parseFloat(order.discount) > 0) {
+          html += `<div style="display: flex; justify-content: space-between; margin-bottom: 0.375rem;"><span style="color: #64748b;">Discount${order.discount_code ? ' (' + order.discount_code + ')' : ''}</span><span style="color: #10b981;">-$${parseFloat(order.discount).toFixed(2)}</span></div>`;
+        }
+        html += `<div style="display: flex; justify-content: space-between; margin-bottom: 0.375rem;"><span style="color: #64748b;">Tax</span><span>$${parseFloat(order.tax || 0).toFixed(2)}</span></div>`;
+        html += `<div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;"><span style="color: #64748b;">Shipping</span><span>$${parseFloat(order.shipping || 0).toFixed(2)}</span></div>`;
+        html += `<div style="display: flex; justify-content: space-between; padding-top: 0.5rem; border-top: 1px solid #e2e8f0; font-weight: 600;"><span>Total</span><span>$${parseFloat(order.total || 0).toFixed(2)}</span></div>`;
+        html += '</div>';
+
+        // Edit button for manual orders
+        if (isManual) {
+          html += `<button onclick="event.stopPropagation(); editManualOrder(${orderId})" class="btn btn-secondary" style="margin-top: 0.75rem; width: 100%;"><i class="fa-solid fa-edit"></i> Edit Order</button>`;
+        }
+        html += '</div>';
+
+        html += '</div>';
+
+        contentDiv.innerHTML = html;
+
+      } catch (error) {
+        console.error('Error:', error);
+        contentDiv.innerHTML = '<div style="color: #ef4444;">Error loading order details</div>';
       }
     }
 
@@ -1542,6 +1688,9 @@
       document.getElementById('editOrderId').value = '';
       document.querySelector('#manualOrderModal h2').textContent = 'Add Manual Order';
       document.getElementById('submitOrderBtn').innerHTML = '<i class="fa-solid fa-plus"></i> Create Order';
+      // Show decrement stock option (only for new orders)
+      document.getElementById('decrementStockGroup').style.display = 'block';
+      document.getElementById('decrementStock').checked = true;
       // Reset subtotal override
       subtotalOverrideEnabled = false;
       document.getElementById('subtotalToggle').textContent = 'override';
@@ -1552,7 +1701,8 @@
       browseMode = false;
       document.getElementById('browseProductsBtn').classList.remove('active');
       document.getElementById('productSearchResults').classList.remove('active');
-      // Reset quick buttons
+      // Reset quick buttons and discount code
+      document.getElementById('discountCodeInput').value = '';
       highlightActiveDiscount();
       highlightActiveShipping();
       // Reset calculated rates
@@ -1591,6 +1741,9 @@
         document.getElementById('orderDate').value = order.created_at ? order.created_at.split('T')[0] : '';
         document.getElementById('orderStatus').value = order.status;
 
+        // Hide decrement stock option for edits (only applies when creating)
+        document.getElementById('decrementStockGroup').style.display = 'none';
+
         // Fill shipping address if exists
         if (order.shipping_address) {
           document.getElementById('shippingLine1').value = order.shipping_address.line1 || '';
@@ -1622,7 +1775,15 @@
             stock: 9999,
           }));
           renderLineItems();
-          document.getElementById('discountInput').value = 0;
+
+          // Calculate discount percentage from stored amount
+          const itemsSubtotal = manualOrderLineItems.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+          let discountPercent = 0;
+          if (order.discount && itemsSubtotal > 0) {
+            discountPercent = Math.round((parseFloat(order.discount) / itemsSubtotal) * 100);
+          }
+          document.getElementById('discountInput').value = discountPercent;
+          document.getElementById('discountCodeInput').value = order.discount_code || '';
           document.getElementById('taxInput').value = order.tax || 0;
           document.getElementById('shippingInput').value = order.shipping || 0;
           highlightActiveDiscount();
@@ -2008,11 +2169,14 @@
       calcBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i>';
 
       try {
+        // Get CSRF token from form (more reliable than cookies)
+        const csrfToken = document.querySelector('#manualOrderForm input[name="csrfmiddlewaretoken"]').value;
+
         const response = await fetch('{% url "calculate_shipping_rates" %}', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
-            'X-CSRFToken': getCookie('csrftoken')
+            'X-CSRFToken': csrfToken
           },
           body: JSON.stringify({
             shipping_address: shippingData,
@@ -2246,6 +2410,10 @@
                 <button type="button" class="quick-btn discount" onclick="setDiscount(50)">50%</button>
                 <button type="button" class="quick-btn discount" onclick="setDiscount(100)">100%</button>
               </div>
+              <div style="margin-top: 0.5rem;">
+                <input type="text" name="discount_code" id="discountCodeInput" placeholder="Promo code (optional)"
+                       style="width: 100%; padding: 0.375rem 0.75rem; border: 1px solid #e2e8f0; border-radius: 6px; font-size: 0.8rem;">
+              </div>
             </div>
 
             <div class="totals-row">
@@ -2289,13 +2457,13 @@
             </div>
           </div>
 
-          <div class="form-group">
+          <div class="form-group" id="decrementStockGroup">
             <label style="display: flex; align-items: center; gap: 0.5rem;">
-              <input type="checkbox" name="decrement_stock" id="decrementStock" value="true">
+              <input type="checkbox" name="decrement_stock" id="decrementStock" value="true" checked>
               <span>Decrement stock quantities</span>
             </label>
             <p style="font-size: 0.75rem; color: #64748b; margin-top: 0.25rem;">
-              Check this to reduce inventory for selected items
+              Automatically reduces inventory for selected items
             </p>
           </div>
         </div>

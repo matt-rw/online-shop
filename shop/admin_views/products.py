@@ -841,12 +841,20 @@ def products_dashboard(request):
 
     # Get all products with variant data in a single query (optimized)
     # Exclude test checkout item from inventory reports
+    from shop.models import OrderStatus
     products = Product.objects.exclude(slug="test-checkout-item").select_related("category_obj").annotate(
         variants_count=Count("variants"),
         stock_total=Sum("variants__stock_quantity"),
         variants_active=Count("variants", filter=Q(variants__is_active=True)),
         min_price=Min("variants__price"),
         max_price=Max("variants__price"),
+        # Total sold: sum of order item quantities for completed orders
+        total_sold=Sum(
+            "variants__orderitem__quantity",
+            filter=Q(variants__orderitem__order__status__in=[
+                OrderStatus.PAID, OrderStatus.SHIPPED, OrderStatus.FULFILLED
+            ])
+        ),
     )
 
     # Apply sorting
@@ -901,6 +909,7 @@ def products_dashboard(request):
                 "available_for_purchase": product.available_for_purchase,
                 "variant_count": product.variants_count or 0,
                 "total_stock": product.stock_total or 0,
+                "total_sold": product.total_sold or 0,
                 "active_variants": product.variants_active or 0,
                 "images": product.images or [],
             }

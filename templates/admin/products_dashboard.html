@@ -616,6 +616,7 @@
             <th>Base Price</th>
             <th>Base Cost</th>
             <th>Total Stock</th>
+            <th>Sold</th>
             <th>SKUs</th>
             <th>Status</th>
             <th>Actions</th>
@@ -657,6 +658,13 @@
                 </span>
               {% else %}
                 <strong>{{ product.total_stock }}</strong> units
+              {% endif %}
+            </td>
+            <td>
+              {% if product.total_sold > 0 %}
+                <strong style="color: #059669;">{{ product.total_sold }}</strong>
+              {% else %}
+                <span style="color: #94a3b8;">0</span>
               {% endif %}
             </td>
             <td>

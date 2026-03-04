@@ -669,7 +669,7 @@
         <form id="modal-smart-form"
               method="POST"
               onsubmit="return handleModalSmartSubmit(event)"
-              class="space-y-5">
+              class="space-y-4">
           {% csrf_token %}
           <div>
             <label for="modal-contact-input" class="block text-sm font-semibold text-gray-900 mb-2">
@@ -684,18 +684,16 @@
                    class="w-full px-4 py-3.5 text-base rounded-xl border-2 border-gray-300 focus:ring-2 focus:ring-gray-900 focus:border-gray-900 transition-all text-gray-900 placeholder-gray-400 font-medium" />
             <input type="hidden" id="modal-email-field" name="email" value="">
             <input type="hidden" id="modal-phone-field" name="phone_number" value="">
-            <p id="modal-input-hint" class="text-sm font-medium text-gray-600 mt-2.5 opacity-0 transition-opacity">
-              <!-- Hint will appear here -->
-            </p>
+            <p id="modal-input-hint" class="text-sm font-medium text-red-500 mt-2 hidden"></p>
+          </div>
+          <div id="modal-sms-disclaimer" class="hidden px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-xs text-gray-500 leading-relaxed">
+            <span class="font-medium text-gray-600">SMS Terms:</span> By entering your phone number, you agree to receive marketing texts from Blueprint Apparel. Msg frequency varies. Msg &amp; data rates may apply. Reply STOP to unsubscribe. <a href="{% url 'shop:privacy' %}" class="underline hover:text-gray-700">Privacy</a> &amp; <a href="{% url 'shop:terms' %}" class="underline hover:text-gray-700">Terms</a>.
           </div>
           <button type="submit"
                   class="w-full px-6 py-4 text-lg rounded-xl bg-gray-900 text-white font-bold hover:bg-gray-800 active:bg-black transition-all shadow-xl hover:shadow-2xl hover:scale-105 transform">
             Get Early Access
           </button>
         </form>
-        <p id="modal-sms-disclaimer" class="text-sm text-gray-600 mt-4 text-left leading-relaxed opacity-0 transition-opacity">
-          By subscribing, you agree to receive marketing texts. Reply STOP to unsubscribe.
-        </p>
       </div>
     </div>
   </div>
@@ -1049,76 +1047,70 @@
       // SMART SIGNUP FORM DETECTION
       // ============================================
 
-      function detectInputType(value) {
-          // Remove whitespace for detection
+      function isValidEmail(value) {
+          return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value.trim());
+      }
+
+      function isValidPhone(value) {
           const trimmed = value.trim();
+          // Strip all non-digits
+          const digits = trimmed.replace(/\D/g, '');
 
-          // Email detection: contains @ and basic email pattern
-          if (trimmed.includes('@') && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmed)) {
-              return 'email';
-          }
+          // Must have only valid phone characters
+          if (!/^[\d\s\+\-\(\)\.]+$/.test(trimmed)) return false;
 
-          // Phone detection: contains mostly numbers, +, -, (, ), or spaces
-          if (/^[\d\s\+\-\(\)]+$/.test(trimmed) && trimmed.replace(/\D/g, '').length >= 10) {
-              return 'phone';
-          }
+          // US phone: 10 digits, or 11 digits starting with 1
+          if (digits.length === 10) return true;
+          if (digits.length === 11 && digits.startsWith('1')) return true;
 
-          // Default to email if it contains @, otherwise phone if it has numbers
-          if (trimmed.includes('@')) return 'email';
-          if (/\d/.test(trimmed)) return 'phone';
+          return false;
+      }
 
-          return 'email'; // default
+      function detectInputType(value) {
+          if (isValidEmail(value)) return 'email';
+          if (isValidPhone(value)) return 'phone';
+          return 'unknown';
+      }
+
+      function looksLikePhone(value) {
+          // Check if user is typing something that looks like a phone number
+          const trimmed = value.trim();
+          if (!trimmed) return false;
+          // Contains mostly digits and phone characters
+          return /^[\d\s\+\-\(\)\.]+$/.test(trimmed) && trimmed.replace(/\D/g, '').length > 0;
       }
 
       // Modal input detection
       function updateModalInputType(input) {
-          const type = detectInputType(input.value);
           const hint = document.getElementById('modal-input-hint');
           const disclaimer = document.getElementById('modal-sms-disclaimer');
 
-          if (input.value.trim().length > 0) {
-              if (type === 'email') {
-                  hint.textContent = '📧 Email detected';
-                  hint.classList.remove('opacity-0');
-                  hint.classList.add('text-blue-600');
-                  hint.classList.remove('text-green-600');
-                  disclaimer.classList.add('opacity-0');
-              } else {
-                  hint.textContent = '📱 Phone number detected';
-                  hint.classList.remove('opacity-0');
-                  hint.classList.add('text-green-600');
-                  hint.classList.remove('text-blue-600');
-                  disclaimer.classList.remove('opacity-0');
-              }
+          // Clear error styling on input
+          input.classList.remove('border-red-500');
+          hint.classList.add('hidden');
+
+          // Show SMS disclaimer if it looks like they're entering a phone number
+          if (looksLikePhone(input.value)) {
+              disclaimer.classList.remove('hidden');
           } else {
-              hint.classList.add('opacity-0');
-              disclaimer.classList.add('opacity-0');
+              disclaimer.classList.add('hidden');
           }
       }
 
       // Main form input detection
       function updateMainInputType(input) {
-          const type = detectInputType(input.value);
           const hint = document.getElementById('main-input-hint');
           const disclaimer = document.getElementById('main-sms-disclaimer');
 
-          if (input.value.trim().length > 0) {
-              if (type === 'email') {
-                  hint.textContent = '📧 Email detected';
-                  hint.classList.remove('opacity-0');
-                  hint.classList.add('text-blue-600');
-                  hint.classList.remove('text-green-600');
-                  disclaimer.classList.add('opacity-0');
-              } else {
-                  hint.textContent = '📱 Phone number detected';
-                  hint.classList.remove('opacity-0');
-                  hint.classList.add('text-green-600');
-                  hint.classList.remove('text-blue-600');
-                  disclaimer.classList.remove('opacity-0');
-              }
+          // Clear error styling on input
+          input.classList.remove('border-red-500');
+          hint.classList.add('hidden');
+
+          // Show SMS disclaimer if it looks like they're entering a phone number
+          if (looksLikePhone(input.value)) {
+              disclaimer.classList.remove('hidden');
           } else {
-              hint.classList.add('opacity-0');
-              disclaimer.classList.add('opacity-0');
+              disclaimer.classList.add('hidden');
           }
       }
 
@@ -1128,6 +1120,19 @@
           const input = document.getElementById('modal-contact-input');
           const type = detectInputType(input.value);
           const form = event.target;
+          const hint = document.getElementById('modal-input-hint');
+
+          // Validate input
+          if (type === 'unknown') {
+              hint.textContent = 'Please enter a valid email or 10-digit phone number';
+              hint.classList.remove('hidden');
+              input.classList.add('border-red-500');
+              return false;
+          }
+
+          // Clear any error styling
+          input.classList.remove('border-red-500');
+          hint.classList.add('hidden');
 
           // Populate the correct hidden field
           if (type === 'email') {
@@ -1151,6 +1156,19 @@
           const input = document.getElementById('main-contact-input');
           const type = detectInputType(input.value);
           const form = event.target;
+          const hint = document.getElementById('main-input-hint');
+
+          // Validate input
+          if (type === 'unknown') {
+              hint.textContent = 'Please enter a valid email or 10-digit phone number';
+              hint.classList.remove('hidden');
+              input.classList.add('border-red-500');
+              return false;
+          }
+
+          // Clear any error styling
+          input.classList.remove('border-red-500');
+          hint.classList.add('hidden');
 
           // Populate the correct hidden field
           if (type === 'email') {

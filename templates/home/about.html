@@ -318,24 +318,29 @@
             </li>
           </ul>
 
-          <form id="about-smart-form" method="POST" onsubmit="return handleAboutSmartSubmit(event)" class="flex gap-2">
+          <form id="about-smart-form" method="POST" onsubmit="return handleAboutSmartSubmit(event)" class="space-y-3">
             {% csrf_token %}
             <input type="hidden" name="next" value="{% url 'shop:about' %}">
-            <input type="text"
-                   id="about-contact-input"
-                   name="contact"
-                   placeholder="Email or phone"
-                   required
-                   oninput="updateAboutInputType(this)"
-                   class="flex-1 px-4 py-3 border border-black text-sm focus:outline-none focus:ring-1 focus:ring-black" />
-            <input type="hidden" id="about-email-field" name="email" value="">
-            <input type="hidden" id="about-phone-field" name="phone_number" value="">
-            <button type="submit"
-                    class="px-6 py-3 bg-black text-white text-xs tracking-widest uppercase font-medium hover:bg-neutral-800 transition-colors">
-              Join
-            </button>
+            <div class="flex gap-2">
+              <input type="text"
+                     id="about-contact-input"
+                     name="contact"
+                     placeholder="Email or phone"
+                     required
+                     oninput="updateAboutInputType(this)"
+                     class="flex-1 px-4 py-3 border border-black text-sm focus:outline-none focus:ring-1 focus:ring-black" />
+              <input type="hidden" id="about-email-field" name="email" value="">
+              <input type="hidden" id="about-phone-field" name="phone_number" value="">
+              <button type="submit"
+                      class="px-6 py-3 bg-black text-white text-xs tracking-widest uppercase font-medium hover:bg-neutral-800 transition-colors">
+                Join
+              </button>
+            </div>
+            <p id="about-input-hint" class="text-sm text-red-500 hidden"></p>
+            <div id="about-sms-disclaimer" class="hidden px-4 py-3 bg-neutral-50 border border-neutral-200 rounded-lg text-xs text-neutral-500 leading-relaxed">
+              <span class="font-medium text-neutral-600">SMS Terms:</span> By entering your phone number, you agree to receive marketing texts from Blueprint Apparel. Msg frequency varies. Msg &amp; data rates may apply. Reply STOP to unsubscribe. <a href="{% url 'shop:privacy' %}" class="underline hover:text-neutral-700">Privacy</a> &amp; <a href="{% url 'shop:terms' %}" class="underline hover:text-neutral-700">Terms</a>.
+            </div>
           </form>
-          <p id="about-input-hint" class="text-xs text-neutral-400 mt-2 opacity-0 transition-opacity"></p>
         </div>
       </div>
     </div>
@@ -418,32 +423,52 @@
   });
 
   // Smart form - detect email or phone
-  function detectInputType(value) {
+  function isValidEmail(value) {
+    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value.trim());
+  }
+
+  function isValidPhone(value) {
     const trimmed = value.trim();
-    if (trimmed.includes('@') && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmed)) {
-      return 'email';
-    }
-    if (/^[\d\s\+\-\(\)]+$/.test(trimmed) && trimmed.replace(/\D/g, '').length >= 10) {
-      return 'phone';
-    }
-    if (trimmed.includes('@')) return 'email';
-    if (/\d/.test(trimmed)) return 'phone';
-    return 'email';
+    // Strip all non-digits
+    const digits = trimmed.replace(/\D/g, '');
+
+    // Must have only valid phone characters
+    if (!/^[\d\s\+\-\(\)\.]+$/.test(trimmed)) return false;
+
+    // US phone: 10 digits, or 11 digits starting with 1
+    if (digits.length === 10) return true;
+    if (digits.length === 11 && digits.startsWith('1')) return true;
+
+    return false;
+  }
+
+  function detectInputType(value) {
+    if (isValidEmail(value)) return 'email';
+    if (isValidPhone(value)) return 'phone';
+    return 'unknown';
+  }
+
+  function looksLikePhone(value) {
+    // Check if user is typing something that looks like a phone number
+    const trimmed = value.trim();
+    if (!trimmed) return false;
+    // Contains mostly digits and phone characters
+    return /^[\d\s\+\-\(\)\.]+$/.test(trimmed) && trimmed.replace(/\D/g, '').length > 0;
   }
 
   function updateAboutInputType(input) {
-    const type = detectInputType(input.value);
     const hint = document.getElementById('about-input-hint');
-    if (input.value.trim().length > 0) {
-      if (type === 'email') {
-        hint.textContent = 'Email detected';
-        hint.classList.remove('opacity-0');
-      } else {
-        hint.textContent = 'Phone number detected';
-        hint.classList.remove('opacity-0');
-      }
+    const disclaimer = document.getElementById('about-sms-disclaimer');
+
+    // Clear error styling on input
+    input.classList.remove('border-red-500');
+    hint.classList.add('hidden');
+
+    // Show SMS disclaimer if it looks like they're entering a phone number
+    if (looksLikePhone(input.value)) {
+      disclaimer.classList.remove('hidden');
     } else {
-      hint.classList.add('opacity-0');
+      disclaimer.classList.add('hidden');
     }
   }
 
@@ -452,6 +477,19 @@
     const input = document.getElementById('about-contact-input');
     const type = detectInputType(input.value);
     const form = event.target;
+    const hint = document.getElementById('about-input-hint');
+
+    // Validate input
+    if (type === 'unknown') {
+      hint.textContent = 'Please enter a valid email or 10-digit phone number';
+      hint.classList.remove('hidden');
+      input.classList.add('border-red-500');
+      return false;
+    }
+
+    // Clear any error styling
+    input.classList.remove('border-red-500');
+    hint.classList.add('hidden');
 
     if (type === 'email') {
       document.getElementById('about-email-field').value = input.value.trim();
