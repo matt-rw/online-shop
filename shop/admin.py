@@ -570,7 +570,7 @@ class SMSLogAdmin(admin.ModelAdmin):
 
     list_display = ("phone_number", "status_badge", "campaign", "template", "sent_at")
     list_filter = ("status", "sent_at", "campaign", "template")
-    search_fields = ("phone_number", "message_body", "twilio_sid")
+    search_fields = ("phone_number", "message_body", "provider_message_id")
     readonly_fields = (
         "subscription",
         "phone_number",
@@ -578,7 +578,7 @@ class SMSLogAdmin(admin.ModelAdmin):
         "campaign",
         "template",
         "status",
-        "twilio_sid",
+        "provider_message_id",
         "sent_at",
         "delivered_at",
         "error_message",

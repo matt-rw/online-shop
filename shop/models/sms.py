@@ -186,7 +186,7 @@ class SMSLog(models.Model):
     )
 
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default="queued")
-    twilio_sid = models.CharField(max_length=34, blank=True)  # Twilio message SID
+    provider_message_id = models.CharField(max_length=64, blank=True, help_text="Message ID from SMS provider (Telnyx/Twilio)")
 
     sent_at = models.DateTimeField(auto_now_add=True)
     delivered_at = models.DateTimeField(null=True, blank=True)

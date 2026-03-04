@@ -1,6 +1,6 @@
 from django.urls import path
 
-from . import admin_views, cart_views, views, webhooks
+from . import admin_views, cart_views, sms_webhooks, views, webhooks
 
 app_name = "shop"
 
@@ -53,5 +53,7 @@ urlpatterns = [
     path("checkout/success/", cart_views.checkout_success_view, name="checkout_success"),
     # Webhooks
     path("webhook/stripe/", webhooks.stripe_webhook, name="stripe_webhook"),
+    path("webhook/sms/telnyx/", sms_webhooks.telnyx_webhook, name="telnyx_sms_webhook"),
+    path("webhook/sms/twilio/", sms_webhooks.twilio_webhook, name="twilio_sms_webhook"),
     path("campaigns/process/", views.process_campaigns_webhook, name="process_campaigns_webhook"),
 ]

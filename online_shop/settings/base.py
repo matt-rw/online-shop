@@ -216,7 +216,22 @@ EMAIL_HOST_USER = "resend"
 EMAIL_HOST_PASSWORD = get_env_variable("RESEND_API_KEY", "")
 DEFAULT_FROM_EMAIL = "Blueprint Apparel <no-reply@blueprnt.store>"
 
-# TWILIO SMS
+# SMS CONFIGURATION
+# Supported providers: "telnyx", "twilio"
+SMS_PROVIDER = get_env_variable("SMS_PROVIDER", "telnyx")
+
+# Telnyx SMS (Recommended - easier setup, competitive pricing)
+TELNYX_API_KEY = get_env_variable("TELNYX_API_KEY", "")
+TELNYX_PHONE_NUMBER = get_env_variable("TELNYX_PHONE_NUMBER", "")  # Your Telnyx number in E.164 format
+TELNYX_MESSAGING_PROFILE_ID = get_env_variable("TELNYX_MESSAGING_PROFILE_ID", "")  # Optional
+TELNYX_WEBHOOK_SECRET = get_env_variable("TELNYX_WEBHOOK_SECRET", "")  # For verifying incoming webhooks
+
+# Plivo SMS (Simple, reliable)
+PLIVO_AUTH_ID = get_env_variable("PLIVO_AUTH_ID", "")
+PLIVO_AUTH_TOKEN = get_env_variable("PLIVO_AUTH_TOKEN", "")
+PLIVO_PHONE_NUMBER = get_env_variable("PLIVO_PHONE_NUMBER", "")
+
+# Twilio SMS (Legacy - keeping for backwards compatibility)
 TWILIO_ACCOUNT_SID = get_env_variable("TWILIO_ACCOUNT_SID", "")
 TWILIO_AUTH_TOKEN = get_env_variable("TWILIO_AUTH_TOKEN", "")
 TWILIO_PHONE_NUMBER = get_env_variable("TWILIO_PHONE_NUMBER", "")
