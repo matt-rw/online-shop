@@ -306,6 +306,10 @@ class ProductVariant(models.Model):
         max_digits=10, decimal_places=2, null=True, blank=True,
         help_text="Cost for this specific variant (leave blank to use product base cost)"
     )
+    weight_oz = models.DecimalField(
+        max_digits=6, decimal_places=2, null=True, blank=True,
+        help_text="Weight in ounces for this variant (leave blank to use product base weight)"
+    )
     is_active = models.BooleanField(default=True, db_index=True)
 
     # Images and custom data

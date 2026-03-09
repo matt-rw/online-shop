@@ -130,21 +130,34 @@ class EasyPostService(ShippingService):
 
     def _calculate_parcel(self, order) -> Dict:
         """Calculate package dimensions and weight for order."""
-        from shop.models import SiteSettings
-
-        site_settings = SiteSettings.load()
-        default_weight = float(site_settings.default_product_weight_oz or 8)
-
         # Calculate total weight from order items
+        # Priority: variant weight > product weight > error
         total_weight = 0
+        missing_weights = []
+
         for item in order.items.select_related('variant__product').all():
-            product = item.variant.product
-            # Use product weight if set, otherwise use site default
-            item_weight = float(product.weight_oz) if product.weight_oz else default_weight
+            variant = item.variant
+            product = variant.product
+
+            # Check variant weight first, then product weight
+            if variant.weight_oz:
+                item_weight = float(variant.weight_oz)
+            elif product.weight_oz:
+                item_weight = float(product.weight_oz)
+            else:
+                missing_weights.append(f"{product.name} - {variant.sku}")
+                continue
+
             total_weight += item_weight * item.quantity
 
-        # Minimum weight of 4oz (packaging)
-        total_weight = max(total_weight, 4)
+        if missing_weights:
+            raise ValueError(
+                f"Cannot generate label: missing weight for {len(missing_weights)} item(s): "
+                f"{', '.join(missing_weights[:3])}{'...' if len(missing_weights) > 3 else ''}"
+            )
+
+        # Add packaging weight (minimum 4oz)
+        total_weight = max(total_weight + 2, 4)  # 2oz for packaging
 
         # Estimate dimensions based on item count (simple heuristic for apparel)
         item_count = sum(item.quantity for item in order.items.all())

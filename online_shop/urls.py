@@ -78,6 +78,7 @@ urlpatterns = [
     path("bp-manage/email/campaigns/", admin_views.email_campaigns, name="admin_email_campaigns"),
     path("bp-manage/email/templates/", admin_views.email_templates, name="admin_email_templates"),
     path("bp-manage/ab-testing/", admin_views.ab_testing_dashboard, name="admin_ab_testing"),
+    path("bp-manage/scheduled-reports/", admin_views.scheduled_reports_dashboard, name="admin_scheduled_reports"),
     path("bp-manage/bundles/", admin_views.bundles_dashboard, name="admin_bundles"),
     path("bp-manage/test-center/", admin_views.test_center, name="admin_test_center"),
     path("bp-manage/test-checkout/", admin_views.test_checkout, name="admin_test_checkout"),

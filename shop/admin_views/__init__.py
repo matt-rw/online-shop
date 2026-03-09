@@ -64,6 +64,7 @@ from .analytics import (
     finance_dashboard,
     ab_testing_dashboard,
 )
+from .reporting import scheduled_reports_dashboard
 from .testing import (
     test_center,
     test_checkout,
@@ -118,4 +119,6 @@ __all__ = [
     # testing
     'test_center',
     'test_checkout',
+    # reporting
+    'scheduled_reports_dashboard',
 ]
