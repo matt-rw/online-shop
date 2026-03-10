@@ -852,9 +852,11 @@ def messages_dashboard(request):
     # Handle image upload for email messages
     if request.method == "POST" and request.POST.get("action") == "upload_message_image":
         import base64
+        import io
         import uuid
         from django.core.files.base import ContentFile
         from django.core.files.storage import default_storage
+        from shop.utils.image_optimizer import optimize_image_keep_format
 
         try:
             image_data = request.POST.get("image_data", "")
@@ -868,10 +870,7 @@ def messages_dashboard(request):
             if len(image_content) == 0:
                 return JsonResponse({"success": False, "error": "Empty image"})
 
-            if len(image_content) > 2 * 1024 * 1024:
-                return JsonResponse({"success": False, "error": "Image too large (max 2MB)"})
-
-            # Determine file extension from format
+            # Determine original file extension
             ext = "jpg"
             if "png" in format_part.lower():
                 ext = "png"
@@ -880,13 +879,54 @@ def messages_dashboard(request):
             elif "webp" in format_part.lower():
                 ext = "webp"
 
+            # Auto-resize if image is too large (over 2MB)
+            max_size = 2 * 1024 * 1024  # 2MB
+            if len(image_content) > max_size:
+                # Use progressive resizing until under limit
+                image_file = io.BytesIO(image_content)
+                max_dim = 1600  # Start with reasonable max dimension
+                quality = 85
+
+                while True:
+                    image_file.seek(0)
+                    optimized_content, new_filename, content_type = optimize_image_keep_format(
+                        image_file,
+                        filename=f"msg.{ext}",
+                        max_dimension=max_dim,
+                        quality=quality
+                    )
+
+                    if len(optimized_content) <= max_size:
+                        image_content = optimized_content
+                        # Update extension based on optimized format
+                        ext = new_filename.rsplit('.', 1)[-1]
+                        break
+
+                    # Reduce dimensions or quality further
+                    if max_dim > 800:
+                        max_dim -= 200
+                    elif quality > 60:
+                        quality -= 10
+                    else:
+                        # Give up and use what we have
+                        image_content = optimized_content
+                        ext = new_filename.rsplit('.', 1)[-1]
+                        break
+
             # Save to media folder
             filename = f"messages/msg_{uuid.uuid4().hex[:8]}.{ext}"
             path = default_storage.save(filename, ContentFile(image_content))
             url = default_storage.url(path)
 
+            # Make URL absolute for emails
+            if url.startswith('/'):
+                url = request.build_absolute_uri(url)
+
             return JsonResponse({"success": True, "url": url})
         except Exception as e:
+            import traceback
+            print(f"Image upload error: {e}")
+            print(traceback.format_exc())
             return JsonResponse({"success": False, "error": str(e)})
 
     # Handle POST request for saving test settings

@@ -147,6 +147,12 @@ class SiteSettings(models.Model):
         help_text="Default product weight in ounces (used when product has no weight set)"
     )
 
+    # Default tax rate for in-person/manual sales (percentage, e.g., 8.25 for 8.25%)
+    default_tax_rate = models.DecimalField(
+        max_digits=5, decimal_places=3, default=0,
+        help_text="Default tax rate percentage for in-person sales (e.g., 8.25 for 8.25%)"
+    )
+
     updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:

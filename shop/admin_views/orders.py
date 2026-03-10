@@ -268,6 +268,11 @@ def orders_dashboard(request):
     # Count test orders for the toggle display
     test_orders_count = Order.objects.filter(is_test=True).count()
 
+    # Get default tax rate for in-person sales
+    from shop.models import SiteSettings
+    site_settings = SiteSettings.load()
+    default_tax_rate = float(site_settings.default_tax_rate or 0)
+
     context = {
         "orders": orders_data,
         "orders_json": json.dumps(orders_data),
@@ -275,6 +280,7 @@ def orders_dashboard(request):
         "show_test_orders": show_test_orders,
         "test_orders_count": test_orders_count,
         "cst_time": timezone.now().astimezone(pytz.timezone("America/Chicago")),
+        "default_tax_rate": default_tax_rate,
     }
 
     return render(request, "admin/orders_dashboard.html", context)
@@ -283,66 +289,113 @@ def orders_dashboard(request):
 @staff_member_required
 def search_variants_for_order(request):
     """
-    AJAX endpoint to search products/variants for manual order creation.
-    Returns variants with product info, SKU, attributes, price, and stock.
-    Supports ?all=true to return all active variants for browsing.
+    AJAX endpoint to search products/variants and bundles for manual order creation.
+    Returns variants and bundles with product info, SKU, attributes, price, and stock.
+    Supports ?all=true to return all active items for browsing.
+    Supports ?type=variants|bundles|all to filter by type.
     """
     from django.http import JsonResponse
     from django.db.models import Q
-    from shop.models import ProductVariant
+    from shop.models import ProductVariant, Bundle
 
     if request.method != "GET":
         return JsonResponse({"error": "Invalid method"}, status=405)
 
     query = request.GET.get("q", "").strip()
     browse_all = request.GET.get("all", "").lower() == "true"
+    item_type = request.GET.get("type", "all").lower()  # variants, bundles, or all
 
     try:
-        # Base queryset - active variants only
-        base_qs = ProductVariant.objects.filter(
-            is_active=True,
-            product__is_active=True
-        ).select_related(
-            "product", "size", "color"
-        ).order_by("product__name", "sku")
-
-        if browse_all:
-            # Return all active variants for browsing
-            variants = list(base_qs[:100])
-        elif len(query) >= 2:
-            # Search by product name or SKU
-            variants = list(base_qs.filter(
-                Q(product__name__icontains=query) | Q(sku__icontains=query)
-            )[:20])
-        else:
-            return JsonResponse({"results": []})
-
         results = []
-        for variant in variants:
-            # Build attribute display string from legacy fields
-            attrs = []
-            if variant.size:
-                attrs.append(f"Size: {variant.size.label or variant.size.code}")
-            if variant.color:
-                attrs.append(f"Color: {variant.color.name}")
 
-            # Get product image URL (from images JSONField list)
-            image_url = None
-            if variant.product.images and len(variant.product.images) > 0:
-                image_url = variant.product.images[0]
+        # Search variants
+        if item_type in ("all", "variants"):
+            base_qs = ProductVariant.objects.filter(
+                is_active=True,
+                product__is_active=True
+            ).select_related(
+                "product", "size", "color"
+            ).order_by("product__name", "sku")
 
-            results.append({
-                "id": variant.id,
-                "product_name": variant.product.name,
-                "sku": variant.sku or f"V-{variant.id}",
-                "attributes": ", ".join(attrs),
-                "price": float(variant.price),
-                "stock": variant.stock_quantity,
-                "display_name": f"{variant.product.name} - {', '.join(attrs)}" if attrs else variant.product.name,
-                "image_url": image_url,
-            })
+            if browse_all:
+                variants = list(base_qs[:100])
+            elif len(query) >= 2:
+                variants = list(base_qs.filter(
+                    Q(product__name__icontains=query) | Q(sku__icontains=query)
+                )[:20])
+            else:
+                variants = []
 
-        print(f"Returning {len(results)} results")  # DEBUG
+            for variant in variants:
+                attrs = []
+                if variant.size:
+                    attrs.append(f"Size: {variant.size.label or variant.size.code}")
+                if variant.color:
+                    attrs.append(f"Color: {variant.color.name}")
+
+                image_url = None
+                if variant.product.images and len(variant.product.images) > 0:
+                    image_url = variant.product.images[0]
+
+                results.append({
+                    "id": variant.id,
+                    "type": "variant",
+                    "product_name": variant.product.name,
+                    "sku": variant.sku or f"V-{variant.id}",
+                    "attributes": ", ".join(attrs),
+                    "price": float(variant.price),
+                    "stock": variant.stock_quantity,
+                    "display_name": f"{variant.product.name} - {', '.join(attrs)}" if attrs else variant.product.name,
+                    "image_url": image_url,
+                })
+
+        # Search bundles
+        if item_type in ("all", "bundles"):
+            bundle_qs = Bundle.objects.filter(
+                is_active=True
+            ).prefetch_related("items__variant__product").order_by("name")
+
+            if browse_all:
+                bundles = list(bundle_qs[:50])
+            elif len(query) >= 2:
+                bundles = list(bundle_qs.filter(
+                    Q(name__icontains=query) | Q(slug__icontains=query)
+                )[:10])
+            else:
+                bundles = []
+
+            for bundle in bundles:
+                # Get bundle items summary
+                items_summary = []
+                for item in bundle.items.all():
+                    items_summary.append(f"{item.quantity}x {item.variant.product.name}")
+
+                # Get first product image from bundle
+                image_url = None
+                first_item = bundle.items.first()
+                if first_item and first_item.variant.product.images:
+                    image_url = first_item.variant.product.images[0]
+
+                results.append({
+                    "id": bundle.id,
+                    "type": "bundle",
+                    "product_name": bundle.name,
+                    "sku": f"BUNDLE-{bundle.id}",
+                    "attributes": ", ".join(items_summary[:3]) + ("..." if len(items_summary) > 3 else ""),
+                    "price": float(bundle.price),
+                    "stock": 999,  # Bundles don't have stock tracking
+                    "display_name": f"[Bundle] {bundle.name}",
+                    "image_url": image_url,
+                    "bundle_items": [
+                        {
+                            "variant_id": item.variant.id,
+                            "product_name": item.variant.product.name,
+                            "quantity": item.quantity,
+                        }
+                        for item in bundle.items.all()
+                    ],
+                })
+
         return JsonResponse({"results": results})
     except Exception as e:
         import traceback
@@ -564,8 +617,16 @@ def update_manual_order(request):
             )
             order.created_at = order_datetime
 
-        # Update or create shipping address
-        if shipping_line1 and shipping_city and shipping_postal:
+        # Update, create, or remove shipping address
+        remove_address = request.POST.get("remove_shipping_address") == "true"
+
+        if remove_address and order.shipping_address:
+            # Remove existing shipping address
+            old_address = order.shipping_address
+            order.shipping_address = None
+            order.save(update_fields=["shipping_address"])
+            old_address.delete()
+        elif shipping_line1 and shipping_city and shipping_postal:
             if order.shipping_address:
                 # Update existing
                 order.shipping_address.full_name = customer_name or "Customer"

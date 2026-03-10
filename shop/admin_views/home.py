@@ -70,6 +70,10 @@ def admin_home(request):
             path = default_storage.save(unique_filename, ContentFile(image_bytes))
             url = default_storage.url(path)
 
+            # Make URL absolute for emails
+            if url.startswith('/'):
+                url = request.build_absolute_uri(url)
+
             return JsonResponse({"success": True, "url": url})
 
         except Exception as e:

@@ -858,14 +858,19 @@
     }
 
     .subtotal-toggle {
-      font-size: 0.75rem;
+      font-size: 0.7rem;
       color: #6366f1;
       cursor: pointer;
-      text-decoration: underline;
+      background: #eef2ff;
+      padding: 0.25rem 0.5rem;
+      border-radius: 4px;
+      font-weight: 500;
+      border: 1px solid #c7d2fe;
     }
 
     .subtotal-toggle:hover {
       color: #4f46e5;
+      background: #e0e7ff;
     }
 
     .mode-toggle {
@@ -1693,7 +1698,11 @@
       document.getElementById('decrementStock').checked = true;
       // Reset subtotal override
       subtotalOverrideEnabled = false;
-      document.getElementById('subtotalToggle').textContent = 'override';
+      const subtotalToggle = document.getElementById('subtotalToggle');
+      subtotalToggle.innerHTML = '<i class="fa-solid fa-pen-to-square"></i> Custom Price';
+      subtotalToggle.style.background = '';
+      subtotalToggle.style.borderColor = '';
+      subtotalToggle.style.color = '';
       document.getElementById('subtotalOverrideWrapper').style.display = 'none';
       document.getElementById('calcSubtotal').style.display = 'block';
       document.getElementById('subtotalOverrideInput').value = '';
@@ -1705,9 +1714,20 @@
       document.getElementById('discountCodeInput').value = '';
       highlightActiveDiscount();
       highlightActiveShipping();
+      highlightActiveTax();
+      // Reset tax note
+      document.getElementById('taxNote').style.display = 'none';
       // Reset calculated rates
       document.getElementById('calculatedRatesContainer').style.display = 'none';
       document.getElementById('calculatedRatesList').innerHTML = '';
+      // Reset shipping address
+      showShippingAddressForEdit(false);
+      document.getElementById('shippingLine1').value = '';
+      document.getElementById('shippingLine2').value = '';
+      document.getElementById('shippingCity').value = '';
+      document.getElementById('shippingRegion').value = '';
+      document.getElementById('shippingPostal').value = '';
+      document.getElementById('shippingCountry').value = 'US';
       renderLineItems();
       updateCalculatedTotals();
       toggleOrderMode('products');
@@ -1752,11 +1772,18 @@
           document.getElementById('shippingRegion').value = order.shipping_address.region || '';
           document.getElementById('shippingPostal').value = order.shipping_address.postal_code || '';
           document.getElementById('shippingCountry').value = order.shipping_address.country || 'US';
+          showShippingAddressForEdit(true);
+        } else {
+          showShippingAddressForEdit(false);
         }
 
         // Reset subtotal override state
         subtotalOverrideEnabled = false;
-        document.getElementById('subtotalToggle').textContent = 'override';
+        const editSubtotalToggle = document.getElementById('subtotalToggle');
+        editSubtotalToggle.innerHTML = '<i class="fa-solid fa-pen-to-square"></i> Custom Price';
+        editSubtotalToggle.style.background = '';
+        editSubtotalToggle.style.borderColor = '';
+        editSubtotalToggle.style.color = '';
         document.getElementById('subtotalOverrideWrapper').style.display = 'none';
         document.getElementById('calcSubtotal').style.display = 'block';
         document.getElementById('subtotalOverrideInput').value = '';
@@ -1819,11 +1846,48 @@
       manualOrderLineItems = [];
     }
 
+    function removeShippingAddress() {
+      // Clear all shipping fields
+      document.getElementById('shippingLine1').value = '';
+      document.getElementById('shippingLine2').value = '';
+      document.getElementById('shippingCity').value = '';
+      document.getElementById('shippingRegion').value = '';
+      document.getElementById('shippingPostal').value = '';
+      document.getElementById('shippingCountry').value = 'US';
+      // Mark for removal
+      document.getElementById('removeShippingAddress').value = 'true';
+      // Hide the remove button and collapse the section
+      document.getElementById('removeAddressBtn').style.display = 'none';
+      document.getElementById('shippingAddressDetails').open = false;
+      document.getElementById('shippingAddressSummary').textContent = 'Add Shipping Address (optional)';
+    }
+
+    function showShippingAddressForEdit(hasAddress) {
+      const removeBtn = document.getElementById('removeAddressBtn');
+      const summary = document.getElementById('shippingAddressSummary');
+      const details = document.getElementById('shippingAddressDetails');
+
+      if (hasAddress) {
+        removeBtn.style.display = 'inline-block';
+        summary.textContent = 'Shipping Address';
+        details.open = true;
+      } else {
+        removeBtn.style.display = 'none';
+        summary.textContent = 'Add Shipping Address (optional)';
+      }
+      // Reset removal flag
+      document.getElementById('removeShippingAddress').value = 'false';
+    }
+
     function toggleOrderMode(mode) {
       const productSection = document.getElementById('productSelectionSection');
       const totalsSection = document.getElementById('manualTotalsSection');
       const useLineItems = document.getElementById('useLineItems');
       const radios = document.querySelectorAll('input[name="order_mode"]');
+
+      // Get inputs from each section to enable/disable
+      const productInputs = productSection.querySelectorAll('input[name="tax"], input[name="shipping"]');
+      const totalsInputs = totalsSection.querySelectorAll('input[name="tax"], input[name="shipping"], input[name="subtotal"], input[name="total"]');
 
       radios.forEach(radio => {
         radio.checked = radio.value === mode;
@@ -1833,10 +1897,16 @@
         productSection.style.display = 'block';
         totalsSection.style.display = 'none';
         useLineItems.value = 'true';
+        // Enable product section inputs, disable totals section inputs
+        productInputs.forEach(input => input.disabled = false);
+        totalsInputs.forEach(input => input.disabled = true);
       } else {
         productSection.style.display = 'none';
         totalsSection.style.display = 'block';
         useLineItems.value = 'false';
+        // Enable totals section inputs, disable product section inputs
+        productInputs.forEach(input => input.disabled = true);
+        totalsInputs.forEach(input => input.disabled = false);
       }
     }
 
@@ -1970,20 +2040,49 @@
     }
 
     function addLineItem(item) {
-      // Check if already added
-      const existing = manualOrderLineItems.find(li => li.variant_id === item.id);
-      if (existing) {
-        existing.quantity += 1;
-      } else {
-        manualOrderLineItems.push({
-          variant_id: item.id,
-          product_name: item.product_name,
-          display_name: item.display_name,
-          sku: item.sku,
-          price: item.price,
-          quantity: 1,
-          stock: item.stock,
+      // Handle bundles by expanding into individual variants
+      if (item.type === 'bundle' && item.bundle_items) {
+        // Add each bundle item as a separate line item
+        item.bundle_items.forEach(bundleItem => {
+          const existing = manualOrderLineItems.find(li => li.variant_id === bundleItem.variant_id);
+          if (existing) {
+            existing.quantity += bundleItem.quantity;
+          } else {
+            // Calculate proportional price from bundle
+            const totalBundleQty = item.bundle_items.reduce((sum, bi) => sum + bi.quantity, 0);
+            const proportionalPrice = item.price / totalBundleQty;
+
+            manualOrderLineItems.push({
+              variant_id: bundleItem.variant_id,
+              product_name: bundleItem.product_name,
+              display_name: `${bundleItem.product_name} (from ${item.product_name})`,
+              sku: `B${item.id}-V${bundleItem.variant_id}`,
+              price: proportionalPrice,
+              quantity: bundleItem.quantity,
+              stock: 999, // Bundles don't track individual stock
+              from_bundle: item.product_name,
+            });
+          }
         });
+
+        // Show notification about bundle
+        showBundleNotification(item.product_name, item.price);
+      } else {
+        // Regular variant
+        const existing = manualOrderLineItems.find(li => li.variant_id === item.id && !li.from_bundle);
+        if (existing) {
+          existing.quantity += 1;
+        } else {
+          manualOrderLineItems.push({
+            variant_id: item.id,
+            product_name: item.product_name,
+            display_name: item.display_name,
+            sku: item.sku,
+            price: item.price,
+            quantity: 1,
+            stock: item.stock,
+          });
+        }
       }
 
       // If in browse mode, keep dropdown open; otherwise clear search
@@ -1999,6 +2098,22 @@
 
       renderLineItems();
       updateCalculatedTotals();
+    }
+
+    function showBundleNotification(bundleName, bundlePrice) {
+      // Show a brief notification that bundle items were added
+      const container = document.getElementById('lineItemsContainer');
+      const existingNote = container.querySelector('.bundle-added-note');
+      if (existingNote) existingNote.remove();
+
+      const note = document.createElement('div');
+      note.className = 'bundle-added-note';
+      note.style.cssText = 'padding: 0.5rem 1rem; background: #dbeafe; color: #1e40af; font-size: 0.75rem; border-radius: 6px; margin-bottom: 0.5rem;';
+      note.innerHTML = `<i class="fa-solid fa-box-open"></i> Added "${bundleName}" bundle at $${bundlePrice.toFixed(2)}`;
+      container.insertBefore(note, container.firstChild);
+
+      // Auto-remove after 3 seconds
+      setTimeout(() => note.remove(), 3000);
     }
 
     function updateLineItemQuantity(index, quantity) {
@@ -2029,10 +2144,13 @@
       }
 
       container.innerHTML = manualOrderLineItems.map((item, index) => `
-        <div class="line-item-row">
+        <div class="line-item-row${item.from_bundle ? ' from-bundle' : ''}" ${item.from_bundle ? `style="background: #f0f9ff; border-left: 3px solid #3b82f6;"` : ''}>
           <div class="line-item-info">
             <div class="line-item-name">${item.display_name}</div>
-            <div class="line-item-sku">SKU: ${item.sku}</div>
+            <div class="line-item-sku">
+              ${item.from_bundle ? `<span style="color: #3b82f6; margin-right: 0.25rem;"><i class="fa-solid fa-box-open"></i></span>` : ''}
+              SKU: ${item.sku}
+            </div>
           </div>
           <input type="number"
                  class="line-item-qty"
@@ -2056,14 +2174,20 @@
       const display = document.getElementById('calcSubtotal');
 
       if (subtotalOverrideEnabled) {
-        toggle.textContent = 'use items';
+        toggle.innerHTML = '<i class="fa-solid fa-calculator"></i> Use Items';
+        toggle.style.background = '#fef3c7';
+        toggle.style.borderColor = '#fcd34d';
+        toggle.style.color = '#92400e';
         wrapper.style.display = 'flex';
         display.style.display = 'none';
         // Pre-fill with current subtotal
         const currentSubtotal = manualOrderLineItems.reduce((sum, item) => sum + (item.price * item.quantity), 0);
         document.getElementById('subtotalOverrideInput').value = currentSubtotal.toFixed(2);
       } else {
-        toggle.textContent = 'override';
+        toggle.innerHTML = '<i class="fa-solid fa-pen-to-square"></i> Custom Price';
+        toggle.style.background = '';
+        toggle.style.borderColor = '';
+        toggle.style.color = '';
         wrapper.style.display = 'none';
         display.style.display = 'block';
         document.getElementById('subtotalOverrideInput').value = '';
@@ -2090,6 +2214,61 @@
       document.getElementById('shippingInput').value = amount.toFixed(2);
       highlightActiveShipping();
       updateCalculatedTotals();
+    }
+
+    // Tax functions
+    const DEFAULT_TAX_RATE = {{ default_tax_rate|default:0 }};
+
+    function setTax(amount) {
+      document.getElementById('taxInput').value = amount.toFixed(2);
+      highlightActiveTax();
+      updateCalculatedTotals();
+      // Hide tax note when manually setting
+      document.getElementById('taxNote').style.display = 'none';
+    }
+
+    function calculateTax() {
+      // Calculate tax based on subtotal (after discount)
+      let subtotal;
+      if (subtotalOverrideEnabled) {
+        subtotal = parseFloat(document.getElementById('subtotalOverrideInput').value) || 0;
+      } else {
+        subtotal = manualOrderLineItems.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+      }
+
+      const discountPercent = parseFloat(document.getElementById('discountInput').value) || 0;
+      const discountAmount = subtotal * (discountPercent / 100);
+      const taxableAmount = subtotal - discountAmount;
+
+      const taxAmount = taxableAmount * (DEFAULT_TAX_RATE / 100);
+      document.getElementById('taxInput').value = taxAmount.toFixed(2);
+
+      // Show note explaining the tax
+      const taxNote = document.getElementById('taxNote');
+      const taxNoteText = document.getElementById('taxNoteText');
+      const hasShipping = document.getElementById('shippingLine1').value.trim() !== '';
+
+      if (hasShipping) {
+        taxNoteText.textContent = `Tax calculated at ${DEFAULT_TAX_RATE}% on $${taxableAmount.toFixed(2)}`;
+      } else {
+        taxNoteText.textContent = `In-person sale: ${DEFAULT_TAX_RATE}% tax on $${taxableAmount.toFixed(2)}`;
+      }
+      taxNote.style.display = 'block';
+
+      highlightActiveTax();
+      updateCalculatedTotals();
+    }
+
+    function highlightActiveTax() {
+      const value = parseFloat(document.getElementById('taxInput').value) || 0;
+      const buttons = document.querySelectorAll('#taxButtons .quick-btn');
+      buttons.forEach(btn => {
+        if (btn.textContent.includes('No Tax')) {
+          btn.classList.toggle('active', value === 0);
+        } else {
+          btn.classList.toggle('active', value > 0);
+        }
+      });
     }
 
     function highlightActiveShipping() {
@@ -2378,7 +2557,9 @@
             <div class="totals-row">
               <div class="subtotal-override">
                 <span class="totals-label">Subtotal</span>
-                <span class="subtotal-toggle" id="subtotalToggle" onclick="toggleSubtotalOverride()">override</span>
+                <span class="subtotal-toggle" id="subtotalToggle" onclick="toggleSubtotalOverride()">
+                  <i class="fa-solid fa-pen-to-square"></i> Custom Price
+                </span>
               </div>
               <div style="display: flex; align-items: center; gap: 0.5rem;">
                 <span class="totals-value" id="calcSubtotal">$0.00</span>
@@ -2416,12 +2597,25 @@
               </div>
             </div>
 
-            <div class="totals-row">
-              <label class="totals-label" for="taxInput">Tax</label>
-              <div class="totals-input-wrapper">
-                <span class="prefix">$</span>
-                <input type="number" name="tax" id="taxInput" step="0.01" min="0" value="0" placeholder="0.00"
-                       class="totals-input" onchange="updateCalculatedTotals()">
+            <div class="totals-row" style="flex-direction: column; align-items: stretch; gap: 0.5rem;">
+              <div style="display: flex; justify-content: space-between; align-items: center;">
+                <label class="totals-label" for="taxInput">Tax</label>
+                <div class="totals-input-wrapper">
+                  <span class="prefix">$</span>
+                  <input type="number" name="tax" id="taxInput" step="0.01" min="0" value="0" placeholder="0.00"
+                         class="totals-input" onchange="updateCalculatedTotals()">
+                </div>
+              </div>
+              <div class="quick-buttons" id="taxButtons">
+                <button type="button" class="quick-btn active" onclick="setTax(0)">No Tax</button>
+                {% if default_tax_rate %}
+                <button type="button" class="quick-btn" style="background: #dbeafe; color: #1e40af; border-color: #93c5fd;" onclick="calculateTax()" id="calcTaxBtn">
+                  <i class="fa-solid fa-calculator"></i> {{ default_tax_rate }}%
+                </button>
+                {% endif %}
+              </div>
+              <div id="taxNote" style="display: none; font-size: 0.75rem; color: #64748b;">
+                <i class="fa-solid fa-info-circle"></i> <span id="taxNoteText"></span>
               </div>
             </div>
 
@@ -2496,12 +2690,13 @@
         </div>
 
         <!-- Shipping Address (Collapsible) -->
-        <details class="form-group" style="border: 1px solid #e2e8f0; border-radius: 6px; padding: 0.75rem;">
+        <details class="form-group" id="shippingAddressDetails" style="border: 1px solid #e2e8f0; border-radius: 6px; padding: 0.75rem;">
           <summary style="cursor: pointer; font-weight: 500; font-size: 0.875rem;">
             <i class="fa-solid fa-truck" style="margin-right: 0.5rem;"></i>
-            Add Shipping Address (optional)
+            <span id="shippingAddressSummary">Add Shipping Address (optional)</span>
           </summary>
           <div style="margin-top: 1rem;">
+            <input type="hidden" name="remove_shipping_address" id="removeShippingAddress" value="false">
             <div class="form-group">
               <label for="shippingLine1">Street Address</label>
               <input type="text" name="shipping_line1" id="shippingLine1" placeholder="123 Main St">
@@ -2535,6 +2730,9 @@
                 </select>
               </div>
             </div>
+            <button type="button" id="removeAddressBtn" onclick="removeShippingAddress()" style="display: none; margin-top: 0.5rem; padding: 0.375rem 0.75rem; background: #fef2f2; color: #dc2626; border: 1px solid #fecaca; border-radius: 6px; font-size: 0.75rem; cursor: pointer;">
+              <i class="fa-solid fa-trash"></i> Remove Address
+            </button>
           </div>
         </details>
 

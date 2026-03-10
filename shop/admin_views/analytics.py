@@ -827,16 +827,17 @@ def finance_dashboard(request):
         if data['total_qty'] > 0:
             variant_avg_cost[variant_id] = data['total_cost'] / data['total_qty']
 
-    # Also calculate total stock (even items without cost data)
+    # Also calculate total stock (even items without cost data) - only active products
     total_stock_units = ProductVariant.objects.filter(
-        is_active=True
+        is_active=True,
+        product__is_active=True
     ).aggregate(total=Sum('stock_quantity'))['total'] or 0
 
     # Potential revenue and inventory value using fallback costs
     potential_revenue = Decimal("0")
     inventory_value = Decimal("0")
 
-    for variant in ProductVariant.objects.filter(is_active=True, stock_quantity__gt=0).select_related('product'):
+    for variant in ProductVariant.objects.filter(is_active=True, product__is_active=True, stock_quantity__gt=0).select_related('product'):
         potential_revenue += variant.price * variant.stock_quantity
 
         # Get cost with fallback: shipment > variant > product base_cost
@@ -872,9 +873,10 @@ def finance_dashboard(request):
         'variants': []
     })
 
-    # Get all active variants with stock
+    # Get all active variants with stock (only from active products)
     variants_with_stock = ProductVariant.objects.filter(
         is_active=True,
+        product__is_active=True,
         stock_quantity__gt=0
     ).select_related('product', 'size', 'color')
 

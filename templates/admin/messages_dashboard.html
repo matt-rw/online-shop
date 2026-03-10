@@ -1084,69 +1084,121 @@
       const file = input.files[0];
       if (!file) return;
 
-      // Validate file size (max 2MB)
-      if (file.size > 2 * 1024 * 1024) {
-        alert('Image too large. Please use an image under 2MB.');
-        input.value = '';
-        return;
-      }
-
-      // Show uploading status
       const statusEl = document.getElementById('imageUploadStatus');
       const btnText = document.getElementById('imageUploadBtnText');
-      statusEl.textContent = 'Uploading...';
+      const sizeMB = (file.size / (1024 * 1024)).toFixed(1);
+
+      statusEl.textContent = file.size > 1024 * 1024 ? `Optimizing ${sizeMB}MB...` : 'Uploading...';
       statusEl.style.color = '#667eea';
-      btnText.textContent = 'Uploading...';
+      btnText.textContent = 'Processing...';
 
       try {
-        // Convert to base64 and upload
-        const reader = new FileReader();
-        reader.onload = async function(e) {
-          const formData = new FormData();
-          formData.append('action', 'upload_message_image');
-          formData.append('image_data', e.target.result);
-          formData.append('csrfmiddlewaretoken', '{{ csrf_token }}');
+        // Resize image on client side before upload
+        const resizedDataUrl = await resizeImageForUpload(file, 1600, 0.85);
 
-          const response = await fetch('{% url "admin_messages" %}', {
-            method: 'POST',
-            body: formData
-          });
+        const formData = new FormData();
+        formData.append('action', 'upload_message_image');
+        formData.append('image_data', resizedDataUrl);
+        formData.append('csrfmiddlewaretoken', '{{ csrf_token }}');
 
-          const data = await response.json();
-          if (data.success) {
-            // Insert image tag at cursor position or end
-            const textarea = document.getElementById('quickContent');
-            const imgTag = `<img src="${data.url}" alt="Image" style="max-width: 100%; height: auto;">`;
+        const resizedSizeMB = (resizedDataUrl.length / (1024 * 1024)).toFixed(2);
+        statusEl.textContent = `Uploading (${resizedSizeMB}MB)...`;
 
-            const start = textarea.selectionStart;
-            const end = textarea.selectionEnd;
-            const text = textarea.value;
+        const response = await fetch('{% url "admin_messages" %}', {
+          method: 'POST',
+          body: formData
+        });
 
-            // Add newlines around the image for readability
-            const before = text.substring(0, start);
-            const after = text.substring(end);
-            const needsNewlineBefore = before.length > 0 && !before.endsWith('\n');
-            const needsNewlineAfter = after.length > 0 && !after.startsWith('\n');
+        if (!response.ok) {
+          throw new Error(`Server error: ${response.status} ${response.statusText}`);
+        }
 
-            textarea.value = before + (needsNewlineBefore ? '\n' : '') + imgTag + (needsNewlineAfter ? '\n' : '') + after;
+        const data = await response.json();
+        if (data.success) {
+          const textarea = document.getElementById('quickContent');
+          const imgTag = `<img src="${data.url}" alt="Image" style="max-width: 100%; height: auto;">`;
 
-            statusEl.textContent = 'Image added!';
-            statusEl.style.color = '#10b981';
-            setTimeout(() => { statusEl.textContent = ''; }, 3000);
-          } else {
-            statusEl.textContent = 'Upload failed: ' + data.error;
-            statusEl.style.color = '#ef4444';
-          }
-          btnText.textContent = 'Add Image';
-        };
-        reader.readAsDataURL(file);
+          const start = textarea.selectionStart;
+          const end = textarea.selectionEnd;
+          const text = textarea.value;
+
+          const before = text.substring(0, start);
+          const after = text.substring(end);
+          const needsNewlineBefore = before.length > 0 && !before.endsWith('\n');
+          const needsNewlineAfter = after.length > 0 && !after.startsWith('\n');
+
+          textarea.value = before + (needsNewlineBefore ? '\n' : '') + imgTag + (needsNewlineAfter ? '\n' : '') + after;
+
+          statusEl.textContent = 'Image added!';
+          statusEl.style.color = '#10b981';
+          setTimeout(() => { statusEl.textContent = ''; }, 3000);
+        } else {
+          statusEl.textContent = 'Upload failed: ' + data.error;
+          statusEl.style.color = '#ef4444';
+        }
       } catch (error) {
-        statusEl.textContent = 'Upload failed';
+        console.error('Upload error:', error);
+        statusEl.textContent = 'Upload failed: ' + error.message;
         statusEl.style.color = '#ef4444';
-        btnText.textContent = 'Add Image';
       }
 
-      input.value = ''; // Reset input
+      btnText.textContent = 'Add Image';
+      input.value = '';
+    }
+
+    function resizeImageForUpload(file, maxDimension, quality) {
+      return new Promise((resolve, reject) => {
+        const img = new Image();
+        const canvas = document.createElement('canvas');
+        const ctx = canvas.getContext('2d');
+
+        img.onload = function() {
+          let { width, height } = img;
+
+          // Calculate new dimensions
+          if (width > maxDimension || height > maxDimension) {
+            if (width > height) {
+              height = Math.round((height * maxDimension) / width);
+              width = maxDimension;
+            } else {
+              width = Math.round((width * maxDimension) / height);
+              height = maxDimension;
+            }
+          }
+
+          canvas.width = width;
+          canvas.height = height;
+          ctx.drawImage(img, 0, 0, width, height);
+
+          // Try to get under 1.5MB by reducing quality if needed
+          let outputQuality = quality;
+          let dataUrl = canvas.toDataURL('image/jpeg', outputQuality);
+
+          // If still too large, reduce quality progressively
+          while (dataUrl.length > 1.5 * 1024 * 1024 && outputQuality > 0.5) {
+            outputQuality -= 0.1;
+            dataUrl = canvas.toDataURL('image/jpeg', outputQuality);
+          }
+
+          // If still too large, reduce dimensions
+          if (dataUrl.length > 1.5 * 1024 * 1024) {
+            const scale = 0.7;
+            canvas.width = Math.round(width * scale);
+            canvas.height = Math.round(height * scale);
+            ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+            dataUrl = canvas.toDataURL('image/jpeg', 0.8);
+          }
+
+          resolve(dataUrl);
+        };
+
+        img.onerror = function() {
+          reject(new Error('Failed to load image'));
+        };
+
+        img.src = URL.createObjectURL(file);
+      });
+    }
 
       const now = new Date();
       const nowLocal = new Date(now.getTime() - now.getTimezoneOffset() * 60000);
