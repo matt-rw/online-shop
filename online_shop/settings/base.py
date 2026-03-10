@@ -177,6 +177,25 @@ MEDIA_URL = "/media/"
 # Allow larger POST data for image uploads (10MB)
 DATA_UPLOAD_MAX_MEMORY_SIZE = 10 * 1024 * 1024  # 10MB
 
+# Cloudinary configuration for persistent media storage
+# Set these environment variables: CLOUDINARY_CLOUD_NAME, CLOUDINARY_API_KEY, CLOUDINARY_API_SECRET
+CLOUDINARY_CLOUD_NAME = get_env_variable("CLOUDINARY_CLOUD_NAME", "")
+CLOUDINARY_API_KEY = get_env_variable("CLOUDINARY_API_KEY", "")
+CLOUDINARY_API_SECRET = get_env_variable("CLOUDINARY_API_SECRET", "")
+
+# Configure Cloudinary if credentials are set
+if CLOUDINARY_CLOUD_NAME and CLOUDINARY_API_KEY and CLOUDINARY_API_SECRET:
+    import cloudinary
+    cloudinary.config(
+        cloud_name=CLOUDINARY_CLOUD_NAME,
+        api_key=CLOUDINARY_API_KEY,
+        api_secret=CLOUDINARY_API_SECRET,
+        secure=True
+    )
+    CLOUDINARY_ENABLED = True
+else:
+    CLOUDINARY_ENABLED = False
+
 # Default storage settings, with the staticfiles storage updated.
 # See https://docs.djangoproject.com/en/5.2/ref/settings/#std-setting-STORAGES
 STORAGES = {

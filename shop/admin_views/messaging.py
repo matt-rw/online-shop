@@ -913,14 +913,25 @@ def messages_dashboard(request):
                         ext = new_filename.rsplit('.', 1)[-1]
                         break
 
-            # Save to media folder
-            filename = f"messages/msg_{uuid.uuid4().hex[:8]}.{ext}"
-            path = default_storage.save(filename, ContentFile(image_content))
-            url = default_storage.url(path)
-
-            # Make URL absolute for emails
-            if url.startswith('/'):
-                url = request.build_absolute_uri(url)
+            # Use Cloudinary if configured, otherwise fall back to local storage
+            from django.conf import settings as django_settings
+            if getattr(django_settings, 'CLOUDINARY_ENABLED', False):
+                import cloudinary.uploader
+                result = cloudinary.uploader.upload(
+                    image_content,
+                    folder="messages",
+                    public_id=f"msg_{uuid.uuid4().hex[:8]}",
+                    resource_type="image"
+                )
+                url = result['secure_url']
+            else:
+                # Save to local media folder
+                filename = f"messages/msg_{uuid.uuid4().hex[:8]}.{ext}"
+                path = default_storage.save(filename, ContentFile(image_content))
+                url = default_storage.url(path)
+                # Make URL absolute for emails
+                if url.startswith('/'):
+                    url = request.build_absolute_uri(url)
 
             return JsonResponse({"success": True, "url": url})
         except Exception as e:

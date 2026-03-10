@@ -43,6 +43,7 @@ def admin_home(request):
     if request.method == "POST" and request.POST.get("action") == "upload_message_image":
         import base64
         import uuid
+        from django.conf import settings as django_settings
         from django.core.files.base import ContentFile
         from django.core.files.storage import default_storage
 
@@ -66,13 +67,24 @@ def admin_home(request):
             ext = filename.rsplit(".", 1)[-1] if "." in filename else "jpg"
             unique_filename = f"messages/{uuid.uuid4().hex}.{ext}"
 
-            # Save to media storage
-            path = default_storage.save(unique_filename, ContentFile(image_bytes))
-            url = default_storage.url(path)
-
-            # Make URL absolute for emails
-            if url.startswith('/'):
-                url = request.build_absolute_uri(url)
+            # Use Cloudinary if configured, otherwise fall back to local storage
+            if getattr(django_settings, 'CLOUDINARY_ENABLED', False):
+                import cloudinary.uploader
+                # Upload to Cloudinary
+                result = cloudinary.uploader.upload(
+                    image_bytes,
+                    folder="messages",
+                    public_id=uuid.uuid4().hex,
+                    resource_type="image"
+                )
+                url = result['secure_url']
+            else:
+                # Save to local media storage
+                path = default_storage.save(unique_filename, ContentFile(image_bytes))
+                url = default_storage.url(path)
+                # Make URL absolute for emails
+                if url.startswith('/'):
+                    url = request.build_absolute_uri(url)
 
             return JsonResponse({"success": True, "url": url})
 
