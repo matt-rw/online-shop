@@ -3,10 +3,13 @@ Order management admin views.
 """
 
 import json
+import logging
 from datetime import datetime
 from decimal import Decimal
 
 from django.conf import settings
+
+logger = logging.getLogger(__name__)
 from django.contrib import messages
 from django.contrib.admin.views.decorators import staff_member_required
 from django.contrib.auth import get_user_model
