@@ -1391,8 +1391,40 @@
     </div>
   </div>
 
+  <!-- Shipping Rates Modal -->
+  <div class="modal-overlay" id="shippingRatesModal">
+    <div class="modal-content" style="max-width: 600px;">
+      <h2 style="font-size: 1.5rem; font-weight: 700; margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem;">
+        <i class="fa-solid fa-truck" style="color: #667eea;"></i> Select Shipping Rate
+      </h2>
+
+      <div id="ratesMessage"></div>
+      <div id="ratesLoading" style="text-align: center; padding: 2rem; color: #64748b;">
+        <i class="fa-solid fa-spinner fa-spin" style="font-size: 1.5rem;"></i>
+        <p style="margin-top: 0.5rem;">Loading available rates...</p>
+      </div>
+
+      <div id="ratesContainer" style="display: none;">
+        <p style="color: #64748b; font-size: 0.875rem; margin-bottom: 1rem;">Choose a shipping option below:</p>
+        <div id="ratesList" style="max-height: 400px; overflow-y: auto;"></div>
+      </div>
+
+      <input type="hidden" id="ratesOrderId">
+
+      <div style="display: flex; gap: 1rem; margin-top: 1.5rem;">
+        <button type="button" id="purchaseLabelBtn" class="btn btn-primary" onclick="purchaseSelectedRate()" disabled style="flex: 1;">
+          <i class="fa-solid fa-tag"></i> Purchase Label
+        </button>
+        <button type="button" class="btn btn-secondary" onclick="closeShippingRatesModal()">
+          Cancel
+        </button>
+      </div>
+    </div>
+  </div>
+
   <script>
     const loadedOrderDetails = {};
+    let selectedRate = null;
 
     async function toggleOrderExpand(row, event) {
       // Don't expand if clicking on action buttons
@@ -1534,12 +1566,17 @@
     }
 
     async function generateLabel(orderId) {
-      if (!confirm('Generate shipping label using EasyPost cheapest rate?')) {
-        return;
-      }
+      // Open modal and fetch rates
+      document.getElementById('ratesOrderId').value = orderId;
+      document.getElementById('ratesLoading').style.display = 'block';
+      document.getElementById('ratesContainer').style.display = 'none';
+      document.getElementById('ratesMessage').innerHTML = '';
+      document.getElementById('purchaseLabelBtn').disabled = true;
+      selectedRate = null;
+      document.getElementById('shippingRatesModal').classList.add('active');
 
       try {
-        const response = await fetch(`/bp-manage/orders/${orderId}/generate-label/`, {
+        const response = await fetch(`/bp-manage/orders/${orderId}/shipping-rates/`, {
           method: 'GET',
           headers: {
             'X-CSRFToken': getCookie('csrftoken')
@@ -1547,18 +1584,183 @@
         });
 
         const data = await response.json();
+        document.getElementById('ratesLoading').style.display = 'none';
 
-        if (data.success) {
-          alert(`Label generated successfully!\n\nTracking: ${data.tracking_number}\nCarrier: ${data.carrier}\nCost: $${data.cost}`);
-          location.reload();
+        if (data.success && data.rates && data.rates.length > 0) {
+          displayShippingRates(data.rates);
         } else {
-          alert(`Error generating label:\n\n${data.error}`);
+          document.getElementById('ratesMessage').innerHTML = `
+            <div style="background: #fef2f2; border: 1px solid #fecaca; border-radius: 8px; padding: 1rem; color: #991b1b;">
+              <i class="fa-solid fa-exclamation-circle"></i> ${data.error || 'No shipping rates available'}
+            </div>`;
         }
       } catch (error) {
         console.error('Error:', error);
-        alert(`Error generating label: ${error.message || 'Unknown error. Check console for details.'}`);
+        document.getElementById('ratesLoading').style.display = 'none';
+        document.getElementById('ratesMessage').innerHTML = `
+          <div style="background: #fef2f2; border: 1px solid #fecaca; border-radius: 8px; padding: 1rem; color: #991b1b;">
+            <i class="fa-solid fa-exclamation-circle"></i> Error fetching rates: ${error.message || 'Unknown error'}
+          </div>`;
       }
     }
+
+    function displayShippingRates(rates) {
+      const container = document.getElementById('ratesList');
+      container.innerHTML = '';
+
+      rates.forEach((rate, index) => {
+        const isRecommended = index === 0;
+        const deliveryText = rate.delivery_days ? `${rate.delivery_days} day${rate.delivery_days > 1 ? 's' : ''}` : 'Varies';
+
+        const rateEl = document.createElement('div');
+        rateEl.className = 'rate-option';
+        rateEl.style.cssText = `
+          border: 2px solid #e2e8f0;
+          border-radius: 10px;
+          padding: 1rem;
+          margin-bottom: 0.75rem;
+          cursor: pointer;
+          transition: all 0.2s;
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          ${isRecommended ? 'border-color: #667eea; background: #f5f3ff;' : ''}
+        `;
+        rateEl.dataset.rateId = rate.id;
+        rateEl.dataset.provider = rate.provider;
+        rateEl.dataset.cost = rate.rate;
+        rateEl.dataset.carrier = rate.carrier;
+        rateEl.dataset.service = rate.service;
+
+        rateEl.innerHTML = `
+          <div style="display: flex; align-items: center; gap: 1rem;">
+            <div style="width: 20px; height: 20px; border: 2px solid ${isRecommended ? '#667eea' : '#cbd5e1'}; border-radius: 50%; display: flex; align-items: center; justify-content: center;" class="rate-radio">
+              ${isRecommended ? '<div style="width: 10px; height: 10px; background: #667eea; border-radius: 50%;"></div>' : ''}
+            </div>
+            <div>
+              <div style="font-weight: 600; color: #1e293b; display: flex; align-items: center; gap: 0.5rem;">
+                ${rate.carrier} ${rate.service}
+                ${isRecommended ? '<span style="background: #667eea; color: white; font-size: 0.625rem; padding: 0.125rem 0.5rem; border-radius: 4px; font-weight: 600;">CHEAPEST</span>' : ''}
+              </div>
+              <div style="font-size: 0.8125rem; color: #64748b; margin-top: 0.25rem;">
+                <i class="fa-solid fa-clock"></i> Est. ${deliveryText}
+              </div>
+            </div>
+          </div>
+          <div style="font-size: 1.25rem; font-weight: 700; color: #0f172a;">
+            $${parseFloat(rate.rate).toFixed(2)}
+          </div>
+        `;
+
+        rateEl.addEventListener('click', () => selectRate(rateEl, rate));
+        rateEl.addEventListener('mouseenter', () => {
+          if (!rateEl.classList.contains('selected')) {
+            rateEl.style.borderColor = '#94a3b8';
+            rateEl.style.background = '#f8fafc';
+          }
+        });
+        rateEl.addEventListener('mouseleave', () => {
+          if (!rateEl.classList.contains('selected')) {
+            rateEl.style.borderColor = '#e2e8f0';
+            rateEl.style.background = 'white';
+          }
+        });
+
+        container.appendChild(rateEl);
+
+        // Auto-select cheapest (first) rate
+        if (isRecommended) {
+          selectRate(rateEl, rate);
+        }
+      });
+
+      document.getElementById('ratesContainer').style.display = 'block';
+    }
+
+    function selectRate(element, rate) {
+      // Deselect all
+      document.querySelectorAll('.rate-option').forEach(el => {
+        el.classList.remove('selected');
+        el.style.borderColor = '#e2e8f0';
+        el.style.background = 'white';
+        el.querySelector('.rate-radio').innerHTML = '';
+      });
+
+      // Select this one
+      element.classList.add('selected');
+      element.style.borderColor = '#667eea';
+      element.style.background = '#f5f3ff';
+      element.querySelector('.rate-radio').innerHTML = '<div style="width: 10px; height: 10px; background: #667eea; border-radius: 50%;"></div>';
+
+      selectedRate = rate;
+      document.getElementById('purchaseLabelBtn').disabled = false;
+    }
+
+    async function purchaseSelectedRate() {
+      if (!selectedRate) return;
+
+      const orderId = document.getElementById('ratesOrderId').value;
+      const btn = document.getElementById('purchaseLabelBtn');
+      const originalText = btn.innerHTML;
+
+      btn.disabled = true;
+      btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Purchasing...';
+
+      try {
+        const formData = new FormData();
+        formData.append('rate_id', selectedRate.id);
+        formData.append('provider', selectedRate.provider);
+
+        const response = await fetch(`/bp-manage/orders/${orderId}/generate-label/`, {
+          method: 'POST',
+          headers: {
+            'X-CSRFToken': getCookie('csrftoken')
+          },
+          body: formData
+        });
+
+        const data = await response.json();
+
+        if (data.success) {
+          closeShippingRatesModal();
+
+          // Open label in new tab for download/printing
+          if (data.label_url) {
+            window.open(data.label_url, '_blank');
+          }
+
+          alert(`Label purchased successfully!\n\nTracking: ${data.tracking_number}\nCarrier: ${data.carrier}\nCost: $${data.cost}\n\nThe label has been opened in a new tab.`);
+          location.reload();
+        } else {
+          document.getElementById('ratesMessage').innerHTML = `
+            <div style="background: #fef2f2; border: 1px solid #fecaca; border-radius: 8px; padding: 1rem; color: #991b1b; margin-bottom: 1rem;">
+              <i class="fa-solid fa-exclamation-circle"></i> ${data.error}
+            </div>`;
+          btn.disabled = false;
+          btn.innerHTML = originalText;
+        }
+      } catch (error) {
+        console.error('Error:', error);
+        document.getElementById('ratesMessage').innerHTML = `
+          <div style="background: #fef2f2; border: 1px solid #fecaca; border-radius: 8px; padding: 1rem; color: #991b1b; margin-bottom: 1rem;">
+            <i class="fa-solid fa-exclamation-circle"></i> Error: ${error.message || 'Unknown error'}
+          </div>`;
+        btn.disabled = false;
+        btn.innerHTML = originalText;
+      }
+    }
+
+    function closeShippingRatesModal() {
+      document.getElementById('shippingRatesModal').classList.remove('active');
+      selectedRate = null;
+    }
+
+    // Close shipping rates modal on overlay click
+    document.getElementById('shippingRatesModal').addEventListener('click', function(e) {
+      if (e.target === this) {
+        closeShippingRatesModal();
+      }
+    });
 
     function openManualTracking(orderId) {
       document.getElementById('orderId').value = orderId;

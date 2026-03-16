@@ -1120,17 +1120,24 @@ def returns_dashboard(request):
     return render(request, "admin/returns_dashboard.html", context)
 
 @staff_member_required
-def generate_shipping_label(request, order_id):
+def get_order_shipping_rates(request, order_id):
     """
-    Auto-generate shipping label using cheapest rate from EasyPost.
+    Get available shipping rates for an existing order.
+    Returns all rate options from EasyPost for user to choose from.
     """
     from django.http import JsonResponse
 
     from shop.models import Order
-    from shop.utils.shipping_helper import create_shipping_label, get_shipping_rates
+    from shop.utils.shipping_helper import get_shipping_rates
 
     try:
         order = Order.objects.get(id=order_id)
+
+        if not order.shipping_address:
+            return JsonResponse(
+                {"success": False, "error": "Order has no shipping address"},
+                status=400,
+            )
 
         # Get all available rates
         rates = get_shipping_rates(order)
@@ -1141,11 +1148,54 @@ def generate_shipping_label(request, order_id):
                 status=400,
             )
 
-        # Use cheapest rate
-        cheapest_rate = rates[0]
+        return JsonResponse({"success": True, "rates": rates})
 
-        # Create label
-        result = create_shipping_label(order, cheapest_rate["id"], cheapest_rate["provider"])
+    except Order.DoesNotExist:
+        return JsonResponse({"success": False, "error": "Order not found"}, status=404)
+    except Exception as e:
+        logger.error(f"Error getting shipping rates: {e}")
+        return JsonResponse({"success": False, "error": str(e)}, status=500)
+
+
+@staff_member_required
+def generate_shipping_label(request, order_id):
+    """
+    Generate shipping label using selected rate from EasyPost.
+    Accepts POST with rate_id and provider, or GET for cheapest rate (legacy).
+    """
+    from django.http import JsonResponse
+
+    from shop.models import Order
+    from shop.utils.shipping_helper import create_shipping_label, get_shipping_rates
+
+    try:
+        order = Order.objects.get(id=order_id)
+
+        # Check if rate was specified (POST request)
+        if request.method == "POST":
+            rate_id = request.POST.get("rate_id")
+            provider = request.POST.get("provider", "easypost")
+
+            if not rate_id:
+                return JsonResponse(
+                    {"success": False, "error": "rate_id is required"},
+                    status=400,
+                )
+        else:
+            # Legacy: GET request uses cheapest rate
+            rates = get_shipping_rates(order)
+
+            if not rates:
+                return JsonResponse(
+                    {"success": False, "error": "No shipping rates available. Check EasyPost configuration."},
+                    status=400,
+                )
+
+            rate_id = rates[0]["id"]
+            provider = rates[0]["provider"]
+
+        # Create label with selected rate
+        result = create_shipping_label(order, rate_id, provider)
 
         return JsonResponse(
             {

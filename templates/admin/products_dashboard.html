@@ -686,7 +686,7 @@
             <td>
               <div style="display: flex; gap: 0.5rem;">
                 <button
-                  onclick="event.stopPropagation(); openEditModal({{ product.id }}, '{{ product.name|escapejs }}', '{{ product.slug }}', '{{ product.category_slug|escapejs }}', '{{ product.description|escapejs }}', '{{ product.base_price }}', '{{ product.base_cost|default:0 }}', {{ product.featured|lower }}, {{ product.available_for_purchase|lower }}, {{ product.images|safe|default:"[]" }})"
+                  onclick="event.stopPropagation(); openEditModal({{ product.id }}, '{{ product.name|escapejs }}', '{{ product.slug }}', '{{ product.category_slug|escapejs }}', '{{ product.description|escapejs }}', '{{ product.base_price }}', '{{ product.base_cost|default:0 }}', {{ product.featured|lower }}, {{ product.available_for_purchase|lower }}, {{ product.images|safe|default:"[]" }}, '{{ product.weight_oz|default:"" }}')"
                   class="btn btn-secondary btn-sm"
                 >
                   <i class="fa-solid fa-edit"></i>
@@ -707,8 +707,9 @@
               data-product-name="{{ product.name|escapejs }}"
               data-base-price="{{ product.base_price }}"
               data-base-cost="{{ product.base_cost|default:0 }}"
+              data-weight-oz="{{ product.weight_oz|default:"" }}"
               style="display: none;">
-            <td colspan="8" style="padding: 0; background: #f8fafc;">
+            <td colspan="9" style="padding: 0; background: #f8fafc;">
               <div class="variants-container" style="padding: 1rem 1rem 1rem 2.5rem;">
                 <div class="variants-loading" style="text-align: center; padding: 1rem; color: #64748b;">
                   <i class="fa-solid fa-spinner fa-spin"></i> Loading variants...
@@ -764,7 +765,7 @@
             <textarea id="edit_description"></textarea>
           </div>
 
-          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1.25rem;">
+          <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 1rem; margin-bottom: 1.25rem;">
             <div class="form-group" style="margin-bottom: 0;">
               <label for="edit_base_price">Base Price ($)</label>
               <input type="number" id="edit_base_price" step="1" required>
@@ -772,6 +773,11 @@
             <div class="form-group" style="margin-bottom: 0;">
               <label for="edit_base_cost">Base Cost ($)</label>
               <input type="number" id="edit_base_cost" step="1" min="0" value="0">
+            </div>
+            <div class="form-group" style="margin-bottom: 0;">
+              <label for="edit_weight_oz">Weight (oz)</label>
+              <input type="number" id="edit_weight_oz" step="0.01" min="0" value="" placeholder="e.g. 8.5">
+              <p style="font-size: 0.7rem; color: #64748b; margin-top: 0.25rem;">For shipping</p>
             </div>
           </div>
 
@@ -932,6 +938,7 @@
         <input type="hidden" id="variants_product_id">
         <input type="hidden" id="variants_base_price">
         <input type="hidden" id="variants_base_cost">
+        <input type="hidden" id="variants_base_weight">
 
         <!-- Summary Stats -->
         <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 1.25rem; margin-bottom: 2rem;">
@@ -1080,6 +1087,25 @@
                 <input type="number" id="variant_cost" step="1" min="0" placeholder="Enter custom cost" style="width: 100%; padding: 0.75rem; border: 2px solid #667eea; border-radius: 8px; font-size: 1rem; font-weight: 600;">
               </div>
               <input type="hidden" id="variant_cost_hidden" value="0">
+            </div>
+            <div class="form-group" style="grid-column: span 2;">
+              <label>Weight (oz) <span style="font-size: 0.75rem; color: #64748b; font-weight: normal;">- for shipping labels</span></label>
+              <div style="display: flex; gap: 0.75rem; margin-bottom: 0.75rem;">
+                <label style="display: flex; align-items: center; gap: 0.5rem; padding: 0.625rem 1rem; background: #f8fafc; border: 2px solid #e2e8f0; border-radius: 8px; cursor: pointer; flex: 1; transition: all 0.2s;" onclick="selectWeightMode('base')" id="weight_mode_base_label">
+                  <input type="radio" name="weight_mode" value="base" id="weight_mode_base" checked style="accent-color: #667eea;">
+                  <div>
+                    <span style="font-weight: 600; color: #374151; font-size: 0.875rem;">Use Base Weight</span>
+                    <span id="base_weight_display" style="display: block; font-size: 0.75rem; color: #64748b;">Not set</span>
+                  </div>
+                </label>
+                <label style="display: flex; align-items: center; gap: 0.5rem; padding: 0.625rem 1rem; background: #f8fafc; border: 2px solid #e2e8f0; border-radius: 8px; cursor: pointer; flex: 1; transition: all 0.2s;" onclick="selectWeightMode('custom')" id="weight_mode_custom_label">
+                  <input type="radio" name="weight_mode" value="custom" id="weight_mode_custom" style="accent-color: #667eea;">
+                  <span style="font-weight: 600; color: #374151; font-size: 0.875rem;">Custom Weight</span>
+                </label>
+              </div>
+              <div id="custom_weight_input" style="display: none;">
+                <input type="number" id="variant_weight" step="0.01" min="0" placeholder="e.g. 8.5" style="width: 100%; padding: 0.75rem; border: 2px solid #667eea; border-radius: 8px; font-size: 1rem; font-weight: 600;">
+              </div>
             </div>
           </div>
         </div>
@@ -1716,8 +1742,9 @@
       const productName = variantsRow.dataset.productName;
       const basePrice = variantsRow.dataset.basePrice;
       const baseCost = variantsRow.dataset.baseCost;
+      const baseWeight = variantsRow.dataset.weightOz;
 
-      openVariantsModal(productId, productName, basePrice, baseCost, []);
+      openVariantsModal(productId, productName, basePrice, baseCost, [], baseWeight);
     }
 
     function updatePrice(input) {
@@ -1750,7 +1777,7 @@
 
     let productImages = [];
 
-    function openEditModal(id, name, slug, category, description, price, cost, featured, available, images) {
+    function openEditModal(id, name, slug, category, description, price, cost, featured, available, images, weightOz) {
       document.getElementById('edit_product_id').value = id;
       document.getElementById('edit_name').value = name;
       document.getElementById('edit_slug').value = slug;
@@ -1758,6 +1785,7 @@
       document.getElementById('edit_description').value = description;
       document.getElementById('edit_base_price').value = price;
       document.getElementById('edit_base_cost').value = cost || 0;
+      document.getElementById('edit_weight_oz').value = weightOz || '';
       document.getElementById('edit_featured').checked = featured;
       document.getElementById('edit_available').checked = available !== false;
 
@@ -1913,6 +1941,7 @@
       formData.append('description', document.getElementById('edit_description').value);
       formData.append('base_price', document.getElementById('edit_base_price').value);
       formData.append('base_cost', document.getElementById('edit_base_cost').value || '0');
+      formData.append('weight_oz', document.getElementById('edit_weight_oz').value || '');
       formData.append('featured', document.getElementById('edit_featured').checked ? 'true' : 'false');
       formData.append('available_for_purchase', document.getElementById('edit_available').checked ? 'true' : 'false');
       formData.append('images', JSON.stringify(productImages));
@@ -2016,10 +2045,11 @@
     let sharedProductImages = [];
 
     // Variants Modal Functions
-    function openVariantsModal(productId, productName, basePrice, baseCost, productImages) {
+    function openVariantsModal(productId, productName, basePrice, baseCost, productImages, baseWeight) {
       document.getElementById('variants_product_id').value = productId;
       document.getElementById('variants_base_price').value = basePrice || '';
       document.getElementById('variants_base_cost').value = baseCost || '0';
+      document.getElementById('variants_base_weight').value = baseWeight || '';
       document.getElementById('variants_modal_title').innerHTML = `<i class="fa-solid fa-shapes"></i> Variants: ${productName}`;
       document.getElementById('variantsModal').classList.add('active');
 
@@ -2060,6 +2090,12 @@
       document.getElementById('base_cost_display').textContent = '$' + parseFloat(baseCost).toFixed(2);
       selectCostMode('base');
       document.getElementById('variant_cost').value = baseCost;
+
+      // Set weight to base weight mode
+      const baseWeight = document.getElementById('variants_base_weight').value || '';
+      document.getElementById('base_weight_display').textContent = baseWeight ? baseWeight + ' oz' : 'Not set';
+      selectWeightMode('base');
+      document.getElementById('variant_weight').value = baseWeight;
 
       // Clear images and custom fields
       variantImages = [];
@@ -2279,6 +2315,34 @@
         baseLabel.style.background = '#f8fafc';
         customInput.style.display = 'block';
         costInput.focus();
+      }
+    }
+
+    function selectWeightMode(mode) {
+      const baseLabel = document.getElementById('weight_mode_base_label');
+      const customLabel = document.getElementById('weight_mode_custom_label');
+      const customInput = document.getElementById('custom_weight_input');
+      const baseWeightRadio = document.getElementById('weight_mode_base');
+      const customWeightRadio = document.getElementById('weight_mode_custom');
+      const weightInput = document.getElementById('variant_weight');
+      const baseWeight = document.getElementById('variants_base_weight').value || '';
+
+      if (mode === 'base') {
+        baseWeightRadio.checked = true;
+        baseLabel.style.borderColor = '#667eea';
+        baseLabel.style.background = '#f5f3ff';
+        customLabel.style.borderColor = '#e2e8f0';
+        customLabel.style.background = '#f8fafc';
+        customInput.style.display = 'none';
+        weightInput.value = baseWeight;
+      } else {
+        customWeightRadio.checked = true;
+        customLabel.style.borderColor = '#667eea';
+        customLabel.style.background = '#f5f3ff';
+        baseLabel.style.borderColor = '#e2e8f0';
+        baseLabel.style.background = '#f8fafc';
+        customInput.style.display = 'block';
+        weightInput.focus();
       }
     }
 
@@ -2979,6 +3043,17 @@
         selectCostMode('base');
       }
 
+      // Set weight mode based on whether variant has custom weight
+      const baseWeight = document.getElementById('variants_base_weight').value || '';
+      document.getElementById('base_weight_display').textContent = baseWeight ? baseWeight + ' oz' : 'Not set';
+      document.getElementById('variant_weight').value = variant.weight_oz || baseWeight;
+
+      if (variant.has_custom_weight) {
+        selectWeightMode('custom');
+      } else {
+        selectWeightMode('base');
+      }
+
       // Load images
       variantImages = variant.images || [];
       displayVariantImages();
@@ -3552,6 +3627,10 @@
       const cost = costInput ? costInput.value : '';
       const costModeBase = document.getElementById('cost_mode_base');
       const useBaseCost = costModeBase ? costModeBase.checked : true;
+      const weightInput = document.getElementById('variant_weight');
+      const weight = weightInput ? weightInput.value : '';
+      const weightModeBase = document.getElementById('weight_mode_base');
+      const useBaseWeight = weightModeBase ? weightModeBase.checked : true;
 
       if (!sizeId || !colorId) {
         showToast('Please select both size and color', 'error');
@@ -3586,6 +3665,8 @@
         'price': price,
         'cost': cost || '',
         'use_base_cost': useBaseCost ? 'true' : 'false',
+        'weight_oz': weight || '',
+        'use_base_weight': useBaseWeight ? 'true' : 'false',
         'images': JSON.stringify(variantImages),
         'custom_fields': JSON.stringify(customFields)
       });
@@ -3983,7 +4064,7 @@
         <textarea id="add_description" name="description" class="form-input" rows="4" placeholder="Enter product description..."></textarea>
       </div>
 
-      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+      <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 1rem;">
         <div class="form-group" style="margin-bottom: 0;">
           <label for="add_base_price">Base Price ($) <span style="color: #ef4444;">*</span></label>
           <input type="number" id="add_base_price" name="base_price" class="form-input" step="1" min="0" placeholder="0.00" required>
@@ -3991,6 +4072,11 @@
         <div class="form-group" style="margin-bottom: 0;">
           <label for="add_base_cost">Base Cost ($)</label>
           <input type="number" id="add_base_cost" name="base_cost" class="form-input" step="1" min="0" placeholder="0.00" value="0">
+        </div>
+        <div class="form-group" style="margin-bottom: 0;">
+          <label for="add_weight_oz">Weight (oz)</label>
+          <input type="number" id="add_weight_oz" name="weight_oz" class="form-input" step="0.01" min="0" placeholder="e.g. 8.5">
+          <p style="font-size: 0.7rem; color: #64748b; margin-top: 0.25rem;">For shipping</p>
         </div>
       </div>
 

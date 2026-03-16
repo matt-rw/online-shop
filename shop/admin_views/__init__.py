@@ -22,6 +22,7 @@ from .orders import (
     add_manual_order,
     update_manual_order,
     returns_dashboard,
+    get_order_shipping_rates,
     generate_shipping_label,
     manual_tracking,
     calculate_shipping_rates,

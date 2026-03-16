@@ -40,6 +40,11 @@ urlpatterns = [
     path("bp-manage/orders/update-manual/", admin_views.update_manual_order, name="update_manual_order"),
     path("bp-manage/orders/search-variants/", admin_views.search_variants_for_order, name="search_variants_for_order"),
     path(
+        "bp-manage/orders/<int:order_id>/shipping-rates/",
+        admin_views.get_order_shipping_rates,
+        name="get_order_shipping_rates",
+    ),
+    path(
         "bp-manage/orders/<int:order_id>/generate-label/",
         admin_views.generate_shipping_label,
         name="generate_shipping_label",

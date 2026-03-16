@@ -149,6 +149,16 @@ def products_dashboard(request):
             except (ValueError, TypeError):
                 base_cost = 0
 
+            # Get weight (optional)
+            weight_oz_str = request.POST.get("weight_oz")
+            weight_oz = None
+            if weight_oz_str:
+                try:
+                    from decimal import Decimal
+                    weight_oz = Decimal(weight_oz_str)
+                except (ValueError, TypeError):
+                    weight_oz = None
+
             # Parse images
             images_json = request.POST.get("images", "[]")
             try:
@@ -167,6 +177,7 @@ def products_dashboard(request):
                     description=request.POST.get("description", ""),
                     base_price=base_price,
                     base_cost=base_cost,
+                    weight_oz=weight_oz,
                     category_obj=category_obj,
                     is_active=request.POST.get("is_active") == "true",
                     featured=request.POST.get("featured") in ("true", "on"),
@@ -225,6 +236,8 @@ def products_dashboard(request):
                 product.description = request.POST.get("description")
                 product.base_price = new_base_price
                 product.base_cost = request.POST.get("base_cost") or 0
+                weight_oz = request.POST.get("weight_oz")
+                product.weight_oz = Decimal(weight_oz) if weight_oz else None
                 product.featured = request.POST.get("featured") == "true"
                 product.available_for_purchase = request.POST.get("available_for_purchase") == "true"
 
@@ -334,6 +347,10 @@ def products_dashboard(request):
                     has_custom_cost = v.cost is not None
                     # Effective cost is variant cost if set, otherwise product base_cost
                     effective_cost = v.cost if v.cost is not None else base_cost
+                    # Check if variant has custom weight (has a value set, not null)
+                    has_custom_weight = v.weight_oz is not None
+                    # Effective weight is variant weight if set, otherwise product weight
+                    effective_weight = v.weight_oz if v.weight_oz is not None else product.weight_oz
                     variants_data.append({
                         "id": v.id,
                         "sku": v.sku,
@@ -348,6 +365,8 @@ def products_dashboard(request):
                         "has_custom_price": has_custom_price,
                         "cost": str(effective_cost) if effective_cost else "0",
                         "has_custom_cost": has_custom_cost,
+                        "weight_oz": str(effective_weight) if effective_weight else "",
+                        "has_custom_weight": has_custom_weight,
                         "is_active": v.is_active,
                         "images": v.images if hasattr(v, "images") else [],
                         "custom_fields": v.custom_fields if hasattr(v, "custom_fields") else {},
@@ -371,6 +390,8 @@ def products_dashboard(request):
             sku = request.POST.get("sku", "")
             stock_quantity = request.POST.get("stock_quantity", 0)
             price = request.POST.get("price")
+            weight_oz = request.POST.get("weight_oz")
+            use_base_weight = request.POST.get("use_base_weight") == "true"
             images_json = request.POST.get("images", "[]")
             custom_fields_json = request.POST.get("custom_fields", "{}")
 
@@ -403,6 +424,13 @@ def products_dashboard(request):
                         {"success": False, "error": f'Variant {" - ".join(parts)} already exists'}
                     )
 
+                from decimal import Decimal
+
+                # Determine weight_oz value
+                variant_weight = None
+                if not use_base_weight and weight_oz:
+                    variant_weight = Decimal(weight_oz)
+
                 variant = ProductVariant.objects.create(
                     product=product,
                     size=size,
@@ -411,6 +439,7 @@ def products_dashboard(request):
                     sku=sku or None,  # Let model auto-generate if empty
                     stock_quantity=stock_quantity,
                     price=price,
+                    weight_oz=variant_weight,
                     images=images,
                     custom_fields=custom_fields,
                     is_active=True,
@@ -440,6 +469,8 @@ def products_dashboard(request):
             price = request.POST.get("price")
             cost = request.POST.get("cost")  # None means use base cost
             use_base_cost = request.POST.get("use_base_cost") == "true"
+            weight_oz = request.POST.get("weight_oz")
+            use_base_weight = request.POST.get("use_base_weight") == "true"
             images_json = request.POST.get("images", "[]")
             custom_fields_json = request.POST.get("custom_fields", "{}")
 
@@ -482,6 +513,12 @@ def products_dashboard(request):
                     variant.cost = None
                 elif cost:
                     variant.cost = cost
+                # Handle weight - None means use base weight, a value means custom weight
+                from decimal import Decimal
+                if use_base_weight:
+                    variant.weight_oz = None
+                elif weight_oz:
+                    variant.weight_oz = Decimal(weight_oz)
                 variant.images = images
                 variant.custom_fields = custom_fields
                 variant.save()

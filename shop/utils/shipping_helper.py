@@ -267,6 +267,7 @@ def create_shipping_label(order, rate_id: str, provider: str) -> Dict:
     order.tracking_number = result["tracking_number"]
     order.carrier = result["carrier"]
     order.label_url = result["label_url"]
+    order.label_cost = result["cost"]
     order.save()
 
     logger.info(
