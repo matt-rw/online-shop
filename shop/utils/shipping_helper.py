@@ -40,8 +40,10 @@ class EasyPostService(ShippingService):
 
     def get_rates(self, order) -> List[Dict]:
         """Get shipping rates from all carriers via EasyPost."""
-        if not self.easypost or not self.api_key:
-            return []
+        if not self.easypost:
+            raise Exception("EasyPost library not installed. Run: pip install easypost")
+        if not self.api_key:
+            raise Exception("EasyPost not configured. Set EASYPOST_API_KEY in environment variables.")
 
         try:
             shipment = self._create_shipment(order)
@@ -208,10 +210,10 @@ class PirateShipService(ShippingService):
         )
 
 
-# Service registry
+# Service registry - only include services that can actually generate labels via API
+# PirateShip is excluded since it requires manual label creation on their website
 AVAILABLE_SERVICES = {
     "easypost": EasyPostService,
-    "pirate_ship": PirateShipService,
 }
 
 

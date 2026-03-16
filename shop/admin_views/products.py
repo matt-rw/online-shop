@@ -268,8 +268,8 @@ def products_dashboard(request):
 
             from shop.models import Color, Material, Size
 
-            sizes = list(Size.objects.all().values("id", "code", "label"))
-            colors = list(Color.objects.all().values("id", "name"))
+            sizes = list(Size.objects.all().values("id", "code", "label", "display_order"))
+            colors = list(Color.objects.all().values("id", "name", "display_order"))
             materials = list(Material.objects.all().values("id", "name"))
 
             return JsonResponse(
@@ -312,7 +312,9 @@ def products_dashboard(request):
             product_id = request.POST.get("product_id")
             try:
                 product = Product.objects.get(id=product_id)
-                variants = product.variants.all().select_related("size", "color", "material")
+                variants = product.variants.all().select_related("size", "color", "material").order_by(
+                    "size__display_order", "size__code", "color__display_order", "color__name"
+                )
 
                 # Get pending shipment data for all variants in this product
                 pending_shipments = ShipmentItem.objects.filter(
@@ -1001,9 +1003,9 @@ def product_wizard(request):
     # Get all categories
     categories = Category.objects.all().order_by("name")
 
-    # Get all standard attribute values
-    sizes = Size.objects.all().order_by("code")
-    colors = Color.objects.all().order_by("name")
+    # Get all standard attribute values (using model default ordering)
+    sizes = Size.objects.all()
+    colors = Color.objects.all()
     materials = Material.objects.all().order_by("name")
 
     # Get custom attributes with their values
@@ -1373,6 +1375,16 @@ def attributes_dashboard(request):
             except Exception as e:
                 return JsonResponse({"success": False, "error": str(e)})
 
+        elif action == "reorder_sizes":
+            try:
+                import json
+                size_ids = json.loads(request.POST.get("size_ids", "[]"))
+                for order, size_id in enumerate(size_ids):
+                    Size.objects.filter(id=size_id).update(display_order=order)
+                return JsonResponse({"success": True})
+            except Exception as e:
+                return JsonResponse({"success": False, "error": str(e)})
+
         # COLOR ACTIONS
         elif action == "create_color":
             try:
@@ -1416,6 +1428,16 @@ def attributes_dashboard(request):
                 return JsonResponse({"success": True})
             except Color.DoesNotExist:
                 return JsonResponse({"success": False, "error": "Color not found"})
+            except Exception as e:
+                return JsonResponse({"success": False, "error": str(e)})
+
+        elif action == "reorder_colors":
+            try:
+                import json
+                color_ids = json.loads(request.POST.get("color_ids", "[]"))
+                for order, color_id in enumerate(color_ids):
+                    Color.objects.filter(id=color_id).update(display_order=order)
+                return JsonResponse({"success": True})
             except Exception as e:
                 return JsonResponse({"success": False, "error": str(e)})
 
@@ -1644,9 +1666,9 @@ def attributes_dashboard(request):
             except Exception as e:
                 return JsonResponse({"success": False, "error": str(e)})
 
-    # GET request - render dashboard
-    sizes = Size.objects.all().order_by("code")
-    colors = Color.objects.all().order_by("name")
+    # GET request - render dashboard (use model's default ordering)
+    sizes = Size.objects.all()
+    colors = Color.objects.all()
     materials = Material.objects.all().order_by("name")
 
     # Get usage counts
@@ -1657,6 +1679,7 @@ def attributes_dashboard(request):
             "id": size.id,
             "code": size.code,
             "label": size.label,
+            "display_order": size.display_order,
             "variant_count": variant_count,
         })
 
@@ -1666,6 +1689,7 @@ def attributes_dashboard(request):
         colors_data.append({
             "id": color.id,
             "name": color.name,
+            "display_order": color.display_order,
             "variant_count": variant_count,
         })
 

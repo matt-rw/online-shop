@@ -1534,6 +1534,22 @@
         html += `<div style="display: flex; justify-content: space-between; padding-top: 0.5rem; border-top: 1px solid #e2e8f0; font-weight: 600;"><span>Total</span><span>$${parseFloat(order.total || 0).toFixed(2)}</span></div>`;
         html += '</div>';
 
+        // Weight info
+        html += '<div style="margin-top: 0.75rem; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 0.625rem 0.875rem;">';
+        html += '<div style="font-size: 0.7rem; text-transform: uppercase; color: #64748b; font-weight: 600; margin-bottom: 0.25rem;"><i class="fa-solid fa-weight-hanging"></i> Package Weight</div>';
+        if (order.total_weight_oz > 0) {
+          const lbs = Math.floor(order.total_weight_oz / 16);
+          const oz = (order.total_weight_oz % 16).toFixed(1);
+          const weightDisplay = lbs > 0 ? `${lbs} lb ${oz} oz` : `${order.total_weight_oz.toFixed(1)} oz`;
+          html += `<div style="font-size: 0.9375rem; font-weight: 600; color: #1e293b;">${weightDisplay}</div>`;
+        } else {
+          html += '<div style="font-size: 0.875rem; color: #94a3b8;">Not set</div>';
+        }
+        if (order.missing_weights && order.missing_weights.length > 0) {
+          html += `<div style="font-size: 0.75rem; color: #dc2626; margin-top: 0.25rem;"><i class="fa-solid fa-exclamation-triangle"></i> Missing: ${order.missing_weights.slice(0, 2).join(', ')}${order.missing_weights.length > 2 ? '...' : ''}</div>`;
+        }
+        html += '</div>';
+
         // Edit button for manual orders
         if (isManual) {
           html += `<button onclick="event.stopPropagation(); editManualOrder(${orderId})" class="btn btn-secondary" style="margin-top: 0.75rem; width: 100%;"><i class="fa-solid fa-edit"></i> Edit Order</button>`;

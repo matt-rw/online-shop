@@ -102,7 +102,10 @@ def orders_dashboard(request):
                 order = Order.objects.get(id=order_id)
 
                 items_data = []
-                for item in order.items.select_related("variant", "shipment_item__shipment"):
+                total_weight_oz = 0
+                missing_weights = []
+
+                for item in order.items.select_related("variant__product", "shipment_item__shipment"):
                     shipment_info = None
                     if item.shipment_item:
                         shipment_info = {
@@ -113,6 +116,20 @@ def orders_dashboard(request):
                             "date_received": item.shipment_item.shipment.date_received.isoformat() if item.shipment_item.shipment.date_received else None,
                         }
 
+                    # Calculate weight for this item
+                    item_weight = None
+                    if item.variant:
+                        # Priority: variant weight > product weight
+                        if item.variant.weight_oz:
+                            item_weight = float(item.variant.weight_oz)
+                        elif item.variant.product.weight_oz:
+                            item_weight = float(item.variant.product.weight_oz)
+
+                    if item_weight:
+                        total_weight_oz += item_weight * item.quantity
+                    else:
+                        missing_weights.append(item.sku)
+
                     items_data.append({
                         "id": item.id,
                         "sku": item.sku,
@@ -122,10 +139,16 @@ def orders_dashboard(request):
                         "unit_cost": float(item.unit_cost) if item.unit_cost else None,
                         "profit": float(item.profit) if item.profit is not None else None,
                         "profit_margin": round(item.profit_margin, 1) if item.profit_margin is not None else None,
+                        "weight_oz": item_weight,
                         "shipment": shipment_info,
                     })
 
-                return JsonResponse({"success": True, "items": items_data})
+                return JsonResponse({
+                    "success": True,
+                    "items": items_data,
+                    "total_weight_oz": round(total_weight_oz, 2),
+                    "missing_weights": missing_weights,
+                })
             except Order.DoesNotExist:
                 return JsonResponse({"success": False, "error": "Order not found"})
             except Exception as e:
@@ -137,10 +160,27 @@ def orders_dashboard(request):
             order_id = request.GET.get("get_order")
             order = Order.objects.get(id=order_id)
 
-            # Get order items
+            # Get order items and calculate weight
             items_data = []
+            total_weight_oz = 0
+            missing_weights = []
+
             for item in order.items.select_related("variant__product", "variant__size", "variant__color"):
                 unit_price = float(item.line_total / item.quantity) if item.quantity > 0 else 0
+
+                # Calculate weight for this item
+                item_weight = None
+                if item.variant:
+                    if item.variant.weight_oz:
+                        item_weight = float(item.variant.weight_oz)
+                    elif item.variant.product.weight_oz:
+                        item_weight = float(item.variant.product.weight_oz)
+
+                if item_weight:
+                    total_weight_oz += item_weight * item.quantity
+                else:
+                    missing_weights.append(item.sku)
+
                 items_data.append({
                     "variant_id": item.variant.id if item.variant else None,
                     "product_name": item.variant.product.name if item.variant else item.sku,
@@ -149,6 +189,7 @@ def orders_dashboard(request):
                     "quantity": item.quantity,
                     "unit_price": unit_price,
                     "line_total": float(item.line_total),
+                    "weight_oz": item_weight,
                 })
 
             # Get shipping address
@@ -177,6 +218,8 @@ def orders_dashboard(request):
                     "tax": float(order.tax),
                     "shipping": float(order.shipping),
                     "total": float(order.total),
+                    "total_weight_oz": round(total_weight_oz, 2),
+                    "missing_weights": missing_weights,
                     "created_at": order.created_at.isoformat(),
                     "items": items_data,
                     "shipping_address": shipping_data,

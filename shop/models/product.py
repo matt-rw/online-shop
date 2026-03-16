@@ -160,6 +160,10 @@ class Size(models.Model):
     #   ('XS', 'XS'), ('S', 'S'), ('M', 'M'), ('L', 'L'), ('XL', 'XL')
     # ]
     label = models.CharField(max_length=64, blank=True)
+    display_order = models.PositiveIntegerField(default=0, help_text="Order in which to display (lower = first)")
+
+    class Meta:
+        ordering = ["display_order", "code"]
 
     def __str__(self):
         return self.label or self.code
@@ -167,6 +171,10 @@ class Size(models.Model):
 
 class Color(models.Model):
     name = models.CharField(max_length=20, unique=True)
+    display_order = models.PositiveIntegerField(default=0, help_text="Order in which to display (lower = first)")
+
+    class Meta:
+        ordering = ["display_order", "name"]
 
     def __str__(self):
         return self.name
