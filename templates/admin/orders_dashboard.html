@@ -1552,11 +1552,11 @@
           alert(`Label generated successfully!\n\nTracking: ${data.tracking_number}\nCarrier: ${data.carrier}\nCost: $${data.cost}`);
           location.reload();
         } else {
-          alert(`Error: ${data.error}`);
+          alert(`Error generating label:\n\n${data.error}`);
         }
       } catch (error) {
         console.error('Error:', error);
-        alert('Error generating label. Please try again.');
+        alert(`Error generating label: ${error.message || 'Unknown error. Check console for details.'}`);
       }
     }
 

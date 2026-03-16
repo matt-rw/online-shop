@@ -63,9 +63,12 @@ class EasyPostService(ShippingService):
 
             return sorted(rates, key=lambda x: x["rate"])
 
+        except ValueError as e:
+            # Re-raise validation errors (like missing weight) so they reach the user
+            raise
         except Exception as e:
             logger.error(f"Error getting EasyPost rates: {e}")
-            return []
+            raise Exception(f"EasyPost error: {str(e)}")
 
     def create_label(self, order, rate_id: str) -> Dict:
         """Create shipping label via EasyPost."""
@@ -217,16 +220,26 @@ def get_shipping_rates(order) -> List[Dict]:
     Get shipping rates from all configured services.
 
     Returns a list of rate options sorted by price.
+    Raises ValueError for validation errors (like missing weights).
     """
     all_rates = []
+    last_error = None
 
     for service_name, service_class in AVAILABLE_SERVICES.items():
         try:
             service = service_class()
             rates = service.get_rates(order)
             all_rates.extend(rates)
+        except ValueError as e:
+            # Re-raise validation errors immediately
+            raise
         except Exception as e:
             logger.error(f"Error getting rates from {service_name}: {e}")
+            last_error = e
+
+    # If no rates and there was an error, raise it
+    if not all_rates and last_error:
+        raise last_error
 
     return sorted(all_rates, key=lambda x: x.get("rate", 999))
 

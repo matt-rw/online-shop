@@ -38,3 +38,4 @@ Thumbs.db
 
 # Documentation (don't ignore, we want to track these)
 # !docs/
+logs/
