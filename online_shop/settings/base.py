@@ -258,6 +258,9 @@ TWILIO_ACCOUNT_SID = get_env_variable("TWILIO_ACCOUNT_SID", "")
 TWILIO_AUTH_TOKEN = get_env_variable("TWILIO_AUTH_TOKEN", "")
 TWILIO_PHONE_NUMBER = get_env_variable("TWILIO_PHONE_NUMBER", "")
 
+# EASYPOST SHIPPING
+EASYPOST_API_KEY = get_env_variable("EASYPOST_API_KEY", "")
+
 # DJANGO-ALLAUTH CONFIGURATION
 SITE_ID = 1  # Required by django.contrib.sites
 
