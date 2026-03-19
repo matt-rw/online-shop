@@ -1412,7 +1412,7 @@
       <input type="hidden" id="ratesOrderId">
 
       <div style="display: flex; gap: 1rem; margin-top: 1.5rem;">
-        <button type="button" id="purchaseLabelBtn" class="btn btn-primary" onclick="purchaseSelectedRate()" disabled style="flex: 1;">
+        <button type="button" id="purchaseLabelBtn" class="btn" onclick="purchaseSelectedRate()" disabled style="flex: 1; background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white; box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);">
           <i class="fa-solid fa-tag"></i> Purchase Label
         </button>
         <button type="button" class="btn btn-secondary" onclick="closeShippingRatesModal()">
@@ -1736,6 +1736,9 @@
       btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Purchasing...';
 
       try {
+        // Get CSRF token from form (more reliable than cookies)
+        const csrfToken = document.querySelector('#manualOrderForm input[name="csrfmiddlewaretoken"]').value;
+
         const formData = new FormData();
         formData.append('rate_id', selectedRate.id);
         formData.append('provider', selectedRate.provider);
@@ -1743,7 +1746,7 @@
         const response = await fetch(`/bp-manage/orders/${orderId}/generate-label/`, {
           method: 'POST',
           headers: {
-            'X-CSRFToken': getCookie('csrftoken')
+            'X-CSRFToken': csrfToken
           },
           body: formData
         });
