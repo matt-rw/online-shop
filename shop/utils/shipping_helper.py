@@ -30,20 +30,21 @@ class EasyPostService(ShippingService):
         try:
             import easypost
 
-            self.easypost = easypost
             self.api_key = getattr(settings, "EASYPOST_API_KEY", None)
             if self.api_key:
-                easypost.api_key = self.api_key
+                self.client = easypost.EasyPostClient(self.api_key)
+            else:
+                self.client = None
         except ImportError:
             logger.warning("EasyPost not installed. Run: pip install easypost")
-            self.easypost = None
+            self.client = None
 
     def get_rates(self, order) -> List[Dict]:
         """Get shipping rates from all carriers via EasyPost."""
-        if not self.easypost:
+        if not self.client:
+            if not self.api_key:
+                raise Exception("EasyPost not configured. Set EASYPOST_API_KEY in environment variables.")
             raise Exception("EasyPost library not installed. Run: pip install easypost")
-        if not self.api_key:
-            raise Exception("EasyPost not configured. Set EASYPOST_API_KEY in environment variables.")
 
         try:
             shipment = self._create_shipment(order)
@@ -74,7 +75,7 @@ class EasyPostService(ShippingService):
 
     def create_label(self, order, rate_id: str) -> Dict:
         """Create shipping label via EasyPost."""
-        if not self.easypost or not self.api_key:
+        if not self.client:
             raise Exception("EasyPost not configured")
 
         try:
@@ -84,15 +85,15 @@ class EasyPostService(ShippingService):
             selected_rate = next((r for r in shipment.rates if r.id == rate_id), None)
             if not selected_rate:
                 # Fall back to cheapest rate
-                selected_rate = shipment.lowest_rate()
+                selected_rate = min(shipment.rates, key=lambda r: float(r.rate))
 
-            shipment.buy(rate=selected_rate)
+            bought_shipment = self.client.shipment.buy(shipment.id, rate=selected_rate)
 
             return {
-                "tracking_number": shipment.tracker.tracking_code,
-                "carrier": shipment.selected_rate.carrier,
-                "label_url": shipment.postage_label.label_url,
-                "cost": float(shipment.selected_rate.rate),
+                "tracking_number": bought_shipment.tracker.tracking_code,
+                "carrier": bought_shipment.selected_rate.carrier,
+                "label_url": bought_shipment.postage_label.label_url,
+                "cost": float(bought_shipment.selected_rate.rate),
             }
 
         except Exception as e:
@@ -101,7 +102,7 @@ class EasyPostService(ShippingService):
 
     def _create_shipment(self, order):
         """Create EasyPost shipment object."""
-        return self.easypost.Shipment.create(
+        return self.client.shipment.create(
             to_address={
                 "name": order.shipping_address.full_name,
                 "street1": order.shipping_address.line1,
