@@ -626,6 +626,22 @@ class SiteSettingsAdmin(admin.ModelAdmin):
             {"fields": ("facebook_url", "instagram_url", "twitter_url", "discord_url")},
         ),
         ("Features", {"fields": ("maintenance_mode",)}),
+        (
+            "Warehouse / Shipping",
+            {
+                "fields": (
+                    "warehouse_name",
+                    "warehouse_street1",
+                    "warehouse_street2",
+                    "warehouse_city",
+                    "warehouse_state",
+                    "warehouse_zip",
+                    "warehouse_country",
+                    "warehouse_phone",
+                ),
+                "description": "Required for EasyPost shipping label generation.",
+            },
+        ),
     )
     readonly_fields = ("updated_at",)
 

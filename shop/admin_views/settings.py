@@ -648,124 +648,40 @@ def quick_links_settings(request):
     return render(request, "admin/quick_links_settings.html", context)
 
 
-def quick_links_settings(request):
+@staff_member_required
+def warehouse_settings(request):
     """
-    Quick Links management page for external service shortcuts.
+    Warehouse and shipping settings management page.
+    Handles warehouse address, default weights, and tax configuration.
     """
-    # Handle AJAX requests
-    if request.headers.get("X-Requested-With") == "XMLHttpRequest":
-        action = request.POST.get("action") or request.GET.get("action")
+    site_settings = SiteSettings.load()
 
-        # For JSON requests, parse body to get action
-        if not action and request.content_type == "application/json":
-            try:
-                body_data = json.loads(request.body)
-                action = body_data.get("action")
-            except (json.JSONDecodeError, ValueError):
-                pass
+    if request.method == "POST":
+        # Update warehouse address fields
+        site_settings.warehouse_name = request.POST.get("warehouse_name", "").strip()
+        site_settings.warehouse_street1 = request.POST.get("warehouse_street1", "").strip()
+        site_settings.warehouse_street2 = request.POST.get("warehouse_street2", "").strip()
+        site_settings.warehouse_city = request.POST.get("warehouse_city", "").strip()
+        site_settings.warehouse_state = request.POST.get("warehouse_state", "").strip()
+        site_settings.warehouse_zip = request.POST.get("warehouse_zip", "").strip()
+        site_settings.warehouse_country = request.POST.get("warehouse_country", "US").strip()
+        site_settings.warehouse_phone = request.POST.get("warehouse_phone", "").strip()
 
-        if action == "get_quick_links":
-            links = QuickLink.objects.all().order_by('display_order', 'name')
-            return JsonResponse({
-                "success": True,
-                "links": [
-                    {
-                        "id": link.id,
-                        "name": link.name,
-                        "url": link.url,
-                        "icon": link.icon,
-                        "username": link.username,
-                        "notes": link.notes,
-                        "category": link.category,
-                        "display_order": link.display_order,
-                        "is_active": link.is_active,
-                    }
-                    for link in links
-                ]
-            })
+        # Update tax rate
+        try:
+            tax = request.POST.get("default_tax_rate", "")
+            if tax:
+                site_settings.default_tax_rate = float(tax)
+        except (ValueError, TypeError):
+            pass
 
-        elif action == "save_quick_link":
-            try:
-                data = json.loads(request.body)
-                link_id = data.get("id")
-                name = data.get("name", "").strip()
-                url = data.get("url", "").strip()
-                icon = data.get("icon", "fa-link").strip() or "fa-link"
-                username = data.get("username", "").strip()
-                notes = data.get("notes", "").strip()
-                category = data.get("category", "other")
-                display_order = int(data.get("display_order", 0))
-                is_active = data.get("is_active", True)
-
-                if not name or not url:
-                    return JsonResponse({"success": False, "error": "Name and URL are required"})
-
-                # Auto-add https:// if no protocol specified
-                if url and not url.startswith(('http://', 'https://')):
-                    url = 'https://' + url
-
-                if link_id:
-                    link = QuickLink.objects.get(id=link_id)
-                    link.name = name
-                    link.url = url
-                    link.icon = icon
-                    link.username = username
-                    link.notes = notes
-                    link.category = category
-                    link.display_order = display_order
-                    link.is_active = is_active
-                    link.save()
-                else:
-                    link = QuickLink.objects.create(
-                        name=name,
-                        url=url,
-                        icon=icon,
-                        username=username,
-                        notes=notes,
-                        category=category,
-                        display_order=display_order,
-                        is_active=is_active,
-                    )
-
-                return JsonResponse({
-                    "success": True,
-                    "link": {
-                        "id": link.id,
-                        "name": link.name,
-                        "url": link.url,
-                        "icon": link.icon,
-                        "username": link.username,
-                        "notes": link.notes,
-                        "category": link.category,
-                        "display_order": link.display_order,
-                        "is_active": link.is_active,
-                    }
-                })
-            except QuickLink.DoesNotExist:
-                return JsonResponse({"success": False, "error": "Link not found"})
-            except Exception as e:
-                return JsonResponse({"success": False, "error": str(e)})
-
-        elif action == "delete_quick_link":
-            try:
-                data = json.loads(request.body)
-                link_id = data.get("id")
-                QuickLink.objects.filter(id=link_id).delete()
-                return JsonResponse({"success": True})
-            except Exception as e:
-                return JsonResponse({"success": False, "error": str(e)})
-
-        return JsonResponse({"success": False, "error": "Unknown action"})
-
-    # Get Quick Links
-    quick_links = QuickLink.objects.all().order_by('display_order', 'name')
+        site_settings.save()
+        messages.success(request, "Warehouse settings saved successfully!")
+        return redirect("admin_warehouse_settings")
 
     context = {
-        "quick_links": quick_links,
-        "quick_link_categories": QuickLink.CATEGORY_CHOICES,
+        "site_settings": site_settings,
         "cst_time": timezone.now().astimezone(pytz.timezone("America/Chicago")),
     }
 
-    return render(request, "admin/quick_links_settings.html", context)
-
-
+    return render(request, "admin/warehouse_settings.html", context)

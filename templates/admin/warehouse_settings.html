@@ -1,0 +1,323 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Warehouse Settings - Blueprint Apparel</title>
+  <link rel="icon" type="image/svg+xml" href="{% static 'admin-favicon.svg' %}">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <style>
+    {% include "admin/partials/dark_mode_styles.html" %}
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background: #f1f5f9;
+      min-height: 100vh;
+    }
+
+    .nav-links {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      padding: 1rem 2rem;
+      display: flex;
+      gap: 0.75rem;
+      align-items: center;
+    }
+
+    .nav-link {
+      background: rgba(255, 255, 255, 0.15);
+      color: white;
+      padding: 0.5rem 1rem;
+      border-radius: 8px;
+      text-decoration: none;
+      font-size: 0.875rem;
+      font-weight: 500;
+      transition: all 0.2s;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .nav-link:hover {
+      background: rgba(255, 255, 255, 0.25);
+    }
+
+    .top-bar {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      padding: 2rem 0;
+      margin-bottom: 2rem;
+    }
+
+    .container {
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 0 2rem;
+    }
+
+    .header h1 {
+      color: white;
+      font-size: 2.5rem;
+      font-weight: 800;
+    }
+
+    .main-content {
+      padding: 0 2rem 2rem 2rem;
+      max-width: 900px;
+      margin: 0 auto;
+    }
+
+    .section-card {
+      background: white;
+      border-radius: 16px;
+      padding: 2rem;
+      margin-bottom: 2rem;
+      box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
+    }
+
+    .section-title {
+      font-size: 1.25rem;
+      font-weight: 700;
+      color: #0f172a;
+      margin-bottom: 1.5rem;
+      padding-bottom: 0.75rem;
+      border-bottom: 2px solid #e2e8f0;
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+
+    .info-box {
+      background: linear-gradient(135deg, #eff6ff 0%, #f0f9ff 100%);
+      border-left: 4px solid #3b82f6;
+      padding: 1rem 1.25rem;
+      border-radius: 8px;
+      margin-bottom: 1.5rem;
+    }
+
+    .info-box p {
+      color: #1e40af;
+      font-size: 0.875rem;
+      line-height: 1.6;
+      margin: 0;
+    }
+
+    .form-group {
+      margin-bottom: 1.25rem;
+    }
+
+    .form-group label {
+      display: block;
+      color: #475569;
+      font-weight: 600;
+      margin-bottom: 0.5rem;
+      font-size: 0.875rem;
+    }
+
+    .form-group input[type="text"],
+    .form-group input[type="number"],
+    .form-group select {
+      width: 100%;
+      padding: 0.75rem 1rem;
+      border: 2px solid #e2e8f0;
+      border-radius: 8px;
+      font-family: inherit;
+      font-size: 1rem;
+      transition: border-color 0.2s;
+    }
+
+    .form-group input:focus,
+    .form-group select:focus {
+      outline: none;
+      border-color: #667eea;
+    }
+
+    .form-row {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 1rem;
+    }
+
+    .form-row-3 {
+      display: grid;
+      grid-template-columns: 2fr 1fr 1fr;
+      gap: 1rem;
+    }
+
+    @media (max-width: 640px) {
+      .form-row-3 {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .btn {
+      padding: 0.75rem 1.5rem;
+      border-radius: 8px;
+      border: none;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-size: 0.9375rem;
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+    }
+
+    .btn-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+    }
+
+    .btn-secondary {
+      background: #f1f5f9;
+      color: #475569;
+      border: 2px solid #e2e8f0;
+    }
+
+    .btn-secondary:hover {
+      background: #e2e8f0;
+    }
+
+    .form-actions {
+      display: flex;
+      gap: 1rem;
+      margin-top: 2rem;
+      padding-top: 1.5rem;
+      border-top: 2px solid #e2e8f0;
+    }
+
+    .success-message {
+      background: linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%);
+      border-left: 4px solid #10b981;
+      padding: 1rem 1.25rem;
+      border-radius: 8px;
+      margin-bottom: 1.5rem;
+      color: #065f46;
+      font-weight: 500;
+    }
+
+    .help-text {
+      color: #64748b;
+      font-size: 0.8125rem;
+      margin-top: 0.25rem;
+    }
+  </style>
+</head>
+<body>
+  {% include "admin/partials/dark_mode_apply.html" %}
+
+  <div class="nav-links">
+    <a href="{% url 'admin_home' %}" class="nav-link">
+      <i class="fa-solid fa-arrow-left"></i> Back to Dashboard
+    </a>
+    <a href="{% url 'admin_orders' %}" class="nav-link">
+      <i class="fa-solid fa-box"></i> Orders
+    </a>
+  </div>
+
+  <div class="top-bar">
+    <div class="container">
+      <div class="header">
+        <h1><i class="fa-solid fa-warehouse"></i> Warehouse Settings</h1>
+      </div>
+    </div>
+  </div>
+
+  <div class="main-content">
+    {% if messages %}
+      {% for message in messages %}
+        <div class="success-message">
+          <i class="fa-solid fa-check-circle"></i> {{ message }}
+        </div>
+      {% endfor %}
+    {% endif %}
+
+    <form method="POST">
+      {% csrf_token %}
+
+      <div class="section-card">
+        <h2 class="section-title">
+          <i class="fa-solid fa-location-dot"></i> Warehouse Address
+        </h2>
+
+        <div class="info-box">
+          <p><i class="fa-solid fa-info-circle"></i> This address is used as the "from" address when generating shipping labels via EasyPost.</p>
+        </div>
+
+        <div class="form-group">
+          <label for="warehouse_name">Business/Warehouse Name</label>
+          <input type="text" id="warehouse_name" name="warehouse_name" value="{{ site_settings.warehouse_name }}" placeholder="Blueprint Apparel">
+        </div>
+
+        <div class="form-group">
+          <label for="warehouse_street1">Street Address</label>
+          <input type="text" id="warehouse_street1" name="warehouse_street1" value="{{ site_settings.warehouse_street1 }}" placeholder="123 Main Street">
+        </div>
+
+        <div class="form-group">
+          <label for="warehouse_street2">Street Address Line 2 (optional)</label>
+          <input type="text" id="warehouse_street2" name="warehouse_street2" value="{{ site_settings.warehouse_street2 }}" placeholder="Suite 100">
+        </div>
+
+        <div class="form-row-3">
+          <div class="form-group">
+            <label for="warehouse_city">City</label>
+            <input type="text" id="warehouse_city" name="warehouse_city" value="{{ site_settings.warehouse_city }}" placeholder="Los Angeles">
+          </div>
+          <div class="form-group">
+            <label for="warehouse_state">State</label>
+            <input type="text" id="warehouse_state" name="warehouse_state" value="{{ site_settings.warehouse_state }}" placeholder="CA">
+          </div>
+          <div class="form-group">
+            <label for="warehouse_zip">ZIP Code</label>
+            <input type="text" id="warehouse_zip" name="warehouse_zip" value="{{ site_settings.warehouse_zip }}" placeholder="90001">
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label for="warehouse_country">Country Code</label>
+            <input type="text" id="warehouse_country" name="warehouse_country" value="{{ site_settings.warehouse_country }}" placeholder="US" maxlength="2">
+            <p class="help-text">Two-letter country code (e.g., US, CA, MX)</p>
+          </div>
+          <div class="form-group">
+            <label for="warehouse_phone">Phone Number (optional)</label>
+            <input type="text" id="warehouse_phone" name="warehouse_phone" value="{{ site_settings.warehouse_phone }}" placeholder="+1 555-123-4567">
+          </div>
+        </div>
+      </div>
+
+      <div class="section-card">
+        <h2 class="section-title">
+          <i class="fa-solid fa-percent"></i> Tax Settings
+        </h2>
+
+        <div class="form-group" style="max-width: 300px;">
+          <label for="default_tax_rate">Default Tax Rate (%)</label>
+          <input type="number" id="default_tax_rate" name="default_tax_rate" value="{{ site_settings.default_tax_rate }}" step="0.001" min="0" max="100" placeholder="8.25">
+          <p class="help-text">Percentage (e.g., 8.25 for 8.25%)</p>
+        </div>
+      </div>
+
+      <div class="form-actions">
+        <button type="submit" class="btn btn-primary">
+          <i class="fa-solid fa-save"></i> Save Settings
+        </button>
+        <a href="{% url 'admin_home' %}" class="btn btn-secondary">
+          <i class="fa-solid fa-times"></i> Cancel
+        </a>
+      </div>
+    </form>
+  </div>
+</body>
+</html>

@@ -74,6 +74,7 @@ urlpatterns = [
     path("bp-manage/security/", admin_views.security_dashboard, name="admin_security"),
     path("bp-manage/homepage/", admin_views.homepage_settings, name="admin_homepage"),
     path("bp-manage/quick-links/", admin_views.quick_links_settings, name="admin_quick_links"),
+    path("bp-manage/warehouse/", admin_views.warehouse_settings, name="admin_warehouse_settings"),
     path("bp-manage/bug-reports/", admin_views.bug_reports_dashboard, name="admin_bug_reports"),
     path("bp-manage/visitors/", admin_views.visitors_dashboard, name="admin_visitors"),
     path("bp-manage/sms/", admin_views.sms_dashboard, name="admin_sms"),

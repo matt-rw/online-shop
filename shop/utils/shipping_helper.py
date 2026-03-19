@@ -49,6 +49,17 @@ class EasyPostService(ShippingService):
         try:
             shipment = self._create_shipment(order)
 
+            if not shipment.rates:
+                # Check for messages from EasyPost about why no rates
+                if hasattr(shipment, 'messages') and shipment.messages:
+                    messages = [m.message for m in shipment.messages if hasattr(m, 'message')]
+                    if messages:
+                        raise Exception(f"No rates available: {'; '.join(messages)}")
+                raise Exception(
+                    "No shipping rates returned. Check that both addresses are valid "
+                    "and the package weight/dimensions are reasonable."
+                )
+
             rates = []
             for rate in shipment.rates:
                 rates.append(
@@ -67,7 +78,7 @@ class EasyPostService(ShippingService):
             return sorted(rates, key=lambda x: x["rate"])
 
         except ValueError as e:
-            # Re-raise validation errors (like missing weight) so they reach the user
+            # Re-raise validation errors (like missing weight, warehouse config) so they reach the user
             raise
         except Exception as e:
             logger.error(f"Error getting EasyPost rates: {e}")
@@ -123,7 +134,7 @@ class EasyPostService(ShippingService):
 
         site_settings = SiteSettings.load()
 
-        return {
+        address = {
             "name": site_settings.warehouse_name or "Blueprint Apparel",
             "street1": site_settings.warehouse_street1 or getattr(settings, "WAREHOUSE_ADDRESS_LINE1", ""),
             "street2": site_settings.warehouse_street2 or "",
@@ -133,6 +144,25 @@ class EasyPostService(ShippingService):
             "country": site_settings.warehouse_country or "US",
             "phone": site_settings.warehouse_phone or "",
         }
+
+        # Validate required fields
+        missing = []
+        if not address["street1"]:
+            missing.append("street address")
+        if not address["city"]:
+            missing.append("city")
+        if not address["state"]:
+            missing.append("state")
+        if not address["zip"]:
+            missing.append("zip code")
+
+        if missing:
+            raise ValueError(
+                f"Warehouse address incomplete. Missing: {', '.join(missing)}. "
+                f"Configure in Django Admin > Site Settings > Warehouse / Shipping."
+            )
+
+        return address
 
     def _calculate_parcel(self, order) -> Dict:
         """Calculate package dimensions and weight for order."""

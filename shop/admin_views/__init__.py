@@ -58,6 +58,7 @@ from .settings import (
     homepage_settings,
     quick_links_settings,
     security_dashboard,
+    warehouse_settings,
 )
 from .analytics import (
     visitors_dashboard,
@@ -112,6 +113,7 @@ __all__ = [
     'homepage_settings',
     'quick_links_settings',
     'security_dashboard',
+    'warehouse_settings',
     # analytics
     'visitors_dashboard',
     'bug_reports_dashboard',
