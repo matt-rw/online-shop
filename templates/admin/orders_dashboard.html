@@ -1263,9 +1263,14 @@
               </td>
               <td>
                 {% if order.tracking_number %}
-                <a href="#" onclick="event.stopPropagation(); showTrackingDetails('{{ order.tracking_number }}', '{{ order.carrier }}', '{{ order.label_url|default:"" }}')" style="color: #10b981; text-decoration: none; font-size: 0.75rem;">
-                  <i class="fa-solid fa-check-circle"></i> {{ order.carrier }}
-                </a>
+                <div style="display: flex; align-items: center; gap: 0.5rem;" onclick="event.stopPropagation();">
+                  <a href="#" onclick="showTrackingDetails('{{ order.tracking_number }}', '{{ order.carrier }}', '{{ order.label_url|default:"" }}')" style="color: #10b981; text-decoration: none; font-size: 0.75rem;">
+                    <i class="fa-solid fa-check-circle"></i> {{ order.carrier }}
+                  </a>
+                  <button class="btn-icon" onclick="generateLabel({{ order.id }})" title="Regenerate Label" style="font-size: 0.7rem; padding: 0.2rem 0.4rem;">
+                    <i class="fa-solid fa-rotate"></i>
+                  </button>
+                </div>
                 {% else %}
                 <div style="display: flex; gap: 0.25rem;" onclick="event.stopPropagation();">
                   <button class="btn-icon" onclick="generateLabel({{ order.id }})" title="Generate Label">
