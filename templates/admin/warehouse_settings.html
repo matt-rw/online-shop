@@ -119,6 +119,7 @@
 
     .form-group input[type="text"],
     .form-group input[type="number"],
+    .form-group input[type="email"],
     .form-group select {
       width: 100%;
       padding: 0.75rem 1rem;
@@ -284,12 +285,13 @@
           </div>
         </div>
 
+        <div class="form-group" style="max-width: 150px;">
+          <label for="warehouse_country">Country Code</label>
+          <input type="text" id="warehouse_country" name="warehouse_country" value="{{ site_settings.warehouse_country }}" placeholder="US" maxlength="2">
+          <p class="help-text">Two-letter code (e.g., US)</p>
+        </div>
+
         <div class="form-row">
-          <div class="form-group">
-            <label for="warehouse_country">Country Code</label>
-            <input type="text" id="warehouse_country" name="warehouse_country" value="{{ site_settings.warehouse_country }}" placeholder="US" maxlength="2">
-            <p class="help-text">Two-letter country code (e.g., US, CA, MX)</p>
-          </div>
           <div class="form-group">
             <label for="warehouse_phone">Phone Number (optional)</label>
             <input type="text" id="warehouse_phone" name="warehouse_phone" value="{{ site_settings.warehouse_phone }}" placeholder="+1 555-123-4567">
