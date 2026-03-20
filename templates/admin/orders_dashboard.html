@@ -1742,6 +1742,8 @@
         const formData = new FormData();
         formData.append('rate_id', selectedRate.id);
         formData.append('provider', selectedRate.provider);
+        formData.append('carrier', selectedRate.carrier);
+        formData.append('service', selectedRate.service);
 
         const response = await fetch(`/bp-manage/orders/${orderId}/generate-label/`, {
           method: 'POST',

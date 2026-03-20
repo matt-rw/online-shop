@@ -84,7 +84,7 @@ class EasyPostService(ShippingService):
             logger.error(f"Error getting EasyPost rates: {e}")
             raise Exception(f"EasyPost error: {str(e)}")
 
-    def create_label(self, order, rate_id: str) -> Dict:
+    def create_label(self, order, rate_id: str, carrier: str = "", service: str = "") -> Dict:
         """Create shipping label via EasyPost."""
         if not self.client:
             raise Exception("EasyPost not configured")
@@ -92,11 +92,24 @@ class EasyPostService(ShippingService):
         try:
             shipment = self._create_shipment(order)
 
-            # Buy the selected rate
+            # Find rate by ID first
             selected_rate = next((r for r in shipment.rates if r.id == rate_id), None)
+
+            # If not found by ID, match by carrier + service (IDs change between shipments)
+            if not selected_rate and carrier and service:
+                selected_rate = next(
+                    (r for r in shipment.rates if r.carrier == carrier and r.service == service),
+                    None
+                )
+                if selected_rate:
+                    logger.info(f"Matched rate by carrier+service: {carrier} {service}")
+
             if not selected_rate:
-                # Fall back to cheapest rate
-                selected_rate = min(shipment.rates, key=lambda r: float(r.rate))
+                available = [(r.carrier, r.service) for r in shipment.rates]
+                raise Exception(
+                    f"Selected rate not found: {carrier} {service}. "
+                    f"Available rates: {available}"
+                )
 
             bought_shipment = self.client.shipment.buy(shipment.id, rate=selected_rate)
 
@@ -278,7 +291,7 @@ def get_shipping_rates(order) -> List[Dict]:
     return sorted(all_rates, key=lambda x: x.get("rate", 999))
 
 
-def create_shipping_label(order, rate_id: str, provider: str) -> Dict:
+def create_shipping_label(order, rate_id: str, provider: str, carrier: str = "", service: str = "") -> Dict:
     """
     Create a shipping label using the specified provider and rate.
 
@@ -286,6 +299,8 @@ def create_shipping_label(order, rate_id: str, provider: str) -> Dict:
         order: Order object
         rate_id: ID of the selected rate
         provider: Provider name (e.g., 'easypost', 'pirate_ship')
+        carrier: Carrier name (e.g., 'USPS', 'FedEx') for matching
+        service: Service name (e.g., 'GroundAdvantage') for matching
 
     Returns:
         Dict with tracking_number, carrier, label_url, cost
@@ -294,8 +309,8 @@ def create_shipping_label(order, rate_id: str, provider: str) -> Dict:
     if not service_class:
         raise ValueError(f"Unknown shipping provider: {provider}")
 
-    service = service_class()
-    result = service.create_label(order, rate_id)
+    svc = service_class()
+    result = svc.create_label(order, rate_id, carrier=carrier, service=service)
 
     # Update order with shipping info
     order.tracking_number = result["tracking_number"]

@@ -1221,6 +1221,8 @@ def generate_shipping_label(request, order_id):
         if request.method == "POST":
             rate_id = request.POST.get("rate_id")
             provider = request.POST.get("provider", "easypost")
+            carrier = request.POST.get("carrier", "")
+            service = request.POST.get("service", "")
 
             if not rate_id:
                 return JsonResponse(
@@ -1239,9 +1241,11 @@ def generate_shipping_label(request, order_id):
 
             rate_id = rates[0]["id"]
             provider = rates[0]["provider"]
+            carrier = rates[0].get("carrier", "")
+            service = rates[0].get("service", "")
 
         # Create label with selected rate
-        result = create_shipping_label(order, rate_id, provider)
+        result = create_shipping_label(order, rate_id, provider, carrier=carrier, service=service)
 
         return JsonResponse(
             {
