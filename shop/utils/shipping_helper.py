@@ -123,6 +123,7 @@ class EasyPostService(ShippingService):
                 "zip": order.shipping_address.postal_code,
                 "country": order.shipping_address.country,
                 "email": order.shipping_address.email or order.email,
+                "phone": order.phone or "",
             },
             from_address=self._get_warehouse_address(),
             parcel=self._calculate_parcel(order),
