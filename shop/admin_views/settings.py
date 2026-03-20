@@ -666,6 +666,7 @@ def warehouse_settings(request):
         site_settings.warehouse_zip = request.POST.get("warehouse_zip", "").strip()
         site_settings.warehouse_country = request.POST.get("warehouse_country", "US").strip()
         site_settings.warehouse_phone = request.POST.get("warehouse_phone", "").strip()
+        site_settings.warehouse_email = request.POST.get("warehouse_email", "").strip()
 
         # Update tax rate
         try:

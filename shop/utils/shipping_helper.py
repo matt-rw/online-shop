@@ -157,6 +157,7 @@ class EasyPostService(ShippingService):
             "zip": site_settings.warehouse_zip or getattr(settings, "WAREHOUSE_ZIP", ""),
             "country": site_settings.warehouse_country or "US",
             "phone": site_settings.warehouse_phone or "",
+            "email": site_settings.warehouse_email or "",
         }
 
         # Validate required fields

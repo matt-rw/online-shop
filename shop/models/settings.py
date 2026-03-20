@@ -140,6 +140,10 @@ class SiteSettings(models.Model):
         max_length=20, blank=True,
         help_text="Warehouse phone number"
     )
+    warehouse_email = models.EmailField(
+        blank=True,
+        help_text="Warehouse contact email"
+    )
 
     # Default shipping weight for products without weight set
     default_product_weight_oz = models.DecimalField(
