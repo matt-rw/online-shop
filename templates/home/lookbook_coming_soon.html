@@ -1,0 +1,83 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Lookbook Coming Soon - Blueprint Apparel{% endblock %}
+
+{% block extra_css %}
+<style>
+  .coming-soon-container {
+    min-height: calc(100vh - 4rem);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 2rem;
+    background: linear-gradient(180deg, #0a0a0a 0%, #1a1a1a 100%);
+  }
+
+  .coming-soon-icon {
+    font-size: 4rem;
+    margin-bottom: 2rem;
+    opacity: 0.5;
+  }
+
+  .coming-soon-title {
+    font-family: 'Playfair Display', serif;
+    font-size: clamp(2rem, 5vw, 3.5rem);
+    font-weight: 400;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: white;
+    margin-bottom: 1rem;
+  }
+
+  .coming-soon-subtitle {
+    font-family: 'Inter', sans-serif;
+    font-size: 1rem;
+    font-weight: 300;
+    color: rgba(255, 255, 255, 0.6);
+    max-width: 400px;
+    line-height: 1.8;
+    margin-bottom: 2rem;
+  }
+
+  .coming-soon-cta {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.75rem;
+    color: white;
+    text-decoration: none;
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    padding: 0.875rem 2rem;
+    border-radius: 4px;
+    font-size: 0.875rem;
+    font-weight: 500;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    transition: all 0.3s;
+  }
+
+  .coming-soon-cta:hover {
+    background: white;
+    color: black;
+    border-color: white;
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="coming-soon-container">
+  <div class="coming-soon-icon">
+    <i class="fa-solid fa-book-open"></i>
+  </div>
+  <h1 class="coming-soon-title">Lookbook</h1>
+  <p class="coming-soon-subtitle">
+    Our lookbook is currently being curated. Check back soon for an immersive look at our latest collection.
+  </p>
+  <a href="{% url 'shop:shop' %}" class="coming-soon-cta">
+    <span>Shop Collection</span>
+    <i class="fa-solid fa-arrow-right"></i>
+  </a>
+</div>
+{% endblock %}

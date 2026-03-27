@@ -484,6 +484,16 @@ def homepage_settings(request):
             except Exception as e:
                 return JsonResponse({"success": False, "error": str(e)})
 
+        elif action == "save_ticker":
+            try:
+                data = json.loads(request.body)
+                news_ticker = data.get("news_ticker", {})
+                site_settings.news_ticker = news_ticker
+                site_settings.save()
+                return JsonResponse({"success": True})
+            except Exception as e:
+                return JsonResponse({"success": False, "error": str(e)})
+
         return JsonResponse({"success": False, "error": "Unknown action"})
 
     if request.method == "POST":
@@ -520,6 +530,7 @@ def homepage_settings(request):
         "site_settings": site_settings,
         "hero_slides": site_settings.hero_slides or [],
         "gallery_images": site_settings.gallery_images or [],
+        "news_ticker": site_settings.news_ticker or {},
         "cst_time": timezone.now().astimezone(pytz.timezone("America/Chicago")),
     }
 
@@ -686,3 +697,157 @@ def warehouse_settings(request):
     }
 
     return render(request, "admin/warehouse_settings.html", context)
+
+
+@staff_member_required
+def lookbook_dashboard(request):
+    """
+    Lookbook list/management page. Shows all lookbooks with ability to create new ones.
+    """
+    from shop.models import Lookbook
+
+    # Handle AJAX requests
+    if request.headers.get("X-Requested-With") == "XMLHttpRequest":
+        action = request.POST.get("action") or request.GET.get("action")
+
+        if not action and request.content_type == "application/json":
+            try:
+                body_data = json.loads(request.body)
+                action = body_data.get("action")
+            except (json.JSONDecodeError, ValueError):
+                pass
+
+        if action == "create_lookbook":
+            try:
+                data = json.loads(request.body)
+                title = data.get("title", "").strip()
+                if not title:
+                    return JsonResponse({"success": False, "error": "Title is required"})
+
+                lookbook = Lookbook.objects.create(
+                    title=title,
+                    description=data.get("description", ""),
+                )
+                return JsonResponse({
+                    "success": True,
+                    "lookbook_id": lookbook.id,
+                    "redirect_url": f"/bp-manage/lookbook/{lookbook.id}/edit/"
+                })
+            except Exception as e:
+                return JsonResponse({"success": False, "error": str(e)})
+
+        elif action == "delete_lookbook":
+            try:
+                data = json.loads(request.body)
+                lookbook_id = data.get("lookbook_id")
+                Lookbook.objects.filter(id=lookbook_id).delete()
+                return JsonResponse({"success": True})
+            except Exception as e:
+                return JsonResponse({"success": False, "error": str(e)})
+
+        elif action == "set_featured":
+            try:
+                data = json.loads(request.body)
+                lookbook_id = data.get("lookbook_id")
+                lookbook = Lookbook.objects.get(id=lookbook_id)
+                lookbook.is_featured = True
+                lookbook.save()  # This will unfeature others
+                return JsonResponse({"success": True})
+            except Lookbook.DoesNotExist:
+                return JsonResponse({"success": False, "error": "Lookbook not found"})
+            except Exception as e:
+                return JsonResponse({"success": False, "error": str(e)})
+
+        elif action == "toggle_published":
+            try:
+                data = json.loads(request.body)
+                lookbook_id = data.get("lookbook_id")
+                lookbook = Lookbook.objects.get(id=lookbook_id)
+                lookbook.is_published = not lookbook.is_published
+                lookbook.save()
+                return JsonResponse({"success": True, "is_published": lookbook.is_published})
+            except Lookbook.DoesNotExist:
+                return JsonResponse({"success": False, "error": "Lookbook not found"})
+            except Exception as e:
+                return JsonResponse({"success": False, "error": str(e)})
+
+        return JsonResponse({"success": False, "error": "Unknown action"})
+
+    lookbooks = Lookbook.objects.all()
+
+    context = {
+        "lookbooks": lookbooks,
+        "cst_time": timezone.now().astimezone(pytz.timezone("America/Chicago")),
+    }
+
+    return render(request, "admin/lookbook_dashboard.html", context)
+
+
+@staff_member_required
+def lookbook_edit(request, lookbook_id):
+    """
+    Edit a specific lookbook's pages and settings.
+    """
+    import base64
+    import uuid
+    from django.core.files.base import ContentFile
+    from django.shortcuts import get_object_or_404
+    from shop.models import Lookbook
+
+    lookbook = get_object_or_404(Lookbook, id=lookbook_id)
+
+    # Handle AJAX requests
+    if request.headers.get("X-Requested-With") == "XMLHttpRequest":
+        action = request.POST.get("action") or request.GET.get("action")
+
+        if not action and request.content_type == "application/json":
+            try:
+                body_data = json.loads(request.body)
+                action = body_data.get("action")
+            except (json.JSONDecodeError, ValueError):
+                pass
+
+        if action == "save_pages":
+            try:
+                data = json.loads(request.body)
+                lookbook.pages = data.get("pages", [])
+                lookbook.settings = data.get("lookbook_settings", {})
+                lookbook.title = data.get("title", lookbook.title)
+                lookbook.description = data.get("description", lookbook.description)
+                lookbook.is_published = data.get("is_published", lookbook.is_published)
+                lookbook.save()
+                return JsonResponse({"success": True})
+            except Exception as e:
+                return JsonResponse({"success": False, "error": str(e)})
+
+        elif action == "upload_page_image":
+            try:
+                from shop.utils.image_optimizer import optimize_image
+
+                image_file = request.FILES.get("image_file")
+                if not image_file:
+                    return JsonResponse({"success": False, "error": "No image file provided"})
+
+                optimized_content, filename, content_type = optimize_image(
+                    image_file,
+                    filename=f"lookbook_{lookbook.id}_{uuid.uuid4().hex[:8]}"
+                )
+
+                from django.core.files.storage import default_storage
+                path = default_storage.save(f"site/lookbook/{filename}", ContentFile(optimized_content))
+                url = default_storage.url(path)
+
+                return JsonResponse({"success": True, "url": url})
+            except Exception as e:
+                return JsonResponse({"success": False, "error": str(e)})
+
+        return JsonResponse({"success": False, "error": "Unknown action"})
+
+    context = {
+        "lookbook": lookbook,
+        "lookbook_pages": lookbook.pages or [],
+        "lookbook_settings": lookbook.settings or {},
+        "cst_time": timezone.now().astimezone(pytz.timezone("America/Chicago")),
+    }
+
+    return render(request, "admin/lookbook_edit.html", context)

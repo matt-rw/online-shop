@@ -1,0 +1,890 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Lookbook - Blueprint Apparel{% endblock %}
+
+{% block extra_css %}
+<style>
+  /* Lookbook Container */
+  .lookbook-container {
+    position: fixed;
+    top: 64px; /* Nav height */
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: #0a0a0a;
+    overflow: hidden;
+    z-index: 50;
+  }
+
+  /* Keep nav visible and styled */
+  header {
+    position: relative;
+    z-index: 100;
+  }
+
+  /* Book wrapper */
+  .book-wrapper {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 2rem;
+  }
+
+  /* The book/spread container */
+  .book {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    height: 100%;
+    max-width: 1600px;
+  }
+
+  /* Spread container - holds one or two pages */
+  .spread {
+    position: absolute;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    height: 100%;
+    opacity: 0;
+    pointer-events: none;
+    padding: 1rem;
+    box-sizing: border-box;
+    backface-visibility: hidden;
+  }
+
+  .spread.active {
+    opacity: 1;
+    pointer-events: auto;
+  }
+
+  /* === FLIP TRANSITION (subtle 3D page lift) === */
+  .transition-flip .book-wrapper {
+    perspective: 2000px;
+    perspective-origin: center center;
+  }
+
+  .transition-flip .book {
+    transform-style: preserve-3d;
+  }
+
+  .transition-flip .spread {
+    transform-style: preserve-3d;
+    transform-origin: center center;
+    transition: transform 0.7s cubic-bezier(0.4, 0.0, 0.2, 1), opacity 0.4s ease;
+  }
+
+  .transition-flip .spread.active {
+    transform: translateX(0) rotateY(0deg) scale(1);
+    opacity: 1;
+    z-index: 10;
+  }
+
+  .transition-flip .spread.prev {
+    transform: translateX(-60%) rotateY(25deg) scale(0.9);
+    opacity: 0;
+    z-index: 5;
+  }
+
+  .transition-flip .spread.next {
+    transform: translateX(60%) rotateY(-25deg) scale(0.9);
+    opacity: 0;
+    z-index: 5;
+  }
+
+  /* === FADE TRANSITION === */
+  .transition-fade .spread {
+    transition: opacity 0.5s ease;
+  }
+
+  .transition-fade .spread.prev,
+  .transition-fade .spread.next {
+    opacity: 0;
+  }
+
+  .transition-fade .spread.active {
+    opacity: 1;
+  }
+
+  /* === SLIDE TRANSITION === */
+  .transition-slide .spread {
+    transition: transform 0.6s cubic-bezier(0.4, 0.0, 0.2, 1), opacity 0.3s ease;
+  }
+
+  .transition-slide .spread.prev {
+    transform: translateX(-100%);
+    opacity: 0;
+  }
+
+  .transition-slide .spread.next {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+
+  .transition-slide .spread.active {
+    transform: translateX(0);
+    opacity: 1;
+  }
+
+  /* Two-page spread */
+  .spread.two-page {
+    gap: 4px;
+  }
+
+  /* Individual page - sized by JavaScript for proper fit */
+  .page {
+    position: relative;
+    background: #1a1a1a;
+    overflow: hidden;
+    box-shadow: 0 10px 60px rgba(0, 0, 0, 0.5);
+  }
+
+  /* Center spine shadow for spreads */
+  .spread.two-page .page.left-page {
+    box-shadow:
+      0 10px 60px rgba(0, 0, 0, 0.5),
+      4px 0 15px -5px rgba(0, 0, 0, 0.4);
+  }
+
+  .spread.two-page .page.right-page {
+    box-shadow:
+      0 10px 60px rgba(0, 0, 0, 0.5),
+      -4px 0 15px -5px rgba(0, 0, 0, 0.4);
+  }
+
+  /* Page content */
+  .page-image {
+    position: absolute;
+    inset: 0;
+    background-size: cover;
+    background-position: center;
+  }
+
+  /* Subtle page edge gradients */
+  .page::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background: linear-gradient(180deg,
+      rgba(255,255,255,0.03) 0%,
+      transparent 5%,
+      transparent 95%,
+      rgba(0,0,0,0.05) 100%
+    );
+  }
+
+  .spread.two-page .page.left-page::before {
+    content: '';
+    position: absolute;
+    right: 0;
+    top: 0;
+    bottom: 0;
+    width: 30px;
+    background: linear-gradient(to left, rgba(0,0,0,0.15), transparent);
+    z-index: 5;
+    pointer-events: none;
+  }
+
+  .spread.two-page .page.right-page::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 30px;
+    background: linear-gradient(to right, rgba(0,0,0,0.15), transparent);
+    z-index: 5;
+    pointer-events: none;
+  }
+
+  /* Cover styling */
+  .cover-page {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .cover-title {
+    font-family: 'Playfair Display', serif;
+    font-size: clamp(1.5rem, 5vw, 3rem);
+    font-weight: 400;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: white;
+    text-shadow: 0 2px 20px rgba(0,0,0,0.5);
+    z-index: 10;
+    text-align: center;
+    padding: 0 1rem;
+  }
+
+  .cover-subtitle {
+    font-family: 'Inter', sans-serif;
+    font-size: clamp(0.6rem, 1.2vw, 0.875rem);
+    font-weight: 300;
+    letter-spacing: 0.3em;
+    text-transform: uppercase;
+    color: rgba(255, 255, 255, 0.8);
+    margin-top: 0.75rem;
+    z-index: 10;
+  }
+
+  /* Page text overlay */
+  .page-text {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    padding: 2.5rem 1.5rem 1.5rem;
+    background: linear-gradient(transparent, rgba(0,0,0,0.8));
+    color: white;
+    opacity: 0;
+    transition: opacity 0.3s;
+  }
+
+  .page:hover .page-text {
+    opacity: 1;
+  }
+
+  .page-title {
+    font-family: 'Playfair Display', serif;
+    font-size: clamp(1rem, 2.5vw, 1.5rem);
+    font-weight: 400;
+    letter-spacing: 0.05em;
+    margin-bottom: 0.25rem;
+    text-transform: uppercase;
+  }
+
+  .page-description {
+    font-family: 'Inter', sans-serif;
+    font-size: clamp(0.65rem, 1vw, 0.75rem);
+    font-weight: 300;
+    letter-spacing: 0.02em;
+    opacity: 0.8;
+    line-height: 1.5;
+  }
+
+  /* Navigation controls */
+  .nav-controls {
+    position: fixed;
+    bottom: 2rem;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+    z-index: 150;
+    padding: 0.75rem 1.5rem;
+    background: rgba(0, 0, 0, 0.6);
+    backdrop-filter: blur(10px);
+    border-radius: 50px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+  }
+
+  .nav-btn {
+    width: 40px;
+    height: 40px;
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    background: transparent;
+    color: white;
+    border-radius: 50%;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+  }
+
+  .nav-btn:hover {
+    background: white;
+    color: black;
+    border-color: white;
+  }
+
+  .nav-btn:disabled {
+    opacity: 0.3;
+    cursor: not-allowed;
+  }
+
+  .nav-btn:disabled:hover {
+    background: transparent;
+    color: white;
+    border-color: rgba(255, 255, 255, 0.3);
+  }
+
+  .page-indicator {
+    color: white;
+    font-family: 'Inter', sans-serif;
+    font-size: 0.875rem;
+    font-weight: 400;
+    letter-spacing: 0.1em;
+    min-width: 80px;
+    text-align: center;
+  }
+
+  /* Close button */
+  .close-btn {
+    position: fixed;
+    top: calc(64px + 1.5rem);
+    right: 1.5rem;
+    width: 48px;
+    height: 48px;
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    background: rgba(0, 0, 0, 0.6);
+    backdrop-filter: blur(10px);
+    color: white;
+    border-radius: 50%;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+    z-index: 200;
+    font-size: 1.25rem;
+  }
+
+  .close-btn:hover {
+    background: white;
+    color: black;
+    border-color: white;
+  }
+
+  /* Keyboard hint */
+  .keyboard-hint {
+    position: fixed;
+    bottom: 6rem;
+    left: 50%;
+    transform: translateX(-50%);
+    color: rgba(255, 255, 255, 0.4);
+    font-family: 'Inter', sans-serif;
+    font-size: 0.75rem;
+    letter-spacing: 0.1em;
+    z-index: 150;
+    transition: opacity 0.5s;
+    text-align: center;
+  }
+
+  .keyboard-hint.hidden {
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  /* Mobile adjustments */
+  /* Mobile: single page at a time (JS handles sizing) */
+  @media (max-width: 768px) {
+    .lookbook-container {
+      top: 56px;
+    }
+
+    .close-btn {
+      top: calc(56px + 1rem);
+      right: 1rem;
+      width: 40px;
+      height: 40px;
+    }
+
+    .book-wrapper {
+      padding: 0.5rem;
+    }
+
+    .nav-controls {
+      bottom: 1rem;
+      padding: 0.5rem 1rem;
+      gap: 1rem;
+    }
+
+    .nav-btn {
+      width: 36px;
+      height: 36px;
+    }
+
+    .keyboard-hint {
+      display: none;
+    }
+  }
+
+  /* Loading state */
+  .loading-overlay {
+    position: fixed;
+    inset: 0;
+    background: #0a0a0a;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 300;
+    transition: opacity 0.5s ease;
+  }
+
+  .loading-overlay.hidden {
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  .loading-spinner {
+    width: 40px;
+    height: 40px;
+    border: 2px solid rgba(255, 255, 255, 0.1);
+    border-top-color: white;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+  }
+
+  @keyframes spin {
+    to { transform: rotate(360deg); }
+  }
+
+  /* Empty state */
+  .empty-lookbook {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    text-align: center;
+    color: white;
+    padding: 2rem;
+  }
+
+  .empty-lookbook h2 {
+    font-family: 'Playfair Display', serif;
+    font-size: 2rem;
+    font-weight: 400;
+    letter-spacing: 0.1em;
+    margin-bottom: 1rem;
+  }
+
+  .empty-lookbook p {
+    font-size: 0.875rem;
+    opacity: 0.6;
+    margin-bottom: 2rem;
+  }
+
+  .empty-lookbook a {
+    color: white;
+    text-decoration: none;
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    padding: 0.75rem 1.5rem;
+    border-radius: 4px;
+    transition: all 0.2s;
+  }
+
+  .empty-lookbook a:hover {
+    background: white;
+    color: black;
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="lookbook-container transition-{{ lookbook_settings.transition_type|default:'flip' }}">
+  <!-- Loading overlay -->
+  <div class="loading-overlay" id="loading">
+    <div class="loading-spinner"></div>
+  </div>
+
+  {% if has_pages %}
+  <!-- Close button -->
+  <a href="{% url 'home' %}" class="close-btn" title="Close Lookbook">
+    <i class="fa-solid fa-xmark"></i>
+  </a>
+
+  <!-- Book -->
+  <div class="book-wrapper">
+    <div class="book" id="book">
+      <!-- Spreads will be generated by JavaScript -->
+    </div>
+  </div>
+
+  <!-- Navigation -->
+  <div class="nav-controls">
+    <button class="nav-btn" id="prev-btn" disabled>
+      <i class="fa-solid fa-chevron-left"></i>
+    </button>
+    <span class="page-indicator" id="page-indicator">1 / 1</span>
+    <button class="nav-btn" id="next-btn">
+      <i class="fa-solid fa-chevron-right"></i>
+    </button>
+  </div>
+
+  <div class="keyboard-hint" id="hint">
+    Use arrow keys to navigate
+  </div>
+
+  {% else %}
+  <div class="empty-lookbook">
+    <h2>Coming Soon</h2>
+    <p>Our lookbook is being prepared. Check back soon.</p>
+    <a href="{% url 'home' %}">Return Home</a>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}
+
+{% block extra_js %}
+{% if has_pages %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  const book = document.getElementById('book');
+  const prevBtn = document.getElementById('prev-btn');
+  const nextBtn = document.getElementById('next-btn');
+  const indicator = document.getElementById('page-indicator');
+  const hint = document.getElementById('hint');
+  const loading = document.getElementById('loading');
+
+  // Page data from Django
+  const allPages = {{ pages|safe }};
+  const showCoverText = {% if lookbook_settings.show_cover_text == False %}false{% else %}true{% endif %};
+  const hasBackCover = {% if lookbook_settings.has_back_cover %}true{% else %}false{% endif %};
+  const coverTitle = "{{ lookbook_settings.cover_title|default:lookbook.title|escapejs }}";
+  const coverSubtitle = "{{ lookbook_settings.cover_subtitle|default:''|escapejs }}";
+
+  if (!book || allPages.length === 0) {
+    if (loading) loading.classList.add('hidden');
+    return;
+  }
+
+  // Detect mobile
+  const isMobile = window.innerWidth <= 768;
+
+  // Build spreads based on device
+  const spreads = [];
+
+  if (isMobile) {
+    // Mobile: every page is a single spread
+    allPages.forEach((page, index) => {
+      spreads.push({
+        type: 'single',
+        pages: [{ ...page, isCover: index === 0, isBackCover: hasBackCover && index === allPages.length - 1 }]
+      });
+    });
+  } else {
+    // Desktop: front cover (single), spreads (two-page), back cover (single if enabled)
+
+    // Determine which pages go where
+    const frontCoverIndex = 0;
+    const backCoverIndex = hasBackCover ? allPages.length - 1 : -1;
+
+    // Front cover is always single
+    spreads.push({
+      type: 'single',
+      pages: [{ ...allPages[frontCoverIndex], isCover: true }]
+    });
+
+    // Middle pages (everything except front and back covers)
+    const middleStart = 1;
+    const middleEnd = hasBackCover ? allPages.length - 1 : allPages.length;
+
+    for (let i = middleStart; i < middleEnd; i += 2) {
+      if (i + 1 < middleEnd) {
+        // Two-page spread
+        spreads.push({
+          type: 'two',
+          pages: [allPages[i], allPages[i + 1]]
+        });
+      } else {
+        // Odd page - show as single
+        spreads.push({
+          type: 'single',
+          pages: [allPages[i]]
+        });
+      }
+    }
+
+    // Back cover (if enabled)
+    if (hasBackCover && allPages.length > 1) {
+      spreads.push({
+        type: 'single',
+        pages: [{ ...allPages[backCoverIndex], isBackCover: true }]
+      });
+    }
+  }
+
+  let currentSpread = 0;
+  const totalSpreads = spreads.length;
+
+  // Calculate page dimensions to fit container while maintaining 3:4 aspect ratio
+  function calculatePageSize(isTwoPage) {
+    const wrapper = document.querySelector('.book-wrapper');
+    const availableWidth = wrapper.clientWidth - 64; // Padding
+    const availableHeight = wrapper.clientHeight - 64;
+    const aspectRatio = 3 / 4; // width / height
+
+    let pageWidth, pageHeight;
+
+    if (isTwoPage) {
+      // Two pages side by side with gap
+      const maxWidthPerPage = (availableWidth - 4) / 2;
+      const maxHeightByWidth = maxWidthPerPage / aspectRatio;
+
+      if (maxHeightByWidth <= availableHeight) {
+        // Width is the constraint
+        pageWidth = maxWidthPerPage;
+        pageHeight = pageWidth / aspectRatio;
+      } else {
+        // Height is the constraint
+        pageHeight = availableHeight;
+        pageWidth = pageHeight * aspectRatio;
+      }
+    } else {
+      // Single page centered
+      const maxWidthByHeight = availableHeight * aspectRatio;
+
+      if (maxWidthByHeight <= availableWidth) {
+        // Height is the constraint
+        pageHeight = availableHeight;
+        pageWidth = pageHeight * aspectRatio;
+      } else {
+        // Width is the constraint
+        pageWidth = availableWidth;
+        pageHeight = pageWidth / aspectRatio;
+      }
+    }
+
+    return { width: Math.floor(pageWidth), height: Math.floor(pageHeight) };
+  }
+
+  // Apply sizes to all pages
+  function resizePages() {
+    const singleSize = calculatePageSize(false);
+    const twoPageSize = calculatePageSize(true);
+
+    document.querySelectorAll('.spread.single-page .page').forEach(page => {
+      page.style.width = singleSize.width + 'px';
+      page.style.height = singleSize.height + 'px';
+    });
+
+    document.querySelectorAll('.spread.two-page .page').forEach(page => {
+      page.style.width = twoPageSize.width + 'px';
+      page.style.height = twoPageSize.height + 'px';
+    });
+  }
+
+  // Create spread elements
+  function createPageElement(pageData, isLeft) {
+    const page = document.createElement('div');
+    page.className = 'page' + (isLeft !== undefined ? (isLeft ? ' left-page' : ' right-page') : '');
+
+    if (pageData.isCover) {
+      page.classList.add('cover-page');
+    }
+
+    // Background image
+    if (pageData.image_url) {
+      const img = document.createElement('div');
+      img.className = 'page-image';
+      let style = `background-image: url('${pageData.image_url}');`;
+      if (pageData.position_x || pageData.position_y) {
+        style += ` background-position: ${pageData.position_x || 50}% ${pageData.position_y || 50}%;`;
+      }
+      if (pageData.zoom && pageData.zoom !== 100) {
+        style += ` background-size: ${pageData.zoom}%;`;
+      }
+      img.style.cssText = style;
+      page.appendChild(img);
+    }
+
+    // Cover text
+    if (pageData.isCover && showCoverText) {
+      const title = document.createElement('div');
+      title.className = 'cover-title';
+      title.textContent = coverTitle;
+      page.appendChild(title);
+
+      if (coverSubtitle) {
+        const subtitle = document.createElement('div');
+        subtitle.className = 'cover-subtitle';
+        subtitle.textContent = coverSubtitle;
+        page.appendChild(subtitle);
+      }
+    }
+
+    // Page text (for non-cover pages)
+    if (!pageData.isCover && (pageData.title || pageData.description)) {
+      const textDiv = document.createElement('div');
+      textDiv.className = 'page-text';
+
+      if (pageData.title) {
+        const h3 = document.createElement('h3');
+        h3.className = 'page-title';
+        h3.textContent = pageData.title;
+        textDiv.appendChild(h3);
+      }
+
+      if (pageData.description) {
+        const p = document.createElement('p');
+        p.className = 'page-description';
+        p.textContent = pageData.description;
+        textDiv.appendChild(p);
+      }
+
+      page.appendChild(textDiv);
+    }
+
+    return page;
+  }
+
+  function createSpreadElement(spreadData, index) {
+    const spread = document.createElement('div');
+    spread.className = 'spread ' + (spreadData.type === 'single' ? 'single-page' : 'two-page');
+    spread.dataset.index = index;
+
+    if (spreadData.type === 'single') {
+      spread.appendChild(createPageElement(spreadData.pages[0]));
+    } else {
+      spread.appendChild(createPageElement(spreadData.pages[0], true));
+      spread.appendChild(createPageElement(spreadData.pages[1], false));
+    }
+
+    return spread;
+  }
+
+  // Build all spreads
+  spreads.forEach((spreadData, index) => {
+    const spreadEl = createSpreadElement(spreadData, index);
+    if (index === 0) {
+      spreadEl.classList.add('active');
+    } else {
+      spreadEl.classList.add('next');
+    }
+    book.appendChild(spreadEl);
+  });
+
+  const spreadElements = document.querySelectorAll('.spread');
+
+  // Size pages to fit
+  resizePages();
+
+  // Resize on window change
+  window.addEventListener('resize', resizePages);
+
+  // Hide loading after images load
+  const images = document.querySelectorAll('.page-image');
+  let loadedImages = 0;
+
+  if (images.length === 0) {
+    loading.classList.add('hidden');
+  } else {
+    images.forEach(img => {
+      const bgImage = img.style.backgroundImage;
+      if (bgImage && bgImage !== 'none') {
+        const url = bgImage.replace(/url\(['"]?([^'"]+)['"]?\)/i, '$1');
+        const testImg = new Image();
+        testImg.onload = testImg.onerror = () => {
+          loadedImages++;
+          if (loadedImages >= images.length) {
+            loading.classList.add('hidden');
+          }
+        };
+        testImg.src = url;
+      } else {
+        loadedImages++;
+        if (loadedImages >= images.length) {
+          loading.classList.add('hidden');
+        }
+      }
+    });
+  }
+
+  // Fallback: hide loading after 3 seconds
+  setTimeout(() => loading.classList.add('hidden'), 3000);
+
+  function updateIndicator() {
+    indicator.textContent = `${currentSpread + 1} / ${totalSpreads}`;
+    prevBtn.disabled = currentSpread === 0;
+    nextBtn.disabled = currentSpread === totalSpreads - 1;
+  }
+
+  function goToSpread(index) {
+    if (index < 0 || index >= totalSpreads || index === currentSpread) return;
+
+    spreadElements.forEach((el, i) => {
+      el.classList.remove('active', 'prev', 'next');
+      if (i === index) {
+        el.classList.add('active');
+      } else if (i < index) {
+        el.classList.add('prev');
+      } else {
+        el.classList.add('next');
+      }
+    });
+
+    currentSpread = index;
+    updateIndicator();
+
+    // Hide hint after first interaction
+    if (hint && !hint.classList.contains('hidden')) {
+      hint.classList.add('hidden');
+    }
+  }
+
+  function navigate(direction) {
+    if (direction === 'next' && currentSpread < totalSpreads - 1) {
+      goToSpread(currentSpread + 1);
+    } else if (direction === 'prev' && currentSpread > 0) {
+      goToSpread(currentSpread - 1);
+    }
+  }
+
+  // Click on spread sides to navigate
+  book.addEventListener('click', (e) => {
+    const rect = book.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const width = rect.width;
+
+    if (x < width / 3) {
+      navigate('prev');
+    } else if (x > width * 2 / 3) {
+      navigate('next');
+    }
+  });
+
+  // Button handlers
+  prevBtn.addEventListener('click', () => navigate('prev'));
+  nextBtn.addEventListener('click', () => navigate('next'));
+
+  // Keyboard navigation
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'ArrowRight' || e.key === ' ') {
+      e.preventDefault();
+      navigate('next');
+    } else if (e.key === 'ArrowLeft') {
+      e.preventDefault();
+      navigate('prev');
+    } else if (e.key === 'Escape') {
+      window.location.href = '{% url "home" %}';
+    }
+  });
+
+  // Swipe support for mobile
+  let touchStartX = 0;
+
+  book.addEventListener('touchstart', (e) => {
+    touchStartX = e.changedTouches[0].screenX;
+  }, { passive: true });
+
+  book.addEventListener('touchend', (e) => {
+    const touchEndX = e.changedTouches[0].screenX;
+    const swipeDistance = touchEndX - touchStartX;
+
+    if (Math.abs(swipeDistance) > 50) {
+      if (swipeDistance > 0) {
+        navigate('prev');
+      } else {
+        navigate('next');
+      }
+    }
+  }, { passive: true });
+
+  // Initial state
+  updateIndicator();
+});
+</script>
+{% endif %}
+{% endblock %}

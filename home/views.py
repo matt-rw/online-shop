@@ -43,11 +43,27 @@ def home_page(request):
     slideshow_settings.setdefault('autoplay', True)
     slideshow_settings.setdefault('transition', 'fade')
 
+    # Get news ticker settings with defaults
+    news_ticker = site_settings.news_ticker or {}
+    news_ticker.setdefault('enabled', True)
+    news_ticker.setdefault('text', '')
+    news_ticker.setdefault('messages', [])
+    news_ticker.setdefault('background_color', '#000000')
+    news_ticker.setdefault('text_color', '#facc15')
+    news_ticker.setdefault('speed', '25')
+
+    # Build ticker content from messages array (or fall back to single text)
+    if news_ticker.get('messages'):
+        news_ticker['ticker_content'] = '   •   '.join(news_ticker['messages'])
+    else:
+        news_ticker['ticker_content'] = news_ticker.get('text', '')
+
     context = {
         "site_settings": site_settings,
         "featured_products": featured_products,
         "hero_slides": hero_slides,
         "gallery_images": gallery_images,
         "slideshow_settings": slideshow_settings,
+        "news_ticker": news_ticker,
     }
     return render(request, "home/home_page.html", context)

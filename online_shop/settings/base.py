@@ -174,8 +174,8 @@ STATIC_URL = "/static/"
 MEDIA_ROOT = os.path.join(BASE_DIR, "media")
 MEDIA_URL = "/media/"
 
-# Allow larger POST data for image uploads (10MB)
-DATA_UPLOAD_MAX_MEMORY_SIZE = 10 * 1024 * 1024  # 10MB
+# File upload settings for lookbook images (up to 50MB)
+FILE_UPLOAD_MAX_MEMORY_SIZE = 5 * 1024 * 1024  # Stream to disk after 5MB
 
 # Cloudinary configuration for persistent media storage
 # Set these environment variables: CLOUDINARY_CLOUD_NAME, CLOUDINARY_API_KEY, CLOUDINARY_API_SECRET
@@ -213,8 +213,8 @@ STORAGES = {
 
 # Django sets a maximum of 1000 fields per form by default, but particularly complex page models
 DATA_UPLOAD_MAX_NUMBER_FIELDS = 10_000
-# Increase max request body size for base64-encoded images (default is 2.5MB)
-DATA_UPLOAD_MAX_MEMORY_SIZE = 10 * 1024 * 1024  # 10MB
+# Increase max request body size for lookbook image uploads (default is 2.5MB)
+DATA_UPLOAD_MAX_MEMORY_SIZE = 55 * 1024 * 1024  # 55MB to handle 50MB files with overhead
 
 
 # TAILWIND

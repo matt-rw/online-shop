@@ -59,6 +59,8 @@ from .settings import (
     quick_links_settings,
     security_dashboard,
     warehouse_settings,
+    lookbook_dashboard,
+    lookbook_edit,
 )
 from .analytics import (
     visitors_dashboard,
@@ -114,6 +116,8 @@ __all__ = [
     'quick_links_settings',
     'security_dashboard',
     'warehouse_settings',
+    'lookbook_dashboard',
+    'lookbook_edit',
     # analytics
     'visitors_dashboard',
     'bug_reports_dashboard',

@@ -14,6 +14,8 @@ urlpatterns = [
     path("coming-soon/", views.coming_soon, name="coming_soon"),
     # About page
     path("about/", views.about, name="about"),
+    # Lookbook
+    path("lookbook/", views.lookbook, name="lookbook"),
     # Privacy Policy
     path("privacy/", views.privacy, name="privacy"),
     # Terms of Service

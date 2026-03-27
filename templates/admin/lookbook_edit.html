@@ -1,0 +1,786 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Edit {{ lookbook.title }} - Blueprint Apparel</title>
+  <link rel="icon" type="image/svg+xml" href="{% static 'admin-favicon.svg' %}">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
+  <style>
+    {% include "admin/partials/dark_mode_styles.html" %}
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background: #f1f5f9;
+      min-height: 100vh;
+    }
+
+    .nav-links {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      padding: 1rem 2rem;
+      display: flex;
+      gap: 0.75rem;
+      align-items: center;
+    }
+    .nav-link {
+      background: rgba(255,255,255,0.15);
+      color: white;
+      padding: 0.5rem 1rem;
+      border-radius: 8px;
+      text-decoration: none;
+      font-size: 0.875rem;
+      font-weight: 500;
+      transition: all 0.2s;
+    }
+    .nav-link:hover { background: rgba(255,255,255,0.25); }
+
+    .top-bar {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      padding: 2rem 0;
+      margin-bottom: 2rem;
+    }
+    .container { max-width: 1400px; margin: 0 auto; padding: 0 2rem; }
+    .header { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem; }
+    .header h1 { color: white; font-size: 1.75rem; font-weight: 800; }
+    .header-actions { display: flex; gap: 0.75rem; align-items: center; }
+
+    .unsaved-badge {
+      background: #fef3c7;
+      color: #b45309;
+      padding: 0.5rem 1rem;
+      border-radius: 8px;
+      font-size: 0.875rem;
+      font-weight: 600;
+      display: none;
+      align-items: center;
+      gap: 0.5rem;
+      animation: pulse 2s infinite;
+    }
+    .unsaved-badge.show { display: flex; }
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.7; }
+    }
+
+    .btn-header {
+      background: white;
+      color: #667eea;
+      padding: 0.625rem 1.25rem;
+      border-radius: 8px;
+      text-decoration: none;
+      font-weight: 600;
+      font-size: 0.875rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      border: none;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .btn-header:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,0,0,0.15); }
+
+    .main-content { padding: 0 2rem 2rem; max-width: 1400px; margin: 0 auto; }
+
+    .section-card {
+      background: white;
+      border-radius: 16px;
+      padding: 2rem;
+      margin-bottom: 2rem;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+    }
+    .section-title {
+      font-size: 1.25rem;
+      font-weight: 700;
+      color: #0f172a;
+      margin-bottom: 1.5rem;
+      padding-bottom: 0.75rem;
+      border-bottom: 2px solid #e2e8f0;
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+
+    /* Form fields */
+    .form-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1.5rem;
+      margin-bottom: 1.5rem;
+    }
+    @media (max-width: 768px) {
+      .form-row { grid-template-columns: 1fr; }
+    }
+    .form-group {
+      margin-bottom: 1rem;
+    }
+    .form-group label {
+      display: block;
+      font-size: 0.8125rem;
+      font-weight: 600;
+      color: #475569;
+      margin-bottom: 0.5rem;
+    }
+    .form-group input,
+    .form-group textarea {
+      width: 100%;
+      padding: 0.75rem 1rem;
+      border: 2px solid #e2e8f0;
+      border-radius: 8px;
+      font-family: inherit;
+      font-size: 1rem;
+    }
+    .form-group input:focus,
+    .form-group textarea:focus {
+      outline: none;
+      border-color: #667eea;
+    }
+    .form-group textarea {
+      min-height: 80px;
+      resize: vertical;
+    }
+
+    /* Pages Grid */
+    .pages-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 1.5rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .page-card {
+      background: white;
+      border: 2px solid #e2e8f0;
+      border-radius: 16px;
+      overflow: hidden;
+      transition: all 0.2s;
+    }
+    .page-card:hover { border-color: #667eea; box-shadow: 0 8px 24px rgba(0,0,0,0.08); }
+    .page-card.sortable-ghost { opacity: 0.4; }
+
+    .page-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0.75rem 1rem;
+      background: #f8fafc;
+      border-bottom: 1px solid #e2e8f0;
+    }
+    .page-number {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-weight: 700;
+      color: #475569;
+    }
+    .page-number span {
+      background: #667eea;
+      color: white;
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.75rem;
+    }
+    .page-header-actions { display: flex; gap: 0.25rem; }
+    .header-btn {
+      width: 28px;
+      height: 28px;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.2s;
+      background: transparent;
+      color: #64748b;
+      font-size: 0.8125rem;
+    }
+    .header-btn:hover { background: #e2e8f0; color: #0f172a; }
+    .header-btn.drag-handle { cursor: grab; }
+    .header-btn.delete:hover { background: #fee2e2; color: #dc2626; }
+
+    .page-image-container {
+      aspect-ratio: 3/4;
+      position: relative;
+      overflow: hidden;
+      cursor: pointer;
+      background: #1e293b;
+    }
+    .page-image-container img {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+    .page-image-placeholder {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100%;
+      color: #64748b;
+      background: linear-gradient(135deg, #e2e8f0 0%, #cbd5e1 100%);
+    }
+    .page-image-placeholder i { font-size: 2rem; margin-bottom: 0.5rem; opacity: 0.5; }
+
+    .page-content { padding: 1rem; }
+    .page-field { margin-bottom: 0.75rem; }
+    .page-field:last-child { margin-bottom: 0; }
+    .page-field label {
+      font-size: 0.6875rem;
+      font-weight: 600;
+      color: #64748b;
+      text-transform: uppercase;
+      margin-bottom: 0.25rem;
+      display: block;
+    }
+    .page-field input,
+    .page-field textarea {
+      width: 100%;
+      padding: 0.5rem 0.75rem;
+      border: 1px solid #e2e8f0;
+      border-radius: 6px;
+      font-size: 0.875rem;
+      font-family: inherit;
+    }
+    .page-field textarea {
+      min-height: 50px;
+      resize: vertical;
+    }
+    .page-field input:focus,
+    .page-field textarea:focus { outline: none; border-color: #667eea; }
+
+    .upload-btn {
+      background: #667eea;
+      color: white;
+      border: none;
+      padding: 0.5rem 1rem;
+      border-radius: 6px;
+      font-size: 0.8125rem;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 0.375rem;
+      transition: all 0.2s;
+      width: 100%;
+      justify-content: center;
+    }
+    .upload-btn:hover { background: #5a67d8; }
+
+    /* Settings */
+    .settings-row {
+      display: flex;
+      gap: 2rem;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+    .control-group {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+    .control-group label {
+      font-size: 0.75rem;
+      font-weight: 700;
+      color: #475569;
+      text-transform: uppercase;
+    }
+    .control-group select {
+      padding: 0.625rem 1rem;
+      border: 2px solid #e2e8f0;
+      border-radius: 8px;
+      font-size: 0.9375rem;
+      background: white;
+      min-width: 140px;
+      cursor: pointer;
+    }
+    .control-group select:focus {
+      outline: none;
+      border-color: #667eea;
+    }
+
+    /* Toggle */
+    .toggle-label-wrap {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      cursor: pointer;
+    }
+    .toggle-label-wrap input { display: none; }
+    .toggle-track {
+      width: 44px;
+      height: 24px;
+      background: #cbd5e1;
+      border-radius: 12px;
+      position: relative;
+      transition: all 0.2s;
+    }
+    .toggle-track::after {
+      content: '';
+      position: absolute;
+      top: 2px;
+      left: 2px;
+      width: 20px;
+      height: 20px;
+      background: white;
+      border-radius: 50%;
+      transition: all 0.2s;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+    }
+    .toggle-label-wrap input:checked + .toggle-track { background: #10b981; }
+    .toggle-label-wrap input:checked + .toggle-track::after { left: 22px; }
+    .toggle-text { font-size: 0.875rem; font-weight: 600; color: #64748b; }
+    .toggle-label-wrap input:checked ~ .toggle-text { color: #10b981; }
+
+    /* Buttons */
+    .btn {
+      padding: 0.75rem 1.25rem;
+      border-radius: 8px;
+      border: none;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-size: 0.9375rem;
+      text-decoration: none;
+    }
+    .btn-primary { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white !important; }
+    .btn-primary:hover { transform: translateY(-1px); }
+    .btn-primary:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+    .btn-secondary { background: #f1f5f9; color: #475569; border: 2px solid #e2e8f0; }
+    .btn-secondary:hover { background: #e2e8f0; }
+    .button-group { display: flex; gap: 1rem; flex-wrap: wrap; margin-top: 1.5rem; }
+
+    /* Empty State */
+    .empty-state {
+      text-align: center;
+      padding: 3rem 2rem;
+      color: #64748b;
+    }
+    .empty-state > i {
+      font-size: 3rem;
+      margin-bottom: 1rem;
+      opacity: 0.5;
+    }
+    .empty-state h3 {
+      font-size: 1.125rem;
+      font-weight: 600;
+      margin-bottom: 0.5rem;
+      color: #475569;
+    }
+    .empty-state p {
+      font-size: 0.875rem;
+      margin-bottom: 1.5rem;
+    }
+
+    /* Toast */
+    .toast {
+      position: fixed;
+      bottom: 2rem;
+      right: 2rem;
+      padding: 1rem 1.5rem;
+      border-radius: 12px;
+      color: white;
+      font-weight: 500;
+      z-index: 1000;
+      animation: slideIn 0.3s ease;
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.2);
+    }
+    .toast-success { background: linear-gradient(135deg, #10b981 0%, #059669 100%); }
+    .toast-error { background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%); }
+    .toast-loading { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); }
+    @keyframes slideIn {
+      from { transform: translateX(100%); opacity: 0; }
+      to { transform: translateX(0); opacity: 1; }
+    }
+  </style>
+  {% include "admin/partials/dark_mode_apply.html" %}
+</head>
+<body>
+  <div class="nav-links">
+    <a href="{% url 'admin_lookbook' %}" class="nav-link"><i class="fas fa-arrow-left"></i> All Lookbooks</a>
+    <a href="{% url 'shop:lookbook' %}" class="nav-link" target="_blank"><i class="fas fa-external-link-alt"></i> View Lookbook</a>
+  </div>
+
+  <div class="top-bar">
+    <div class="container">
+      <div class="header">
+        <h1><i class="fas fa-pen"></i> {{ lookbook.title }}</h1>
+        <div class="header-actions">
+          <div class="unsaved-badge" id="unsaved-badge">
+            <i class="fas fa-exclamation-circle"></i> Unsaved
+          </div>
+          <button class="btn-header" onclick="saveAll()" id="save-btn">
+            <i class="fas fa-save"></i> Save
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="main-content">
+    <!-- Lookbook Details -->
+    <div class="section-card">
+      <h2 class="section-title"><i class="fas fa-info-circle"></i> Details</h2>
+      <div class="form-row">
+        <div class="form-group">
+          <label for="title">Title</label>
+          <input type="text" id="title" value="{{ lookbook.title }}" onchange="markUnsaved()">
+        </div>
+        <div class="form-group">
+          <label for="description">Description</label>
+          <input type="text" id="description" value="{{ lookbook.description }}" placeholder="Brief description..." onchange="markUnsaved()">
+        </div>
+      </div>
+      <div class="settings-row">
+        <div class="control-group">
+          <label class="toggle-label-wrap">
+            <input type="checkbox" id="is-published" {% if lookbook.is_published %}checked{% endif %} onchange="markUnsaved()">
+            <div class="toggle-track"></div>
+            <span class="toggle-text">Published</span>
+          </label>
+        </div>
+        <div class="control-group">
+          <label>Transition</label>
+          <select id="transition-type" onchange="markUnsaved()">
+            <option value="flip" {% if lookbook_settings.transition_type == 'flip' or not lookbook_settings.transition_type %}selected{% endif %}>Page Flip</option>
+            <option value="fade" {% if lookbook_settings.transition_type == 'fade' %}selected{% endif %}>Fade</option>
+            <option value="slide" {% if lookbook_settings.transition_type == 'slide' %}selected{% endif %}>Slide</option>
+          </select>
+        </div>
+      </div>
+      <div class="settings-row" style="margin-top: 1rem;">
+        <div class="control-group">
+          <label class="toggle-label-wrap">
+            <input type="checkbox" id="show-cover-text" {% if lookbook_settings.show_cover_text != False %}checked{% endif %} onchange="markUnsaved()">
+            <div class="toggle-track"></div>
+            <span class="toggle-text">Show Cover Text</span>
+          </label>
+        </div>
+        <div class="control-group">
+          <label class="toggle-label-wrap">
+            <input type="checkbox" id="has-back-cover" {% if lookbook_settings.has_back_cover %}checked{% endif %} onchange="markUnsaved()">
+            <div class="toggle-track"></div>
+            <span class="toggle-text">Has Back Cover</span>
+          </label>
+        </div>
+        <div class="form-group" style="flex: 1;">
+          <label for="cover-title">Cover Title (optional)</label>
+          <input type="text" id="cover-title" value="{{ lookbook_settings.cover_title|default:'' }}" placeholder="Leave blank to use lookbook title" onchange="markUnsaved()">
+        </div>
+        <div class="form-group" style="flex: 1;">
+          <label for="cover-subtitle">Cover Subtitle (optional)</label>
+          <input type="text" id="cover-subtitle" value="{{ lookbook_settings.cover_subtitle|default:'' }}" placeholder="e.g., Spring 2026 Collection" onchange="markUnsaved()">
+        </div>
+      </div>
+    </div>
+
+    <!-- Pages -->
+    <div class="section-card">
+      <h2 class="section-title">
+        <i class="fas fa-images"></i> Pages
+        <span id="page-count" style="font-size: 0.875rem; font-weight: 500; color: #64748b; margin-left: auto;"></span>
+      </h2>
+
+      <div class="pages-grid" id="pages-container"></div>
+
+      <div id="empty-state" class="empty-state" style="display: none;">
+        <i class="fas fa-book-open"></i>
+        <h3>No pages yet</h3>
+        <p>Add your first page to this lookbook.</p>
+        <button type="button" class="btn btn-primary" onclick="addNewPage()">
+          <i class="fas fa-plus"></i> Add Page
+        </button>
+      </div>
+
+      <div class="button-group">
+        <button type="button" class="btn btn-primary" onclick="addNewPage()">
+          <i class="fas fa-plus"></i> Add Page
+        </button>
+        <button type="button" class="btn btn-primary" onclick="saveAll()" id="save-btn-bottom">
+          <i class="fas fa-save"></i> Save Changes
+        </button>
+        <a href="{% url 'admin_lookbook' %}" class="btn btn-secondary">
+          <i class="fas fa-arrow-left"></i> Back to List
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <input type="file" id="page-image-input" accept="image/*" style="display: none;">
+
+  {{ lookbook_pages|json_script:"lookbook-pages-data" }}
+  {{ lookbook_settings|json_script:"lookbook-settings-data" }}
+
+  <script>
+    const csrfToken = '{{ csrf_token }}';
+    const lookbookId = {{ lookbook.id }};
+    let pages = [];
+    try {
+      pages = JSON.parse(document.getElementById('lookbook-pages-data').textContent) || [];
+    } catch(e) { pages = []; }
+
+    let sortableInstance = null;
+    let hasUnsavedChanges = false;
+    let currentUploadIndex = null;
+
+    document.addEventListener('DOMContentLoaded', function() {
+      renderPages();
+      initSortable();
+
+      window.addEventListener('beforeunload', function(e) {
+        if (hasUnsavedChanges) {
+          e.preventDefault();
+          e.returnValue = '';
+        }
+      });
+    });
+
+    function markUnsaved() {
+      hasUnsavedChanges = true;
+      document.getElementById('unsaved-badge').classList.add('show');
+    }
+
+    function markSaved() {
+      hasUnsavedChanges = false;
+      document.getElementById('unsaved-badge').classList.remove('show');
+    }
+
+    function initSortable() {
+      const container = document.getElementById('pages-container');
+      if (sortableInstance) sortableInstance.destroy();
+      sortableInstance = Sortable.create(container, {
+        animation: 150,
+        handle: '.drag-handle',
+        ghostClass: 'sortable-ghost',
+        onEnd: function() {
+          const newPages = [];
+          container.querySelectorAll('.page-card').forEach(card => {
+            const idx = parseInt(card.dataset.index);
+            if (pages[idx]) newPages.push(pages[idx]);
+          });
+          pages = newPages;
+          renderPages();
+          markUnsaved();
+        }
+      });
+    }
+
+    function renderPages() {
+      const container = document.getElementById('pages-container');
+      const emptyState = document.getElementById('empty-state');
+      container.innerHTML = '';
+
+      document.getElementById('page-count').textContent = `${pages.length} page${pages.length !== 1 ? 's' : ''}`;
+
+      if (pages.length === 0) {
+        emptyState.style.display = 'block';
+        return;
+      }
+      emptyState.style.display = 'none';
+
+      pages.forEach((page, index) => {
+        const card = document.createElement('div');
+        card.className = 'page-card';
+        card.dataset.index = index;
+
+        const imageHtml = page.image_url
+          ? `<img src="${page.image_url}" alt="${page.title || ''}">`
+          : `<div class="page-image-placeholder"><i class="fas fa-cloud-upload-alt"></i><span>Click to upload</span></div>`;
+
+        card.innerHTML = `
+          <div class="page-header">
+            <div class="page-number">
+              <span>${index + 1}</span>
+            </div>
+            <div class="page-header-actions">
+              <button class="header-btn" onclick="duplicatePage(${index})" title="Duplicate"><i class="fas fa-copy"></i></button>
+              <button class="header-btn drag-handle" title="Drag to reorder"><i class="fas fa-grip-vertical"></i></button>
+              <button class="header-btn delete" onclick="deletePage(${index})" title="Delete"><i class="fas fa-trash"></i></button>
+            </div>
+          </div>
+          <div class="page-image-container" onclick="triggerUpload(${index})">
+            ${imageHtml}
+          </div>
+          <div class="page-content">
+            <div class="page-field">
+              <label>Title</label>
+              <input type="text" value="${page.title || ''}" placeholder="Optional..." onchange="updatePage(${index}, 'title', this.value)">
+            </div>
+            <div class="page-field">
+              <label>Description</label>
+              <textarea placeholder="Optional..." onchange="updatePage(${index}, 'description', this.value)">${page.description || ''}</textarea>
+            </div>
+            <button class="upload-btn" onclick="triggerUpload(${index})">
+              <i class="fas fa-upload"></i> ${page.image_url ? 'Replace' : 'Upload'}
+            </button>
+          </div>
+        `;
+        container.appendChild(card);
+      });
+
+      initSortable();
+    }
+
+    function addNewPage() {
+      pages.push({
+        image_url: '',
+        title: '',
+        description: '',
+        position_x: 50,
+        position_y: 50,
+        zoom: 100
+      });
+      renderPages();
+      markUnsaved();
+      showToast('Page added', 'success');
+    }
+
+    function duplicatePage(index) {
+      const copy = JSON.parse(JSON.stringify(pages[index]));
+      pages.splice(index + 1, 0, copy);
+      renderPages();
+      markUnsaved();
+      showToast('Page duplicated', 'success');
+    }
+
+    function deletePage(index) {
+      if (!confirm('Delete this page?')) return;
+      pages.splice(index, 1);
+      renderPages();
+      markUnsaved();
+      showToast('Page deleted', 'success');
+    }
+
+    function updatePage(index, field, value) {
+      pages[index][field] = value;
+      markUnsaved();
+    }
+
+    function triggerUpload(index) {
+      currentUploadIndex = index;
+      document.getElementById('page-image-input').click();
+    }
+
+    document.getElementById('page-image-input').addEventListener('change', async function(e) {
+      const file = e.target.files[0];
+      if (!file || currentUploadIndex === null) return;
+
+      if (file.size > 50 * 1024 * 1024) {
+        showToast('Image too large (max 50MB)', 'error');
+        e.target.value = '';
+        return;
+      }
+
+      showToast('Uploading image...', 'loading');
+
+      try {
+        // Upload file directly
+        const formData = new FormData();
+        formData.append('action', 'upload_page_image');
+        formData.append('image_file', file);
+
+        const response = await fetch(`/bp-manage/lookbook/${lookbookId}/edit/`, {
+          method: 'POST',
+          headers: {
+            'X-Requested-With': 'XMLHttpRequest',
+            'X-CSRFToken': csrfToken
+          },
+          body: formData
+        });
+
+        const data = await response.json();
+
+        if (data.success) {
+          pages[currentUploadIndex].image_url = data.url;
+          renderPages();
+          markUnsaved();
+          showToast('Image uploaded', 'success');
+        } else {
+          showToast('Upload failed: ' + (data.error || 'Unknown error'), 'error');
+        }
+      } catch (error) {
+        console.error('Upload error:', error);
+        showToast('Upload failed: ' + error.message, 'error');
+      }
+
+      e.target.value = '';
+    });
+
+    async function saveAll() {
+      const btns = document.querySelectorAll('#save-btn, #save-btn-bottom');
+      btns.forEach(btn => {
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
+      });
+
+      const data = {
+        action: 'save_pages',
+        pages: pages,
+        title: document.getElementById('title').value.trim(),
+        description: document.getElementById('description').value.trim(),
+        is_published: document.getElementById('is-published').checked,
+        lookbook_settings: {
+          transition_type: document.getElementById('transition-type').value,
+          show_cover_text: document.getElementById('show-cover-text').checked,
+          has_back_cover: document.getElementById('has-back-cover').checked,
+          cover_title: document.getElementById('cover-title').value.trim(),
+          cover_subtitle: document.getElementById('cover-subtitle').value.trim()
+        }
+      };
+
+      try {
+        const response = await fetch(`/bp-manage/lookbook/${lookbookId}/edit/`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-Requested-With': 'XMLHttpRequest',
+            'X-CSRFToken': csrfToken
+          },
+          body: JSON.stringify(data)
+        });
+
+        const result = await response.json();
+        if (result.success) {
+          markSaved();
+          showToast('Saved!', 'success');
+        } else {
+          showToast('Error: ' + result.error, 'error');
+        }
+      } catch (error) {
+        showToast('Error: ' + error.message, 'error');
+      } finally {
+        btns.forEach(btn => {
+          btn.disabled = false;
+          btn.innerHTML = '<i class="fas fa-save"></i> Save';
+        });
+      }
+    }
+
+    function showToast(message, type) {
+      document.querySelectorAll('.toast').forEach(t => t.remove());
+      const icons = { success: 'check-circle', error: 'exclamation-circle', loading: 'spinner fa-spin' };
+      const toast = document.createElement('div');
+      toast.className = `toast toast-${type === 'loading' ? 'loading' : type}`;
+      toast.innerHTML = `<i class="fas fa-${icons[type]}"></i> ${message}`;
+      document.body.appendChild(toast);
+      if (type !== 'loading') {
+        setTimeout(() => toast.remove(), 3000);
+      }
+    }
+  </script>
+</body>
+</html>

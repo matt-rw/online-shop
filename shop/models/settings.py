@@ -75,6 +75,12 @@ class SiteSettings(models.Model):
         help_text="Gallery images below products. Each has: image_url, alt_text"
     )
 
+    # News ticker settings
+    news_ticker = models.JSONField(
+        default=dict, blank=True,
+        help_text="News ticker settings: enabled, text, background_color, text_color, speed"
+    )
+
     # Site metadata
     site_name = models.CharField(max_length=100, default="Blueprint Apparel")
     site_description = models.TextField(blank=True)
@@ -155,6 +161,16 @@ class SiteSettings(models.Model):
     default_tax_rate = models.DecimalField(
         max_digits=5, decimal_places=3, default=0,
         help_text="Default tax rate percentage for in-person sales (e.g., 8.25 for 8.25%)"
+    )
+
+    # Lookbook settings
+    lookbook_pages = models.JSONField(
+        default=list, blank=True,
+        help_text="Lookbook pages. Each page has: image_url, title, description, products (optional)"
+    )
+    lookbook_settings = models.JSONField(
+        default=dict, blank=True,
+        help_text="Lookbook settings: is_published, transition_type, etc."
     )
 
     updated_at = models.DateTimeField(auto_now=True)

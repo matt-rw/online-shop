@@ -887,6 +887,68 @@
         </button>
       </div>
     </div>
+
+    <!-- News Ticker -->
+    <div class="section-card">
+      <h2 class="section-title"><i class="fas fa-newspaper"></i> News Ticker</h2>
+      <p style="color: #64748b; font-size: 0.875rem; margin-bottom: 1.5rem;">
+        Scrolling announcement banner displayed on the homepage. Add multiple messages to display them in rotation.
+      </p>
+
+      <div class="form-group">
+        <label class="toggle-label-wrap">
+          <input type="checkbox" id="ticker-enabled" onchange="markUnsaved()">
+          <div class="toggle-track"></div>
+          <span class="toggle-text">Show Ticker</span>
+        </label>
+      </div>
+
+      <div class="form-group">
+        <label>Messages <span id="ticker-message-count" style="font-weight: 400; color: #64748b;"></span></label>
+        <div id="ticker-messages-container" style="display: flex; flex-direction: column; gap: 0.75rem;"></div>
+        <button type="button" class="btn btn-secondary btn-sm" onclick="addTickerMessage()" style="margin-top: 0.75rem;">
+          <i class="fas fa-plus"></i> Add Message
+        </button>
+      </div>
+
+      <div style="display: flex; gap: 1.5rem; flex-wrap: wrap;">
+        <div class="form-group" style="flex: 1; min-width: 200px;">
+          <label for="ticker-bg-color">Background Color</label>
+          <div style="display: flex; gap: 0.5rem; align-items: center;">
+            <input type="color" id="ticker-bg-color" value="#000000" onchange="markUnsaved(); updateTickerPreview();" style="width: 50px; height: 38px; padding: 2px; border: 2px solid #e2e8f0; border-radius: 8px; cursor: pointer;">
+            <input type="text" id="ticker-bg-color-text" value="#000000" onchange="document.getElementById('ticker-bg-color').value = this.value; markUnsaved(); updateTickerPreview();" style="flex: 1;">
+          </div>
+        </div>
+        <div class="form-group" style="flex: 1; min-width: 200px;">
+          <label for="ticker-text-color">Text Color</label>
+          <div style="display: flex; gap: 0.5rem; align-items: center;">
+            <input type="color" id="ticker-text-color" value="#facc15" onchange="markUnsaved(); updateTickerPreview();" style="width: 50px; height: 38px; padding: 2px; border: 2px solid #e2e8f0; border-radius: 8px; cursor: pointer;">
+            <input type="text" id="ticker-text-color-text" value="#facc15" onchange="document.getElementById('ticker-text-color').value = this.value; markUnsaved(); updateTickerPreview();" style="flex: 1;">
+          </div>
+        </div>
+        <div class="control-group" style="flex: 1; min-width: 160px;">
+          <label><i class="fas fa-tachometer-alt"></i> Scroll Speed</label>
+          <select id="ticker-speed" onchange="markUnsaved()">
+            <option value="40">Slow</option>
+            <option value="25" selected>Normal</option>
+            <option value="15">Fast</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label>Preview</label>
+        <div id="ticker-preview" style="overflow: hidden; border-radius: 8px; padding: 0.75rem 0;">
+          <div id="ticker-preview-text" style="font-family: monospace; font-weight: bold; white-space: nowrap;"></div>
+        </div>
+      </div>
+
+      <div class="button-group">
+        <button type="button" class="btn btn-primary" onclick="saveTicker()" id="save-ticker-btn">
+          <i class="fas fa-save"></i> Save Ticker
+        </button>
+      </div>
+    </div>
   </div>
 
   <!-- Position Modal -->
@@ -1001,6 +1063,7 @@
   {{ hero_slides|json_script:"hero-slides-data" }}
   {{ site_settings.slideshow_settings|json_script:"slideshow-settings-data" }}
   {{ gallery_images|json_script:"gallery-images-data" }}
+  {{ news_ticker|json_script:"news-ticker-data" }}
 
   <script>
     const csrfToken = '{{ csrf_token }}';
@@ -1781,6 +1844,177 @@
       updateGalleryPreviewPosition();
       updateGalleryCardPosition(currentGalleryPositionIndex);
       markUnsaved();
+    }
+
+    // ============================================
+    // NEWS TICKER
+    // ============================================
+    let newsTicker = {};
+    let tickerMessages = [];
+    try {
+      newsTicker = JSON.parse(document.getElementById('news-ticker-data').textContent) || {};
+    } catch(e) { newsTicker = {}; }
+
+    document.addEventListener('DOMContentLoaded', function() {
+      // Load ticker settings
+      document.getElementById('ticker-enabled').checked = newsTicker.enabled !== false;
+      document.getElementById('ticker-bg-color').value = newsTicker.background_color || '#000000';
+      document.getElementById('ticker-bg-color-text').value = newsTicker.background_color || '#000000';
+      document.getElementById('ticker-text-color').value = newsTicker.text_color || '#facc15';
+      document.getElementById('ticker-text-color-text').value = newsTicker.text_color || '#facc15';
+      document.getElementById('ticker-speed').value = newsTicker.speed || '25';
+
+      // Load messages (support both old single text and new messages array)
+      if (newsTicker.messages && newsTicker.messages.length > 0) {
+        tickerMessages = newsTicker.messages.slice();
+      } else if (newsTicker.text) {
+        tickerMessages = [newsTicker.text];
+      } else {
+        tickerMessages = [];
+      }
+
+      renderTickerMessages();
+      updateTickerPreview();
+    });
+
+    function renderTickerMessages() {
+      const container = document.getElementById('ticker-messages-container');
+      container.innerHTML = '';
+
+      document.getElementById('ticker-message-count').textContent =
+        tickerMessages.length > 0 ? `(${tickerMessages.length})` : '';
+
+      tickerMessages.forEach((msg, index) => {
+        const row = document.createElement('div');
+        row.style.cssText = 'display: flex; gap: 0.5rem; align-items: center;';
+        row.innerHTML = `
+          <span style="color: #64748b; font-size: 0.75rem; font-weight: 600; min-width: 24px;">#${index + 1}</span>
+          <input type="text" value="${escapeHtml(msg)}"
+                 placeholder="Enter message..."
+                 onchange="updateTickerMessage(${index}, this.value)"
+                 oninput="updateTickerPreview()"
+                 style="flex: 1; padding: 0.75rem 1rem; border: 2px solid #e2e8f0; border-radius: 8px; font-size: 1rem;">
+          <button type="button" onclick="deleteTickerMessage(${index})"
+                  style="width: 38px; height: 38px; border: none; background: #fee2e2; color: #dc2626; border-radius: 8px; cursor: pointer; display: flex; align-items: center; justify-content: center;"
+                  title="Delete message">
+            <i class="fas fa-trash"></i>
+          </button>
+        `;
+        container.appendChild(row);
+      });
+
+      if (tickerMessages.length === 0) {
+        container.innerHTML = '<p style="color: #94a3b8; font-size: 0.875rem; padding: 0.75rem 0;">No messages yet. Click "Add Message" to create one.</p>';
+      }
+    }
+
+    function escapeHtml(text) {
+      const div = document.createElement('div');
+      div.textContent = text;
+      return div.innerHTML.replace(/"/g, '&quot;');
+    }
+
+    function addTickerMessage() {
+      if (tickerMessages.length >= 5) {
+        showToast('Maximum 5 messages', 'warning');
+        return;
+      }
+      tickerMessages.push('');
+      renderTickerMessages();
+      markUnsaved();
+      // Focus the new input
+      const inputs = document.querySelectorAll('#ticker-messages-container input');
+      if (inputs.length > 0) inputs[inputs.length - 1].focus();
+    }
+
+    function updateTickerMessage(index, value) {
+      tickerMessages[index] = value;
+      markUnsaved();
+    }
+
+    function deleteTickerMessage(index) {
+      tickerMessages.splice(index, 1);
+      renderTickerMessages();
+      updateTickerPreview();
+      markUnsaved();
+    }
+
+    function updateTickerPreview() {
+      const preview = document.getElementById('ticker-preview');
+      const previewText = document.getElementById('ticker-preview-text');
+      const bgColor = document.getElementById('ticker-bg-color').value;
+      const textColor = document.getElementById('ticker-text-color').value;
+
+      // Get current messages from inputs
+      const inputs = document.querySelectorAll('#ticker-messages-container input');
+      const currentMessages = [];
+      inputs.forEach(input => {
+        if (input.value.trim()) currentMessages.push(input.value.trim());
+      });
+
+      const displayText = currentMessages.length > 0
+        ? currentMessages.join('   •   ')
+        : 'YOUR MESSAGE HERE';
+
+      preview.style.backgroundColor = bgColor;
+      previewText.style.color = textColor;
+      previewText.textContent = displayText + '   •   ' + displayText + '   •   ';
+
+      // Sync color text inputs
+      document.getElementById('ticker-bg-color-text').value = bgColor;
+      document.getElementById('ticker-text-color-text').value = textColor;
+    }
+
+    async function saveTicker() {
+      const btn = document.getElementById('save-ticker-btn');
+      btn.disabled = true;
+      btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
+
+      // Get messages from inputs
+      const inputs = document.querySelectorAll('#ticker-messages-container input');
+      const messages = [];
+      inputs.forEach(input => {
+        if (input.value.trim()) messages.push(input.value.trim());
+      });
+
+      const tickerData = {
+        enabled: document.getElementById('ticker-enabled').checked,
+        messages: messages,
+        text: messages.join(' • '), // Backwards compatibility
+        background_color: document.getElementById('ticker-bg-color').value,
+        text_color: document.getElementById('ticker-text-color').value,
+        speed: document.getElementById('ticker-speed').value
+      };
+
+      try {
+        const response = await fetch('{% url "admin_homepage" %}', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-Requested-With': 'XMLHttpRequest',
+            'X-CSRFToken': csrfToken
+          },
+          body: JSON.stringify({
+            action: 'save_ticker',
+            news_ticker: tickerData
+          })
+        });
+
+        const data = await response.json();
+        if (data.success) {
+          newsTicker = tickerData;
+          tickerMessages = messages;
+          markSaved();
+          showToast('Ticker saved!', 'success');
+        } else {
+          showToast('Error: ' + data.error, 'error');
+        }
+      } catch (error) {
+        showToast('Error: ' + error.message, 'error');
+      } finally {
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fas fa-save"></i> Save Ticker';
+      }
     }
   </script>
 </body>

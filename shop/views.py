@@ -238,6 +238,39 @@ def about(request):
     return render(request, "home/about.html")
 
 
+def lookbook(request):
+    """Lookbook page with immersive page-flipping magazine experience."""
+    import json
+    from shop.models import Lookbook
+
+    # Get the featured lookbook
+    featured = Lookbook.get_featured()
+
+    # If no featured lookbook or not published, show coming soon (unless staff)
+    if not featured:
+        if request.user.is_staff:
+            # Staff can see any lookbook - get the most recent one
+            featured = Lookbook.objects.first()
+        if not featured:
+            return render(request, "home/lookbook_coming_soon.html")
+
+    # Get all pages and ensure they have default values
+    pages = []
+    for page in (featured.pages or []):
+        page.setdefault('zoom', 100)
+        page.setdefault('position_x', 50)
+        page.setdefault('position_y', 50)
+        pages.append(page)
+
+    context = {
+        "lookbook": featured,
+        "pages": json.dumps(pages),  # JSON for JavaScript
+        "has_pages": len(pages) > 0,
+        "lookbook_settings": featured.settings or {},
+    }
+    return render(request, "home/lookbook.html", context)
+
+
 def privacy(request):
     """Privacy Policy page."""
     return render(request, "home/privacy.html")
