@@ -446,10 +446,21 @@ def homepage_settings(request):
                 )
                 optimized_size = len(optimized_content)
 
-                # Save optimized image to media folder
-                from django.core.files.storage import default_storage
-                path = default_storage.save(f"site/hero/{filename}", ContentFile(optimized_content))
-                url = default_storage.url(path)
+                # Use Cloudinary if available, otherwise fall back to local storage
+                from django.conf import settings as django_settings
+                if getattr(django_settings, 'CLOUDINARY_ENABLED', False):
+                    import cloudinary.uploader
+                    result = cloudinary.uploader.upload(
+                        optimized_content,
+                        folder="hero",
+                        public_id=f"hero_slide_{uuid.uuid4().hex[:8]}",
+                        resource_type="image"
+                    )
+                    url = result['secure_url']
+                else:
+                    from django.core.files.storage import default_storage
+                    path = default_storage.save(f"site/hero/{filename}", ContentFile(optimized_content))
+                    url = default_storage.url(path)
 
                 # Log optimization results
                 savings = round((1 - optimized_size / original_size) * 100, 1) if original_size > 0 else 0
@@ -822,6 +833,7 @@ def lookbook_edit(request, lookbook_id):
 
         elif action == "upload_page_image":
             try:
+                from django.conf import settings as django_settings
                 from shop.utils.image_optimizer import optimize_image
 
                 image_file = request.FILES.get("image_file")
@@ -833,9 +845,20 @@ def lookbook_edit(request, lookbook_id):
                     filename=f"lookbook_{lookbook.id}_{uuid.uuid4().hex[:8]}"
                 )
 
-                from django.core.files.storage import default_storage
-                path = default_storage.save(f"site/lookbook/{filename}", ContentFile(optimized_content))
-                url = default_storage.url(path)
+                # Use Cloudinary if available, otherwise fall back to local storage
+                if getattr(django_settings, 'CLOUDINARY_ENABLED', False):
+                    import cloudinary.uploader
+                    result = cloudinary.uploader.upload(
+                        optimized_content,
+                        folder="lookbook",
+                        public_id=f"lookbook_{lookbook.id}_{uuid.uuid4().hex[:8]}",
+                        resource_type="image"
+                    )
+                    url = result['secure_url']
+                else:
+                    from django.core.files.storage import default_storage
+                    path = default_storage.save(f"site/lookbook/{filename}", ContentFile(optimized_content))
+                    url = default_storage.url(path)
 
                 return JsonResponse({"success": True, "url": url})
             except Exception as e:

@@ -81,8 +81,9 @@ The admin system is the core of this project — a complete back-office solution
 | Database | PostgreSQL |
 | Payments | Stripe Checkout |
 | Email | Resend |
-| SMS | Twilio |
+| SMS | Telnyx |
 | Shipping | EasyPost |
+| Images | Cloudinary |
 | Hosting | Render |
 | Auth | django-allauth + custom 2FA |
 
@@ -133,7 +134,7 @@ python manage.py runserver
 SECRET_KEY=your-secret-key
 DEBUG=True
 
-# Stripe
+# Stripe (payments)
 STRIPE_SECRET_KEY=sk_test_xxx
 STRIPE_PUBLISHABLE_KEY=pk_test_xxx
 STRIPE_WEBHOOK_SECRET=whsec_xxx
@@ -141,13 +142,18 @@ STRIPE_WEBHOOK_SECRET=whsec_xxx
 # Resend (email)
 RESEND_API_KEY=re_xxx
 
-# Twilio (SMS)
-TWILIO_ACCOUNT_SID=ACxxx
-TWILIO_AUTH_TOKEN=xxx
-TWILIO_PHONE_NUMBER=+1234567890
+# Telnyx (SMS)
+TELNYX_API_KEY=xxx
+TELNYX_PHONE_NUMBER=+1234567890
+TELNYX_MESSAGING_PROFILE_ID=xxx
 
 # EasyPost (shipping)
 EASYPOST_API_KEY=xxx
+
+# Cloudinary (image storage - required for production)
+CLOUDINARY_CLOUD_NAME=your-cloud-name
+CLOUDINARY_API_KEY=xxx
+CLOUDINARY_API_SECRET=xxx
 ```
 
 ## What I Learned
