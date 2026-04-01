@@ -915,17 +915,23 @@ def about_settings(request):
                     filename=f"about_banner_{uuid.uuid4().hex[:8]}"
                 )
 
-                # Use Cloudinary if available, otherwise fall back to local storage
+                url = None
+                # Try Cloudinary first if enabled
                 if getattr(django_settings, 'CLOUDINARY_ENABLED', False):
-                    import cloudinary.uploader
-                    result = cloudinary.uploader.upload(
-                        optimized_content,
-                        folder="about",
-                        public_id=f"about_banner_{uuid.uuid4().hex[:8]}",
-                        resource_type="image"
-                    )
-                    url = result['secure_url']
-                else:
+                    try:
+                        import cloudinary.uploader
+                        result = cloudinary.uploader.upload(
+                            optimized_content,
+                            folder="about",
+                            public_id=f"about_banner_{uuid.uuid4().hex[:8]}",
+                            resource_type="image"
+                        )
+                        url = result['secure_url']
+                    except Exception as cloud_err:
+                        logger.warning(f"Cloudinary upload failed, falling back to local: {cloud_err}")
+
+                # Fall back to local storage
+                if not url:
                     from django.core.files.storage import default_storage
                     path = default_storage.save(f"site/about/{filename}", ContentFile(optimized_content))
                     url = default_storage.url(path)
