@@ -53,8 +53,9 @@ def home_page(request):
     news_ticker.setdefault('speed', '25')
 
     # Build ticker content from messages array (or fall back to single text)
+    # Note: template adds bullet separators between repetitions, so we just join messages the same way
     if news_ticker.get('messages'):
-        news_ticker['ticker_content'] = '   •   '.join(news_ticker['messages'])
+        news_ticker['ticker_content'] = '\u00a0\u00a0\u00a0•\u00a0\u00a0\u00a0'.join(news_ticker['messages'])
     else:
         news_ticker['ticker_content'] = news_ticker.get('text', '')
 
