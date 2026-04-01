@@ -173,6 +173,12 @@ class SiteSettings(models.Model):
         help_text="Lookbook settings: is_published, transition_type, etc."
     )
 
+    # About page settings
+    about_settings = models.JSONField(
+        default=dict, blank=True,
+        help_text="About page settings: banner_image, main_text, quote, etc."
+    )
+
     updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:

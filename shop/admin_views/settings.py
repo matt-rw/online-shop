@@ -3,6 +3,7 @@ Homepage, security, and site settings admin views.
 """
 
 import json
+import logging
 from datetime import datetime, timedelta
 
 from django.contrib import messages
@@ -19,6 +20,8 @@ from shop.models import (
     SiteSettings,
 )
 from shop.models.settings import QuickLink
+
+logger = logging.getLogger(__name__)
 
 def security_dashboard(request):
     """
@@ -874,3 +877,87 @@ def lookbook_edit(request, lookbook_id):
     }
 
     return render(request, "admin/lookbook_edit.html", context)
+
+
+@staff_member_required
+def about_settings(request):
+    """
+    About page settings management.
+    Handles banner image and main text content.
+    """
+    import base64
+    import uuid
+
+    site_settings = SiteSettings.load()
+
+    # Handle AJAX requests
+    if request.headers.get("X-Requested-With") == "XMLHttpRequest":
+        action = request.POST.get("action") or request.GET.get("action")
+
+        if not action and request.content_type == "application/json":
+            try:
+                body_data = json.loads(request.body)
+                action = body_data.get("action")
+            except (json.JSONDecodeError, ValueError):
+                pass
+
+        if action == "upload_banner_image":
+            try:
+                from django.conf import settings as django_settings
+                from shop.utils.image_optimizer import optimize_image
+
+                image_file = request.FILES.get("image_file")
+                if not image_file:
+                    return JsonResponse({"success": False, "error": "No image file provided"})
+
+                optimized_content, filename, content_type = optimize_image(
+                    image_file,
+                    filename=f"about_banner_{uuid.uuid4().hex[:8]}"
+                )
+
+                # Use Cloudinary if available, otherwise fall back to local storage
+                if getattr(django_settings, 'CLOUDINARY_ENABLED', False):
+                    import cloudinary.uploader
+                    result = cloudinary.uploader.upload(
+                        optimized_content,
+                        folder="about",
+                        public_id=f"about_banner_{uuid.uuid4().hex[:8]}",
+                        resource_type="image"
+                    )
+                    url = result['secure_url']
+                else:
+                    from django.core.files.storage import default_storage
+                    path = default_storage.save(f"site/about/{filename}", ContentFile(optimized_content))
+                    url = default_storage.url(path)
+
+                return JsonResponse({"success": True, "url": url})
+            except Exception as e:
+                return JsonResponse({"success": False, "error": str(e)})
+
+        elif action == "save_about_settings":
+            try:
+                data = json.loads(request.body)
+                about_settings_data = site_settings.about_settings or {}
+
+                # Update settings
+                about_settings_data['banner_image'] = data.get('banner_image', '')
+                about_settings_data['main_text'] = data.get('main_text', [])
+
+                site_settings.about_settings = about_settings_data
+                site_settings.save()
+                return JsonResponse({"success": True})
+            except Exception as e:
+                return JsonResponse({"success": False, "error": str(e)})
+
+        return JsonResponse({"success": False, "error": "Unknown action"})
+
+    # Get existing about settings
+    about_settings_data = site_settings.about_settings or {}
+
+    context = {
+        "site_settings": site_settings,
+        "about_settings": about_settings_data,
+        "cst_time": timezone.now().astimezone(pytz.timezone("America/Chicago")),
+    }
+
+    return render(request, "admin/about_settings.html", context)

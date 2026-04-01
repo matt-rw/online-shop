@@ -61,6 +61,7 @@ from .settings import (
     warehouse_settings,
     lookbook_dashboard,
     lookbook_edit,
+    about_settings,
 )
 from .analytics import (
     visitors_dashboard,
@@ -118,6 +119,7 @@ __all__ = [
     'warehouse_settings',
     'lookbook_dashboard',
     'lookbook_edit',
+    'about_settings',
     # analytics
     'visitors_dashboard',
     'bug_reports_dashboard',

@@ -235,7 +235,15 @@ def coming_soon(request):
 
 def about(request):
     """About page with Our Story and Foundation Line sections."""
-    return render(request, "home/about.html")
+    from shop.models.settings import SiteSettings
+
+    site_settings = SiteSettings.load()
+    about_settings = site_settings.about_settings or {}
+
+    context = {
+        "about_settings": about_settings,
+    }
+    return render(request, "home/about.html", context)
 
 
 def lookbook(request):

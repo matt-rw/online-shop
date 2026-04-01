@@ -1,0 +1,592 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>About Page Settings - Blueprint Apparel</title>
+  <link rel="icon" type="image/svg+xml" href="{% static 'admin-favicon.svg' %}">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <style>
+    {% include "admin/partials/dark_mode_styles.html" %}
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background: #f1f5f9;
+      min-height: 100vh;
+    }
+
+    .nav-links {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      padding: 1rem 2rem;
+      display: flex;
+      gap: 0.75rem;
+      align-items: center;
+    }
+
+    .nav-link {
+      background: rgba(255, 255, 255, 0.15);
+      color: white;
+      padding: 0.5rem 1rem;
+      border-radius: 8px;
+      text-decoration: none;
+      font-size: 0.875rem;
+      font-weight: 500;
+      transition: all 0.2s;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .nav-link:hover {
+      background: rgba(255, 255, 255, 0.25);
+    }
+
+    .top-bar {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      padding: 2rem 0;
+      margin-bottom: 2rem;
+    }
+
+    .container {
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 0 2rem;
+    }
+
+    .header h1 {
+      color: white;
+      font-size: 2.5rem;
+      font-weight: 800;
+    }
+
+    .main-content {
+      padding: 0 2rem 2rem 2rem;
+      max-width: 900px;
+      margin: 0 auto;
+    }
+
+    .section-card {
+      background: white;
+      border-radius: 16px;
+      padding: 2rem;
+      margin-bottom: 2rem;
+      box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
+    }
+
+    .section-title {
+      font-size: 1.25rem;
+      font-weight: 700;
+      color: #0f172a;
+      margin-bottom: 1.5rem;
+      padding-bottom: 0.75rem;
+      border-bottom: 2px solid #e2e8f0;
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+
+    .info-box {
+      background: linear-gradient(135deg, #eff6ff 0%, #f0f9ff 100%);
+      border-left: 4px solid #3b82f6;
+      padding: 1rem 1.25rem;
+      border-radius: 8px;
+      margin-bottom: 1.5rem;
+    }
+
+    .info-box p {
+      color: #1e40af;
+      font-size: 0.875rem;
+      line-height: 1.6;
+      margin: 0;
+    }
+
+    .form-group {
+      margin-bottom: 1.25rem;
+    }
+
+    .form-group label {
+      display: block;
+      color: #475569;
+      font-weight: 600;
+      margin-bottom: 0.5rem;
+      font-size: 0.875rem;
+    }
+
+    .form-group input[type="text"],
+    .form-group textarea {
+      width: 100%;
+      padding: 0.75rem 1rem;
+      border: 2px solid #e2e8f0;
+      border-radius: 8px;
+      font-family: inherit;
+      font-size: 1rem;
+      transition: border-color 0.2s;
+    }
+
+    .form-group input:focus,
+    .form-group textarea:focus {
+      outline: none;
+      border-color: #667eea;
+    }
+
+    .form-group textarea {
+      min-height: 100px;
+      resize: vertical;
+    }
+
+    .btn {
+      padding: 0.75rem 1.5rem;
+      border-radius: 8px;
+      border: none;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-size: 0.9375rem;
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+    }
+
+    .btn-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+    }
+
+    .btn-secondary {
+      background: #f1f5f9;
+      color: #475569;
+      border: 2px solid #e2e8f0;
+    }
+
+    .btn-secondary:hover {
+      background: #e2e8f0;
+    }
+
+    .btn-sm {
+      padding: 0.5rem 1rem;
+      font-size: 0.8125rem;
+    }
+
+    .btn-danger {
+      background: #fee2e2;
+      color: #dc2626;
+      border: 2px solid #fecaca;
+    }
+
+    .btn-danger:hover {
+      background: #fecaca;
+    }
+
+    .form-actions {
+      display: flex;
+      gap: 1rem;
+      margin-top: 2rem;
+      padding-top: 1.5rem;
+      border-top: 2px solid #e2e8f0;
+    }
+
+    .success-message {
+      background: linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%);
+      border-left: 4px solid #10b981;
+      padding: 1rem 1.25rem;
+      border-radius: 8px;
+      margin-bottom: 1.5rem;
+      color: #065f46;
+      font-weight: 500;
+    }
+
+    .error-message {
+      background: linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%);
+      border-left: 4px solid #dc2626;
+      padding: 1rem 1.25rem;
+      border-radius: 8px;
+      margin-bottom: 1.5rem;
+      color: #991b1b;
+      font-weight: 500;
+    }
+
+    .help-text {
+      color: #64748b;
+      font-size: 0.8125rem;
+      margin-top: 0.25rem;
+    }
+
+    /* Image upload area */
+    .image-upload-area {
+      border: 2px dashed #e2e8f0;
+      border-radius: 12px;
+      padding: 2rem;
+      text-align: center;
+      transition: all 0.2s;
+      cursor: pointer;
+      background: #fafafa;
+    }
+
+    .image-upload-area:hover {
+      border-color: #667eea;
+      background: #f8fafc;
+    }
+
+    .image-upload-area.dragover {
+      border-color: #667eea;
+      background: #eff6ff;
+    }
+
+    .image-preview {
+      margin-top: 1rem;
+      position: relative;
+      display: inline-block;
+    }
+
+    .image-preview img {
+      max-width: 100%;
+      max-height: 200px;
+      border-radius: 8px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    }
+
+    .image-preview .remove-btn {
+      position: absolute;
+      top: -8px;
+      right: -8px;
+      background: #dc2626;
+      color: white;
+      border: none;
+      border-radius: 50%;
+      width: 24px;
+      height: 24px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 12px;
+    }
+
+    /* Text paragraph list */
+    .paragraph-list {
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+    }
+
+    .paragraph-item {
+      display: flex;
+      gap: 0.75rem;
+      align-items: flex-start;
+    }
+
+    .paragraph-item textarea {
+      flex: 1;
+      min-height: 80px;
+    }
+
+    .paragraph-item .remove-paragraph {
+      flex-shrink: 0;
+      margin-top: 0.5rem;
+    }
+
+    .add-paragraph-btn {
+      margin-top: 1rem;
+    }
+
+    /* Toast notification */
+    .toast {
+      position: fixed;
+      bottom: 2rem;
+      right: 2rem;
+      padding: 1rem 1.5rem;
+      border-radius: 8px;
+      color: white;
+      font-weight: 500;
+      z-index: 1000;
+      transform: translateY(100px);
+      opacity: 0;
+      transition: all 0.3s ease;
+    }
+
+    .toast.show {
+      transform: translateY(0);
+      opacity: 1;
+    }
+
+    .toast.success {
+      background: #10b981;
+    }
+
+    .toast.error {
+      background: #dc2626;
+    }
+  </style>
+</head>
+<body>
+  {% include "admin/partials/dark_mode_apply.html" %}
+
+  <div class="nav-links">
+    <a href="{% url 'admin_home' %}" class="nav-link">
+      <i class="fa-solid fa-arrow-left"></i> Back to Dashboard
+    </a>
+    <a href="{% url 'admin_homepage' %}" class="nav-link">
+      <i class="fa-solid fa-home"></i> Homepage
+    </a>
+    <a href="{% url 'shop:about' %}" class="nav-link" target="_blank">
+      <i class="fa-solid fa-external-link-alt"></i> View About Page
+    </a>
+  </div>
+
+  <div class="top-bar">
+    <div class="container">
+      <div class="header">
+        <h1><i class="fa-solid fa-info-circle"></i> About Page Settings</h1>
+      </div>
+    </div>
+  </div>
+
+  <div class="main-content">
+    <div id="message-container"></div>
+
+    <!-- Banner Image Section -->
+    <div class="section-card">
+      <h2 class="section-title">
+        <i class="fa-solid fa-image"></i> Banner Image
+      </h2>
+
+      <div class="info-box">
+        <p><i class="fa-solid fa-info-circle"></i> This image appears in the scrolling banner at the top of the About page. For best results, use a wide image (at least 1000px wide).</p>
+      </div>
+
+      <div class="image-upload-area" id="banner-upload-area">
+        <input type="file" id="banner-image-input" accept="image/*" style="display: none;">
+        <i class="fa-solid fa-cloud-upload-alt" style="font-size: 2rem; color: #94a3b8; margin-bottom: 0.5rem;"></i>
+        <p style="color: #64748b; margin-bottom: 0.5rem;">Click or drag image to upload</p>
+        <p class="help-text">Recommended: Wide format image (PNG, JPG, WebP)</p>
+      </div>
+
+      <div class="image-preview" id="banner-preview" style="display: none;">
+        <img id="banner-preview-img" src="" alt="Banner preview">
+        <button type="button" class="remove-btn" onclick="removeBannerImage()">
+          <i class="fa-solid fa-times"></i>
+        </button>
+      </div>
+    </div>
+
+    <!-- Main Text Content Section -->
+    <div class="section-card">
+      <h2 class="section-title">
+        <i class="fa-solid fa-align-left"></i> Main Text Content
+      </h2>
+
+      <div class="info-box">
+        <p><i class="fa-solid fa-info-circle"></i> These paragraphs appear in the "Our Story" section of the About page. Each text box becomes a separate paragraph.</p>
+      </div>
+
+      <div class="paragraph-list" id="paragraph-list">
+        <!-- Paragraphs will be added here dynamically -->
+      </div>
+
+      <button type="button" class="btn btn-secondary btn-sm add-paragraph-btn" onclick="addParagraph()">
+        <i class="fa-solid fa-plus"></i> Add Paragraph
+      </button>
+    </div>
+
+    <div class="form-actions">
+      <button type="button" class="btn btn-primary" onclick="saveSettings()">
+        <i class="fa-solid fa-save"></i> Save Changes
+      </button>
+      <a href="{% url 'admin_home' %}" class="btn btn-secondary">
+        <i class="fa-solid fa-times"></i> Cancel
+      </a>
+    </div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+  <script>
+    // State
+    let bannerImageUrl = '{{ about_settings.banner_image|default:""|escapejs }}';
+    let mainTextParagraphs = {{ about_settings.main_text|safe|default:"[]" }};
+
+    // Initialize
+    document.addEventListener('DOMContentLoaded', function() {
+      // Show existing banner image
+      if (bannerImageUrl) {
+        showBannerPreview(bannerImageUrl);
+      }
+
+      // Load existing paragraphs or add default ones
+      if (mainTextParagraphs.length === 0) {
+        // Add default paragraphs from the current about page
+        mainTextParagraphs = [
+          "In our debut collection, we draw inspiration from Japanese gardens — balanced, intentional, and built with purpose.",
+          "Relating back to our Chicago roots, we channel that into clean, versatile pieces designed to move wherever life takes you.",
+          "Whether you're chasing goals, finding your rhythm, or carving out your own identity, Blueprint Apparel reflects your focus, discipline, and individuality."
+        ];
+      }
+      renderParagraphs();
+
+      // Set up drag and drop for banner
+      const uploadArea = document.getElementById('banner-upload-area');
+      const fileInput = document.getElementById('banner-image-input');
+
+      uploadArea.addEventListener('click', () => fileInput.click());
+      uploadArea.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        uploadArea.classList.add('dragover');
+      });
+      uploadArea.addEventListener('dragleave', () => {
+        uploadArea.classList.remove('dragover');
+      });
+      uploadArea.addEventListener('drop', (e) => {
+        e.preventDefault();
+        uploadArea.classList.remove('dragover');
+        if (e.dataTransfer.files.length) {
+          handleBannerUpload(e.dataTransfer.files[0]);
+        }
+      });
+
+      fileInput.addEventListener('change', (e) => {
+        if (e.target.files.length) {
+          handleBannerUpload(e.target.files[0]);
+        }
+      });
+    });
+
+    function handleBannerUpload(file) {
+      const formData = new FormData();
+      formData.append('image_file', file);
+      formData.append('action', 'upload_banner_image');
+
+      fetch(window.location.href, {
+        method: 'POST',
+        headers: {
+          'X-Requested-With': 'XMLHttpRequest',
+          'X-CSRFToken': '{{ csrf_token }}'
+        },
+        body: formData
+      })
+      .then(response => response.json())
+      .then(data => {
+        if (data.success) {
+          bannerImageUrl = data.url;
+          showBannerPreview(data.url);
+          showToast('Image uploaded successfully', 'success');
+        } else {
+          showToast('Upload failed: ' + data.error, 'error');
+        }
+      })
+      .catch(error => {
+        showToast('Upload failed: ' + error.message, 'error');
+      });
+    }
+
+    function showBannerPreview(url) {
+      const preview = document.getElementById('banner-preview');
+      const img = document.getElementById('banner-preview-img');
+      const uploadArea = document.getElementById('banner-upload-area');
+
+      img.src = url;
+      preview.style.display = 'inline-block';
+      uploadArea.style.display = 'none';
+    }
+
+    function removeBannerImage() {
+      bannerImageUrl = '';
+      const preview = document.getElementById('banner-preview');
+      const uploadArea = document.getElementById('banner-upload-area');
+
+      preview.style.display = 'none';
+      uploadArea.style.display = 'block';
+    }
+
+    function renderParagraphs() {
+      const container = document.getElementById('paragraph-list');
+      container.innerHTML = '';
+
+      mainTextParagraphs.forEach((text, index) => {
+        const item = document.createElement('div');
+        item.className = 'paragraph-item';
+        item.innerHTML = `
+          <textarea
+            placeholder="Enter paragraph text..."
+            onchange="updateParagraph(${index}, this.value)"
+          >${text}</textarea>
+          <button type="button" class="btn btn-danger btn-sm remove-paragraph" onclick="removeParagraph(${index})">
+            <i class="fa-solid fa-trash"></i>
+          </button>
+        `;
+        container.appendChild(item);
+      });
+    }
+
+    function addParagraph() {
+      mainTextParagraphs.push('');
+      renderParagraphs();
+      // Focus the new textarea
+      const textareas = document.querySelectorAll('.paragraph-item textarea');
+      if (textareas.length) {
+        textareas[textareas.length - 1].focus();
+      }
+    }
+
+    function updateParagraph(index, value) {
+      mainTextParagraphs[index] = value;
+    }
+
+    function removeParagraph(index) {
+      mainTextParagraphs.splice(index, 1);
+      renderParagraphs();
+    }
+
+    function saveSettings() {
+      // Filter out empty paragraphs
+      const paragraphs = mainTextParagraphs.filter(p => p.trim() !== '');
+
+      fetch(window.location.href, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Requested-With': 'XMLHttpRequest',
+          'X-CSRFToken': '{{ csrf_token }}'
+        },
+        body: JSON.stringify({
+          action: 'save_about_settings',
+          banner_image: bannerImageUrl,
+          main_text: paragraphs
+        })
+      })
+      .then(response => response.json())
+      .then(data => {
+        if (data.success) {
+          showToast('Settings saved successfully', 'success');
+        } else {
+          showToast('Save failed: ' + data.error, 'error');
+        }
+      })
+      .catch(error => {
+        showToast('Save failed: ' + error.message, 'error');
+      });
+    }
+
+    function showToast(message, type) {
+      const toast = document.getElementById('toast');
+      toast.textContent = message;
+      toast.className = 'toast ' + type + ' show';
+
+      setTimeout(() => {
+        toast.classList.remove('show');
+      }, 3000);
+    }
+  </script>
+</body>
+</html>

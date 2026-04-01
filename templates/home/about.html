@@ -255,14 +255,27 @@
 <section class="bg-black border-b border-black">
   <div class="poster-scroll-container">
     <div class="poster-scroll-track">
-      <img src="{% static 'images/poster.png' %}" alt="Blueprint Poster" loading="lazy" />
-      <img src="{% static 'images/poster.png' %}" alt="Blueprint Poster" loading="lazy" />
-      <img src="{% static 'images/poster.png' %}" alt="Blueprint Poster" loading="lazy" />
-      <img src="{% static 'images/poster.png' %}" alt="Blueprint Poster" loading="lazy" />
-      <img src="{% static 'images/poster.png' %}" alt="Blueprint Poster" loading="lazy" />
-      <img src="{% static 'images/poster.png' %}" alt="Blueprint Poster" loading="lazy" />
-      <img src="{% static 'images/poster.png' %}" alt="Blueprint Poster" loading="lazy" />
-      <img src="{% static 'images/poster.png' %}" alt="Blueprint Poster" loading="lazy" />
+      {% with banner_url=about_settings.banner_image|default:"" %}
+        {% if banner_url %}
+          <img src="{{ banner_url }}" alt="Blueprint Poster" loading="lazy" />
+          <img src="{{ banner_url }}" alt="Blueprint Poster" loading="lazy" />
+          <img src="{{ banner_url }}" alt="Blueprint Poster" loading="lazy" />
+          <img src="{{ banner_url }}" alt="Blueprint Poster" loading="lazy" />
+          <img src="{{ banner_url }}" alt="Blueprint Poster" loading="lazy" />
+          <img src="{{ banner_url }}" alt="Blueprint Poster" loading="lazy" />
+          <img src="{{ banner_url }}" alt="Blueprint Poster" loading="lazy" />
+          <img src="{{ banner_url }}" alt="Blueprint Poster" loading="lazy" />
+        {% else %}
+          <img src="{% static 'images/poster.png' %}" alt="Blueprint Poster" loading="lazy" />
+          <img src="{% static 'images/poster.png' %}" alt="Blueprint Poster" loading="lazy" />
+          <img src="{% static 'images/poster.png' %}" alt="Blueprint Poster" loading="lazy" />
+          <img src="{% static 'images/poster.png' %}" alt="Blueprint Poster" loading="lazy" />
+          <img src="{% static 'images/poster.png' %}" alt="Blueprint Poster" loading="lazy" />
+          <img src="{% static 'images/poster.png' %}" alt="Blueprint Poster" loading="lazy" />
+          <img src="{% static 'images/poster.png' %}" alt="Blueprint Poster" loading="lazy" />
+          <img src="{% static 'images/poster.png' %}" alt="Blueprint Poster" loading="lazy" />
+        {% endif %}
+      {% endwith %}
     </div>
   </div>
 </section>
@@ -281,9 +294,15 @@
         <h1 class="text-3xl md:text-4xl font-bold tracking-tight leading-none mb-10">OUR STORY</h1>
 
         <div class="space-y-6 text-neutral-700 leading-relaxed text-base">
-          <p>In our debut collection, we draw inspiration from Japanese gardens — balanced, intentional, and built with purpose.</p>
-          <p>Relating back to our Chicago roots, we channel that into clean, versatile pieces designed to move wherever life takes you.</p>
-          <p>Whether you're chasing goals, finding your rhythm, or carving out your own identity, Blueprint Apparel reflects your focus, discipline, and individuality.</p>
+          {% if about_settings.main_text %}
+            {% for paragraph in about_settings.main_text %}
+              <p>{{ paragraph }}</p>
+            {% endfor %}
+          {% else %}
+            <p>In our debut collection, we draw inspiration from Japanese gardens — balanced, intentional, and built with purpose.</p>
+            <p>Relating back to our Chicago roots, we channel that into clean, versatile pieces designed to move wherever life takes you.</p>
+            <p>Whether you're chasing goals, finding your rhythm, or carving out your own identity, Blueprint Apparel reflects your focus, discipline, and individuality.</p>
+          {% endif %}
         </div>
 
         <!-- Quote -->
