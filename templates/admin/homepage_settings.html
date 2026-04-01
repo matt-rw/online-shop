@@ -929,9 +929,23 @@
         <div class="control-group" style="flex: 1; min-width: 160px;">
           <label><i class="fas fa-tachometer-alt"></i> Scroll Speed</label>
           <select id="ticker-speed" onchange="markUnsaved()">
+            <option value="80">Very Slow</option>
+            <option value="60">Slower</option>
             <option value="40">Slow</option>
             <option value="25" selected>Normal</option>
             <option value="15">Fast</option>
+            <option value="8">Very Fast</option>
+          </select>
+        </div>
+        <div class="control-group" style="flex: 1; min-width: 160px;">
+          <label><i class="fas fa-arrows-alt-h"></i> Dot Spacing</label>
+          <select id="ticker-spacing" onchange="markUnsaved(); updateTickerPreview();">
+            <option value="1">Compact</option>
+            <option value="3" selected>Normal</option>
+            <option value="5">Wide</option>
+            <option value="8">Wider</option>
+            <option value="12">Very Wide</option>
+            <option value="20">Extra Wide</option>
           </select>
         </div>
       </div>
@@ -1863,6 +1877,7 @@
       document.getElementById('ticker-text-color').value = newsTicker.text_color || '#facc15';
       document.getElementById('ticker-text-color-text').value = newsTicker.text_color || '#facc15';
       document.getElementById('ticker-speed').value = newsTicker.speed || '25';
+      document.getElementById('ticker-spacing').value = newsTicker.spacing || '3';
 
       // Load messages (support both old single text and new messages array)
       if (newsTicker.messages && newsTicker.messages.length > 0) {
@@ -1944,6 +1959,10 @@
       const previewText = document.getElementById('ticker-preview-text');
       const bgColor = document.getElementById('ticker-bg-color').value;
       const textColor = document.getElementById('ticker-text-color').value;
+      const spacing = parseInt(document.getElementById('ticker-spacing').value) || 3;
+
+      // Build spacing string (non-breaking spaces)
+      const spacer = '\u00a0'.repeat(spacing) + '•' + '\u00a0'.repeat(spacing);
 
       // Get current messages from inputs
       const inputs = document.querySelectorAll('#ticker-messages-container input');
@@ -1953,12 +1972,12 @@
       });
 
       const displayText = currentMessages.length > 0
-        ? currentMessages.join('   •   ')
+        ? currentMessages.join(spacer)
         : 'YOUR MESSAGE HERE';
 
       preview.style.backgroundColor = bgColor;
       previewText.style.color = textColor;
-      previewText.textContent = displayText + '   •   ' + displayText + '   •   ';
+      previewText.textContent = displayText + spacer + displayText + spacer;
 
       // Sync color text inputs
       document.getElementById('ticker-bg-color-text').value = bgColor;
@@ -1983,7 +2002,8 @@
         text: messages.join(' • '), // Backwards compatibility
         background_color: document.getElementById('ticker-bg-color').value,
         text_color: document.getElementById('ticker-text-color').value,
-        speed: document.getElementById('ticker-speed').value
+        speed: document.getElementById('ticker-speed').value,
+        spacing: document.getElementById('ticker-spacing').value
       };
 
       try {

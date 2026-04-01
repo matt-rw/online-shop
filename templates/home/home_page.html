@@ -609,8 +609,8 @@
   {% if news_ticker.enabled and news_ticker.ticker_content %}
   <div class="w-full py-4 overflow-hidden relative ticker-wrapper" style="background-color: {{ news_ticker.background_color|default:'#000000' }};">
     <div class="ticker-animate font-mono font-bold text-base" style="color: {{ news_ticker.text_color|default:'#facc15' }}; animation-duration: {{ news_ticker.speed|default:'25' }}s;">
-      <span>{% for i in "123456" %}{{ news_ticker.ticker_content }}&nbsp;&nbsp;&nbsp;•&nbsp;&nbsp;&nbsp;{% endfor %}</span>
-      <span aria-hidden="true">{% for i in "123456" %}{{ news_ticker.ticker_content }}&nbsp;&nbsp;&nbsp;•&nbsp;&nbsp;&nbsp;{% endfor %}</span>
+      <span>{% for i in "123456" %}{{ news_ticker.ticker_content }}{{ news_ticker.spacer }}{% endfor %}</span>
+      <span aria-hidden="true">{% for i in "123456" %}{{ news_ticker.ticker_content }}{{ news_ticker.spacer }}{% endfor %}</span>
     </div>
   </div>
   {% endif %}

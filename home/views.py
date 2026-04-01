@@ -51,13 +51,17 @@ def home_page(request):
     news_ticker.setdefault('background_color', '#000000')
     news_ticker.setdefault('text_color', '#facc15')
     news_ticker.setdefault('speed', '25')
+    news_ticker.setdefault('spacing', '3')
 
     # Build ticker content from messages array (or fall back to single text)
-    # Note: template adds bullet separators between repetitions, so we just join messages the same way
+    # Build spacer based on spacing setting (number of non-breaking spaces on each side of bullet)
+    spacing = int(news_ticker.get('spacing', 3))
+    spacer = '\u00a0' * spacing + '•' + '\u00a0' * spacing
     if news_ticker.get('messages'):
-        news_ticker['ticker_content'] = '\u00a0\u00a0\u00a0•\u00a0\u00a0\u00a0'.join(news_ticker['messages'])
+        news_ticker['ticker_content'] = spacer.join(news_ticker['messages'])
     else:
         news_ticker['ticker_content'] = news_ticker.get('text', '')
+    news_ticker['spacer'] = spacer  # Pass to template for repetition separators
 
     context = {
         "site_settings": site_settings,
