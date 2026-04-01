@@ -828,6 +828,11 @@
               <option value="false">Paused</option>
             </select>
           </div>
+          <div class="control-group">
+            <label><i class="fas fa-link"></i> Logo Link</label>
+            <input type="text" id="logo-link" placeholder="/" onchange="markUnsaved()" style="padding: 0.75rem 1rem; border: 2px solid #e2e8f0; border-radius: 8px; font-size: 1rem; min-width: 160px;">
+            <small style="display: block; color: #64748b; font-size: 0.75rem; margin-top: 0.25rem;">Where the hero logo links to (e.g., /shop)</small>
+          </div>
         </div>
       </div>
 
@@ -1108,6 +1113,7 @@
       if (slideshowSettings.autoplay !== undefined) {
         document.getElementById('slide-autoplay').value = String(slideshowSettings.autoplay);
       }
+      document.getElementById('logo-link').value = slideshowSettings.logo_link || '/';
 
       renderSlides();
       initSortable();
@@ -1515,7 +1521,8 @@
       const settings = {
         duration: parseInt(document.getElementById('slide-duration').value),
         transition: document.getElementById('slide-transition').value,
-        autoplay: document.getElementById('slide-autoplay').value === 'true'
+        autoplay: document.getElementById('slide-autoplay').value === 'true',
+        logo_link: document.getElementById('logo-link').value.trim() || '/'
       };
 
       try {

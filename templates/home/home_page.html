@@ -407,7 +407,7 @@
                      data-mobile-zoom="{{ slide.mobile_zoom|default:slide.zoom|default:100 }}"
                      data-mobile-pos-x="{{ slide.mobile_position_x|default:slide.position_x|default:50 }}"
                      data-mobile-pos-y="{{ slide.mobile_position_y|default:slide.position_y|default:50 }}"
-                     style="background-image: url('{{ slide.image_url }}'); background-size: cover;">
+                     style="background-image: url('{{ slide.image_url }}'); background-size: cover; background-position: {{ slide.position_x|default:50 }}% {{ slide.position_y|default:50 }}%;{% if slide.scale and slide.scale != 1 %} transform: scale({{ slide.scale }}); transform-origin: {{ slide.position_x|default:50 }}% {{ slide.position_y|default:50 }}%;{% endif %}">
                 </div>
               </div>
               <div class="w-full md:w-[30%] overflow-hidden">
@@ -424,7 +424,7 @@
                    data-mobile-zoom="{{ slide.mobile_zoom|default:slide.zoom|default:100 }}"
                    data-mobile-pos-x="{{ slide.mobile_position_x|default:slide.position_x|default:50 }}"
                    data-mobile-pos-y="{{ slide.mobile_position_y|default:slide.position_y|default:50 }}"
-                   style="background-image: url('{{ slide.image_url }}'); background-size: cover;">
+                   style="background-image: url('{{ slide.image_url }}'); background-size: cover; background-position: {{ slide.position_x|default:50 }}% {{ slide.position_y|default:50 }}%;{% if slide.scale and slide.scale != 1 %} transform: scale({{ slide.scale }}); transform-origin: {{ slide.position_x|default:50 }}% {{ slide.position_y|default:50 }}%;{% endif %}">
               </div>
             </div>
           {% endif %}
@@ -582,7 +582,7 @@
     </div>
 
     <div class="relative z-10 flex flex-col items-center justify-center h-full text-white">
-      <a href="{% url 'home' %}" class="block group">
+      <a href="{{ slideshow_settings.logo_link|default:'/' }}" class="block group">
         <img src="{% static 'images/font.webp' %}?v=2"
              class="h-24 sm:h-48 md:h-48 lg:h-64 w-auto transition-all duration-300 group-hover:scale-105"
              style="filter: drop-shadow(0 0 10px rgba(0,0,0,0.8)) drop-shadow(0 0 30px rgba(0,0,0,0.6));"

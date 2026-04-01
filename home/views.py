@@ -27,6 +27,9 @@ def home_page(request):
             s.setdefault('mobile_zoom', s.get('zoom', 100))
             s.setdefault('mobile_position_x', s.get('position_x', 50))
             s.setdefault('mobile_position_y', s.get('position_y', 50))
+            # Pre-compute scale for template (zoom/100)
+            s['scale'] = s['zoom'] / 100
+            s['mobile_scale'] = s['mobile_zoom'] / 100
             hero_slides.append(s)
 
     # Get gallery images and ensure position keys exist
@@ -42,6 +45,7 @@ def home_page(request):
     slideshow_settings.setdefault('duration', 5000)
     slideshow_settings.setdefault('autoplay', True)
     slideshow_settings.setdefault('transition', 'fade')
+    slideshow_settings.setdefault('logo_link', '/')
 
     # Get news ticker settings with defaults
     news_ticker = site_settings.news_ticker or {}
