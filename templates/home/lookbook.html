@@ -5,22 +5,21 @@
 
 {% block extra_css %}
 <style>
-  /* Lookbook Container */
+  /* Lookbook Container - full screen, no nav */
   .lookbook-container {
     position: fixed;
-    top: 64px; /* Nav height */
+    top: 0;
     left: 0;
     right: 0;
     bottom: 0;
     background: #0a0a0a;
     overflow: hidden;
-    z-index: 50;
+    z-index: 9999;
   }
 
-  /* Keep nav visible and styled */
+  /* Hide nav on lookbook page */
   header {
-    position: relative;
-    z-index: 100;
+    display: none !important;
   }
 
   /* Book wrapper */
@@ -286,6 +285,13 @@
     backdrop-filter: blur(10px);
     border-radius: 50px;
     border: 1px solid rgba(255, 255, 255, 0.1);
+    transition: opacity 0.3s ease;
+  }
+
+  /* Auto-hide nav controls */
+  .nav-controls.hidden {
+    opacity: 0;
+    pointer-events: none;
   }
 
   .nav-btn {
@@ -329,10 +335,10 @@
     text-align: center;
   }
 
-  /* Close button */
-  .close-btn {
+  /* Fullscreen button */
+  .fullscreen-btn {
     position: fixed;
-    top: calc(64px + 1.5rem);
+    top: 1.5rem;
     right: 1.5rem;
     width: 48px;
     height: 48px;
@@ -347,44 +353,21 @@
     justify-content: center;
     transition: all 0.2s;
     z-index: 200;
-    font-size: 1.25rem;
   }
 
-  .close-btn:hover {
+  .fullscreen-btn:hover {
     background: white;
     color: black;
     border-color: white;
   }
 
-  /* Keyboard hint */
-  .keyboard-hint {
-    position: fixed;
-    bottom: 6rem;
-    left: 50%;
-    transform: translateX(-50%);
-    color: rgba(255, 255, 255, 0.4);
-    font-family: 'Inter', sans-serif;
-    font-size: 0.75rem;
-    letter-spacing: 0.1em;
-    z-index: 150;
-    transition: opacity 0.5s;
-    text-align: center;
-  }
 
-  .keyboard-hint.hidden {
-    opacity: 0;
-    pointer-events: none;
-  }
 
   /* Mobile adjustments */
   /* Mobile: single page at a time (JS handles sizing) */
   @media (max-width: 768px) {
-    .lookbook-container {
-      top: 56px;
-    }
-
-    .close-btn {
-      top: calc(56px + 1rem);
+    .fullscreen-btn {
+      top: 1rem;
       right: 1rem;
       width: 40px;
       height: 40px;
@@ -490,10 +473,15 @@
   </div>
 
   {% if has_pages %}
-  <!-- Close button -->
-  <a href="{% url 'home' %}" class="close-btn" title="Close Lookbook">
-    <i class="fa-solid fa-xmark"></i>
-  </a>
+  <!-- Fullscreen button -->
+  <button class="fullscreen-btn" id="fullscreen-btn" title="Fullscreen (F)">
+    <svg id="fullscreen-icon-expand" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+      <path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"/>
+    </svg>
+    <svg id="fullscreen-icon-compress" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="display: none;">
+      <path d="M8 3v3a2 2 0 0 1-2 2H3m18 0h-3a2 2 0 0 1-2-2V3m0 18v-3a2 2 0 0 1 2-2h3M3 16h3a2 2 0 0 1 2 2v3"/>
+    </svg>
+  </button>
 
   <!-- Book -->
   <div class="book-wrapper">
@@ -513,9 +501,6 @@
     </button>
   </div>
 
-  <div class="keyboard-hint" id="hint">
-    Use arrow keys to navigate
-  </div>
 
   {% else %}
   <div class="empty-lookbook">
@@ -535,8 +520,48 @@ document.addEventListener('DOMContentLoaded', function() {
   const prevBtn = document.getElementById('prev-btn');
   const nextBtn = document.getElementById('next-btn');
   const indicator = document.getElementById('page-indicator');
-  const hint = document.getElementById('hint');
   const loading = document.getElementById('loading');
+  const navControls = document.querySelector('.nav-controls');
+
+  // Auto-hide nav controls
+  let hideTimeout;
+  let lastMouseMove = 0;
+
+  function showNavControls() {
+    navControls.classList.remove('hidden');
+    clearTimeout(hideTimeout);
+    hideTimeout = setTimeout(() => {
+      navControls.classList.add('hidden');
+    }, 1000); // Hide after 1 second
+  }
+
+  function hideNavControls() {
+    clearTimeout(hideTimeout);
+    navControls.classList.add('hidden');
+  }
+
+  // Throttled mousemove - only trigger every 100ms
+  document.addEventListener('mousemove', () => {
+    const now = Date.now();
+    if (now - lastMouseMove > 100) {
+      lastMouseMove = now;
+      showNavControls();
+    }
+  });
+
+  document.addEventListener('touchstart', showNavControls);
+
+  // Keep controls visible while hovering over them
+  navControls.addEventListener('mouseenter', () => {
+    clearTimeout(hideTimeout);
+    navControls.classList.remove('hidden');
+  });
+
+  navControls.addEventListener('mouseleave', () => {
+    hideTimeout = setTimeout(() => {
+      navControls.classList.add('hidden');
+    }, 1000);
+  });
 
   // Page data from Django
   const allPages = {{ pages|safe }};
@@ -817,11 +842,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     currentSpread = index;
     updateIndicator();
-
-    // Hide hint after first interaction
-    if (hint && !hint.classList.contains('hidden')) {
-      hint.classList.add('hidden');
-    }
+    showNavControls(); // Show controls when navigating
   }
 
   function navigate(direction) {
@@ -849,6 +870,60 @@ document.addEventListener('DOMContentLoaded', function() {
   prevBtn.addEventListener('click', () => navigate('prev'));
   nextBtn.addEventListener('click', () => navigate('next'));
 
+  // Fullscreen functionality
+  const fullscreenBtn = document.getElementById('fullscreen-btn');
+  const expandIcon = document.getElementById('fullscreen-icon-expand');
+  const compressIcon = document.getElementById('fullscreen-icon-compress');
+  const lookbookContainer = document.querySelector('.lookbook-container');
+
+  function isFullscreen() {
+    return !!(document.fullscreenElement || document.webkitFullscreenElement || document.mozFullScreenElement);
+  }
+
+  function toggleFullscreen() {
+    if (!isFullscreen()) {
+      // Enter fullscreen
+      const elem = document.documentElement;
+      if (elem.requestFullscreen) {
+        elem.requestFullscreen();
+      } else if (elem.webkitRequestFullscreen) {
+        elem.webkitRequestFullscreen();
+      } else if (elem.mozRequestFullScreen) {
+        elem.mozRequestFullScreen();
+      }
+    } else {
+      // Exit fullscreen
+      if (document.exitFullscreen) {
+        document.exitFullscreen();
+      } else if (document.webkitExitFullscreen) {
+        document.webkitExitFullscreen();
+      } else if (document.mozCancelFullScreen) {
+        document.mozCancelFullScreen();
+      }
+    }
+  }
+
+  function updateFullscreenUI() {
+    if (isFullscreen()) {
+      expandIcon.style.display = 'none';
+      compressIcon.style.display = 'block';
+      fullscreenBtn.title = 'Exit Fullscreen (F)';
+    } else {
+      expandIcon.style.display = 'block';
+      compressIcon.style.display = 'none';
+      fullscreenBtn.title = 'Fullscreen (F)';
+    }
+    // Recalculate page sizes after fullscreen change
+    setTimeout(resizePages, 100);
+  }
+
+  fullscreenBtn.addEventListener('click', toggleFullscreen);
+
+  // Listen for fullscreen changes
+  document.addEventListener('fullscreenchange', updateFullscreenUI);
+  document.addEventListener('webkitfullscreenchange', updateFullscreenUI);
+  document.addEventListener('mozfullscreenchange', updateFullscreenUI);
+
   // Keyboard navigation
   document.addEventListener('keydown', (e) => {
     if (e.key === 'ArrowRight' || e.key === ' ') {
@@ -857,9 +932,11 @@ document.addEventListener('DOMContentLoaded', function() {
     } else if (e.key === 'ArrowLeft') {
       e.preventDefault();
       navigate('prev');
-    } else if (e.key === 'Escape') {
-      window.location.href = '{% url "home" %}';
+    } else if (e.key === 'f' || e.key === 'F') {
+      e.preventDefault();
+      toggleFullscreen();
     }
+    // Escape key is handled by browser for exiting fullscreen
   });
 
   // Swipe support for mobile
@@ -884,6 +961,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
   // Initial state
   updateIndicator();
+  showNavControls(); // Show controls initially, then auto-hide
 });
 </script>
 {% endif %}

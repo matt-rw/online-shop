@@ -335,20 +335,20 @@
 
   <div class="nav-links">
     <a href="{% url 'admin_home' %}" class="nav-link">
-      <i class="fa-solid fa-arrow-left"></i> Back to Dashboard
+      ← Back to Dashboard
     </a>
     <a href="{% url 'admin_homepage' %}" class="nav-link">
-      <i class="fa-solid fa-home"></i> Homepage
+      Homepage
     </a>
     <a href="{% url 'shop:about' %}" class="nav-link" target="_blank">
-      <i class="fa-solid fa-external-link-alt"></i> View About Page
+      View About Page ↗
     </a>
   </div>
 
   <div class="top-bar">
     <div class="container">
       <div class="header">
-        <h1><i class="fa-solid fa-info-circle"></i> About Page Settings</h1>
+        <h1>About Page Settings</h1>
       </div>
     </div>
   </div>
@@ -359,24 +359,29 @@
     <!-- Banner Image Section -->
     <div class="section-card">
       <h2 class="section-title">
-        <i class="fa-solid fa-image"></i> Banner Image
+        Banner Image
       </h2>
 
       <div class="info-box">
-        <p><i class="fa-solid fa-info-circle"></i> This image appears in the scrolling banner at the top of the About page. For best results, use a wide image (at least 1000px wide).</p>
+        <p>This image appears in the scrolling banner at the top of the About page. For best results, use a wide image (at least 1000px wide).</p>
       </div>
 
       <div class="image-upload-area" id="banner-upload-area">
         <input type="file" id="banner-image-input" accept="image/*" style="display: none;">
-        <i class="fa-solid fa-cloud-upload-alt" style="font-size: 2rem; color: #94a3b8; margin-bottom: 0.5rem;"></i>
+        <svg style="width: 2rem; height: 2rem; color: #94a3b8; margin-bottom: 0.5rem;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/>
+        </svg>
         <p style="color: #64748b; margin-bottom: 0.5rem;">Click or drag image to upload</p>
         <p class="help-text">Recommended: Wide format image (PNG, JPG, WebP)</p>
+        <p id="upload-status" style="color: #667eea; margin-top: 0.5rem; display: none;">Uploading...</p>
       </div>
 
       <div class="image-preview" id="banner-preview" style="display: none;">
         <img id="banner-preview-img" src="" alt="Banner preview">
         <button type="button" class="remove-btn" onclick="removeBannerImage()">
-          <i class="fa-solid fa-times"></i>
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
+            <path d="M18 6L6 18M6 6l12 12"/>
+          </svg>
         </button>
       </div>
     </div>
@@ -384,11 +389,11 @@
     <!-- Main Text Content Section -->
     <div class="section-card">
       <h2 class="section-title">
-        <i class="fa-solid fa-align-left"></i> Main Text Content
+        Main Text Content
       </h2>
 
       <div class="info-box">
-        <p><i class="fa-solid fa-info-circle"></i> These paragraphs appear in the "Our Story" section of the About page. Each text box becomes a separate paragraph.</p>
+        <p>These paragraphs appear in the "Our Story" section of the About page. Each text box becomes a separate paragraph.</p>
       </div>
 
       <div class="paragraph-list" id="paragraph-list">
@@ -396,16 +401,16 @@
       </div>
 
       <button type="button" class="btn btn-secondary btn-sm add-paragraph-btn" onclick="addParagraph()">
-        <i class="fa-solid fa-plus"></i> Add Paragraph
+        + Add Paragraph
       </button>
     </div>
 
     <div class="form-actions">
       <button type="button" class="btn btn-primary" onclick="saveSettings()">
-        <i class="fa-solid fa-save"></i> Save Changes
+        Save Changes
       </button>
       <a href="{% url 'admin_home' %}" class="btn btn-secondary">
-        <i class="fa-solid fa-times"></i> Cancel
+        Cancel
       </a>
     </div>
   </div>
@@ -467,6 +472,11 @@
       formData.append('image_file', file);
       formData.append('action', 'upload_banner_image');
 
+      // Show loading state
+      const uploadStatus = document.getElementById('upload-status');
+      uploadStatus.style.display = 'block';
+      uploadStatus.textContent = 'Uploading...';
+
       fetch(window.location.href, {
         method: 'POST',
         headers: {
@@ -475,18 +485,27 @@
         },
         body: formData
       })
-      .then(response => response.json())
+      .then(response => {
+        if (!response.ok) {
+          throw new Error('Server returned ' + response.status);
+        }
+        return response.json();
+      })
       .then(data => {
+        uploadStatus.style.display = 'none';
         if (data.success) {
           bannerImageUrl = data.url;
           showBannerPreview(data.url);
           showToast('Image uploaded successfully', 'success');
         } else {
           showToast('Upload failed: ' + data.error, 'error');
+          console.error('Upload error:', data.error);
         }
       })
       .catch(error => {
+        uploadStatus.style.display = 'none';
         showToast('Upload failed: ' + error.message, 'error');
+        console.error('Upload error:', error);
       });
     }
 
@@ -521,8 +540,8 @@
             placeholder="Enter paragraph text..."
             onchange="updateParagraph(${index}, this.value)"
           >${text}</textarea>
-          <button type="button" class="btn btn-danger btn-sm remove-paragraph" onclick="removeParagraph(${index})">
-            <i class="fa-solid fa-trash"></i>
+          <button type="button" class="btn btn-danger btn-sm remove-paragraph" onclick="removeParagraph(${index})" title="Remove">
+            ✕
           </button>
         `;
         container.appendChild(item);
@@ -552,6 +571,8 @@
       // Filter out empty paragraphs
       const paragraphs = mainTextParagraphs.filter(p => p.trim() !== '');
 
+      console.log('Saving settings:', { banner_image: bannerImageUrl, main_text: paragraphs });
+
       fetch(window.location.href, {
         method: 'POST',
         headers: {
@@ -565,8 +586,14 @@
           main_text: paragraphs
         })
       })
-      .then(response => response.json())
+      .then(response => {
+        if (!response.ok) {
+          throw new Error('Server returned ' + response.status);
+        }
+        return response.json();
+      })
       .then(data => {
+        console.log('Save response:', data);
         if (data.success) {
           showToast('Settings saved successfully', 'success');
         } else {
@@ -574,6 +601,7 @@
         }
       })
       .catch(error => {
+        console.error('Save error:', error);
         showToast('Save failed: ' + error.message, 'error');
       });
     }
