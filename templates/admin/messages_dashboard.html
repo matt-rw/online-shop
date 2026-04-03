@@ -4,10 +4,9 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="csrf-token" content="{{ csrf_token }}">
-  <title>Messages - Admin Dashboard</title>
+  <title>Messages - Admin</title>
   <link rel="icon" type="image/svg+xml" href="{% static 'admin-favicon.svg' %}">
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -16,96 +15,87 @@
       background: #f1f5f9;
       min-height: 100vh;
     }
-    .nav-links {
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-      padding: 1rem 2rem;
-      display: flex;
-      gap: 0.75rem;
-      align-items: center;
-    }
+
+    /* Top Bar */
     .top-bar {
       background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-      padding: 2rem 0;
-      box-shadow: 0 4px 20px rgba(102, 126, 234, 0.15);
-      margin-bottom: 2rem;
+      padding: 1.5rem 0 4rem;
     }
-    .nav-link {
-      background: rgba(255, 255, 255, 0.15);
+    .top-btn {
+      background: rgba(255, 255, 255, 0.2);
       backdrop-filter: blur(10px);
       color: white;
-      padding: 0.5rem 1rem;
-      border-radius: 8px;
+      padding: 0.625rem 1.25rem;
+      border-radius: 10px;
       text-decoration: none;
-      font-size: 0.875rem;
-      font-weight: 500;
+      font-size: 0.9375rem;
+      font-weight: 600;
       transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-      border: 1px solid rgba(255, 255, 255, 0.1);
-    }
-    .nav-link:hover {
-      background: rgba(255, 255, 255, 0.25);
-      transform: translateY(-1px);
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-    }
-    .header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 1rem;
-    }
-    .header h1 {
-      color: white;
-      font-size: 2.5rem;
-      font-weight: 800;
-      letter-spacing: -0.02em;
-    }
-    .btn-primary {
-      background: white;
-      color: #667eea;
-      padding: 0.875rem 1.75rem;
-      border-radius: 12px;
-      text-decoration: none;
-      font-weight: 700;
-      font-size: 1rem;
-      transition: all 0.3s;
-      border: none;
-      cursor: pointer;
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+      border: 1px solid rgba(255, 255, 255, 0.2);
       display: inline-flex;
       align-items: center;
       gap: 0.5rem;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+      cursor: pointer;
     }
-    .btn-primary:hover {
+    .top-btn:hover {
+      background: rgba(255, 255, 255, 0.3);
       transform: translateY(-2px);
-      box-shadow: 0 6px 16px rgba(0, 0, 0, 0.15);
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
     }
-    .container {
-      max-width: 1600px;
+    .top-bar .container {
+      max-width: 1200px;
       margin: 0 auto;
       padding: 0 2rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
     }
-    .main-content {
-      max-width: 1600px;
-      margin: 0 auto;
+    .top-bar h1 {
+      color: white;
+      font-size: 2rem;
+      font-weight: 800;
+    }
+    .compose-btn {
+      background: white;
+      color: #667eea;
+      border: none;
+      padding: 0.75rem 1.5rem;
+      border-radius: 10px;
+      font-size: 0.9375rem;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+      transition: all 0.2s;
+    }
+    .compose-btn:hover { transform: translateY(-2px); box-shadow: 0 6px 16px rgba(0,0,0,0.2); }
+
+    /* Main Container */
+    .main-container {
+      max-width: 1200px;
+      margin: -3rem auto 2rem;
       padding: 0 2rem;
     }
-    .stats-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-      gap: 1.5rem;
-      margin-bottom: 2rem;
-      margin-top: -4rem;
-      position: relative;
-      z-index: 10;
+
+    /* Stats Row */
+    .stats-row {
+      display: flex;
+      gap: 1rem;
+      margin-bottom: 1.5rem;
     }
     .stat-card {
       background: white;
+      padding: 1.25rem 1.5rem;
       border-radius: 12px;
-      padding: 1.5rem;
-      box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+      box-shadow: 0 2px 8px rgba(0,0,0,0.06);
       text-align: center;
+      flex: 1;
     }
     .stat-card .number {
-      font-size: 2rem;
+      font-size: 1.75rem;
       font-weight: 800;
       background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
       -webkit-background-clip: text;
@@ -113,230 +103,684 @@
       background-clip: text;
     }
     .stat-card .label {
+      font-size: 0.8125rem;
       color: #64748b;
-      font-size: 0.875rem;
-      font-weight: 600;
+      font-weight: 500;
       margin-top: 0.25rem;
     }
-    .filters {
+
+    /* File Explorer */
+    .explorer {
       background: white;
       border-radius: 12px;
-      padding: 1.5rem;
-      margin-bottom: 1.5rem;
-      display: flex;
-      gap: 1rem;
-      align-items: center;
-      flex-wrap: wrap;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+      overflow: hidden;
     }
-    .filter-group {
+
+    /* Folder Contents Header */
+    .folder-contents-header {
+      padding: 1rem 1.5rem;
+      border-bottom: 1px solid #e2e8f0;
+      display: flex;
+      align-items: center;
+      gap: 1.5rem;
+      background: #fafbfc;
+    }
+    .back-btn {
       display: flex;
       align-items: center;
       gap: 0.5rem;
-    }
-    .filter-group label {
-      font-weight: 600;
-      color: #475569;
-      font-size: 0.875rem;
-    }
-    .filter-group select {
       padding: 0.5rem 1rem;
-      border: 2px solid #e2e8f0;
       border-radius: 8px;
       font-size: 0.875rem;
-      background: white;
+      font-weight: 500;
       cursor: pointer;
-    }
-    .messages-table {
+      border: 1px solid #e2e8f0;
       background: white;
-      border-radius: 12px;
-      overflow: hidden;
-      box-shadow: 0 2px 12px rgba(0,0,0,0.06);
-    }
-    .messages-table table {
-      width: 100%;
-      border-collapse: collapse;
-    }
-    .messages-table th {
-      background: #f8fafc;
-      padding: 1rem 1.5rem;
-      text-align: left;
-      font-weight: 700;
       color: #475569;
-      font-size: 0.8125rem;
-      text-transform: uppercase;
-      letter-spacing: 0.05em;
-      border-bottom: 2px solid #e2e8f0;
+      transition: all 0.15s;
     }
-    .messages-table td {
-      padding: 1rem 1.5rem;
-      border-bottom: 1px solid #f1f5f9;
-      color: #334155;
-      font-size: 0.9375rem;
+    .back-btn:hover { background: #f1f5f9; }
+    .current-folder-title {
+      font-size: 1.125rem;
+      font-weight: 600;
+      color: #1e293b;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      flex: 1;
     }
-    .messages-table tbody tr {
-      transition: background 0.15s;
+    .filter-chips {
+      display: flex;
+      gap: 0.5rem;
     }
-    .messages-table tbody tr:hover {
-      background: #f0f4ff;
-    }
-    .badge {
-      padding: 0.25rem 0.75rem;
+    .filter-chip {
+      padding: 0.5rem 1rem;
       border-radius: 20px;
+      font-size: 0.8125rem;
+      font-weight: 500;
+      cursor: pointer;
+      color: #94a3b8;
+      background: #f1f5f9;
+      border: none;
+      transition: all 0.15s;
+    }
+    .filter-chip:hover { background: #e2e8f0; color: #64748b; }
+    .filter-chip.active {
+      background: #667eea;
+      color: white;
+    }
+    .folder-contents-list {
+      min-height: 300px;
+    }
+
+    /* Folder Grid - Mac Finder Style */
+    .folders-view {
+      padding: 2rem;
+      min-height: 400px;
+    }
+    .folders-section {
+      max-width: 900px;
+      margin: 0 auto;
+    }
+    .folders-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 1.5rem;
+    }
+    .folders-title {
+      font-size: 1rem;
+      font-weight: 600;
+      color: #475569;
+    }
+    .add-folder-btn {
+      padding: 0.5rem 1rem;
+      border-radius: 8px;
+      font-size: 0.875rem;
+      cursor: pointer;
+      color: #64748b;
+      background: white;
+      border: 1px solid #e2e8f0;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      transition: all 0.15s;
+    }
+    .add-folder-btn:hover { background: #f1f5f9; border-color: #cbd5e1; color: #475569; }
+    .folders-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+      gap: 1.5rem;
+    }
+    .folder-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 1.5rem 1rem;
+      border-radius: 12px;
+      cursor: pointer;
+      transition: all 0.15s;
+      position: relative;
+      border: 2px solid transparent;
+      background: #f8fafc;
+    }
+    .folder-item:hover { background: #e2e8f0; transform: translateY(-2px); }
+    .folder-item.selected { background: #dbeafe; border-color: #3b82f6; }
+    .folder-icon-wrap {
+      position: relative;
+      margin-bottom: 0.75rem;
+    }
+    .folder-icon {
+      font-size: 3.5rem;
+      filter: drop-shadow(0 4px 6px rgba(0,0,0,0.1));
+    }
+    .folder-badge {
+      position: absolute;
+      top: -6px;
+      right: -10px;
+      background: #667eea;
+      color: white;
       font-size: 0.75rem;
       font-weight: 700;
-      text-transform: uppercase;
+      padding: 0.25rem 0.5rem;
+      border-radius: 10px;
+      min-width: 24px;
+      text-align: center;
     }
-    .badge-email {
-      background: #dbeafe;
-      color: #1e40af;
-    }
-    .badge-sms {
-      background: #dcfce7;
-      color: #166534;
-    }
-    .badge-sent {
-      background: #dcfce7;
-      color: #166534;
-    }
-    .badge-partial {
-      background: #fef3c7;
-      color: #92400e;
-    }
-    .badge-failed {
-      background: #fee2e2;
-      color: #991b1b;
-    }
-    .badge-scheduled {
-      background: #f3e8ff;
-      color: #7c3aed;
-    }
-    .content-preview {
-      max-width: 400px;
+    .folder-name {
+      font-size: 0.9375rem;
+      color: #334155;
+      font-weight: 600;
+      text-align: center;
+      max-width: 120px;
       overflow: hidden;
       text-overflow: ellipsis;
       white-space: nowrap;
     }
-    .empty-state {
-      text-align: center;
-      padding: 4rem 2rem;
+    .folder-menu-btn {
+      position: absolute;
+      top: 8px;
+      right: 8px;
+      opacity: 0;
+      padding: 0.375rem 0.5rem;
+      border: none;
+      background: rgba(255,255,255,0.9);
       color: #64748b;
+      cursor: pointer;
+      border-radius: 6px;
+      font-size: 0.75rem;
+      line-height: 1;
     }
-    .empty-state i {
-      font-size: 3rem;
-      margin-bottom: 1rem;
-      opacity: 0.5;
+    .folder-item:hover .folder-menu-btn { opacity: 1; }
+    .folder-menu-btn:hover { background: white; color: #1e293b; }
+
+    /* Explorer Content */
+    .explorer-content {
+      min-height: 300px;
     }
 
-    /* Timeline Styles */
-    .timeline-container {
-      position: relative;
-      padding: 1rem 0 1rem 2rem;
+    /* Message Table */
+    .message-table {
+      width: 100%;
     }
-    .timeline-line {
-      position: absolute;
-      left: 0.75rem;
-      top: 0;
-      bottom: 0;
-      width: 3px;
-      background: linear-gradient(180deg, #667eea 0%, #764ba2 100%);
-      border-radius: 3px;
+    .message-row {
+      display: flex;
+      align-items: center;
+      padding: 1.25rem 1.5rem;
+      border-bottom: 1px solid #e2e8f0;
+      cursor: pointer;
+      transition: background 0.1s;
+      gap: 1.25rem;
     }
-    .timeline-item {
-      position: relative;
-      margin-bottom: 1.25rem;
-      padding-left: 1.5rem;
+    .message-row:hover { background: #f8fafc; }
+    .message-row.selected { background: #eef2ff; }
+    .message-row:last-child { border-bottom: none; }
+
+    .msg-icon {
+      width: 48px;
+      height: 48px;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.25rem;
+      flex-shrink: 0;
     }
-    .timeline-item:last-child {
-      margin-bottom: 0;
+    .msg-icon.email { background: #dbeafe; color: #3b82f6; }
+    .msg-icon.sms { background: #dcfce7; color: #22c55e; }
+
+    .msg-content { flex: 1; min-width: 0; }
+    .msg-subject {
+      font-weight: 600;
+      color: #1e293b;
+      font-size: 1.0625rem;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
     }
-    .timeline-node {
-      position: absolute;
-      left: -1.75rem;
-      top: 0.5rem;
-      width: 14px;
-      height: 14px;
-      border-radius: 50%;
-      border: 3px solid white;
-      box-shadow: 0 0 0 2px #667eea, 0 2px 4px rgba(0,0,0,0.1);
+    .msg-details {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      margin-top: 0.375rem;
     }
-    .timeline-node.scheduled {
-      background: #7c3aed;
-      box-shadow: 0 0 0 2px #7c3aed, 0 2px 4px rgba(0,0,0,0.1);
+    .msg-date {
+      font-size: 0.8125rem;
+      color: #64748b;
     }
-    .timeline-node.draft {
-      background: #f59e0b;
-      box-shadow: 0 0 0 2px #f59e0b, 0 2px 4px rgba(0,0,0,0.1);
+    .msg-attachments {
+      display: flex;
+      align-items: center;
+      gap: 0.25rem;
+      font-size: 0.75rem;
+      color: #64748b;
     }
-    .timeline-card {
-      background: white;
-      border-radius: 10px;
-      padding: 1rem;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.06);
-      border: 1px solid #e2e8f0;
-      transition: all 0.2s;
+    .msg-attachments i { font-size: 0.8125rem; }
+    .msg-recipients {
+      font-size: 0.8125rem;
+      color: #64748b;
     }
-    .timeline-card:hover {
-      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-      transform: translateX(4px);
-    }
-    .timeline-card.scheduled {
-      border-left: 3px solid #7c3aed;
-    }
-    .timeline-card.draft {
-      border-left: 3px solid #f59e0b;
-      background: #fffbeb;
-    }
-    .timeline-date {
+
+    .status-badge {
+      padding: 0.375rem 0.75rem;
+      border-radius: 6px;
       font-size: 0.75rem;
       font-weight: 600;
-      color: #667eea;
-      margin-bottom: 0.5rem;
+      text-transform: uppercase;
+      letter-spacing: 0.03em;
+      flex-shrink: 0;
+    }
+    .status-badge.draft { background: #fef3c7; color: #b45309; }
+    .status-badge.scheduled { background: #ede9fe; color: #7c3aed; }
+    .status-badge.sent { background: #dcfce7; color: #16a34a; }
+    .status-badge.partial { background: #fef3c7; color: #b45309; }
+    .status-badge.failed { background: #fee2e2; color: #dc2626; }
+    .status-badge.sending { background: #e0e7ff; color: #4f46e5; }
+
+    /* Empty State */
+    .empty-state {
+      padding: 4rem 2rem;
+      text-align: center;
+      color: #94a3b8;
+    }
+    .empty-state i { font-size: 3rem; margin-bottom: 1rem; opacity: 0.4; }
+    .empty-state h3 { font-size: 1.125rem; color: #64748b; margin-bottom: 0.5rem; }
+
+    /* Message View - Full Content View */
+    .message-view {
+      display: none;
+    }
+    .message-view.open {
+      display: block;
+    }
+    .message-view-header {
+      padding: 1rem 1.5rem;
+      border-bottom: 1px solid #e2e8f0;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: #fafbfc;
+    }
+    .back-btn {
       display: flex;
       align-items: center;
       gap: 0.5rem;
+      padding: 0.5rem 1rem;
+      border-radius: 8px;
+      font-size: 0.875rem;
+      font-weight: 500;
+      cursor: pointer;
+      border: 1px solid #e2e8f0;
+      background: white;
+      color: #475569;
+      transition: all 0.15s;
     }
-    .timeline-date .relative {
-      color: #94a3b8;
-      font-weight: 400;
+    .back-btn:hover { background: #f1f5f9; }
+    .message-actions { display: flex; gap: 0.5rem; }
+    .action-btn {
+      padding: 0.5rem 1rem;
+      border-radius: 8px;
+      font-size: 0.8125rem;
+      font-weight: 500;
+      cursor: pointer;
+      border: 1px solid #e2e8f0;
+      background: white;
+      color: #475569;
+      display: flex;
+      align-items: center;
+      gap: 0.375rem;
+      transition: all 0.15s;
     }
-    .timeline-empty {
-      text-align: center;
-      padding: 2rem;
-      color: #94a3b8;
-    }
-    .timeline-empty i {
-      font-size: 2rem;
-      margin-bottom: 0.5rem;
-      opacity: 0.5;
-    }
+    .action-btn:hover { background: #f8fafc; }
+    .action-btn.primary { background: #667eea; color: white; border-color: #667eea; }
+    .action-btn.primary:hover { background: #5a67d8; }
+    .action-btn.danger:hover { background: #fee2e2; color: #dc2626; border-color: #fecaca; }
 
-    /* Delete confirmation modal */
-    .delete-modal-overlay {
+    .message-view-body {
+      padding: 2rem;
+    }
+    .message-meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 2rem;
+      margin-bottom: 1.5rem;
+      padding-bottom: 1.5rem;
+      border-bottom: 1px solid #e2e8f0;
+    }
+    .meta-item label {
+      display: block;
+      font-size: 0.6875rem;
+      font-weight: 600;
+      color: #94a3b8;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-bottom: 0.25rem;
+    }
+    .meta-item span {
+      font-size: 0.9375rem;
+      color: #1e293b;
+      font-weight: 500;
+    }
+    .message-subject {
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: #1e293b;
+      margin-bottom: 1rem;
+    }
+    .message-body {
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: 12px;
+      padding: 1.5rem;
+      font-size: 1rem;
+      line-height: 1.7;
+      color: #334155;
+      white-space: pre-wrap;
+      min-height: 200px;
+    }
+    .message-stats {
+      display: flex;
+      gap: 1rem;
+      margin-top: 1.5rem;
+    }
+    .stat-box {
+      background: white;
+      border: 1px solid #e2e8f0;
+      padding: 1rem 1.5rem;
+      border-radius: 8px;
+      text-align: center;
+    }
+    .stat-box .num { font-size: 1.5rem; font-weight: 700; }
+    .stat-box .num.success { color: #16a34a; }
+    .stat-box .num.error { color: #dc2626; }
+    .stat-box .lbl { font-size: 0.75rem; color: #64748b; margin-top: 0.25rem; }
+
+    /* Compose Modal */
+    .modal-overlay {
       position: fixed;
-      top: 0;
-      left: 0;
-      right: 0;
-      bottom: 0;
-      background: rgba(0, 0, 0, 0.5);
+      inset: 0;
+      background: rgba(0, 0, 0, 0.4);
       backdrop-filter: blur(4px);
       display: none;
       align-items: center;
       justify-content: center;
-      z-index: 1000;
+      z-index: 200;
+      padding: 2rem;
     }
-    .delete-modal-overlay.active {
-      display: flex;
-    }
-    .delete-modal {
+    .modal-overlay.open { display: flex; }
+    .modal {
       background: white;
       border-radius: 16px;
-      padding: 2rem;
-      max-width: 400px;
-      width: 90%;
-      text-align: center;
-      box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+      box-shadow: 0 20px 40px rgba(0,0,0,0.2);
+      width: 100%;
+      max-width: 650px;
+      max-height: 90vh;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
     }
-    .delete-modal-icon {
+    .modal-header {
+      padding: 1.25rem 1.5rem;
+      border-bottom: 1px solid #e2e8f0;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .modal-title { font-size: 1.25rem; font-weight: 700; color: #1e293b; }
+    .modal-body { padding: 1.5rem; overflow-y: auto; flex: 1; }
+    .modal-footer {
+      padding: 1rem 1.5rem;
+      border-top: 1px solid #e2e8f0;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: #fafbfc;
+    }
+
+    /* Form */
+    .form-row { margin-bottom: 1rem; }
+    .form-label {
+      display: block;
+      font-size: 0.8125rem;
+      font-weight: 600;
+      color: #475569;
+      margin-bottom: 0.375rem;
+    }
+    .form-input {
+      width: 100%;
+      padding: 0.75rem 1rem;
+      background: white;
+      border: 2px solid #e2e8f0;
+      border-radius: 8px;
+      color: #1e293b;
+      font-size: 0.9375rem;
+      transition: border-color 0.2s;
+    }
+    .form-input:focus { outline: none; border-color: #667eea; }
+    .form-textarea { min-height: 140px; resize: vertical; font-family: inherit; }
+
+    .type-toggle {
+      display: inline-flex;
+      background: #f1f5f9;
+      border-radius: 8px;
+      padding: 0.25rem;
+    }
+    .type-btn {
+      padding: 0.5rem 1rem;
+      border: none;
+      background: transparent;
+      color: #64748b;
+      font-size: 0.8125rem;
+      font-weight: 500;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    .type-btn.active { background: white; color: #1e293b; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+
+    .test-row {
+      background: #fffbeb;
+      border: 1px solid #fcd34d;
+      border-radius: 8px;
+      padding: 0.75rem 1rem;
+      margin-bottom: 1rem;
+      display: none;
+      align-items: center;
+      gap: 0.75rem;
+    }
+    .test-row.active { display: flex; }
+    .test-row label { font-size: 0.8125rem; color: #92400e; font-weight: 600; white-space: nowrap; }
+    .test-row input { flex: 1; border-color: #fcd34d; }
+
+    .settings-dropdown {
+      position: relative;
+    }
+    .test-settings-popover {
+      position: absolute;
+      top: calc(100% + 0.5rem);
+      right: 0;
+      background: white;
+      border-radius: 12px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+      padding: 1.25rem;
+      width: 280px;
+      z-index: 100;
+      display: none;
+    }
+    .test-settings-popover.open { display: block; }
+    .test-settings-header {
+      font-size: 0.875rem;
+      font-weight: 600;
+      color: #1e293b;
+      margin-bottom: 1rem;
+    }
+    .test-settings-field {
+      margin-bottom: 1rem;
+    }
+    .test-settings-field label {
+      display: block;
+      font-size: 0.75rem;
+      font-weight: 600;
+      color: #64748b;
+      margin-bottom: 0.375rem;
+      text-transform: uppercase;
+      letter-spacing: 0.03em;
+    }
+    .test-settings-field input {
+      padding: 0.625rem 0.875rem;
+      font-size: 0.875rem;
+    }
+
+    .option-row {
+      position: relative;
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      margin-bottom: 1rem;
+    }
+    .option-row label {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-size: 0.875rem;
+      color: #64748b;
+      cursor: pointer;
+    }
+    .recipient-info { font-size: 0.875rem; color: #64748b; }
+    .recipient-info strong { color: #667eea; }
+
+    .btn-group { display: flex; gap: 0.5rem; }
+    .btn {
+      padding: 0.75rem 1.5rem;
+      border-radius: 8px;
+      font-size: 0.9375rem;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      transition: all 0.2s;
+      border: none;
+    }
+    .btn-secondary { background: #f1f5f9; color: #475569; }
+    .btn-secondary:hover { background: #e2e8f0; }
+    .btn-primary { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; }
+    .btn-primary:hover { transform: translateY(-1px); box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4); }
+
+    /* Compose with Preview */
+    .compose-split {
+      display: flex;
+      gap: 1.5rem;
+    }
+    .compose-editor { flex: 1; min-width: 0; }
+    .compose-preview {
+      flex: 1;
+      min-width: 0;
+      display: none;
+    }
+    .compose-preview.active { display: block; }
+    .preview-toggle {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.5rem 1rem;
+      border: 1px solid #e2e8f0;
+      background: white;
+      border-radius: 8px;
+      font-size: 0.8125rem;
+      font-weight: 500;
+      color: #64748b;
+      cursor: pointer;
+    }
+    .preview-toggle.active { background: #667eea; color: white; border-color: #667eea; }
+    .preview-panel {
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: 12px;
+      height: 100%;
+      min-height: 400px;
+      display: flex;
+      flex-direction: column;
+    }
+    .preview-header {
+      padding: 0.75rem 1rem;
+      border-bottom: 1px solid #e2e8f0;
+      font-size: 0.75rem;
+      font-weight: 600;
+      color: #64748b;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    .preview-device-toggle {
+      display: flex;
+      gap: 0.25rem;
+      margin-left: auto;
+    }
+    .preview-device-btn {
+      padding: 0.375rem 0.5rem;
+      border: none;
+      background: transparent;
+      color: #94a3b8;
+      cursor: pointer;
+      border-radius: 4px;
+    }
+    .preview-device-btn:hover { background: #e2e8f0; color: #64748b; }
+    .preview-device-btn.active { background: #667eea; color: white; }
+    .preview-content {
+      flex: 1;
+      overflow-y: auto;
+      padding: 1rem;
+      display: flex;
+      justify-content: center;
+    }
+    .preview-frame {
+      background: white;
+      border-radius: 8px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      width: 100%;
+      max-width: 100%;
+      transition: all 0.3s;
+    }
+    .preview-frame.phone {
+      max-width: 320px;
+      border-radius: 24px;
+      border: 8px solid #1e293b;
+    }
+    .preview-email {
+      padding: 1.5rem;
+    }
+    .preview-email-subject {
+      font-size: 1.125rem;
+      font-weight: 700;
+      color: #1e293b;
+      margin-bottom: 1rem;
+      padding-bottom: 1rem;
+      border-bottom: 1px solid #e2e8f0;
+    }
+    .preview-email-body {
+      font-size: 0.9375rem;
+      line-height: 1.7;
+      color: #334155;
+    }
+    .preview-email-body img {
+      max-width: 100%;
+      height: auto;
+      border-radius: 8px;
+      margin: 0.5rem 0;
+    }
+    .preview-sms {
+      padding: 1rem;
+      display: flex;
+      flex-direction: column;
+    }
+    .preview-sms-bubble {
+      background: #667eea;
+      color: white;
+      padding: 0.875rem 1rem;
+      border-radius: 18px 18px 4px 18px;
+      font-size: 0.9375rem;
+      line-height: 1.5;
+      max-width: 85%;
+      align-self: flex-end;
+    }
+    .preview-sms-meta {
+      font-size: 0.75rem;
+      color: #94a3b8;
+      margin-top: 0.5rem;
+      text-align: right;
+    }
+
+    /* Confirm Modal */
+    .confirm-modal {
+      max-width: 400px;
+      text-align: center;
+      padding: 2rem;
+    }
+    .confirm-modal .icon {
       width: 56px;
       height: 56px;
       border-radius: 50%;
@@ -348,88 +792,153 @@
       margin: 0 auto 1rem;
       font-size: 1.25rem;
     }
-    .delete-modal-title {
-      font-size: 1.125rem;
-      font-weight: 600;
-      color: #1e293b;
-      margin-bottom: 0.5rem;
-    }
-    .delete-modal-text {
-      color: #64748b;
-      font-size: 0.875rem;
-      margin-bottom: 1.5rem;
-      line-height: 1.5;
-    }
-    .delete-modal-buttons {
-      display: flex;
-      gap: 0.75rem;
-      justify-content: center;
-    }
-    .delete-modal-cancel {
-      padding: 0.625rem 1.25rem;
-      border: 1px solid #e2e8f0;
+    .confirm-modal h3 { color: #1e293b; margin-bottom: 0.5rem; }
+    .confirm-modal p { color: #64748b; margin-bottom: 1.5rem; font-size: 0.9375rem; }
+    .confirm-modal .btn-group { justify-content: center; }
+    .btn-danger { background: #dc2626; color: white; }
+    .btn-danger:hover { background: #b91c1c; }
+
+    /* Folder context menu */
+    .context-menu {
+      position: fixed;
       background: white;
-      color: #64748b;
       border-radius: 8px;
-      font-weight: 500;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+      padding: 0.375rem;
+      z-index: 300;
+      min-width: 140px;
+      display: none;
+    }
+    .context-menu.open { display: block; }
+    .context-menu-item {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.5rem 0.75rem;
+      font-size: 0.8125rem;
+      color: #475569;
       cursor: pointer;
-      font-size: 0.875rem;
-      transition: all 0.2s;
-    }
-    .delete-modal-cancel:hover {
-      background: #f8fafc;
-    }
-    .delete-modal-confirm {
-      padding: 0.625rem 1.25rem;
+      border-radius: 4px;
       border: none;
-      background: #dc2626;
-      color: white;
-      border-radius: 8px;
-      font-weight: 500;
+      background: none;
+      width: 100%;
+      text-align: left;
+    }
+    .context-menu-item:hover { background: #f1f5f9; }
+    .context-menu-item.danger { color: #dc2626; }
+    .context-menu-item.danger:hover { background: #fee2e2; }
+    .context-divider { height: 1px; background: #e2e8f0; margin: 0.25rem 0; }
+
+    /* Folder modal */
+    .color-picker {
+      display: flex;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+      margin-top: 0.5rem;
+    }
+    .color-option {
+      width: 28px;
+      height: 28px;
+      border-radius: 6px;
       cursor: pointer;
-      font-size: 0.875rem;
-      transition: all 0.2s;
+      border: 2px solid transparent;
+      transition: all 0.15s;
     }
-    .delete-modal-confirm:hover {
-      background: #b91c1c;
+    .color-option:hover { transform: scale(1.1); }
+    .color-option.selected { border-color: #1e293b; box-shadow: 0 0 0 2px white inset; }
+
+    /* Move to folder dropdown */
+    .move-folder-dropdown {
+      position: relative;
     }
+    .move-dropdown-content {
+      position: absolute;
+      top: 100%;
+      left: 0;
+      background: white;
+      border-radius: 8px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+      padding: 0.375rem;
+      z-index: 150;
+      min-width: 180px;
+      display: none;
+    }
+    .move-dropdown-content.open { display: block; }
+    .move-folder-item {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.5rem 0.75rem;
+      font-size: 0.8125rem;
+      color: #475569;
+      cursor: pointer;
+      border-radius: 4px;
+      border: none;
+      background: none;
+      width: 100%;
+      text-align: left;
+    }
+    .move-folder-item:hover { background: #f1f5f9; }
+
+    /* Close button */
+    .close-btn {
+      background: none;
+      border: none;
+      color: #94a3b8;
+      font-size: 1.25rem;
+      cursor: pointer;
+      padding: 0.25rem 0.5rem;
+      border-radius: 4px;
+    }
+    .close-btn:hover { background: #f1f5f9; color: #64748b; }
   </style>
 </head>
 <body>
-  <div class="nav-links">
-    <a href="{% url 'admin_home' %}" class="nav-link">← Back</a>
-  </div>
-
   <div class="top-bar">
     <div class="container">
-      <div class="header">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+        <a href="{% url 'admin_home' %}" class="top-btn">
+          <i class="fa-solid fa-arrow-left"></i> Back
+        </a>
+        <div style="display: flex; gap: 0.75rem;">
+          <div class="settings-dropdown">
+            <button class="top-btn" onclick="toggleTestSettings(event)" title="Test Settings">
+              <i class="fa-solid fa-gear"></i>
+            </button>
+            <div class="test-settings-popover" id="testSettingsPopover">
+              <div class="test-settings-header">Default Test Recipients</div>
+              <div class="test-settings-field">
+                <label>Email</label>
+                <input type="email" id="defaultTestEmail" class="form-input" placeholder="test@example.com">
+              </div>
+              <div class="test-settings-field">
+                <label>Phone</label>
+                <input type="tel" id="defaultTestPhone" class="form-input" placeholder="+1234567890">
+              </div>
+              <button type="button" class="btn btn-primary" style="width: 100%; padding: 0.5rem;" onclick="saveTestSettings()">Save</button>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div style="display: flex; justify-content: space-between; align-items: center;">
         <h1>Messages</h1>
+        <button class="compose-btn" onclick="openCompose()">
+          <i class="fa-solid fa-plus"></i> Compose
+        </button>
       </div>
     </div>
   </div>
 
-  <div class="container">
+  <div class="main-container">
     <!-- Stats -->
-    <div class="stats-grid">
+    <div class="stats-row">
       <div class="stat-card">
         <div class="number">{{ stats.total_messages }}</div>
-        <div class="label">Total Messages</div>
-      </div>
-      <div class="stat-card">
-        <div class="number">{{ stats.email_messages }}</div>
-        <div class="label">Email Messages</div>
-      </div>
-      <div class="stat-card">
-        <div class="number">{{ stats.sms_messages }}</div>
-        <div class="label">SMS Messages</div>
+        <div class="label">Total Sent</div>
       </div>
       <div class="stat-card">
         <div class="number">{{ stats.total_sent }}</div>
-        <div class="label">Total Delivered</div>
-      </div>
-      <div class="stat-card">
-        <div class="number">{{ stats.total_failed }}</div>
-        <div class="label">Failed</div>
+        <div class="label">Delivered</div>
       </div>
       <div class="stat-card">
         <div class="number">{{ stats.draft_count }}</div>
@@ -439,990 +948,1103 @@
         <div class="number">{{ stats.scheduled_count }}</div>
         <div class="label">Scheduled</div>
       </div>
-    </div>
-
-    <!-- Quick Send Form -->
-    <div class="quick-send-section" style="background: white; border-radius: 12px; padding: 1.5rem; margin-bottom: 1.5rem; box-shadow: 0 2px 12px rgba(0,0,0,0.06);">
-      <h3 style="font-size: 1rem; font-weight: 600; color: #1e293b; margin: 0 0 1rem 0;">
-        <i class="fa-solid fa-paper-plane" style="color: #667eea;"></i> Quick Send
-      </h3>
-      <form id="quickSendForm" onsubmit="sendQuickMessage(event)" autocomplete="off">
-        {% csrf_token %}
-        <!-- Message Type Toggle -->
-        <div style="display: inline-flex; gap: 0.25rem; margin-bottom: 0.75rem; background: #f1f5f9; padding: 0.25rem; border-radius: 6px;">
-          <button type="button" id="toggleEmail" onclick="setMessageType('email')" style="padding: 0.375rem 0.75rem; border: none; background: white; color: #1e293b; border-radius: 4px; font-size: 0.8125rem; font-weight: 500; cursor: pointer; transition: all 0.15s; box-shadow: 0 1px 2px rgba(0,0,0,0.05);">
-            📧 Email ({{ stats.email_sub_count }})
-          </button>
-          <button type="button" id="toggleSMS" onclick="setMessageType('sms')" style="padding: 0.375rem 0.75rem; border: none; background: transparent; color: #64748b; border-radius: 4px; font-size: 0.8125rem; font-weight: 500; cursor: pointer; transition: all 0.15s;">
-            💬 SMS ({{ stats.sms_sub_count }})
-          </button>
-        </div>
-        <input type="hidden" name="message_type" id="messageType" value="email">
-
-        <!-- Test Mode Toggle -->
-        <div style="margin-bottom: 1rem; display: flex; align-items: center; gap: 1rem;">
-          <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer; user-select: none;">
-            <input type="checkbox" id="testModeToggle" onchange="toggleTestMode()" style="width: 18px; height: 18px; cursor: pointer; accent-color: #667eea;">
-            <span style="font-weight: 600; color: #475569;">Test Mode</span>
-          </label>
-          <span id="testModeHint" style="font-size: 0.8125rem; color: #64748b; display: none;">Send to a specific recipient for testing</span>
-        </div>
-
-        <!-- Test Recipient Input (hidden by default) -->
-        <div id="testRecipientField" style="margin-bottom: 1rem; display: none;">
-          <input type="text" name="test_recipient" id="testRecipient" placeholder="Enter email address or phone number" style="width: 100%; padding: 0.75rem 1rem; border: 2px solid #f59e0b; border-radius: 8px; font-size: 0.9375rem; background: #fffbeb;" onfocus="this.style.borderColor='#d97706'" onblur="this.style.borderColor='#f59e0b'">
-          <p style="font-size: 0.75rem; color: #92400e; margin-top: 0.25rem;"><i class="fa-solid fa-flask"></i> Test mode: Message will only be sent to this recipient</p>
-        </div>
-
-        <!-- Subject (email only) -->
-        <div id="subjectField" style="margin-bottom: 1rem;">
-          <input type="text" name="subject" id="quickSubject" placeholder="Subject line" style="width: 100%; padding: 0.75rem 1rem; border: 2px solid #e2e8f0; border-radius: 8px; font-size: 0.9375rem; transition: border-color 0.2s;" onfocus="this.style.borderColor='#667eea'" onblur="this.style.borderColor='#e2e8f0'">
-        </div>
-
-        <!-- Message Content -->
-        <div style="margin-bottom: 0.5rem;">
-          <textarea name="content" id="quickContent" placeholder="Write your message here..." rows="3" style="width: 100%; padding: 0.75rem 1rem; border: 2px solid #e2e8f0; border-radius: 8px; font-size: 0.9375rem; resize: vertical; font-family: inherit; transition: border-color 0.2s;" onfocus="this.style.borderColor='#667eea'" onblur="this.style.borderColor='#e2e8f0'" required></textarea>
-        </div>
-
-        <!-- Image Upload (email only) -->
-        <div id="imageUploadRow" style="margin-bottom: 1rem; display: flex; align-items: center; gap: 0.75rem;">
-          <button type="button" onclick="document.getElementById('messageImageInput').click()" style="padding: 0.5rem 0.875rem; background: #f1f5f9; color: #64748b; border: 1px solid #e2e8f0; border-radius: 6px; font-size: 0.8125rem; font-weight: 500; cursor: pointer; display: flex; align-items: center; gap: 0.375rem; transition: all 0.2s;" onmouseover="this.style.background='#e2e8f0'; this.style.color='#475569'" onmouseout="this.style.background='#f1f5f9'; this.style.color='#64748b'">
-            <i class="fa-solid fa-image"></i>
-            <span id="imageUploadBtnText">Add Image</span>
-          </button>
-          <span id="imageUploadStatus" style="font-size: 0.75rem; color: #64748b;"></span>
-          <input type="file" id="messageImageInput" accept="image/*" style="display: none;" onchange="handleMessageImageUpload(this)">
-        </div>
-
-        <input type="hidden" name="draft_id" id="draftId" value="">
-
-        <!-- Schedule (optional) -->
-        <div style="margin-bottom: 1rem;">
-          <div style="display: flex; align-items: center; gap: 0.75rem;">
-            <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer; color: #64748b; font-size: 0.875rem;">
-              <input type="checkbox" id="scheduleToggle" onchange="toggleScheduleField()" style="width: 16px; height: 16px; accent-color: #667eea;">
-              Schedule for later
-            </label>
-            <input type="datetime-local" name="scheduled_for" id="scheduledFor" style="display: none; padding: 0.5rem 0.75rem; border: 2px solid #e2e8f0; border-radius: 8px; font-size: 0.875rem; transition: border-color 0.2s;" onfocus="this.style.borderColor='#667eea'" onblur="this.style.borderColor='#e2e8f0'">
-          </div>
-        </div>
-
-        <!-- Send Button -->
-        <div style="display: flex; justify-content: space-between; align-items: center;">
-          <span id="recipientCount" style="color: #64748b; font-size: 0.875rem;">
-            Will send to <strong style="color: #667eea;">{{ stats.email_sub_count }}</strong> active email subscribers
-          </span>
-          <div style="display: flex; gap: 0.5rem;">
-            <button type="button" id="saveDraftBtn" onclick="saveDraft()" style="padding: 0.75rem 1.25rem; background: #f1f5f9; color: #475569; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 0.5rem; transition: all 0.2s;" onmouseover="this.style.background='#e2e8f0'" onmouseout="this.style.background='#f1f5f9'">
-              <i class="fa-solid fa-floppy-disk"></i>
-              <span id="saveDraftBtnText">Save Draft</span>
-            </button>
-            <button type="submit" id="sendBtn" style="padding: 0.75rem 2rem; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 0.5rem; transition: all 0.2s;">
-              <span id="sendBtnText">Send Now</span>
-              <span>→</span>
-            </button>
-          </div>
-        </div>
-      </form>
-    </div>
-
-    <!-- Test Settings Panel (Collapsible) -->
-    <div id="testSettingsPanel" class="test-settings-panel collapsed" style="background: white; border-radius: 12px; margin-bottom: 1.5rem; box-shadow: 0 2px 12px rgba(0,0,0,0.06); overflow: hidden;">
-      <div onclick="toggleTestSettings()" style="display: flex; align-items: center; gap: 0.5rem; padding: 0.875rem 1.25rem; cursor: pointer; user-select: none;">
-        <i id="testSettingsChevron" class="fa-solid fa-chevron-right" style="color: #94a3b8; font-size: 0.75rem; transition: transform 0.2s;"></i>
-        <i class="fa-solid fa-flask" style="color: #667eea; font-size: 0.8125rem;"></i>
-        <span style="font-weight: 500; color: #64748b; font-size: 0.8125rem;">Test Defaults</span>
-        <span id="testSettingsHint" style="color: #94a3b8; font-size: 0.75rem;">· click to configure</span>
+      <div class="stat-card">
+        <div class="number">{{ stats.email_sub_count }}</div>
+        <div class="label">Email Subs</div>
       </div>
-      <div id="testSettingsContent" style="max-height: 0; opacity: 0; transition: max-height 0.3s ease, opacity 0.2s ease, padding 0.3s ease; padding: 0 1.25rem; overflow: hidden;">
-        <div style="display: flex; gap: 1rem; flex-wrap: wrap; padding-bottom: 1rem;">
-          <div style="display: flex; align-items: center; gap: 0.5rem; flex: 1; min-width: 200px;">
-            <label style="font-size: 0.75rem; font-weight: 500; color: #94a3b8; white-space: nowrap;">Email</label>
-            <input type="email" id="defaultTestEmail" placeholder="test@example.com" value="{{ default_test_email }}" style="flex: 1; padding: 0.5rem 0.75rem; border: 1px solid #e2e8f0; border-radius: 6px; font-size: 0.8125rem;">
-          </div>
-          <div style="display: flex; align-items: center; gap: 0.5rem; flex: 1; min-width: 200px;">
-            <label style="font-size: 0.75rem; font-weight: 500; color: #94a3b8; white-space: nowrap;">Phone</label>
-            <input type="tel" id="defaultTestPhone" placeholder="+1 555 123 4567" value="{{ default_test_phone }}" style="flex: 1; padding: 0.5rem 0.75rem; border: 1px solid #e2e8f0; border-radius: 6px; font-size: 0.8125rem;">
-          </div>
-          <button onclick="saveTestSettings()" style="padding: 0.5rem 1rem; background: #667eea; color: white; border: none; border-radius: 6px; font-size: 0.8125rem; font-weight: 500; cursor: pointer; transition: background 0.2s;" onmouseover="this.style.background='#5a67d8'" onmouseout="this.style.background='#667eea'">
-            Save
-          </button>
-          <span id="saveStatus" style="font-size: 0.75rem; color: #10b981; display: none; align-self: center;"><i class="fa-solid fa-check"></i> Saved</span>
-        </div>
+      <div class="stat-card">
+        <div class="number">{{ stats.sms_sub_count }}</div>
+        <div class="label">SMS Subs</div>
       </div>
     </div>
 
-    <!-- Schedule Timeline Section -->
-    <div class="timeline-section" style="background: white; border-radius: 12px; padding: 1.5rem; margin-bottom: 1.5rem; box-shadow: 0 2px 12px rgba(0,0,0,0.06);">
-      <h3 style="font-size: 1rem; font-weight: 600; color: #1e293b; margin: 0 0 1rem 0; display: flex; align-items: center; justify-content: space-between;">
-        <span>
-          <i class="fa-solid fa-calendar-alt" style="color: #667eea;"></i> Upcoming Schedule
-        </span>
-        {% if timeline_items %}
-        <span style="font-size: 0.75rem; font-weight: 500; color: #94a3b8;">
-          {{ timeline_items|length }} item{{ timeline_items|length|pluralize }}
-        </span>
-        {% endif %}
-      </h3>
-      {% if timeline_items %}
-      <div class="timeline-container">
-        <div class="timeline-line"></div>
-        {% load tz %}
-        {% for item in timeline_items %}
-        <div class="timeline-item">
-          <div class="timeline-node {{ item.type }}"></div>
-          <div class="timeline-card {{ item.type }}">
-            <div class="timeline-date">
-              <i class="fa-solid fa-clock"></i>
-              {% timezone "America/Chicago" %}{{ item.scheduled_for|date:"D, M j" }} at {{ item.scheduled_for|date:"g:i A" }}{% endtimezone %}
-              <span class="relative">· in {{ item.scheduled_for|timeuntil }}</span>
-            </div>
-            <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 0.5rem;">
-              <div style="display: flex; align-items: center; gap: 0.5rem;">
-                <span style="font-size: 0.7rem; padding: 0.2rem 0.5rem; background: {% if item.message_type == 'email' %}#dbeafe{% else %}#dcfce7{% endif %}; color: {% if item.message_type == 'email' %}#1e40af{% else %}#166534{% endif %}; border-radius: 4px; font-weight: 500;">
-                  {% if item.message_type == 'email' %}📧 Email{% else %}💬 SMS{% endif %}
-                </span>
-                {% if item.type == 'scheduled' %}
-                <span style="font-size: 0.7rem; padding: 0.2rem 0.5rem; background: #f3e8ff; color: #7c3aed; border-radius: 4px; font-weight: 500;">
-                  Scheduled
-                </span>
-                {% else %}
-                <span style="font-size: 0.7rem; padding: 0.2rem 0.5rem; background: #fef3c7; color: #92400e; border-radius: 4px; font-weight: 500;">
-                  Draft
-                </span>
-                {% endif %}
+    <!-- File Explorer -->
+    <div class="explorer">
+      <!-- Folders View (initial view) -->
+      <div class="folders-view" id="foldersView">
+        <div class="folders-section">
+          <div class="folders-header">
+            <span class="folders-title">Folders</span>
+            <button class="add-folder-btn" onclick="openFolderModal()">
+              <i class="fa-solid fa-plus"></i> New Folder
+            </button>
+          </div>
+          <div class="folders-grid">
+            <!-- All Messages -->
+            <div class="folder-item" data-folder="all" onclick="openFolder('all')">
+              <div class="folder-icon-wrap">
+                <i class="folder-icon fa-solid fa-inbox" style="color: #667eea;"></i>
               </div>
-              {% if item.type == 'scheduled' %}
-              <button onclick="cancelScheduled({{ item.id }})" style="font-size: 0.7rem; color: #94a3b8; background: none; border: none; cursor: pointer; padding: 0.25rem;" onmouseover="this.style.color='#ef4444'" onmouseout="this.style.color='#94a3b8'" title="Cancel">
-                <i class="fa-solid fa-times"></i>
+              <span class="folder-name">All Messages</span>
+            </div>
+            <!-- Custom folders -->
+            {% for folder in folders %}
+            <div class="folder-item" data-folder="custom-{{ folder.id }}" onclick="openFolder('custom-{{ folder.id }}')">
+              <button class="folder-menu-btn" onclick="event.stopPropagation(); showFolderMenu(event, {{ folder.id }}, '{{ folder.name|escapejs }}', '{{ folder.color }}', false)">
+                <i class="fa-solid fa-ellipsis"></i>
               </button>
-              {% else %}
-              <a href="{% url 'admin_home' %}?load_draft={{ item.id }}" style="font-size: 0.7rem; color: #667eea; text-decoration: none;" title="Edit draft">
-                <i class="fa-solid fa-pen"></i>
-              </a>
-              {% endif %}
-            </div>
-            {% if item.subject %}
-            <div style="font-weight: 600; color: #1e293b; font-size: 0.875rem; margin-bottom: 0.25rem;">{{ item.subject|truncatechars:50 }}</div>
-            {% endif %}
-            <div style="color: #64748b; font-size: 0.8125rem; line-height: 1.4;">{{ item.content|truncatechars:100 }}</div>
-            {% if item.type == 'scheduled' and item.recipient_count %}
-            <div style="margin-top: 0.5rem; font-size: 0.7rem; color: #94a3b8;">
-              <i class="fa-solid fa-users"></i> {{ item.recipient_count }} recipient{{ item.recipient_count|pluralize }}
-            </div>
-            {% endif %}
-          </div>
-        </div>
-        {% endfor %}
-      </div>
-      {% else %}
-      <div style="text-align: center; padding: 2rem 1rem; color: #94a3b8;">
-        <i class="fa-solid fa-calendar-check" style="font-size: 2rem; margin-bottom: 0.75rem; opacity: 0.5; display: block;"></i>
-        <p style="margin: 0; font-size: 0.875rem;">No scheduled messages</p>
-        <p style="margin: 0.25rem 0 0 0; font-size: 0.75rem;">Schedule a message from the <a href="{% url 'admin_home' %}" style="color: #667eea;">dashboard</a></p>
-      </div>
-      {% endif %}
-    </div>
-
-    {% if drafts %}
-    <!-- Drafts Section -->
-    <div class="drafts-section" style="background: white; border-radius: 12px; padding: 1.5rem; margin-bottom: 1.5rem; box-shadow: 0 2px 12px rgba(0,0,0,0.06);">
-      <h3 style="font-size: 1rem; font-weight: 600; color: #1e293b; margin: 0 0 1rem 0;">
-        <i class="fa-solid fa-file-pen" style="color: #667eea;"></i> Drafts
-      </h3>
-      <div style="display: flex; flex-wrap: wrap; gap: 0.75rem;">
-        {% for draft in drafts %}
-        <div class="draft-card" style="flex: 1; min-width: 250px; max-width: 350px; padding: 1rem; background: {% if draft.scheduled_for %}#faf5ff{% else %}#f8fafc{% endif %}; border: 1px solid {% if draft.scheduled_for %}#e9d5ff{% else %}#e2e8f0{% endif %}; border-radius: 8px;">
-          <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 0.5rem;">
-            <span style="font-size: 0.75rem; padding: 0.25rem 0.5rem; background: {% if draft.message_type == 'email' %}#dbeafe{% else %}#dcfce7{% endif %}; color: {% if draft.message_type == 'email' %}#1e40af{% else %}#166534{% endif %}; border-radius: 4px; font-weight: 500;">
-              {% if draft.message_type == 'email' %}📧 Email{% else %}💬 SMS{% endif %}
-            </span>
-            <span style="font-size: 0.75rem; color: #94a3b8;">{{ draft.updated_at|timesince }} ago</span>
-          </div>
-          {% if draft.scheduled_for %}
-          <div style="font-size: 0.75rem; color: #7c3aed; margin-bottom: 0.5rem; display: flex; align-items: center; gap: 0.25rem;">
-            <i class="fa-solid fa-clock"></i>
-            Scheduled: {% timezone "America/Chicago" %}{{ draft.scheduled_for|date:"M j, g:i A" }}{% endtimezone %}
-          </div>
-          {% endif %}
-          {% if draft.subject %}
-          <div style="font-weight: 600; color: #1e293b; font-size: 0.875rem; margin-bottom: 0.25rem;">{{ draft.subject|truncatechars:40 }}</div>
-          {% endif %}
-          <div style="color: #64748b; font-size: 0.8125rem; line-height: 1.4; margin-bottom: 0.75rem;">{{ draft.content|truncatechars:80 }}</div>
-          <div style="display: flex; justify-content: space-between; align-items: center;">
-            <a href="{% url 'admin_home' %}?load_draft={{ draft.id }}" style="font-size: 0.75rem; color: #667eea; text-decoration: none; font-weight: 500;">Edit & Send →</a>
-            <button onclick="deleteDraft({{ draft.id }})" style="font-size: 0.75rem; color: #94a3b8; background: none; border: none; cursor: pointer; padding: 0.25rem;" onmouseover="this.style.color='#ef4444'" onmouseout="this.style.color='#94a3b8'" title="Delete draft">
-              <i class="fa-solid fa-trash"></i>
-            </button>
-          </div>
-        </div>
-        {% endfor %}
-      </div>
-    </div>
-    {% endif %}
-
-    {% if scheduled_messages %}
-    <!-- Scheduled Messages Section -->
-    <div class="scheduled-section" style="background: white; border-radius: 12px; padding: 1.5rem; margin-bottom: 1.5rem; box-shadow: 0 2px 12px rgba(0,0,0,0.06);">
-      <h3 style="font-size: 1rem; font-weight: 600; color: #1e293b; margin: 0 0 1rem 0;">
-        <i class="fa-solid fa-clock" style="color: #7c3aed;"></i> Scheduled Messages
-      </h3>
-      <div style="display: flex; flex-wrap: wrap; gap: 0.75rem;">
-        {% load tz %}
-        {% for msg in scheduled_messages %}
-        <div class="scheduled-card" style="flex: 1; min-width: 280px; max-width: 400px; padding: 1rem; background: #faf5ff; border: 1px solid #e9d5ff; border-radius: 8px;">
-          <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 0.5rem;">
-            <span style="font-size: 0.75rem; padding: 0.25rem 0.5rem; background: {% if msg.message_type == 'email' %}#dbeafe{% else %}#dcfce7{% endif %}; color: {% if msg.message_type == 'email' %}#1e40af{% else %}#166534{% endif %}; border-radius: 4px; font-weight: 500;">
-              {% if msg.message_type == 'email' %}📧 Email{% else %}💬 SMS{% endif %}
-            </span>
-            <span style="font-size: 0.75rem; color: #7c3aed; font-weight: 600;">
-              <i class="fa-solid fa-clock"></i>
-              {% timezone "America/Chicago" %}{{ msg.scheduled_for|date:"M j, g:i A" }}{% endtimezone %}
-            </span>
-          </div>
-          {% if msg.subject %}
-          <div style="font-weight: 600; color: #1e293b; font-size: 0.875rem; margin-bottom: 0.25rem;">{{ msg.subject|truncatechars:40 }}</div>
-          {% endif %}
-          <div style="color: #64748b; font-size: 0.8125rem; line-height: 1.4; margin-bottom: 0.75rem;">{{ msg.content|truncatechars:80 }}</div>
-          <div style="display: flex; justify-content: space-between; align-items: center;">
-            <span style="font-size: 0.75rem; color: #64748b;">To {{ msg.recipient_count }} recipient{{ msg.recipient_count|pluralize }}</span>
-            <button onclick="cancelScheduled({{ msg.id }})" style="font-size: 0.75rem; color: #94a3b8; background: none; border: none; cursor: pointer; padding: 0.25rem;" onmouseover="this.style.color='#ef4444'" onmouseout="this.style.color='#94a3b8'" title="Cancel scheduled message">
-              <i class="fa-solid fa-times"></i> Cancel
-            </button>
-          </div>
-        </div>
-        {% endfor %}
-      </div>
-    </div>
-    {% endif %}
-
-    <!-- Filters -->
-    <div class="filters">
-      <div class="filter-group">
-        <label>Type:</label>
-        <select onchange="applyFilters()" id="typeFilter">
-          <option value="all" {% if message_type == 'all' %}selected{% endif %}>All</option>
-          <option value="email" {% if message_type == 'email' %}selected{% endif %}>Email</option>
-          <option value="sms" {% if message_type == 'sms' %}selected{% endif %}>SMS</option>
-        </select>
-      </div>
-      <div class="filter-group">
-        <label>Time Range:</label>
-        <select onchange="applyFilters()" id="rangeFilter">
-          <option value="7" {% if date_range == '7' %}selected{% endif %}>Last 7 days</option>
-          <option value="30" {% if date_range == '30' %}selected{% endif %}>Last 30 days</option>
-          <option value="90" {% if date_range == '90' %}selected{% endif %}>Last 90 days</option>
-          <option value="all" {% if date_range == 'all' %}selected{% endif %}>All time</option>
-        </select>
-      </div>
-    </div>
-
-    <!-- Messages Table -->
-    <div class="messages-table">
-      {% if messages %}
-      <table>
-        <thead>
-          <tr>
-            <th>Type</th>
-            <th>Content</th>
-            <th>Recipients</th>
-            <th>Sent</th>
-            <th>Failed</th>
-            <th>Status</th>
-            <th>Date</th>
-            <th>Sent By</th>
-          </tr>
-        </thead>
-        <tbody>
-          {% for msg in messages %}
-          <tr style="cursor: pointer;" onclick="showMessageDetail({{ msg.id }}, '{{ msg.message_type }}', '{{ msg.subject|escapejs }}', '{{ msg.content|escapejs }}', {{ msg.recipient_count }}, {{ msg.sent_count }}, {{ msg.failed_count }}, '{{ msg.status }}', '{% timezone "America/Chicago" %}{{ msg.sent_at|date:"M j, Y g:i A" }}{% endtimezone %}', '{{ msg.sent_by.username|default:"System" }}')">
-            <td>
-              <span class="badge badge-{{ msg.message_type }}">
-                {% if msg.message_type == 'email' %}
-                <i class="fa-solid fa-envelope"></i>
-                {% else %}
-                <i class="fa-solid fa-comment-sms"></i>
-                {% endif %}
-                {{ msg.message_type|upper }}
-              </span>
-            </td>
-            <td>
-              <div class="content-preview">
-                {% if msg.subject %}<strong>{{ msg.subject }}</strong> - {% endif %}{{ msg.content|truncatechars:80 }}
+              <div class="folder-icon-wrap">
+                <i class="folder-icon fa-solid fa-folder" style="color: {{ folder.color }};"></i>
+                {% if folder.message_count %}<span class="folder-badge">{{ folder.message_count }}</span>{% endif %}
               </div>
-            </td>
-            <td>{{ msg.recipient_count }}</td>
-            <td style="color: #166534; font-weight: 600;">{{ msg.sent_count }}</td>
-            <td style="color: {% if msg.failed_count > 0 %}#991b1b{% else %}#64748b{% endif %}; font-weight: 600;">{{ msg.failed_count }}</td>
-            <td>
-              <span class="badge badge-{{ msg.status }}">{{ msg.status }}</span>
-            </td>
-            <td style="white-space: nowrap;">
-              {% timezone "America/Chicago" %}
-              {{ msg.sent_at|date:"M j, Y" }}<br>
-              <span style="color: #64748b; font-size: 0.8125rem;">{{ msg.sent_at|date:"g:i A" }}</span>
-              {% endtimezone %}
-            </td>
-            <td>{{ msg.sent_by.username|default:"System" }}</td>
-          </tr>
+              <span class="folder-name">{{ folder.name }}</span>
+            </div>
+            {% endfor %}
+            <!-- Archive -->
+            <div class="folder-item" data-folder="archive" onclick="openFolder('archive')">
+              <div class="folder-icon-wrap">
+                <i class="folder-icon fa-solid fa-box-archive" style="color: #94a3b8;"></i>
+                {% if archived_messages %}<span class="folder-badge" style="background: #94a3b8;">{{ archived_messages|length }}</span>{% endif %}
+              </div>
+              <span class="folder-name">Archive</span>
+            </div>
+          </div>
+          {% if not folders %}
+          <p style="text-align: center; color: #94a3b8; margin-top: 2rem; font-size: 0.875rem;">
+            Create folders to organize your messages
+          </p>
+          {% endif %}
+        </div>
+      </div>
+
+      <!-- Folder Contents View (when a folder is opened) -->
+      <div class="folder-contents-view" id="folderContentsView" style="display: none;">
+        <div class="folder-contents-header">
+          <button class="back-btn" onclick="backToFolders()">
+            <i class="fa-solid fa-arrow-left"></i> Folders
+          </button>
+          <div class="current-folder-title" id="currentFolderTitle">
+            <i class="fa-solid fa-folder"></i>
+            <span id="currentFolderName">Folder</span>
+          </div>
+          <div class="filter-chips" id="filterChips">
+            <button class="filter-chip active" data-filter="draft" onclick="toggleFilter('draft')">
+              Drafts
+            </button>
+            <button class="filter-chip active" data-filter="scheduled" onclick="toggleFilter('scheduled')">
+              Scheduled
+            </button>
+            <button class="filter-chip active" data-filter="sent" onclick="toggleFilter('sent')">
+              Sent
+            </button>
+          </div>
+        </div>
+
+        <div class="folder-contents-list">
+          <div class="message-table" id="messageList">
+          {% load tz %}
+          <!-- Drafts -->
+          {% for draft in drafts %}
+          <div class="message-row" data-id="{{ draft.id }}" data-status="draft" data-folder="{{ draft.folder_id|default:'' }}" data-archived="false" onclick="selectRow(this)">
+            <div class="msg-icon {{ draft.message_type }}">
+              <i class="fa-solid {% if draft.message_type == 'email' %}fa-envelope{% else %}fa-comment{% endif %}"></i>
+            </div>
+            <div class="msg-content">
+              <div class="msg-subject">{% if draft.subject %}{{ draft.subject }}{% else %}(No subject){% endif %}</div>
+              <div class="msg-details">
+                <span class="msg-date">Edited {{ draft.updated_at|timesince }} ago</span>
+                              </div>
+            </div>
+            <span class="status-badge draft">Draft</span>
+          </div>
           {% endfor %}
-        </tbody>
-      </table>
-      {% else %}
-      <div class="empty-state">
-        <i class="fa-solid fa-inbox"></i>
-        <h3>No messages yet</h3>
-        <p>Quick messages you send from the dashboard will appear here.</p>
+          <!-- Scheduled -->
+          {% for msg in scheduled_messages %}
+          <div class="message-row" data-id="{{ msg.id }}" data-status="scheduled" data-folder="{{ msg.folder_id|default:'' }}" data-archived="false" onclick="selectRow(this)">
+            <div class="msg-icon {{ msg.message_type }}">
+              <i class="fa-solid {% if msg.message_type == 'email' %}fa-envelope{% else %}fa-comment{% endif %}"></i>
+            </div>
+            <div class="msg-content">
+              <div class="msg-subject">{% if msg.subject %}{{ msg.subject }}{% else %}(No subject){% endif %}</div>
+              <div class="msg-details">
+                <span class="msg-date">{% timezone "America/Chicago" %}{{ msg.scheduled_for|date:"M j, g:i A" }}{% endtimezone %}</span>
+                <span class="msg-recipients">{{ msg.recipient_count }} recipients</span>
+                              </div>
+            </div>
+            <span class="status-badge scheduled">Scheduled</span>
+          </div>
+          {% endfor %}
+          <!-- Sent -->
+          {% for msg in messages %}
+          <div class="message-row" data-id="{{ msg.id }}" data-status="sent" data-folder="{{ msg.folder_id|default:'' }}" data-archived="false" onclick="selectRow(this)">
+            <div class="msg-icon {{ msg.message_type }}">
+              <i class="fa-solid {% if msg.message_type == 'email' %}fa-envelope{% else %}fa-comment{% endif %}"></i>
+            </div>
+            <div class="msg-content">
+              <div class="msg-subject">{% if msg.subject %}{{ msg.subject }}{% else %}(No subject){% endif %}</div>
+              <div class="msg-details">
+                <span class="msg-date">{% timezone "America/Chicago" %}{{ msg.sent_at|date:"M j, g:i A" }}{% endtimezone %}</span>
+                <span class="msg-recipients">{{ msg.sent_count }}/{{ msg.recipient_count }} delivered</span>
+                              </div>
+            </div>
+            <span class="status-badge {% if msg.failed_count > 0 %}partial{% else %}sent{% endif %}">{% if msg.failed_count > 0 %}Partial{% else %}Sent{% endif %}</span>
+          </div>
+          {% endfor %}
+          <!-- Archived -->
+          {% for msg in archived_messages %}
+          <div class="message-row" data-id="{{ msg.id }}" data-status="{{ msg.status }}" data-folder="{{ msg.folder_id|default:'' }}" data-archived="true" onclick="selectRow(this)" style="display: none; opacity: 0.7;">
+            <div class="msg-icon {{ msg.message_type }}">
+              <i class="fa-solid {% if msg.message_type == 'email' %}fa-envelope{% else %}fa-comment{% endif %}"></i>
+            </div>
+            <div class="msg-content">
+              <div class="msg-subject">{% if msg.subject %}{{ msg.subject }}{% else %}(No subject){% endif %}</div>
+              <div class="msg-details">
+                <span class="msg-date">Archived {{ msg.updated_at|timesince }} ago</span>
+                              </div>
+            </div>
+            <span class="status-badge" style="background: #f1f5f9; color: #64748b;">Archived</span>
+          </div>
+          {% endfor %}
+          </div>
+          <div class="empty-state" id="emptyState" style="display: none;">
+            <i class="fa-solid fa-inbox"></i>
+            <h3>No messages</h3>
+            <p>This folder is empty</p>
+          </div>
+        </div>
       </div>
-      {% endif %}
+
+      <!-- Message View (replaces content when viewing a message) -->
+      <div class="message-view" id="messageView">
+        <div class="message-view-header">
+          <button class="back-btn" onclick="closeMessageView()">
+            <i class="fa-solid fa-arrow-left"></i> Back
+          </button>
+          <div class="message-actions">
+            <div class="move-folder-dropdown">
+              <button class="action-btn" onclick="toggleMoveDropdown(event)">
+                <i class="fa-solid fa-folder-open"></i> Move to Folder
+              </button>
+              <div class="move-dropdown-content" id="moveDropdown">
+                <button class="move-folder-item" onclick="moveToFolder(null)">
+                  <i class="fa-solid fa-inbox" style="color: #667eea; font-size: 0.75rem;"></i> All Messages (No folder)
+                </button>
+                {% if folders %}
+                <div style="height: 1px; background: #e2e8f0; margin: 0.25rem 0;"></div>
+                {% endif %}
+                {% for folder in folders %}
+                <button class="move-folder-item" onclick="moveToFolder({{ folder.id }})">
+                  <span class="folder-dot" style="background: {{ folder.color }}; width: 10px; height: 10px; border-radius: 3px; display: inline-block;"></span> {{ folder.name }}
+                </button>
+                {% endfor %}
+              </div>
+            </div>
+            <button class="action-btn" id="archiveBtn" onclick="archiveMessage()">
+              <i class="fa-solid fa-box-archive"></i> Archive
+            </button>
+            <button class="action-btn" id="unarchiveBtn" onclick="unarchiveMessage()" style="display: none;">
+              <i class="fa-solid fa-arrow-up-from-bracket"></i> Restore
+            </button>
+            <button class="action-btn primary" id="editBtn" onclick="editMessage()" style="display: none;">
+              <i class="fa-solid fa-pen"></i> Edit
+            </button>
+            <button class="action-btn primary" id="sendNowBtn" onclick="sendDraftNow()" style="display: none;">
+              <i class="fa-solid fa-paper-plane"></i> Send Now
+            </button>
+            <button class="action-btn danger" id="deleteBtn" onclick="confirmDelete()">
+              <i class="fa-solid fa-trash"></i> Delete
+            </button>
+          </div>
+        </div>
+        <div class="message-view-body">
+          <div class="message-meta" id="messageMeta"></div>
+          <h2 class="message-subject" id="messageSubject"></h2>
+          <div class="message-body" id="messageBody"></div>
+          <div class="message-stats" id="messageStats"></div>
+        </div>
+      </div>
     </div>
   </div>
 
-  <!-- Message Detail Modal -->
-  <div id="messageModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); backdrop-filter: blur(4px); z-index: 1000; align-items: center; justify-content: center;" onclick="closeMessageModal()">
-    <div style="background: white; border-radius: 16px; max-width: 600px; width: 90%; max-height: 80vh; overflow: hidden; box-shadow: 0 20px 60px rgba(0,0,0,0.3);" onclick="event.stopPropagation()">
-      <div style="padding: 1.25rem 1.5rem; border-bottom: 1px solid #e2e8f0; display: flex; justify-content: space-between; align-items: center;">
+  <!-- Folder Context Menu -->
+  <div class="context-menu" id="folderContextMenu">
+    <button class="context-menu-item" onclick="renameFolderFromMenu()">
+      <i class="fa-solid fa-pen"></i> Rename
+    </button>
+    <button class="context-menu-item" onclick="changeFolderColorFromMenu()">
+      <i class="fa-solid fa-palette"></i> Change Color
+    </button>
+    <div class="context-divider"></div>
+    <button class="context-menu-item" id="archiveFolderBtn" onclick="archiveFolderFromMenu()">
+      <i class="fa-solid fa-box-archive"></i> Archive Folder
+    </button>
+    <button class="context-menu-item" id="unarchiveFolderBtn" onclick="unarchiveFolderFromMenu()" style="display: none;">
+      <i class="fa-solid fa-arrow-up-from-bracket"></i> Unarchive Folder
+    </button>
+    <button class="context-menu-item danger" onclick="deleteFolderFromMenu()">
+      <i class="fa-solid fa-trash"></i> Delete Folder
+    </button>
+  </div>
+
+  <!-- Compose Modal -->
+  <div class="modal-overlay" id="composeModal">
+    <div class="modal" id="composeModalInner" style="max-width: 650px; transition: max-width 0.3s;">
+      <div class="modal-header">
+        <span class="modal-title" id="composeTitle">New Message</span>
         <div style="display: flex; align-items: center; gap: 0.75rem;">
-          <span id="modalIcon" style="font-size: 1.5rem;">📧</span>
-          <h2 id="modalTitle" style="font-size: 1.125rem; font-weight: 700; color: #1e293b; margin: 0;">Message Details</h2>
+          <button type="button" class="preview-toggle" id="previewToggle" onclick="togglePreview()">
+            <i class="fa-solid fa-eye"></i> Preview
+          </button>
+          <button class="close-btn" onclick="closeCompose()"><i class="fa-solid fa-times"></i></button>
         </div>
-        <button onclick="closeMessageModal()" style="background: none; border: none; font-size: 1.5rem; color: #64748b; cursor: pointer; width: 32px; height: 32px; border-radius: 8px; display: flex; align-items: center; justify-content: center;" onmouseover="this.style.background='#f1f5f9'" onmouseout="this.style.background='none'">&times;</button>
       </div>
-      <div style="padding: 1.5rem; overflow-y: auto; max-height: 60vh;">
-        <div id="modalSubject" style="display: none; margin-bottom: 1rem;">
-          <label style="font-size: 0.75rem; font-weight: 600; color: #64748b; text-transform: uppercase; letter-spacing: 0.05em;">Subject</label>
-          <p id="modalSubjectText" style="margin: 0.25rem 0 0 0; font-size: 1rem; font-weight: 600; color: #1e293b;"></p>
-        </div>
-        <div style="margin-bottom: 1rem;">
-          <label style="font-size: 0.75rem; font-weight: 600; color: #64748b; text-transform: uppercase; letter-spacing: 0.05em;">Content</label>
-          <div id="modalContent" style="margin: 0.25rem 0 0 0; font-size: 0.9375rem; color: #334155; line-height: 1.6; white-space: pre-wrap; background: #f8fafc; padding: 1rem; border-radius: 8px; border: 1px solid #e2e8f0;"></div>
-        </div>
-        <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 1rem;">
-          <div style="background: #f0fdf4; padding: 0.75rem; border-radius: 8px; text-align: center;">
-            <div id="modalSent" style="font-size: 1.25rem; font-weight: 700; color: #166534;">0</div>
-            <div style="font-size: 0.75rem; color: #166534;">Sent</div>
+      <div class="modal-body">
+        <div class="compose-split">
+          <div class="compose-editor">
+            <form id="composeForm" onsubmit="sendMessage(event)">
+              {% csrf_token %}
+              <input type="hidden" name="draft_id" id="draftId" value="">
+
+              <div class="form-row" style="display: flex; gap: 1rem; align-items: center; flex-wrap: wrap;">
+                <div class="type-toggle">
+                  <button type="button" class="type-btn active" id="typeEmail" onclick="setType('email')">📧 Email</button>
+                  <button type="button" class="type-btn" id="typeSMS" onclick="setType('sms')">💬 SMS</button>
+                </div>
+                <input type="hidden" name="message_type" id="messageType" value="email">
+
+                <div style="display: flex; align-items: center; gap: 0.5rem;">
+                  <label style="font-size: 0.8125rem; color: #64748b;">Save to:</label>
+                  <select name="folder_id" id="folderSelect" class="form-input" style="width: auto; padding: 0.5rem 0.75rem;">
+                    <option value="">No folder</option>
+                    {% for folder in folders %}
+                    <option value="{{ folder.id }}">{{ folder.name }}</option>
+                    {% endfor %}
+                  </select>
+                </div>
+              </div>
+
+              <div class="option-row">
+                <label><input type="checkbox" id="testToggle" onchange="toggleTest()" style="accent-color: #f59e0b;"> Test Mode</label>
+              </div>
+
+              <div class="test-row" id="testRow">
+                <label><i class="fa-solid fa-flask"></i> Send to:</label>
+                <input type="text" name="test_recipient" id="testInput" class="form-input" placeholder="email or phone">
+              </div>
+
+              <div class="form-row" id="subjectRow">
+                <label class="form-label">Subject</label>
+                <input type="text" name="subject" id="subjectInput" class="form-input" placeholder="Subject line" oninput="updatePreview()">
+              </div>
+
+              <div class="form-row">
+                <label class="form-label">Message</label>
+                <textarea name="content" id="contentInput" class="form-input form-textarea" placeholder="Write your message..." required oninput="updatePreview()"></textarea>
+              </div>
+
+              <div class="form-row" id="imageRow">
+                <button type="button" onclick="document.getElementById('imageInput').click()" class="btn btn-secondary" style="padding: 0.5rem 1rem; font-size: 0.8125rem;">
+                  <i class="fa-solid fa-image"></i> Add Image
+                </button>
+                <span id="imageStatus" style="font-size: 0.8125rem; margin-left: 0.75rem; color: #64748b;"></span>
+                <input type="file" id="imageInput" accept="image/*" style="display: none;" onchange="uploadImage(this)">
+              </div>
+
+              <div class="option-row">
+                <label><input type="checkbox" id="scheduleToggle" onchange="toggleSchedule()" style="accent-color: #8b5cf6;"> Schedule for later</label>
+                <input type="datetime-local" name="scheduled_for" id="scheduleInput" class="form-input" style="display: none; width: auto; padding: 0.5rem;">
+              </div>
+            </form>
           </div>
-          <div style="background: #fef2f2; padding: 0.75rem; border-radius: 8px; text-align: center;">
-            <div id="modalFailed" style="font-size: 1.25rem; font-weight: 700; color: #991b1b;">0</div>
-            <div style="font-size: 0.75rem; color: #991b1b;">Failed</div>
+          <div class="compose-preview" id="composePreview">
+            <div class="preview-panel">
+              <div class="preview-header">
+                <i class="fa-solid fa-eye"></i> Preview
+                <div class="preview-device-toggle">
+                  <button type="button" class="preview-device-btn active" id="previewDesktop" onclick="setPreviewDevice('desktop')">
+                    <i class="fa-solid fa-desktop"></i>
+                  </button>
+                  <button type="button" class="preview-device-btn" id="previewPhone" onclick="setPreviewDevice('phone')">
+                    <i class="fa-solid fa-mobile-screen"></i>
+                  </button>
+                </div>
+              </div>
+              <div class="preview-content">
+                <div class="preview-frame" id="previewFrame">
+                  <div class="preview-email" id="previewEmail">
+                    <div class="preview-email-subject" id="previewSubject">(No subject)</div>
+                    <div class="preview-email-body" id="previewBody">Your message will appear here...</div>
+                  </div>
+                  <div class="preview-sms" id="previewSms" style="display: none;">
+                    <div class="preview-sms-bubble" id="previewSmsBubble">Your message will appear here...</div>
+                    <div class="preview-sms-meta">Just now</div>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
-        <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid #e2e8f0; display: flex; justify-content: space-between; font-size: 0.8125rem; color: #64748b;">
-          <span>Recipients: <strong id="modalRecipients">0</strong></span>
-          <span>Status: <strong id="modalStatus">sent</strong></span>
-          <span>Sent by: <strong id="modalSentBy">-</strong></span>
-        </div>
-        <div style="margin-top: 0.5rem; font-size: 0.8125rem; color: #94a3b8;">
-          <span id="modalDate"></span>
+      </div>
+      <div class="modal-footer">
+        <div class="recipient-info" id="recipientInfo">Sending to <strong>{{ stats.email_sub_count }}</strong> email subscribers</div>
+        <div class="btn-group">
+          <button type="button" class="btn btn-secondary" onclick="saveDraft()"><i class="fa-solid fa-floppy-disk"></i> Save Draft</button>
+          <button type="button" class="btn btn-primary" id="sendBtn" onclick="sendMessage(event)">Send <i class="fa-solid fa-arrow-right"></i></button>
         </div>
       </div>
     </div>
   </div>
 
-  <!-- Delete Draft Confirmation Modal -->
-  <div class="delete-modal-overlay" id="deleteDraftModal" onclick="if(event.target === this) closeDeleteDraftModal()">
-    <div class="delete-modal">
-      <div class="delete-modal-icon">
-        <i class="fa-solid fa-trash"></i>
+  <!-- Confirm Modal -->
+  <div class="modal-overlay" id="confirmModal">
+    <div class="modal confirm-modal">
+      <div class="icon"><i class="fa-solid fa-trash"></i></div>
+      <h3 id="confirmTitle">Delete?</h3>
+      <p id="confirmText">This cannot be undone.</p>
+      <div class="btn-group">
+        <button class="btn btn-secondary" onclick="closeConfirm()">Cancel</button>
+        <button class="btn btn-danger" onclick="doDelete()">Delete</button>
       </div>
-      <h3 class="delete-modal-title">Delete Draft?</h3>
-      <p class="delete-modal-text">Are you sure you want to delete this draft? This action cannot be undone.</p>
-      <div class="delete-modal-buttons">
-        <button type="button" class="delete-modal-cancel" onclick="closeDeleteDraftModal()">Cancel</button>
-        <button type="button" class="delete-modal-confirm" onclick="confirmDeleteDraft()">Delete</button>
+    </div>
+  </div>
+
+  <!-- Folder Modal -->
+  <div class="modal-overlay" id="folderModal">
+    <div class="modal" style="max-width: 400px;">
+      <div class="modal-header">
+        <span class="modal-title" id="folderModalTitle">New Folder</span>
+        <button class="close-btn" onclick="closeFolderModal()"><i class="fa-solid fa-times"></i></button>
+      </div>
+      <div class="modal-body">
+        <input type="hidden" id="editFolderId" value="">
+        <div class="form-row">
+          <label class="form-label">Folder Name</label>
+          <input type="text" id="folderNameInput" class="form-input" placeholder="My Folder" maxlength="100">
+        </div>
+        <div class="form-row">
+          <label class="form-label">Color</label>
+          <div class="color-picker" id="colorPicker">
+            <div class="color-option selected" data-color="#6366f1" style="background: #6366f1;"></div>
+            <div class="color-option" data-color="#8b5cf6" style="background: #8b5cf6;"></div>
+            <div class="color-option" data-color="#ec4899" style="background: #ec4899;"></div>
+            <div class="color-option" data-color="#f43f5e" style="background: #f43f5e;"></div>
+            <div class="color-option" data-color="#f97316" style="background: #f97316;"></div>
+            <div class="color-option" data-color="#eab308" style="background: #eab308;"></div>
+            <div class="color-option" data-color="#22c55e" style="background: #22c55e;"></div>
+            <div class="color-option" data-color="#14b8a6" style="background: #14b8a6;"></div>
+            <div class="color-option" data-color="#0ea5e9" style="background: #0ea5e9;"></div>
+            <div class="color-option" data-color="#64748b" style="background: #64748b;"></div>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer" style="justify-content: flex-end;">
+        <div class="btn-group">
+          <button class="btn btn-secondary" onclick="closeFolderModal()">Cancel</button>
+          <button class="btn btn-primary" onclick="saveFolder()">Save</button>
+        </div>
       </div>
     </div>
   </div>
 
   <script>
-    let pendingDeleteDraftId = null;
+    const drafts = { {% for d in drafts %}{{ d.id }}:{id:{{ d.id }},type:'{{ d.message_type }}',subject:'{{ d.subject|escapejs }}',content:`{{ d.content|escapejs }}`,scheduled:'{% if d.scheduled_for %}{{ d.scheduled_for|date:"c" }}{% endif %}',updated:'{{ d.updated_at|date:"M j, g:i A" }}',folder:'{{ d.folder_id|default:"" }}'},{% endfor %} };
+    const scheduled = { {% for m in scheduled_messages %}{{ m.id }}:{id:{{ m.id }},type:'{{ m.message_type }}',subject:'{{ m.subject|escapejs }}',content:`{{ m.content|escapejs }}`,scheduled:'{% timezone "America/Chicago" %}{{ m.scheduled_for|date:"M j, Y g:i A" }}{% endtimezone %}',recipients:{{ m.recipient_count }}},{% endfor %} };
+    const sent = { {% for m in messages %}{{ m.id }}:{id:{{ m.id }},type:'{{ m.message_type }}',subject:'{{ m.subject|escapejs }}',content:`{{ m.content|escapejs }}`,sentAt:'{% timezone "America/Chicago" %}{{ m.sent_at|date:"M j, Y g:i A" }}{% endtimezone %}',sentBy:'{{ m.sent_by.username|default:"System" }}',recipients:{{ m.recipient_count }},sentCount:{{ m.sent_count }},failedCount:{{ m.failed_count }}},{% endfor %} };
 
-    function applyFilters() {
-      const type = document.getElementById('typeFilter').value;
-      const range = document.getElementById('rangeFilter').value;
-      window.location.href = `?type=${type}&range=${range}`;
+    let currentId = null, currentStatus = null, msgType = 'email', testMode = false;
+    let currentFolder = null;
+    let activeFilters = { draft: true, scheduled: true, sent: true };
+    const emailCount = {{ stats.email_sub_count }}, smsCount = {{ stats.sms_sub_count }};
+
+    // Folder info for custom folders
+    const folderInfo = {
+      all: { name: 'All Messages', icon: 'fa-inbox', color: '#667eea' },
+      archive: { name: 'Archive', icon: 'fa-box-archive', color: '#94a3b8' },
+      {% for folder in folders %}
+      'custom-{{ folder.id }}': { name: '{{ folder.name|escapejs }}', icon: 'fa-folder', color: '{{ folder.color }}', id: {{ folder.id }} },
+      {% endfor %}
+    };
+
+    function openFolder(folderId) {
+      currentFolder = folderId;
+      // Reset filters when opening a folder
+      activeFilters = { draft: true, scheduled: true, sent: true };
+      document.querySelectorAll('.filter-chip').forEach(c => c.classList.add('active'));
+
+      // Hide folders view, show contents view
+      document.getElementById('foldersView').style.display = 'none';
+      document.getElementById('folderContentsView').style.display = 'block';
+
+      // Update header
+      const info = folderInfo[folderId] || { name: 'Folder', icon: 'fa-folder', color: '#667eea' };
+      document.getElementById('currentFolderTitle').innerHTML = `<i class="fa-solid ${info.icon}" style="color: ${info.color};"></i> <span>${info.name}</span>`;
+
+      // Hide filters for archive view
+      document.getElementById('filterChips').style.display = folderId === 'archive' ? 'none' : 'flex';
+
+      // Filter messages for this folder
+      filterMessagesForFolder();
     }
 
-    // Test Settings Functions
-    function toggleTestSettings() {
-      const panel = document.getElementById('testSettingsPanel');
-      const content = document.getElementById('testSettingsContent');
-      const chevron = document.getElementById('testSettingsChevron');
-      const hint = document.getElementById('testSettingsHint');
-
-      panel.classList.toggle('collapsed');
-
-      if (panel.classList.contains('collapsed')) {
-        content.style.maxHeight = '0';
-        content.style.opacity = '0';
-        content.style.paddingTop = '0';
-        chevron.style.transform = 'rotate(0deg)';
-        hint.textContent = '· click to configure';
-      } else {
-        content.style.maxHeight = '100px';
-        content.style.opacity = '1';
-        content.style.paddingTop = '0.5rem';
-        chevron.style.transform = 'rotate(90deg)';
-        hint.textContent = '';
-      }
+    function backToFolders() {
+      currentFolder = null;
+      document.getElementById('folderContentsView').style.display = 'none';
+      document.getElementById('foldersView').style.display = 'block';
+      closeMessageView();
     }
 
-    async function saveTestSettings() {
-      const email = document.getElementById('defaultTestEmail').value;
-      const phone = document.getElementById('defaultTestPhone').value;
-      const status = document.getElementById('saveStatus');
+    function toggleFilter(status) {
+      activeFilters[status] = !activeFilters[status];
+      document.querySelector(`.filter-chip[data-filter="${status}"]`).classList.toggle('active', activeFilters[status]);
+      filterMessagesForFolder();
+    }
 
-      try {
-        const formData = new FormData();
-        formData.append('action', 'save_test_settings');
-        formData.append('test_email', email);
-        formData.append('test_phone', phone);
+    function filterMessagesForFolder() {
+      const rows = document.querySelectorAll('.message-row');
+      let visibleCount = 0;
 
-        const response = await fetch('', {
-          method: 'POST',
-          body: formData,
-          headers: {
-            'X-CSRFToken': '{{ csrf_token }}'
-          }
-        });
+      rows.forEach(row => {
+        const status = row.dataset.status;
+        const folder = row.dataset.folder;
+        const isArchived = row.dataset.archived === 'true';
 
-        const result = await response.json();
-        if (result.success) {
-          status.style.display = 'inline';
-          setTimeout(() => { status.style.display = 'none'; }, 2000);
-        } else {
-          alert('Failed to save: ' + (result.error || 'Unknown error'));
+        let show = false;
+        if (currentFolder === 'archive') {
+          show = isArchived;
+        } else if (currentFolder === 'all') {
+          show = !isArchived && activeFilters[status];
+        } else if (currentFolder && currentFolder.startsWith('custom-')) {
+          const customId = currentFolder.replace('custom-', '');
+          show = !isArchived && folder === customId && activeFilters[status];
         }
-      } catch (error) {
-        alert('Error saving settings: ' + error.message);
-      }
+
+        row.style.display = show ? '' : 'none';
+        if (show) visibleCount++;
+      });
+
+      document.getElementById('messageList').style.display = visibleCount > 0 ? '' : 'none';
+      document.getElementById('emptyState').style.display = visibleCount > 0 ? 'none' : '';
     }
 
-    function showMessageDetail(id, type, subject, content, recipients, sent, failed, status, date, sentBy) {
-      document.getElementById('modalIcon').textContent = type === 'email' ? '📧' : '💬';
-      document.getElementById('modalTitle').textContent = type === 'email' ? 'Email Message' : 'SMS Message';
+    function selectRow(row) {
+      document.querySelectorAll('.message-row').forEach(r => r.classList.remove('selected'));
+      row.classList.add('selected');
+      currentId = parseInt(row.dataset.id);
+      currentStatus = row.dataset.status;
+      showMessageView();
+    }
 
-      const subjectDiv = document.getElementById('modalSubject');
-      if (subject && type === 'email') {
-        document.getElementById('modalSubjectText').textContent = subject;
-        subjectDiv.style.display = 'block';
+    function showMessageView() {
+      const data = currentStatus === 'draft' ? drafts[currentId] : currentStatus === 'scheduled' ? scheduled[currentId] : sent[currentId];
+      if (!data) return;
+
+      // Build meta info
+      let meta = `<div class="meta-item"><label>Type</label><span>${data.type === 'email' ? '📧 Email' : '💬 SMS'}</span></div>`;
+
+      const isDraft = currentStatus === 'draft';
+      if (isDraft) {
+        meta += `<div class="meta-item"><label>Status</label><span style="color:#f59e0b">Draft</span></div>`;
+        meta += `<div class="meta-item"><label>Updated</label><span>${data.updated}</span></div>`;
+        if (data.scheduled) meta += `<div class="meta-item"><label>Scheduled</label><span style="color:#8b5cf6">${new Date(data.scheduled).toLocaleString()}</span></div>`;
+      } else if (currentStatus === 'scheduled') {
+        meta += `<div class="meta-item"><label>Status</label><span style="color:#8b5cf6">Scheduled</span></div>`;
+        meta += `<div class="meta-item"><label>Send Time</label><span>${data.scheduled}</span></div>`;
+        meta += `<div class="meta-item"><label>Recipients</label><span>${data.recipients}</span></div>`;
       } else {
-        subjectDiv.style.display = 'none';
+        meta += `<div class="meta-item"><label>Status</label><span style="color:#16a34a">Sent</span></div>`;
+        meta += `<div class="meta-item"><label>Sent</label><span>${data.sentAt}</span></div>`;
+        meta += `<div class="meta-item"><label>By</label><span>${data.sentBy}</span></div>`;
       }
 
-      document.getElementById('modalContent').textContent = content;
-      document.getElementById('modalRecipients').textContent = recipients;
-      document.getElementById('modalSent').textContent = sent;
-      document.getElementById('modalFailed').textContent = failed;
-      document.getElementById('modalStatus').textContent = status;
-      document.getElementById('modalDate').textContent = date;
-      document.getElementById('modalSentBy').textContent = sentBy;
+      // Only show Edit and Send Now buttons for drafts
+      document.getElementById('editBtn').style.display = isDraft ? 'inline-flex' : 'none';
+      document.getElementById('sendNowBtn').style.display = isDraft ? 'inline-flex' : 'none';
 
-      document.getElementById('messageModal').style.display = 'flex';
+      document.getElementById('messageMeta').innerHTML = meta;
+      document.getElementById('messageSubject').textContent = data.subject || '(No subject)';
+      document.getElementById('messageBody').innerHTML = data.content.replace(/\n/g, '<br>');
+
+      // Stats for sent messages
+      if (currentStatus === 'sent') {
+        document.getElementById('messageStats').innerHTML = `
+          <div class="stat-box"><div class="num success">${data.sentCount}</div><div class="lbl">Delivered</div></div>
+          <div class="stat-box"><div class="num error">${data.failedCount}</div><div class="lbl">Failed</div></div>
+        `;
+        document.getElementById('messageStats').style.display = 'flex';
+      } else {
+        document.getElementById('messageStats').style.display = 'none';
+      }
+
+      // Show archive or unarchive button based on current state
+      const isArchived = currentFolder === 'archive';
+      document.getElementById('archiveBtn').style.display = isArchived ? 'none' : 'inline-flex';
+      document.getElementById('unarchiveBtn').style.display = isArchived ? 'inline-flex' : 'none';
+
+      // Hide folder contents, show message view
+      document.querySelector('.folder-contents-list').style.display = 'none';
+      document.querySelector('.folder-contents-header').style.display = 'none';
+      document.getElementById('messageView').classList.add('open');
     }
 
-    function closeMessageModal() {
-      document.getElementById('messageModal').style.display = 'none';
+    function closeMessageView() {
+      document.getElementById('messageView').classList.remove('open');
+      document.querySelector('.folder-contents-list').style.display = 'block';
+      document.querySelector('.folder-contents-header').style.display = 'flex';
+      if (currentFolder) {
+        filterMessagesForFolder(currentFolder);
+      }
+      document.querySelectorAll('.message-row').forEach(r => r.classList.remove('selected'));
+      currentId = null; currentStatus = null;
     }
 
-    function deleteDraft(draftId) {
-      pendingDeleteDraftId = draftId;
-      document.getElementById('deleteDraftModal').classList.add('active');
+    function openCompose(data = null) {
+      document.getElementById('draftId').value = data ? data.id : '';
+      document.getElementById('subjectInput').value = data ? data.subject : '';
+      document.getElementById('contentInput').value = data ? data.content : '';
+      document.getElementById('composeTitle').textContent = data ? 'Edit Draft' : 'New Message';
+      setType(data ? data.type : 'email');
+      document.getElementById('testToggle').checked = false; toggleTest();
+      // Set folder
+      const folderSelect = document.getElementById('folderSelect');
+      if (data && data.folder) {
+        folderSelect.value = data.folder;
+      } else if (currentFolder && currentFolder.startsWith('custom-')) {
+        folderSelect.value = currentFolder.replace('custom-', '');
+      } else {
+        folderSelect.value = '';
+      }
+      if (data && data.scheduled) {
+        document.getElementById('scheduleToggle').checked = true; toggleSchedule();
+        const dt = new Date(data.scheduled);
+        if (!isNaN(dt)) document.getElementById('scheduleInput').value = dt.toISOString().slice(0,16);
+      } else { document.getElementById('scheduleToggle').checked = false; toggleSchedule(); }
+      // Auto-enable preview when editing an existing draft
+      if (data && !previewEnabled) {
+        togglePreview();
+      } else if (previewEnabled) {
+        updatePreview();
+      }
+      document.getElementById('composeModal').classList.add('open');
     }
 
-    function closeDeleteDraftModal() {
-      document.getElementById('deleteDraftModal').classList.remove('active');
-      pendingDeleteDraftId = null;
+    function closeCompose() {
+      document.getElementById('composeModal').classList.remove('open');
+      // Reset preview state
+      if (previewEnabled) {
+        previewEnabled = false;
+        document.getElementById('composePreview').classList.remove('active');
+        document.getElementById('previewToggle').classList.remove('active');
+        document.getElementById('composeModalInner').style.maxWidth = '650px';
+      }
     }
+    function editMessage() { if (currentStatus === 'draft' && drafts[currentId]) { closeMessageView(); openCompose(drafts[currentId]); } }
 
-    async function confirmDeleteDraft() {
-      if (!pendingDeleteDraftId) return;
-
-      const btn = document.querySelector('.delete-modal-confirm');
-      btn.textContent = 'Deleting...';
-      btn.disabled = true;
-
+    async function archiveMessage() {
+      if (!currentId) return;
+      const fd = new FormData();
+      fd.append('csrfmiddlewaretoken', '{{ csrf_token }}');
+      fd.append('action', 'archive_message');
+      fd.append('message_id', currentId);
       try {
-        const formData = new FormData();
-        formData.append('action', 'delete_draft');
-        formData.append('draft_id', pendingDeleteDraftId);
-
-        const response = await fetch('{% url "admin_home" %}', {
+        await fetch('{% url "admin_messages" %}', {
           method: 'POST',
-          body: formData,
-          headers: {
-            'X-CSRFToken': '{{ csrf_token }}'
-          }
+          body: fd,
+          headers: {'X-Requested-With': 'XMLHttpRequest'}
         });
-
-        const result = await response.json();
-        if (result.success) {
-          window.location.reload();
-        } else {
-          alert(result.error || 'Failed to delete draft');
-          closeDeleteDraftModal();
-        }
-      } catch (error) {
-        alert('Error deleting draft: ' + error.message);
-        closeDeleteDraftModal();
-      } finally {
-        btn.textContent = 'Delete';
-        btn.disabled = false;
+        location.reload();
+      } catch (err) {
+        console.error('Archive error:', err);
+        location.reload();
       }
     }
 
-    // Close modals on Escape key
-    document.addEventListener('keydown', function(e) {
-      if (e.key === 'Escape') {
-        closeMessageModal();
-        closeDeleteDraftModal();
+    async function unarchiveMessage() {
+      if (!currentId) return;
+      const fd = new FormData();
+      fd.append('csrfmiddlewaretoken', '{{ csrf_token }}');
+      fd.append('action', 'unarchive_message');
+      fd.append('message_id', currentId);
+      try {
+        await fetch('{% url "admin_messages" %}', {
+          method: 'POST',
+          body: fd,
+          headers: {'X-Requested-With': 'XMLHttpRequest'}
+        });
+        location.reload();
+      } catch (err) {
+        console.error('Unarchive error:', err);
+        location.reload();
+      }
+    }
+
+    async function sendDraftNow() {
+      if (currentStatus !== 'draft' || !drafts[currentId]) return;
+      const data = drafts[currentId];
+      const count = data.type === 'email' ? emailCount : smsCount;
+      if (!confirm(`Send this ${data.type} to ${count} subscribers now?`)) return;
+      document.getElementById('sendNowBtn').disabled = true;
+      document.getElementById('sendNowBtn').innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Sending...';
+      const fd = new FormData();
+      fd.append('action', 'quick_send');
+      fd.append('message_type', data.type);
+      fd.append('subject', data.subject);
+      fd.append('content', data.content);
+      fd.append('draft_id', currentId);
+      fd.append('csrfmiddlewaretoken', '{{ csrf_token }}');
+      try {
+        const res = await fetch('{% url "admin_home" %}', {method: 'POST', body: fd, headers: {'X-Requested-With': 'XMLHttpRequest'}});
+        const json = await res.json();
+        if (json.success) { alert(`Sent to ${json.sent_count} recipients!`); location.reload(); }
+        else alert(json.error || 'Failed to send');
+      } catch (err) { alert(err.message); }
+      document.getElementById('sendNowBtn').disabled = false;
+      document.getElementById('sendNowBtn').innerHTML = '<i class="fa-solid fa-paper-plane"></i> Send Now';
+    }
+
+    function setType(type) {
+      msgType = type;
+      document.getElementById('messageType').value = type;
+      document.getElementById('typeEmail').classList.toggle('active', type === 'email');
+      document.getElementById('typeSMS').classList.toggle('active', type === 'sms');
+      document.getElementById('subjectRow').style.display = type === 'email' ? 'block' : 'none';
+      document.getElementById('imageRow').style.display = type === 'email' ? 'flex' : 'none';
+      // Load saved test recipient for this type
+      if (testMode) {
+        const savedRecipient = localStorage.getItem(`test_recipient_${type}`);
+        if (savedRecipient) {
+          document.getElementById('testInput').value = savedRecipient;
+        }
+      }
+      updateRecipientInfo();
+      updatePreview();
+    }
+
+    // Preview functionality
+    let previewEnabled = false;
+    let previewDevice = 'desktop';
+
+    function togglePreview() {
+      previewEnabled = !previewEnabled;
+      const previewPanel = document.getElementById('composePreview');
+      const previewToggle = document.getElementById('previewToggle');
+      const modal = document.getElementById('composeModalInner');
+
+      previewPanel.classList.toggle('active', previewEnabled);
+      previewToggle.classList.toggle('active', previewEnabled);
+      modal.style.maxWidth = previewEnabled ? '1000px' : '650px';
+
+      if (previewEnabled) {
+        updatePreview();
+      }
+    }
+
+    function setPreviewDevice(device) {
+      previewDevice = device;
+      document.getElementById('previewDesktop').classList.toggle('active', device === 'desktop');
+      document.getElementById('previewPhone').classList.toggle('active', device === 'phone');
+      document.getElementById('previewFrame').classList.toggle('phone', device === 'phone');
+    }
+
+    function updatePreview() {
+      if (!previewEnabled) return;
+
+      const subject = document.getElementById('subjectInput').value || '(No subject)';
+      const content = document.getElementById('contentInput').value || 'Your message will appear here...';
+
+      // Show/hide email or SMS preview based on type
+      document.getElementById('previewEmail').style.display = msgType === 'email' ? 'block' : 'none';
+      document.getElementById('previewSms').style.display = msgType === 'sms' ? 'flex' : 'none';
+
+      if (msgType === 'email') {
+        document.getElementById('previewSubject').textContent = subject;
+        // Render HTML content for email (supports images, links, etc.)
+        document.getElementById('previewBody').innerHTML = content.replace(/\n/g, '<br>');
+      } else {
+        // SMS preview - plain text in bubble
+        document.getElementById('previewSmsBubble').textContent = content;
+      }
+    }
+
+    function toggleTest() {
+      testMode = document.getElementById('testToggle').checked;
+      document.getElementById('testRow').classList.toggle('active', testMode);
+      if (testMode) {
+        // Load saved test recipient based on message type
+        const savedRecipient = localStorage.getItem(`test_recipient_${msgType}`);
+        const testInput = document.getElementById('testInput');
+        if (savedRecipient && !testInput.value) {
+          testInput.value = savedRecipient;
+        }
+        testInput.focus();
+      }
+      updateRecipientInfo();
+    }
+
+    function saveTestRecipient() {
+      const testInput = document.getElementById('testInput').value.trim();
+      if (testInput) {
+        localStorage.setItem(`test_recipient_${msgType}`, testInput);
+      }
+    }
+
+    // Test settings popover
+    function toggleTestSettings(e) {
+      e.stopPropagation();
+      const popover = document.getElementById('testSettingsPopover');
+      const isOpen = popover.classList.toggle('open');
+      if (isOpen) {
+        // Load saved values
+        document.getElementById('defaultTestEmail').value = localStorage.getItem('test_recipient_email') || '';
+        document.getElementById('defaultTestPhone').value = localStorage.getItem('test_recipient_sms') || '';
+      }
+    }
+
+    function saveTestSettings() {
+      const email = document.getElementById('defaultTestEmail').value.trim();
+      const phone = document.getElementById('defaultTestPhone').value.trim();
+      if (email) localStorage.setItem('test_recipient_email', email);
+      else localStorage.removeItem('test_recipient_email');
+      if (phone) localStorage.setItem('test_recipient_sms', phone);
+      else localStorage.removeItem('test_recipient_sms');
+      document.getElementById('testSettingsPopover').classList.remove('open');
+      // Update test input if test mode is active
+      if (testMode) {
+        const saved = localStorage.getItem(`test_recipient_${msgType}`);
+        if (saved) document.getElementById('testInput').value = saved;
+      }
+    }
+
+    // Close test settings when clicking outside
+    document.addEventListener('click', e => {
+      if (!e.target.closest('.test-settings-popover') && !e.target.closest('.test-settings-btn')) {
+        document.getElementById('testSettingsPopover').classList.remove('open');
       }
     });
 
-    async function cancelScheduled(messageId) {
-      if (!confirm('Cancel this scheduled message?')) return;
-
-      try {
-        const formData = new FormData();
-        formData.append('action', 'cancel_scheduled');
-        formData.append('message_id', messageId);
-
-        const response = await fetch('', {
-          method: 'POST',
-          body: formData,
-          headers: {
-            'X-CSRFToken': '{{ csrf_token }}'
-          }
-        });
-
-        const result = await response.json();
-        if (result.success) {
-          window.location.reload();
-        } else {
-          alert(result.error || 'Failed to cancel message');
-        }
-      } catch (error) {
-        alert('Error: ' + error.message);
-      }
+    function toggleSchedule() {
+      const on = document.getElementById('scheduleToggle').checked;
+      document.getElementById('scheduleInput').style.display = on ? 'inline-block' : 'none';
+      if (on) document.getElementById('scheduleInput').min = new Date().toISOString().slice(0,16);
+      document.getElementById('sendBtn').innerHTML = (on && !testMode) ? 'Schedule <i class="fa-solid fa-clock"></i>' : 'Send <i class="fa-solid fa-arrow-right"></i>';
     }
 
-    // Quick Send Form Functions
-    let currentMessageType = 'email';
-    let testMode = false;
-    const emailCount = {{ stats.email_sub_count }};
-    const smsCount = {{ stats.sms_sub_count }};
-    const defaultTestEmail = '{{ default_test_email|default:"" }}';
-    const defaultTestPhone = '{{ default_test_phone|default:"" }}';
-
-    function setMessageType(type) {
-      currentMessageType = type;
-      document.getElementById('messageType').value = type;
-
-      const emailBtn = document.getElementById('toggleEmail');
-      const smsBtn = document.getElementById('toggleSMS');
-      const subjectField = document.getElementById('subjectField');
-      const imageUploadRow = document.getElementById('imageUploadRow');
-
-      if (type === 'email') {
-        emailBtn.style.background = 'white';
-        emailBtn.style.color = '#1e293b';
-        emailBtn.style.boxShadow = '0 1px 2px rgba(0,0,0,0.05)';
-        smsBtn.style.background = 'transparent';
-        smsBtn.style.color = '#64748b';
-        smsBtn.style.boxShadow = 'none';
-        subjectField.style.display = 'block';
-        imageUploadRow.style.display = 'flex';
-      } else {
-        smsBtn.style.background = 'white';
-        smsBtn.style.color = '#1e293b';
-        smsBtn.style.boxShadow = '0 1px 2px rgba(0,0,0,0.05)';
-        emailBtn.style.background = 'transparent';
-        emailBtn.style.color = '#64748b';
-        emailBtn.style.boxShadow = 'none';
-        subjectField.style.display = 'none';
-        imageUploadRow.style.display = 'none';
-      }
-
-      updateRecipientCount();
-
-      // Update test recipient placeholder and default
-      if (testMode) {
-        const testInput = document.getElementById('testRecipient');
-        if (type === 'email') {
-          testInput.placeholder = 'Enter email address';
-          if (!testInput.value) testInput.value = defaultTestEmail;
-        } else {
-          testInput.placeholder = 'Enter phone number';
-          if (!testInput.value) testInput.value = defaultTestPhone;
-        }
-      }
-    }
-
-    function toggleTestMode() {
-      testMode = document.getElementById('testModeToggle').checked;
-      document.getElementById('testRecipientField').style.display = testMode ? 'block' : 'none';
-      document.getElementById('testModeHint').style.display = testMode ? 'inline' : 'none';
-
-      if (testMode) {
-        const testInput = document.getElementById('testRecipient');
-        if (!testInput.value) {
-          testInput.value = currentMessageType === 'email' ? defaultTestEmail : defaultTestPhone;
-        }
-      }
-
-      updateRecipientCount();
-      updateSendButton();
-    }
-
-    function toggleScheduleField() {
-      const isScheduled = document.getElementById('scheduleToggle').checked;
-      const scheduleInput = document.getElementById('scheduledFor');
-      scheduleInput.style.display = isScheduled ? 'inline-block' : 'none';
-    }
-
-    async function handleMessageImageUpload(input) {
-      const file = input.files[0];
-      if (!file) return;
-
-      const statusEl = document.getElementById('imageUploadStatus');
-      const btnText = document.getElementById('imageUploadBtnText');
-      const sizeMB = (file.size / (1024 * 1024)).toFixed(1);
-
-      statusEl.textContent = file.size > 1024 * 1024 ? `Optimizing ${sizeMB}MB...` : 'Uploading...';
-      statusEl.style.color = '#667eea';
-      btnText.textContent = 'Processing...';
-
-      try {
-        // Resize image on client side before upload
-        const resizedDataUrl = await resizeImageForUpload(file, 1600, 0.85);
-
-        const formData = new FormData();
-        formData.append('action', 'upload_message_image');
-        formData.append('image_data', resizedDataUrl);
-        formData.append('csrfmiddlewaretoken', '{{ csrf_token }}');
-
-        const resizedSizeMB = (resizedDataUrl.length / (1024 * 1024)).toFixed(2);
-        statusEl.textContent = `Uploading (${resizedSizeMB}MB)...`;
-
-        const response = await fetch('{% url "admin_messages" %}', {
-          method: 'POST',
-          body: formData
-        });
-
-        if (!response.ok) {
-          throw new Error(`Server error: ${response.status} ${response.statusText}`);
-        }
-
-        const data = await response.json();
-        if (data.success) {
-          const textarea = document.getElementById('quickContent');
-          const imgTag = `<img src="${data.url}" alt="Image" style="max-width: 100%; height: auto;">`;
-
-          const start = textarea.selectionStart;
-          const end = textarea.selectionEnd;
-          const text = textarea.value;
-
-          const before = text.substring(0, start);
-          const after = text.substring(end);
-          const needsNewlineBefore = before.length > 0 && !before.endsWith('\n');
-          const needsNewlineAfter = after.length > 0 && !after.startsWith('\n');
-
-          textarea.value = before + (needsNewlineBefore ? '\n' : '') + imgTag + (needsNewlineAfter ? '\n' : '') + after;
-
-          statusEl.textContent = 'Image added!';
-          statusEl.style.color = '#10b981';
-          setTimeout(() => { statusEl.textContent = ''; }, 3000);
-        } else {
-          statusEl.textContent = 'Upload failed: ' + data.error;
-          statusEl.style.color = '#ef4444';
-        }
-      } catch (error) {
-        console.error('Upload error:', error);
-        statusEl.textContent = 'Upload failed: ' + error.message;
-        statusEl.style.color = '#ef4444';
-      }
-
-      btnText.textContent = 'Add Image';
-      input.value = '';
-    }
-
-    function resizeImageForUpload(file, maxDimension, quality) {
-      return new Promise((resolve, reject) => {
-        const img = new Image();
-        const canvas = document.createElement('canvas');
-        const ctx = canvas.getContext('2d');
-
-        img.onload = function() {
-          let { width, height } = img;
-
-          // Calculate new dimensions
-          if (width > maxDimension || height > maxDimension) {
-            if (width > height) {
-              height = Math.round((height * maxDimension) / width);
-              width = maxDimension;
-            } else {
-              width = Math.round((width * maxDimension) / height);
-              height = maxDimension;
-            }
-          }
-
-          canvas.width = width;
-          canvas.height = height;
-          ctx.drawImage(img, 0, 0, width, height);
-
-          // Try to get under 1.5MB by reducing quality if needed
-          let outputQuality = quality;
-          let dataUrl = canvas.toDataURL('image/jpeg', outputQuality);
-
-          // If still too large, reduce quality progressively
-          while (dataUrl.length > 1.5 * 1024 * 1024 && outputQuality > 0.5) {
-            outputQuality -= 0.1;
-            dataUrl = canvas.toDataURL('image/jpeg', outputQuality);
-          }
-
-          // If still too large, reduce dimensions
-          if (dataUrl.length > 1.5 * 1024 * 1024) {
-            const scale = 0.7;
-            canvas.width = Math.round(width * scale);
-            canvas.height = Math.round(height * scale);
-            ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-            dataUrl = canvas.toDataURL('image/jpeg', 0.8);
-          }
-
-          resolve(dataUrl);
-        };
-
-        img.onerror = function() {
-          reject(new Error('Failed to load image'));
-        };
-
-        img.src = URL.createObjectURL(file);
-      });
-    }
-
-      const now = new Date();
-      const nowLocal = new Date(now.getTime() - now.getTimezoneOffset() * 60000);
-      const minValue = nowLocal.toISOString().slice(0, 16);
-      scheduleInput.min = minValue;
-
-      if (isScheduled) {
-        if (scheduleInput.value && scheduleInput.value < minValue) {
-          scheduleInput.value = '';
-        }
-      } else {
-        scheduleInput.value = '';
-      }
-      updateSendButton();
-    }
-
-    function updateSendButton() {
-      const sendBtn = document.getElementById('sendBtn');
-      const sendBtnText = document.getElementById('sendBtnText');
-      const isScheduled = document.getElementById('scheduleToggle').checked && !testMode;
-
-      if (!sendBtnText) return;
-
-      if (isScheduled) {
-        sendBtnText.textContent = 'Schedule';
-        sendBtn.style.background = 'linear-gradient(135deg, #8b5cf6 0%, #6366f1 100%)';
-      } else {
-        sendBtnText.textContent = 'Send Now';
-        sendBtn.style.background = 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)';
-      }
-    }
-
-    function updateRecipientCount() {
-      const recipientCount = document.getElementById('recipientCount');
-      const count = currentMessageType === 'email' ? emailCount : smsCount;
-
-      if (testMode) {
-        recipientCount.innerHTML = 'Will send to <strong style="color: #f59e0b;">test recipient only</strong>';
-      } else {
-        const type = currentMessageType === 'email' ? 'email' : 'SMS';
-        recipientCount.innerHTML = `Will send to <strong style="color: #667eea;">${count}</strong> active ${type} subscribers`;
-      }
-    }
-
-    async function sendQuickMessage(event) {
-      event.preventDefault();
-
-      const form = document.getElementById('quickSendForm');
-      const sendBtn = document.getElementById('sendBtn');
-      const content = document.getElementById('quickContent').value.trim();
-      const subject = document.getElementById('quickSubject').value.trim();
-      const testRecipient = document.getElementById('testRecipient').value.trim();
-
-      if (!content) {
-        alert('Please enter a message');
-        return;
-      }
-
-      if (currentMessageType === 'email' && !subject) {
-        alert('Please enter a subject line');
-        return;
-      }
-
-      if (testMode && !testRecipient) {
-        alert('Please enter a test recipient');
-        return;
-      }
-
-      const isScheduled = document.getElementById('scheduleToggle').checked && !testMode;
-      const scheduledFor = document.getElementById('scheduledFor').value;
-
-      if (isScheduled && !scheduledFor) {
-        alert('Please select a date and time for scheduling');
-        return;
-      }
-
-      if (isScheduled) {
-        const scheduleDate = new Date(scheduledFor);
-        if (scheduleDate <= new Date()) {
-          alert('Schedule time must be in the future');
-          return;
-        }
-      }
-
-      const count = currentMessageType === 'email' ? emailCount : smsCount;
-      let confirmMsg = testMode
-        ? `Send a test ${currentMessageType} to ${testRecipient}?`
-        : isScheduled
-          ? `Schedule ${currentMessageType} to ${count} subscribers?`
-          : `Send ${currentMessageType} to ${count} subscribers?`;
-
-      if (!confirm(confirmMsg)) return;
-
-      sendBtn.disabled = true;
-      sendBtn.innerHTML = '<span>Sending...</span>';
-
-      try {
-        const formData = new FormData(form);
-        formData.append('action', 'quick_send');
-
-        const response = await fetch('{% url "admin_home" %}', {
-          method: 'POST',
-          body: formData,
-          headers: {
-            'X-Requested-With': 'XMLHttpRequest'
-          }
-        });
-
-        if (!response.ok) {
-          throw new Error(`Server error: ${response.status}`);
-        }
-
-        const result = await response.json();
-
-        if (result.success) {
-          let msg = result.scheduled
-            ? 'Message scheduled successfully!'
-            : `Sent to ${result.sent_count} recipient(s)`;
-          if (result.failed_count > 0) {
-            msg += ` (${result.failed_count} failed)`;
-          }
-          alert(msg);
-
-          // Clear form and reload to show in timeline/table
-          document.getElementById('quickContent').value = '';
-          document.getElementById('quickSubject').value = '';
-          document.getElementById('scheduleToggle').checked = false;
-          toggleScheduleField();
-          window.location.reload();
-        } else {
-          alert(result.error || 'Failed to send message');
-        }
-      } catch (error) {
-        alert('Error: ' + error.message);
-      } finally {
-        sendBtn.disabled = false;
-        const btnText = document.getElementById('scheduleToggle').checked && !testMode ? 'Schedule' : 'Send Now';
-        sendBtn.innerHTML = `<span id="sendBtnText">${btnText}</span><span>→</span>`;
-      }
+    function updateRecipientInfo() {
+      const info = document.getElementById('recipientInfo');
+      info.innerHTML = testMode ? 'Sending to <strong style="color:#f59e0b">test recipient</strong>' : `Sending to <strong>${msgType === 'email' ? emailCount : smsCount}</strong> ${msgType} subscribers`;
     }
 
     async function saveDraft() {
-      const content = document.getElementById('quickContent').value.trim();
-      const subject = document.getElementById('quickSubject').value.trim();
+      const content = document.getElementById('contentInput').value.trim();
+      if (!content) return alert('Enter a message');
+      if (msgType === 'email' && !document.getElementById('subjectInput').value.trim()) return alert('Enter a subject');
+      const fd = new FormData();
+      fd.append('action', 'save_draft'); fd.append('message_type', msgType);
+      fd.append('subject', document.getElementById('subjectInput').value);
+      fd.append('content', content); fd.append('csrfmiddlewaretoken', '{{ csrf_token }}');
       const draftId = document.getElementById('draftId').value;
-      const scheduledFor = document.getElementById('scheduledFor').value;
+      if (draftId) fd.append('draft_id', draftId);
+      const folderId = document.getElementById('folderSelect').value;
+      if (folderId) fd.append('folder_id', folderId);
+      const sched = document.getElementById('scheduleInput').value;
+      if (sched) fd.append('scheduled_for', sched);
+      const res = await fetch('{% url "admin_messages" %}', {method: 'POST', body: fd, headers: {'X-Requested-With': 'XMLHttpRequest'}});
+      const json = await res.json();
+      if (json.success) location.reload(); else alert(json.error || 'Failed');
+    }
 
-      if (!content) {
-        alert('Please enter a message to save');
-        return;
-      }
-
-      if (currentMessageType === 'email' && !subject) {
-        alert('Please enter a subject line');
-        return;
-      }
-
-      const saveDraftBtn = document.getElementById('saveDraftBtn');
-      saveDraftBtn.disabled = true;
-      saveDraftBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Saving...';
-
+    async function sendMessage(e) {
+      e.preventDefault();
+      const content = document.getElementById('contentInput').value.trim();
+      if (!content) return alert('Enter a message');
+      if (msgType === 'email' && !document.getElementById('subjectInput').value.trim()) return alert('Enter a subject');
+      if (testMode && !document.getElementById('testInput').value.trim()) return alert('Enter test recipient');
+      const isScheduled = document.getElementById('scheduleToggle').checked && !testMode;
+      if (isScheduled && !document.getElementById('scheduleInput').value) return alert('Select schedule time');
+      const count = msgType === 'email' ? emailCount : smsCount;
+      if (!confirm(testMode ? `Send test to ${document.getElementById('testInput').value}?` : isScheduled ? `Schedule to ${count} subscribers?` : `Send to ${count} subscribers?`)) return;
+      // Save test recipient for future use
+      if (testMode) saveTestRecipient();
+      document.getElementById('sendBtn').disabled = true;
+      document.getElementById('sendBtn').innerHTML = 'Sending...';
+      const fd = new FormData(document.getElementById('composeForm'));
+      fd.append('action', 'quick_send');
       try {
-        const formData = new FormData();
-        formData.append('action', 'save_draft');
-        formData.append('message_type', currentMessageType);
-        formData.append('subject', subject);
-        formData.append('content', content);
-        formData.append('csrfmiddlewaretoken', '{{ csrf_token }}');
-        if (draftId) {
-          formData.append('draft_id', draftId);
-        }
-        if (scheduledFor) {
-          formData.append('scheduled_for', scheduledFor);
-        }
+        const res = await fetch('{% url "admin_home" %}', {method: 'POST', body: fd, headers: {'X-Requested-With': 'XMLHttpRequest'}});
+        const json = await res.json();
+        if (json.success) { alert(json.scheduled ? 'Scheduled!' : `Sent to ${json.sent_count}`); location.reload(); }
+        else alert(json.error || 'Failed');
+      } catch (err) { alert(err.message); }
+      document.getElementById('sendBtn').disabled = false; toggleSchedule();
+    }
 
-        const response = await fetch('{% url "admin_messages" %}', {
-          method: 'POST',
-          body: formData,
-          headers: {
-            'X-Requested-With': 'XMLHttpRequest'
+    async function uploadImage(input) {
+      const file = input.files[0]; if (!file) return;
+      document.getElementById('imageStatus').textContent = 'Uploading...';
+      const canvas = document.createElement('canvas'), ctx = canvas.getContext('2d'), img = new Image();
+      img.onload = async () => {
+        let {width, height} = img; const max = 1600;
+        if (width > max || height > max) { if (width > height) { height = Math.round(height * max / width); width = max; } else { width = Math.round(width * max / height); height = max; } }
+        canvas.width = width; canvas.height = height; ctx.drawImage(img, 0, 0, width, height);
+        const fd = new FormData(); fd.append('action', 'upload_message_image'); fd.append('image_data', canvas.toDataURL('image/jpeg', 0.85)); fd.append('csrfmiddlewaretoken', '{{ csrf_token }}');
+        const res = await fetch('{% url "admin_messages" %}', {method: 'POST', body: fd});
+        const json = await res.json();
+        if (json.success) { document.getElementById('contentInput').value += `\n<img src="${json.url}" style="max-width:100%">`; document.getElementById('imageStatus').textContent = 'Added!'; }
+        else document.getElementById('imageStatus').textContent = 'Failed';
+        setTimeout(() => document.getElementById('imageStatus').textContent = '', 2000);
+      };
+      img.src = URL.createObjectURL(file); input.value = '';
+    }
+
+    function confirmDelete() {
+      document.getElementById('confirmTitle').textContent = currentStatus === 'draft' ? 'Delete Draft?' : currentStatus === 'scheduled' ? 'Cancel Scheduled?' : 'Delete?';
+      document.getElementById('confirmModal').classList.add('open');
+    }
+    function closeConfirm() { document.getElementById('confirmModal').classList.remove('open'); }
+
+    async function doDelete() {
+      const fd = new FormData(); fd.append('csrfmiddlewaretoken', '{{ csrf_token }}');
+      if (currentStatus === 'draft') { fd.append('action', 'delete_draft'); fd.append('draft_id', currentId); }
+      else { fd.append('action', 'cancel_scheduled'); fd.append('message_id', currentId); }
+      const url = currentStatus === 'draft' ? '{% url "admin_home" %}' : '{% url "admin_messages" %}';
+      const res = await fetch(url, {method: 'POST', body: fd});
+      const json = await res.json();
+      if (json.success) location.reload(); else { alert(json.error || 'Failed'); closeConfirm(); }
+    }
+
+    document.addEventListener('keydown', e => { if (e.key === 'Escape') { closeCompose(); closeConfirm(); closeMessageView(); closeFolderModal(); closeFolderContextMenu(); } });
+
+    // Initialize on page load
+    document.addEventListener('DOMContentLoaded', () => {
+      // Add attachment indicators to message rows
+      const allMessages = {...drafts, ...scheduled, ...sent};
+      document.querySelectorAll('.message-row').forEach(row => {
+        const id = row.dataset.id;
+        const msg = allMessages[id];
+        if (msg && msg.content && msg.content.includes('<img')) {
+          const details = row.querySelector('.msg-details');
+          if (details) {
+            const count = (msg.content.match(/<img/g) || []).length;
+            const indicator = document.createElement('span');
+            indicator.className = 'msg-attachments';
+            indicator.innerHTML = `<i class="fa-solid fa-image"></i> ${count}`;
+            details.appendChild(indicator);
           }
-        });
-
-        const result = await response.json();
-
-        if (result.success) {
-          // Update draft_id for future saves
-          document.getElementById('draftId').value = result.draft_id;
-
-          // Show success message briefly
-          saveDraftBtn.innerHTML = '<i class="fa-solid fa-check"></i> Saved!';
-          saveDraftBtn.style.background = '#dcfce7';
-          saveDraftBtn.style.color = '#166534';
-
-          setTimeout(() => {
-            saveDraftBtn.innerHTML = '<i class="fa-solid fa-floppy-disk"></i> <span id="saveDraftBtnText">Save Draft</span>';
-            saveDraftBtn.style.background = '#f1f5f9';
-            saveDraftBtn.style.color = '#475569';
-            saveDraftBtn.disabled = false;
-          }, 1500);
-
-          // Reload to show in drafts list
-          setTimeout(() => window.location.reload(), 1600);
-        } else {
-          alert(result.error || 'Failed to save draft');
-          saveDraftBtn.innerHTML = '<i class="fa-solid fa-floppy-disk"></i> <span id="saveDraftBtnText">Save Draft</span>';
-          saveDraftBtn.disabled = false;
         }
-      } catch (error) {
-        alert('Error: ' + error.message);
-        saveDraftBtn.innerHTML = '<i class="fa-solid fa-floppy-disk"></i> <span id="saveDraftBtnText">Save Draft</span>';
-        saveDraftBtn.disabled = false;
+      });
+    });
+
+    // Folder management
+    const folders = { {% for f in folders %}{{ f.id }}:{id:{{ f.id }},name:'{{ f.name|escapejs }}',color:'{{ f.color }}'},{% endfor %} };
+    let selectedFolderColor = '#6366f1';
+    let contextMenuFolderId = null;
+
+    function openFolderModal(editId = null, editName = '', editColor = '#6366f1') {
+      document.getElementById('editFolderId').value = editId || '';
+      document.getElementById('folderNameInput').value = editName;
+      document.getElementById('folderModalTitle').textContent = editId ? 'Edit Folder' : 'New Folder';
+      selectedFolderColor = editColor;
+      document.querySelectorAll('.color-option').forEach(c => {
+        c.classList.toggle('selected', c.dataset.color === editColor);
+      });
+      document.getElementById('folderModal').classList.add('open');
+      document.getElementById('folderNameInput').focus();
+    }
+
+    function closeFolderModal() {
+      document.getElementById('folderModal').classList.remove('open');
+    }
+
+    // Color picker
+    document.querySelectorAll('.color-option').forEach(opt => {
+      opt.addEventListener('click', () => {
+        document.querySelectorAll('.color-option').forEach(c => c.classList.remove('selected'));
+        opt.classList.add('selected');
+        selectedFolderColor = opt.dataset.color;
+      });
+    });
+
+    async function saveFolder() {
+      const name = document.getElementById('folderNameInput').value.trim();
+      if (!name) return alert('Please enter a folder name');
+      const editId = document.getElementById('editFolderId').value;
+      const fd = new FormData();
+      fd.append('csrfmiddlewaretoken', '{{ csrf_token }}');
+      fd.append('name', name);
+      fd.append('color', selectedFolderColor);
+      if (editId) {
+        fd.append('action', 'rename_folder');
+        fd.append('folder_id', editId);
+      } else {
+        fd.append('action', 'create_folder');
+      }
+      try {
+        const res = await fetch('{% url "admin_messages" %}', {
+          method: 'POST',
+          body: fd,
+          headers: {'X-Requested-With': 'XMLHttpRequest'}
+        });
+        if (!res.ok) {
+          console.error('Server returned status:', res.status);
+          location.reload(); // Reload anyway since folder might have been created
+          return;
+        }
+        const text = await res.text();
+        if (!text.trim()) {
+          location.reload();
+          return;
+        }
+        let json;
+        try {
+          json = JSON.parse(text);
+        } catch (parseErr) {
+          console.error('Response was not JSON:', text.substring(0, 200));
+          location.reload(); // Reload anyway
+          return;
+        }
+        if (json.success) location.reload();
+        else alert(json.error || 'Failed to save folder');
+      } catch (err) {
+        console.error('Fetch error:', err);
+        location.reload(); // Reload anyway
       }
     }
 
-    // Initialize form state on page load
-    document.addEventListener('DOMContentLoaded', function() {
-      const testModeCheckbox = document.getElementById('testModeToggle');
-      if (testModeCheckbox && testModeCheckbox.checked) {
-        toggleTestMode();
+    // Folder context menu
+    let contextMenuFolderArchived = false;
+
+    function showFolderMenu(e, folderId, name, color, isArchived = false) {
+      e.preventDefault();
+      contextMenuFolderId = folderId;
+      contextMenuFolderArchived = isArchived;
+      const menu = document.getElementById('folderContextMenu');
+      menu.style.left = e.clientX + 'px';
+      menu.style.top = e.clientY + 'px';
+      menu.classList.add('open');
+      // Store folder info for editing
+      menu.dataset.name = name;
+      menu.dataset.color = color;
+      // Show/hide archive buttons
+      document.getElementById('archiveFolderBtn').style.display = isArchived ? 'none' : 'flex';
+      document.getElementById('unarchiveFolderBtn').style.display = isArchived ? 'flex' : 'none';
+    }
+
+    function closeFolderContextMenu() {
+      document.getElementById('folderContextMenu').classList.remove('open');
+    }
+
+    function renameFolderFromMenu() {
+      closeFolderContextMenu();
+      const menu = document.getElementById('folderContextMenu');
+      openFolderModal(contextMenuFolderId, menu.dataset.name, menu.dataset.color);
+    }
+
+    function changeFolderColorFromMenu() {
+      closeFolderContextMenu();
+      const menu = document.getElementById('folderContextMenu');
+      openFolderModal(contextMenuFolderId, menu.dataset.name, menu.dataset.color);
+    }
+
+    async function deleteFolderFromMenu() {
+      closeFolderContextMenu();
+      const fd = new FormData();
+      fd.append('csrfmiddlewaretoken', '{{ csrf_token }}');
+      fd.append('action', 'delete_folder');
+      fd.append('folder_id', contextMenuFolderId);
+      try {
+        const res = await fetch('{% url "admin_messages" %}', {
+          method: 'POST',
+          body: fd,
+          headers: {'X-Requested-With': 'XMLHttpRequest'}
+        });
+        const text = await res.text();
+        let json;
+        try {
+          json = JSON.parse(text);
+        } catch (parseErr) {
+          console.error('Response was not JSON:', text.substring(0, 200));
+          location.reload();
+          return;
+        }
+        if (json.success) location.reload();
+        else alert(json.error || 'Failed to delete folder');
+      } catch (err) {
+        console.error('Fetch error:', err);
+        location.reload();
       }
-      const scheduleCheckbox = document.getElementById('scheduleToggle');
-      if (scheduleCheckbox && scheduleCheckbox.checked) {
-        toggleScheduleField();
+    }
+
+    async function archiveFolderFromMenu() {
+      closeFolderContextMenu();
+      const fd = new FormData();
+      fd.append('csrfmiddlewaretoken', '{{ csrf_token }}');
+      fd.append('action', 'archive_folder');
+      fd.append('folder_id', contextMenuFolderId);
+      try {
+        await fetch('{% url "admin_messages" %}', {
+          method: 'POST',
+          body: fd,
+          headers: {'X-Requested-With': 'XMLHttpRequest'}
+        });
+        location.reload();
+      } catch (err) {
+        console.error('Archive folder error:', err);
+        location.reload();
+      }
+    }
+
+    async function unarchiveFolderFromMenu() {
+      closeFolderContextMenu();
+      const fd = new FormData();
+      fd.append('csrfmiddlewaretoken', '{{ csrf_token }}');
+      fd.append('action', 'unarchive_folder');
+      fd.append('folder_id', contextMenuFolderId);
+      try {
+        await fetch('{% url "admin_messages" %}', {
+          method: 'POST',
+          body: fd,
+          headers: {'X-Requested-With': 'XMLHttpRequest'}
+        });
+        location.reload();
+      } catch (err) {
+        console.error('Unarchive folder error:', err);
+        location.reload();
+      }
+    }
+
+    // Move to folder dropdown
+    function toggleMoveDropdown(e) {
+      e.stopPropagation();
+      document.getElementById('moveDropdown').classList.toggle('open');
+    }
+
+    async function moveToFolder(folderId) {
+      document.getElementById('moveDropdown').classList.remove('open');
+      if (!currentId) return;
+      const fd = new FormData();
+      fd.append('csrfmiddlewaretoken', '{{ csrf_token }}');
+      fd.append('action', 'move_to_folder');
+      fd.append('message_id', currentId);
+      if (folderId) fd.append('folder_id', folderId);
+      try {
+        const res = await fetch('{% url "admin_messages" %}', {
+          method: 'POST',
+          body: fd,
+          headers: {'X-Requested-With': 'XMLHttpRequest'}
+        });
+        const text = await res.text();
+        let json;
+        try {
+          json = JSON.parse(text);
+        } catch (parseErr) {
+          console.error('Response was not JSON:', text.substring(0, 200));
+          location.reload();
+          return;
+        }
+        if (json.success) location.reload();
+        else alert(json.error || 'Failed to move message');
+      } catch (err) {
+        console.error('Fetch error:', err);
+        location.reload();
+      }
+    }
+
+    // Close dropdowns when clicking outside
+    document.addEventListener('click', e => {
+      if (!e.target.closest('.move-folder-dropdown')) {
+        document.getElementById('moveDropdown').classList.remove('open');
+      }
+      if (!e.target.closest('.context-menu') && !e.target.closest('.folder-menu-btn')) {
+        closeFolderContextMenu();
       }
     });
   </script>

@@ -8,7 +8,7 @@ from datetime import datetime, timedelta
 from django.contrib import messages
 from django.contrib.admin.views.decorators import staff_member_required
 from django.contrib.auth import get_user_model
-from django.db.models import Count, Q, Sum
+from django.db.models import Count, Max, Q, Sum
 from django.http import JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
@@ -27,7 +27,7 @@ from shop.models import (
     SMSSubscription,
     SMSTemplate,
 )
-from shop.models.messaging import QuickMessage
+from shop.models.messaging import MessageFolder, QuickMessage
 
 User = get_user_model()
 
@@ -842,11 +842,12 @@ def email_templates(request):
     return render(request, "admin/email_templates.html", context)
 
 
+@staff_member_required
 def messages_dashboard(request):
     """
     Dashboard showing all quick messages sent from the admin.
     """
-    from shop.models.messaging import QuickMessage
+    from shop.models.messaging import MessageFolder, QuickMessage
     from shop.models.settings import SiteSettings
 
     # Handle image upload for email messages
@@ -940,10 +941,112 @@ def messages_dashboard(request):
             print(traceback.format_exc())
             return JsonResponse({"success": False, "error": str(e)})
 
+    # Handle folder creation
+    if request.method == "POST" and request.POST.get("action") == "create_folder":
+        import traceback
+        try:
+            name = request.POST.get("name", "").strip()
+            color = request.POST.get("color", "#6366f1").strip()
+            if not name:
+                return JsonResponse({"success": False, "error": "Folder name is required"})
+            # Get max display order
+            max_order = MessageFolder.objects.aggregate(max_order=Max("display_order"))["max_order"] or 0
+            folder = MessageFolder.objects.create(
+                name=name,
+                color=color,
+                created_by=request.user,
+                display_order=max_order + 1,
+            )
+            return JsonResponse({
+                "success": True,
+                "folder": {
+                    "id": folder.id,
+                    "name": folder.name,
+                    "color": folder.color,
+                    "message_count": 0,
+                }
+            })
+        except Exception as e:
+            print(f"Folder creation error: {e}")
+            print(traceback.format_exc())
+            error_msg = str(e)
+            if "no such table" in error_msg.lower() or "does not exist" in error_msg.lower():
+                error_msg = "Database migration required. Run: python manage.py migrate shop"
+            return JsonResponse({"success": False, "error": error_msg})
+
+    # Handle folder rename
+    if request.method == "POST" and request.POST.get("action") == "rename_folder":
+        import traceback
+        try:
+            folder_id = request.POST.get("folder_id")
+            name = request.POST.get("name", "").strip()
+            color = request.POST.get("color")
+            if not name:
+                return JsonResponse({"success": False, "error": "Folder name is required"})
+            folder = MessageFolder.objects.get(id=folder_id)
+            folder.name = name
+            if color:
+                folder.color = color
+            folder.save()
+            return JsonResponse({"success": True})
+        except MessageFolder.DoesNotExist:
+            return JsonResponse({"success": False, "error": "Folder not found"})
+        except Exception as e:
+            print(f"Folder rename error: {e}")
+            print(traceback.format_exc())
+            error_msg = str(e)
+            if "no such table" in error_msg.lower() or "does not exist" in error_msg.lower():
+                error_msg = "Database migration required. Run: python manage.py migrate shop"
+            return JsonResponse({"success": False, "error": error_msg})
+
+    # Handle folder delete
+    if request.method == "POST" and request.POST.get("action") == "delete_folder":
+        import traceback
+        try:
+            folder_id = request.POST.get("folder_id")
+            folder = MessageFolder.objects.get(id=folder_id)
+            # Move messages to no folder (null)
+            folder.messages.update(folder=None)
+            folder.delete()
+            return JsonResponse({"success": True})
+        except MessageFolder.DoesNotExist:
+            return JsonResponse({"success": False, "error": "Folder not found"})
+        except Exception as e:
+            print(f"Folder delete error: {e}")
+            print(traceback.format_exc())
+            error_msg = str(e)
+            if "no such table" in error_msg.lower() or "does not exist" in error_msg.lower():
+                error_msg = "Database migration required. Run: python manage.py migrate shop"
+            return JsonResponse({"success": False, "error": error_msg})
+
+    # Handle move message to folder
+    if request.method == "POST" and request.POST.get("action") == "move_to_folder":
+        import traceback
+        try:
+            message_id = request.POST.get("message_id")
+            folder_id = request.POST.get("folder_id")  # Can be empty for "no folder"
+            message = QuickMessage.objects.get(id=message_id)
+            if folder_id:
+                folder = MessageFolder.objects.get(id=folder_id)
+                message.folder = folder
+            else:
+                message.folder = None
+            message.save()
+            return JsonResponse({"success": True})
+        except QuickMessage.DoesNotExist:
+            return JsonResponse({"success": False, "error": "Message not found"})
+        except MessageFolder.DoesNotExist:
+            return JsonResponse({"success": False, "error": "Folder not found"})
+        except Exception as e:
+            print(f"Move to folder error: {e}")
+            print(traceback.format_exc())
+            error_msg = str(e)
+            if "no such table" in error_msg.lower() or "does not exist" in error_msg.lower():
+                error_msg = "Database migration required. Run: python manage.py migrate shop"
+            return JsonResponse({"success": False, "error": error_msg})
+
     # Handle POST request for saving test settings
     if request.method == "POST" and request.POST.get("action") == "save_test_settings":
-        from django.http import JsonResponse
-
         try:
             settings = SiteSettings.load()
             settings.default_test_email = request.POST.get("test_email", "").strip()
@@ -955,8 +1058,6 @@ def messages_dashboard(request):
 
     # Handle cancel scheduled message
     if request.method == "POST" and request.POST.get("action") == "cancel_scheduled":
-        from django.http import JsonResponse
-
         try:
             message_id = request.POST.get("message_id")
             message = QuickMessage.objects.get(id=message_id, status="scheduled")
@@ -969,12 +1070,11 @@ def messages_dashboard(request):
 
     # Handle save draft
     if request.method == "POST" and request.POST.get("action") == "save_draft":
-        from django.http import JsonResponse
-
         message_type = request.POST.get("message_type", "email")
         subject = request.POST.get("subject", "")
         content = request.POST.get("content", "")
         draft_id = request.POST.get("draft_id")
+        folder_id = request.POST.get("folder_id", "").strip()
         scheduled_for_str = request.POST.get("scheduled_for", "").strip()
 
         # Parse scheduled_for if provided
@@ -989,6 +1089,14 @@ def messages_dashboard(request):
             except ValueError:
                 pass
 
+        # Get folder if provided
+        folder = None
+        if folder_id:
+            try:
+                folder = MessageFolder.objects.get(id=folder_id)
+            except MessageFolder.DoesNotExist:
+                pass
+
         try:
             if draft_id:
                 # Update existing draft
@@ -997,6 +1105,7 @@ def messages_dashboard(request):
                 draft.subject = subject
                 draft.content = content
                 draft.scheduled_for = scheduled_for
+                draft.folder = folder
                 draft.save()
             else:
                 # Create new draft
@@ -1006,6 +1115,7 @@ def messages_dashboard(request):
                     content=content,
                     status="draft",
                     scheduled_for=scheduled_for,
+                    folder=folder,
                 )
             return JsonResponse({"success": True, "draft_id": draft.id})
         except QuickMessage.DoesNotExist:
@@ -1013,12 +1123,73 @@ def messages_dashboard(request):
         except Exception as e:
             return JsonResponse({"success": False, "error": str(e)})
 
+    # Handle archive message
+    if request.method == "POST" and request.POST.get("action") == "archive_message":
+        try:
+            message_id = request.POST.get("message_id")
+            message = QuickMessage.objects.get(id=message_id)
+            message.is_archived = True
+            message.save()
+            return JsonResponse({"success": True})
+        except QuickMessage.DoesNotExist:
+            return JsonResponse({"success": False, "error": "Message not found"})
+        except Exception as e:
+            return JsonResponse({"success": False, "error": str(e)})
+
+    # Handle unarchive message
+    if request.method == "POST" and request.POST.get("action") == "unarchive_message":
+        try:
+            message_id = request.POST.get("message_id")
+            message = QuickMessage.objects.get(id=message_id)
+            message.is_archived = False
+            message.save()
+            return JsonResponse({"success": True})
+        except QuickMessage.DoesNotExist:
+            return JsonResponse({"success": False, "error": "Message not found"})
+        except Exception as e:
+            return JsonResponse({"success": False, "error": str(e)})
+
+    # Handle archive folder
+    if request.method == "POST" and request.POST.get("action") == "archive_folder":
+        try:
+            folder_id = request.POST.get("folder_id")
+            folder = MessageFolder.objects.get(id=folder_id)
+            folder.is_archived = True
+            folder.save()
+            # Also archive all messages in the folder
+            folder.messages.update(is_archived=True)
+            return JsonResponse({"success": True})
+        except MessageFolder.DoesNotExist:
+            return JsonResponse({"success": False, "error": "Folder not found"})
+        except Exception as e:
+            return JsonResponse({"success": False, "error": str(e)})
+
+    # Handle unarchive folder
+    if request.method == "POST" and request.POST.get("action") == "unarchive_folder":
+        try:
+            folder_id = request.POST.get("folder_id")
+            folder = MessageFolder.objects.get(id=folder_id)
+            folder.is_archived = False
+            folder.save()
+            # Also unarchive all messages in the folder
+            folder.messages.update(is_archived=False)
+            return JsonResponse({"success": True})
+        except MessageFolder.DoesNotExist:
+            return JsonResponse({"success": False, "error": "Folder not found"})
+        except Exception as e:
+            return JsonResponse({"success": False, "error": str(e)})
+
+    # Catch-all for AJAX POST requests that didn't match any handler
+    if request.method == "POST" and request.headers.get("X-Requested-With") == "XMLHttpRequest":
+        action = request.POST.get("action", "unknown")
+        return JsonResponse({"success": False, "error": f"Unknown action: {action}"})
+
     # Get filter parameters
     message_type = request.GET.get("type", "all")
     date_range = request.GET.get("range", "30")
 
-    # Base queryset - exclude drafts from main list
-    messages = QuickMessage.objects.exclude(status="draft").order_by("-created_at")
+    # Base queryset - exclude drafts and archived from main list
+    messages = QuickMessage.objects.exclude(status="draft").filter(is_archived=False).order_by("-created_at")
 
     # Apply filters
     if message_type in ["email", "sms"]:
@@ -1032,11 +1203,14 @@ def messages_dashboard(request):
         except ValueError:
             pass
 
-    # Get drafts separately
-    drafts = QuickMessage.objects.filter(status="draft").order_by("-updated_at")
+    # Get drafts separately (exclude archived)
+    drafts = QuickMessage.objects.filter(status="draft", is_archived=False).order_by("-updated_at")
 
-    # Get scheduled messages separately
-    scheduled_messages = QuickMessage.objects.filter(status="scheduled").order_by("scheduled_for")
+    # Get scheduled messages separately (exclude archived)
+    scheduled_messages = QuickMessage.objects.filter(status="scheduled", is_archived=False).order_by("scheduled_for")
+
+    # Get archived messages
+    archived_messages = QuickMessage.objects.filter(is_archived=True).order_by("-updated_at")
 
     # Build timeline: combine scheduled messages + drafts with scheduled times + recently sent
     timeline_items = []
@@ -1094,10 +1268,17 @@ def messages_dashboard(request):
     email_sub_count = EmailSubscription.objects.filter(is_active=True).count()
     sms_sub_count = SMSSubscription.objects.filter(is_active=True).count()
 
+    # Get custom folders (exclude archived)
+    folders = MessageFolder.objects.filter(is_archived=False)
+    archived_folders = MessageFolder.objects.filter(is_archived=True)
+
     context = {
         "messages": messages[:100],  # Limit to 100 most recent
         "drafts": drafts,
         "scheduled_messages": scheduled_messages,
+        "archived_messages": archived_messages,
+        "folders": folders,
+        "archived_folders": archived_folders,
         "timeline_items": timeline_items,
         "message_type": message_type,
         "date_range": date_range,

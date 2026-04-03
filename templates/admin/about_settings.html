@@ -377,12 +377,54 @@
       </div>
 
       <div class="image-preview" id="banner-preview" style="display: none;">
-        <img id="banner-preview-img" src="" alt="Banner preview">
-        <button type="button" class="remove-btn" onclick="removeBannerImage()">
+        <div class="preview-container" style="position: relative; width: 100%; height: 200px; overflow: hidden; border-radius: 8px; background: #0a0a0a;">
+          <img id="banner-preview-img" src="" alt="Banner preview" style="position: absolute; width: 100%; height: 100%; object-fit: cover;">
+        </div>
+        <button type="button" class="remove-btn" onclick="removeBannerImage()" style="position: absolute; top: 8px; right: 8px;">
           <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
             <path d="M18 6L6 18M6 6l12 12"/>
           </svg>
         </button>
+
+        <!-- Position Controls -->
+        <div class="position-controls" style="margin-top: 1.5rem; padding: 1rem; background: #f8fafc; border-radius: 8px;">
+          <h4 style="font-size: 0.875rem; font-weight: 600; margin-bottom: 1rem; color: #475569;">Image Position</h4>
+
+          <div class="control-group" style="margin-bottom: 1rem;">
+            <label style="display: flex; justify-content: space-between; font-size: 0.8125rem; color: #64748b; margin-bottom: 0.5rem;">
+              <span>Zoom</span>
+              <span id="zoom-value">100%</span>
+            </label>
+            <input type="range" id="banner-zoom" min="100" max="300" value="100" style="width: 100%;" oninput="updateBannerPosition()">
+          </div>
+
+          <div class="control-group" style="margin-bottom: 1rem;">
+            <label style="display: flex; justify-content: space-between; font-size: 0.8125rem; color: #64748b; margin-bottom: 0.5rem;">
+              <span>Horizontal Position</span>
+              <span id="pos-x-value">50%</span>
+            </label>
+            <input type="range" id="banner-pos-x" min="0" max="100" value="50" style="width: 100%;" oninput="updateBannerPosition()">
+          </div>
+
+          <div class="control-group" style="margin-bottom: 1rem;">
+            <label style="display: flex; justify-content: space-between; font-size: 0.8125rem; color: #64748b; margin-bottom: 0.5rem;">
+              <span>Vertical Position</span>
+              <span id="pos-y-value">50%</span>
+            </label>
+            <input type="range" id="banner-pos-y" min="0" max="100" value="50" style="width: 100%;" oninput="updateBannerPosition()">
+          </div>
+        </div>
+      </div>
+
+      <!-- Animation Settings -->
+      <div class="animation-settings" style="margin-top: 1.5rem; padding: 1rem; background: #f8fafc; border-radius: 8px;">
+        <h4 style="font-size: 0.875rem; font-weight: 600; margin-bottom: 1rem; color: #475569;">Animation Settings</h4>
+
+        <label style="display: flex; align-items: center; gap: 0.75rem; cursor: pointer;">
+          <input type="checkbox" id="animation-enabled" checked style="width: 1.25rem; height: 1.25rem;">
+          <span style="font-size: 0.875rem; color: #475569;">Enable scrolling animation</span>
+        </label>
+        <p class="help-text" style="margin-top: 0.5rem; margin-left: 2rem;">When disabled, the banner will display as a static image.</p>
       </div>
     </div>
 
@@ -420,6 +462,10 @@
   <script>
     // State
     let bannerImageUrl = '{{ about_settings.banner_image|default:""|escapejs }}';
+    let bannerZoom = {{ about_settings.banner_zoom|default:100 }};
+    let bannerPosX = {{ about_settings.banner_position_x|default:50 }};
+    let bannerPosY = {{ about_settings.banner_position_y|default:50 }};
+    let animationEnabled = {{ about_settings.animation_enabled|yesno:"true,false,true" }};
     let mainTextParagraphs = {{ about_settings.main_text|safe|default:"[]" }};
 
     // Initialize
@@ -428,6 +474,13 @@
       if (bannerImageUrl) {
         showBannerPreview(bannerImageUrl);
       }
+
+      // Initialize position controls
+      document.getElementById('banner-zoom').value = bannerZoom;
+      document.getElementById('banner-pos-x').value = bannerPosX;
+      document.getElementById('banner-pos-y').value = bannerPosY;
+      document.getElementById('animation-enabled').checked = animationEnabled;
+      updateBannerPosition();
 
       // Load existing paragraphs or add default ones
       if (mainTextParagraphs.length === 0) {
@@ -528,6 +581,26 @@
       uploadArea.style.display = 'block';
     }
 
+    function updateBannerPosition() {
+      bannerZoom = parseInt(document.getElementById('banner-zoom').value);
+      bannerPosX = parseInt(document.getElementById('banner-pos-x').value);
+      bannerPosY = parseInt(document.getElementById('banner-pos-y').value);
+
+      // Update labels
+      document.getElementById('zoom-value').textContent = bannerZoom + '%';
+      document.getElementById('pos-x-value').textContent = bannerPosX + '%';
+      document.getElementById('pos-y-value').textContent = bannerPosY + '%';
+
+      // Update preview image
+      const img = document.getElementById('banner-preview-img');
+      if (img) {
+        const scale = bannerZoom / 100;
+        img.style.transform = `scale(${scale})`;
+        img.style.transformOrigin = `${bannerPosX}% ${bannerPosY}%`;
+        img.style.objectPosition = `${bannerPosX}% ${bannerPosY}%`;
+      }
+    }
+
     function renderParagraphs() {
       const container = document.getElementById('paragraph-list');
       container.innerHTML = '';
@@ -570,8 +643,19 @@
     function saveSettings() {
       // Filter out empty paragraphs
       const paragraphs = mainTextParagraphs.filter(p => p.trim() !== '');
+      animationEnabled = document.getElementById('animation-enabled').checked;
 
-      console.log('Saving settings:', { banner_image: bannerImageUrl, main_text: paragraphs });
+      const payload = {
+        action: 'save_about_settings',
+        banner_image: bannerImageUrl,
+        banner_zoom: bannerZoom,
+        banner_position_x: bannerPosX,
+        banner_position_y: bannerPosY,
+        animation_enabled: animationEnabled,
+        main_text: paragraphs
+      };
+
+      console.log('Saving settings:', payload);
 
       fetch(window.location.href, {
         method: 'POST',
@@ -580,11 +664,7 @@
           'X-Requested-With': 'XMLHttpRequest',
           'X-CSRFToken': '{{ csrf_token }}'
         },
-        body: JSON.stringify({
-          action: 'save_about_settings',
-          banner_image: bannerImageUrl,
-          main_text: paragraphs
-        })
+        body: JSON.stringify(payload)
       })
       .then(response => {
         if (!response.ok) {

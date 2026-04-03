@@ -3,6 +3,37 @@ from django.db import models
 from django.utils import timezone
 
 
+class MessageFolder(models.Model):
+    """
+    Custom folders for organizing quick messages.
+    """
+
+    name = models.CharField(max_length=100)
+    color = models.CharField(
+        max_length=7,
+        default="#6366f1",
+        help_text="Hex color code for folder icon",
+    )
+    created_by = models.ForeignKey(
+        User, on_delete=models.SET_NULL, null=True, blank=True, related_name="message_folders"
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+    display_order = models.IntegerField(default=0)
+    is_archived = models.BooleanField(default=False)
+
+    class Meta:
+        verbose_name = "Message Folder"
+        verbose_name_plural = "Message Folders"
+        ordering = ["display_order", "name"]
+
+    def __str__(self):
+        return self.name
+
+    @property
+    def message_count(self):
+        return self.messages.filter(is_archived=False).count()
+
+
 class QuickMessage(models.Model):
     """
     Quick messages sent directly from the admin dashboard.
@@ -52,6 +83,17 @@ class QuickMessage(models.Model):
         blank=True,
         help_text="Schedule message to be sent at this time (leave empty to send immediately)",
     )
+
+    # Organization
+    folder = models.ForeignKey(
+        MessageFolder,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="messages",
+        help_text="Optional folder for organizing messages",
+    )
+    is_archived = models.BooleanField(default=False)
 
     class Meta:
         verbose_name = "Quick Message"

@@ -226,15 +226,31 @@
   .poster-scroll-track {
     display: flex;
     height: 100%;
-    animation: scroll-right 30s linear infinite;
     will-change: transform;
     backface-visibility: hidden;
+  }
+
+  .poster-scroll-track.animated {
+    animation: scroll-right 30s linear infinite;
   }
 
   .poster-scroll-track img {
     flex-shrink: 0;
     height: 100%;
     width: auto;
+    object-fit: cover;
+  }
+
+  /* Static banner (no animation) */
+  .poster-static {
+    width: 100%;
+    height: 500px;
+    overflow: hidden;
+  }
+
+  .poster-static img {
+    width: 100%;
+    height: 100%;
     object-fit: cover;
   }
 
@@ -251,33 +267,37 @@
 
 {% block content %}
 
-<!-- Scrolling Poster Banner -->
+<!-- Poster Banner -->
 <section class="bg-black border-b border-black">
-  <div class="poster-scroll-container">
-    <div class="poster-scroll-track">
-      {% with banner_url=about_settings.banner_image|default:"" %}
+  {% with banner_url=about_settings.banner_image|default:"" zoom=about_settings.banner_zoom|default:100 pos_x=about_settings.banner_position_x|default:50 pos_y=about_settings.banner_position_y|default:50 animated=about_settings.animation_enabled %}
+    {% if animated == False %}
+      <!-- Static Banner -->
+      <div class="poster-static">
         {% if banner_url %}
-          <img src="{{ banner_url }}" alt="Blueprint Poster" loading="lazy" />
-          <img src="{{ banner_url }}" alt="Blueprint Poster" loading="lazy" />
-          <img src="{{ banner_url }}" alt="Blueprint Poster" loading="lazy" />
-          <img src="{{ banner_url }}" alt="Blueprint Poster" loading="lazy" />
-          <img src="{{ banner_url }}" alt="Blueprint Poster" loading="lazy" />
-          <img src="{{ banner_url }}" alt="Blueprint Poster" loading="lazy" />
-          <img src="{{ banner_url }}" alt="Blueprint Poster" loading="lazy" />
-          <img src="{{ banner_url }}" alt="Blueprint Poster" loading="lazy" />
+          <img src="{{ banner_url }}" alt="Blueprint Poster" loading="lazy"
+               style="object-position: {{ pos_x }}% {{ pos_y }}%;" />
         {% else %}
           <img src="{% static 'images/poster.png' %}" alt="Blueprint Poster" loading="lazy" />
-          <img src="{% static 'images/poster.png' %}" alt="Blueprint Poster" loading="lazy" />
-          <img src="{% static 'images/poster.png' %}" alt="Blueprint Poster" loading="lazy" />
-          <img src="{% static 'images/poster.png' %}" alt="Blueprint Poster" loading="lazy" />
-          <img src="{% static 'images/poster.png' %}" alt="Blueprint Poster" loading="lazy" />
-          <img src="{% static 'images/poster.png' %}" alt="Blueprint Poster" loading="lazy" />
-          <img src="{% static 'images/poster.png' %}" alt="Blueprint Poster" loading="lazy" />
-          <img src="{% static 'images/poster.png' %}" alt="Blueprint Poster" loading="lazy" />
         {% endif %}
-      {% endwith %}
-    </div>
-  </div>
+      </div>
+    {% else %}
+      <!-- Animated Scrolling Banner -->
+      <div class="poster-scroll-container">
+        <div class="poster-scroll-track animated">
+          {% if banner_url %}
+            {% for i in "12345678" %}
+              <img src="{{ banner_url }}" alt="Blueprint Poster" loading="lazy"
+                   style="object-position: {{ pos_x }}% {{ pos_y }}%;" />
+            {% endfor %}
+          {% else %}
+            {% for i in "12345678" %}
+              <img src="{% static 'images/poster.png' %}" alt="Blueprint Poster" loading="lazy" />
+            {% endfor %}
+          {% endif %}
+        </div>
+      </div>
+    {% endif %}
+  {% endwith %}
 </section>
 
 <!-- ============================================ -->

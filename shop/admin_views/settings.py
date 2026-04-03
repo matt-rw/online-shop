@@ -892,70 +892,81 @@ def about_settings(request):
 
     # Handle AJAX requests
     if request.headers.get("X-Requested-With") == "XMLHttpRequest":
-        action = request.POST.get("action") or request.GET.get("action")
+        try:
+            action = request.POST.get("action") or request.GET.get("action")
 
-        if not action and request.content_type == "application/json":
-            try:
-                body_data = json.loads(request.body)
-                action = body_data.get("action")
-            except (json.JSONDecodeError, ValueError):
-                pass
+            if not action and request.content_type == "application/json":
+                try:
+                    body_data = json.loads(request.body)
+                    action = body_data.get("action")
+                except (json.JSONDecodeError, ValueError):
+                    pass
 
-        if action == "upload_banner_image":
-            try:
-                from django.conf import settings as django_settings
-                from shop.utils.image_optimizer import optimize_image
+            logger.info(f"About settings AJAX action: {action}")
 
-                image_file = request.FILES.get("image_file")
-                if not image_file:
-                    return JsonResponse({"success": False, "error": "No image file provided"})
+            if action == "upload_banner_image":
+                try:
+                    from django.conf import settings as django_settings
+                    from shop.utils.image_optimizer import optimize_image
 
-                optimized_content, filename, content_type = optimize_image(
-                    image_file,
-                    filename=f"about_banner_{uuid.uuid4().hex[:8]}"
-                )
+                    image_file = request.FILES.get("image_file")
+                    if not image_file:
+                        return JsonResponse({"success": False, "error": "No image file provided"})
 
-                url = None
-                # Try Cloudinary first if enabled
-                if getattr(django_settings, 'CLOUDINARY_ENABLED', False):
-                    try:
-                        import cloudinary.uploader
-                        result = cloudinary.uploader.upload(
-                            optimized_content,
-                            folder="about",
-                            public_id=f"about_banner_{uuid.uuid4().hex[:8]}",
-                            resource_type="image"
-                        )
-                        url = result['secure_url']
-                    except Exception as cloud_err:
-                        logger.warning(f"Cloudinary upload failed, falling back to local: {cloud_err}")
+                    optimized_content, filename, content_type = optimize_image(
+                        image_file,
+                        filename=f"about_banner_{uuid.uuid4().hex[:8]}"
+                    )
 
-                # Fall back to local storage
-                if not url:
-                    from django.core.files.storage import default_storage
-                    path = default_storage.save(f"site/about/{filename}", ContentFile(optimized_content))
-                    url = default_storage.url(path)
+                    url = None
+                    # Try Cloudinary first if enabled
+                    if getattr(django_settings, 'CLOUDINARY_ENABLED', False):
+                        try:
+                            import cloudinary.uploader
+                            result = cloudinary.uploader.upload(
+                                optimized_content,
+                                folder="about",
+                                public_id=f"about_banner_{uuid.uuid4().hex[:8]}",
+                                resource_type="image"
+                            )
+                            url = result['secure_url']
+                        except Exception as cloud_err:
+                            logger.warning(f"Cloudinary upload failed, falling back to local: {cloud_err}")
 
-                return JsonResponse({"success": True, "url": url})
-            except Exception as e:
-                return JsonResponse({"success": False, "error": str(e)})
+                    # Fall back to local storage
+                    if not url:
+                        from django.core.files.storage import default_storage
+                        path = default_storage.save(f"site/about/{filename}", ContentFile(optimized_content))
+                        url = default_storage.url(path)
 
-        elif action == "save_about_settings":
-            try:
-                data = json.loads(request.body)
-                about_settings_data = site_settings.about_settings or {}
+                    return JsonResponse({"success": True, "url": url})
+                except Exception as e:
+                    return JsonResponse({"success": False, "error": str(e)})
 
-                # Update settings
-                about_settings_data['banner_image'] = data.get('banner_image', '')
-                about_settings_data['main_text'] = data.get('main_text', [])
+            elif action == "save_about_settings":
+                try:
+                    data = json.loads(request.body)
+                    about_settings_data = site_settings.about_settings or {}
 
-                site_settings.about_settings = about_settings_data
-                site_settings.save()
-                return JsonResponse({"success": True})
-            except Exception as e:
-                return JsonResponse({"success": False, "error": str(e)})
+                    # Update settings
+                    about_settings_data['banner_image'] = data.get('banner_image', '')
+                    about_settings_data['banner_zoom'] = data.get('banner_zoom', 100)
+                    about_settings_data['banner_position_x'] = data.get('banner_position_x', 50)
+                    about_settings_data['banner_position_y'] = data.get('banner_position_y', 50)
+                    about_settings_data['animation_enabled'] = data.get('animation_enabled', True)
+                    about_settings_data['main_text'] = data.get('main_text', [])
 
-        return JsonResponse({"success": False, "error": "Unknown action"})
+                    site_settings.about_settings = about_settings_data
+                    site_settings.save()
+                    return JsonResponse({"success": True})
+                except Exception as e:
+                    return JsonResponse({"success": False, "error": str(e)})
+
+            else:
+                return JsonResponse({"success": False, "error": f"Unknown action: {action}"})
+        except Exception as e:
+            logger.exception(f"About settings AJAX error: {e}")
+            return JsonResponse({"success": False, "error": str(e)})
 
     # Get existing about settings
     about_settings_data = site_settings.about_settings or {}
