@@ -511,7 +511,6 @@ def homepage_settings(request):
         elif action == "save_site_lock":
             try:
                 from datetime import datetime as dt
-                import pytz
 
                 data = json.loads(request.body)
                 site_lock_data = data.get("site_lock", {})

@@ -1021,7 +1021,7 @@
           </button>
         </div>
         <small style="display: block; color: #64748b; font-size: 0.8125rem; margin-top: 0.5rem;">
-          Site automatically unlocks at this time. A countdown timer will be shown on the lock screen.
+          Site automatically unlocks at this time (Central Time). Current time: <strong id="current-ct-time"></strong>
         </small>
         <div id="launch-preview" style="margin-top: 0.75rem; padding: 0.75rem 1rem; background: #f8fafc; border-radius: 8px; font-size: 0.875rem; display: none;">
           <strong>Launches:</strong> <span id="launch-preview-text"></span>
@@ -2131,7 +2131,23 @@
         document.getElementById('site-lock-launch').value = siteLock.launch_at.slice(0, 16);
         updateLaunchPreview();
       }
+
+      // Update current CT time
+      updateCurrentCTTime();
+      setInterval(updateCurrentCTTime, 1000);
     });
+
+    function updateCurrentCTTime() {
+      const now = new Date();
+      const ctTime = now.toLocaleString('en-US', {
+        timeZone: 'America/Chicago',
+        hour: 'numeric',
+        minute: '2-digit',
+        second: '2-digit',
+        hour12: true
+      });
+      document.getElementById('current-ct-time').textContent = ctTime + ' CT';
+    }
 
     function updateLaunchPreview() {
       const input = document.getElementById('site-lock-launch');
