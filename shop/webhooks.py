@@ -214,8 +214,16 @@ def handle_checkout_session_completed(event):
 
         logger.info(f"Order {order.id} created and marked as PAID (session: {checkout_session_id})")
 
-        # TODO: Send order confirmation email
-        # send_order_confirmation_email(order)
+        # Send order confirmation email
+        try:
+            from shop.utils.email_helper import send_order_confirmation
+            success, log = send_order_confirmation(order)
+            if success:
+                logger.info(f"Order confirmation email sent for {order.order_number}")
+            else:
+                logger.info(f"Order confirmation email not sent (no template or error) for {order.order_number}")
+        except Exception as e:
+            logger.error(f"Error sending order confirmation email: {e}")
 
         # TODO: Notify admin of new order
         # notify_admin_new_order(order)

@@ -216,3 +216,172 @@ def trigger_auto_send(trigger_type, subscription, context=None):
     except Exception as e:
         logger.error(f"Error in auto-send for trigger {trigger_type}: {str(e)}")
         return False, None
+
+
+def send_order_confirmation(order):
+    """
+    Send order confirmation email to customer.
+
+    Args:
+        order: The Order object
+
+    Returns:
+        tuple: (success: bool, log_object: EmailLog or None)
+    """
+    from shop.models import EmailTemplate
+
+    try:
+        # Find active template with on_order trigger
+        template = EmailTemplate.objects.filter(auto_trigger="on_order", is_active=True).first()
+
+        if not template:
+            logger.info("No active order confirmation template found")
+            return False, None
+
+        # Get customer email
+        customer_email = order.email
+        if not customer_email and order.user:
+            customer_email = order.user.email
+
+        if not customer_email:
+            logger.warning(f"No email address for order {order.order_number}")
+            return False, None
+
+        # Build order items list for template
+        items_list = []
+        for item in order.items.select_related('variant__product').all():
+            product_name = item.variant.product.name if item.variant and item.variant.product else "Item"
+            variant_info = ""
+            if item.variant:
+                if item.variant.size:
+                    variant_info += f" - {item.variant.size.name}"
+                if item.variant.color:
+                    variant_info += f" / {item.variant.color.name}"
+
+            items_list.append({
+                "name": product_name + variant_info,
+                "sku": item.sku or "",
+                "quantity": item.quantity,
+                "price": f"${item.line_total:.2f}",
+            })
+
+        # Build shipping address string
+        shipping_str = ""
+        if order.shipping_address:
+            addr = order.shipping_address
+            shipping_str = f"{addr.full_name}\n{addr.line1}"
+            if addr.line2:
+                shipping_str += f"\n{addr.line2}"
+            shipping_str += f"\n{addr.city}, {addr.region} {addr.postal_code}"
+
+        # Build context for template
+        context = {
+            "order_number": order.order_number,
+            "customer_name": order.customer_name or (order.user.first_name if order.user else "Customer"),
+            "customer_email": customer_email,
+            "items": items_list,
+            "items_html": _render_items_html(items_list),
+            "items_text": _render_items_text(items_list),
+            "subtotal": f"${order.subtotal:.2f}",
+            "discount": f"${order.discount:.2f}" if order.discount else "",
+            "discount_code": order.discount_code or "",
+            "shipping_cost": f"${order.shipping:.2f}",
+            "tax": f"${order.tax:.2f}",
+            "total": f"${order.total:.2f}",
+            "shipping_address": shipping_str,
+            "order_date": order.created_at.strftime("%B %d, %Y") if order.created_at else "",
+        }
+
+        # Send the email
+        return send_from_template(
+            email_address=customer_email,
+            template=template,
+            context=context,
+        )
+
+    except Exception as e:
+        logger.error(f"Error sending order confirmation for {order.order_number}: {str(e)}")
+        return False, None
+
+
+def _render_items_html(items):
+    """Render order items as HTML table rows for email template."""
+    html = ""
+    for item in items:
+        html += f"""
+        <tr>
+            <td style="padding: 12px; border-bottom: 1px solid #e5e5e5;">{item['name']}</td>
+            <td style="padding: 12px; border-bottom: 1px solid #e5e5e5; text-align: center;">{item['quantity']}</td>
+            <td style="padding: 12px; border-bottom: 1px solid #e5e5e5; text-align: right;">{item['price']}</td>
+        </tr>
+        """
+    return html
+
+
+def _render_items_text(items):
+    """Render order items as plain text for email template."""
+    lines = []
+    for item in items:
+        lines.append(f"{item['name']} x{item['quantity']} - {item['price']}")
+    return "\n".join(lines)
+
+
+def send_shipping_notification(order):
+    """
+    Send shipping notification email to customer.
+
+    Args:
+        order: The Order object (must have tracking_number set)
+
+    Returns:
+        tuple: (success: bool, log_object: EmailLog or None)
+    """
+    from shop.models import EmailTemplate
+
+    try:
+        # Find active template with on_shipping trigger
+        template = EmailTemplate.objects.filter(auto_trigger="on_shipping", is_active=True).first()
+
+        if not template:
+            logger.info("No active shipping notification template found")
+            return False, None
+
+        # Get customer email
+        customer_email = order.email
+        if not customer_email and order.user:
+            customer_email = order.user.email
+
+        if not customer_email:
+            logger.warning(f"No email address for order {order.order_number}")
+            return False, None
+
+        # Build tracking URL based on carrier
+        tracking_url = ""
+        if order.tracking_number:
+            carrier = (order.carrier or "").upper()
+            if "USPS" in carrier:
+                tracking_url = f"https://tools.usps.com/go/TrackConfirmAction?tLabels={order.tracking_number}"
+            elif "UPS" in carrier:
+                tracking_url = f"https://www.ups.com/track?tracknum={order.tracking_number}"
+            elif "FEDEX" in carrier:
+                tracking_url = f"https://www.fedex.com/fedextrack/?trknbr={order.tracking_number}"
+
+        # Build context for template
+        context = {
+            "order_number": order.order_number,
+            "customer_name": order.customer_name or (order.user.first_name if order.user else "Customer"),
+            "tracking_number": order.tracking_number or "",
+            "carrier": order.carrier or "",
+            "tracking_url": tracking_url,
+        }
+
+        # Send the email
+        return send_from_template(
+            email_address=customer_email,
+            template=template,
+            context=context,
+        )
+
+    except Exception as e:
+        logger.error(f"Error sending shipping notification for {order.order_number}: {str(e)}")
+        return False, None

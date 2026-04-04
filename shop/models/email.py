@@ -42,6 +42,8 @@ class EmailTemplate(models.Model):
         ("promotion", "Promotional Email"),
         ("newsletter", "Newsletter"),
         ("announcement", "Announcement"),
+        ("order_confirmation", "Order Confirmation"),
+        ("shipping_notification", "Shipping Notification"),
         ("custom", "Custom"),
     ]
 
@@ -49,6 +51,8 @@ class EmailTemplate(models.Model):
         ("manual", "Manual Only"),
         ("on_subscribe", "On New Subscription"),
         ("on_confirmation", "On Confirmation Request"),
+        ("on_order", "On New Order"),
+        ("on_shipping", "On Order Shipped"),
         ("scheduled", "Scheduled Campaign"),
     ]
 
