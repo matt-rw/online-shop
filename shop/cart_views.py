@@ -1051,7 +1051,7 @@ def checkout_success_view(request):
                     # Get customer email
                     customer_email = metadata.get("customer_email") or ""
                     if not customer_email and session.customer_details:
-                        customer_email = session.customer_details.get("email", "")
+                        customer_email = session.customer_details.email or ""
 
                     # Parse amounts
                     subtotal = Decimal(metadata.get("subtotal", "0"))
