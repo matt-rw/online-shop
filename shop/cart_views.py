@@ -1001,11 +1001,10 @@ def create_checkout_session(request):
                 }
             )
 
-        # Handle discount/promo code
+        # Handle discount/promo code (applied locally, not via Stripe coupons)
         discount_id = request.POST.get("discount_id", "")
         discount_amount = Decimal("0.00")
         discount_code = ""
-        stripe_coupon_id = None
         if discount_id:
             try:
                 from .models import Discount
@@ -1014,23 +1013,42 @@ def create_checkout_session(request):
                 # Calculate discount amount
                 if discount_obj.discount_type == "percentage":
                     discount_amount = (subtotal * discount_obj.value / 100).quantize(Decimal("0.01"))
-                    # Create a Stripe coupon for percentage discount
-                    stripe_coupon = stripe.Coupon.create(
-                        percent_off=float(discount_obj.value),
-                        duration="once",
-                        name=f"Promo: {discount_code.upper()}"
-                    )
-                    stripe_coupon_id = stripe_coupon.id
                 elif discount_obj.discount_type == "fixed":
                     discount_amount = min(discount_obj.value, subtotal)
-                    # Create a Stripe coupon for fixed discount
-                    stripe_coupon = stripe.Coupon.create(
-                        amount_off=int(discount_amount * 100),
-                        currency="usd",
-                        duration="once",
-                        name=f"Promo: {discount_code.upper()}"
-                    )
-                    stripe_coupon_id = stripe_coupon.id
+                elif discount_obj.discount_type == "free_shipping":
+                    # Zero out shipping cost and remove shipping line item if added
+                    shipping_cost = Decimal("0.00")
+                    line_items = [
+                        item for item in line_items
+                        if item["price_data"]["product_data"]["name"] not in ["Shipping", "Free Shipping"]
+                    ]
+                    logger.info(f"Applied free shipping discount: {discount_code}")
+
+                # Apply discount by proportionally reducing line item prices
+                if discount_amount > 0 and subtotal > 0:
+                    discount_ratio = (subtotal - discount_amount) / subtotal
+                    adjusted_line_items = []
+                    for item in line_items:
+                        # Skip shipping line item (if already added)
+                        if item["price_data"]["product_data"]["name"] in ["Shipping", "Free Shipping"]:
+                            adjusted_line_items.append(item)
+                            continue
+                        # Adjust unit amount proportionally
+                        original_amount = item["price_data"]["unit_amount"]
+                        adjusted_amount = int(original_amount * float(discount_ratio))
+                        # Ensure at least 1 cent
+                        adjusted_amount = max(adjusted_amount, 1)
+                        adjusted_item = {
+                            "price_data": {
+                                "currency": "usd",
+                                "unit_amount": adjusted_amount,
+                                "product_data": item["price_data"]["product_data"],
+                            },
+                            "quantity": item["quantity"],
+                        }
+                        adjusted_line_items.append(adjusted_item)
+                    line_items = adjusted_line_items
+                    logger.info(f"Applied {discount_code} discount: ${discount_amount:.2f} off (ratio: {discount_ratio:.4f})")
             except Exception as e:
                 logger.warning(f"Error applying discount {discount_id}: {e}")
 
@@ -1065,10 +1083,6 @@ def create_checkout_session(request):
                 "shipping_country": request.POST.get("shipping_country", "US"),
             },
         }
-
-        # Add discount coupon if available
-        if stripe_coupon_id:
-            session_params["discounts"] = [{"coupon": stripe_coupon_id}]
 
         session = stripe.checkout.Session.create(**session_params)
 
