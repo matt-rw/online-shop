@@ -66,7 +66,7 @@ class EmailTemplate(models.Model):
     ]
 
     name = models.CharField(max_length=100, unique=True)
-    template_type = models.CharField(max_length=20, choices=TEMPLATE_TYPES, default="custom")
+    template_type = models.CharField(max_length=25, choices=TEMPLATE_TYPES, default="custom")
     folder = models.CharField(
         max_length=50,
         default="general",
