@@ -5,6 +5,8 @@ from . import admin_views, cart_views, sms_webhooks, views, webhooks
 app_name = "shop"
 
 urlpatterns = [
+    # Early access / site lock
+    path("early-access/", views.early_access_view, name="early_access"),
     # Health checks (for monitoring)
     path("health/", views.health_check, name="health"),
     path("health/detailed/", views.health_check_detailed, name="health_detailed"),

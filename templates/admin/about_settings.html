@@ -10,11 +10,7 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
   <style>
     {% include "admin/partials/dark_mode_styles.html" %}
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
 
     body {
       font-family: 'Inter', sans-serif;
@@ -22,42 +18,34 @@
       min-height: 100vh;
     }
 
-    .nav-links {
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-      padding: 1rem 2rem;
-      display: flex;
-      gap: 0.75rem;
-      align-items: center;
-    }
-
-    .nav-link {
-      background: rgba(255, 255, 255, 0.15);
-      color: white;
-      padding: 0.5rem 1rem;
-      border-radius: 8px;
-      text-decoration: none;
-      font-size: 0.875rem;
-      font-weight: 500;
-      transition: all 0.2s;
-      border: 1px solid rgba(255, 255, 255, 0.1);
-    }
-
-    .nav-link:hover {
-      background: rgba(255, 255, 255, 0.25);
-    }
-
     .top-bar {
       background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-      padding: 2rem 0;
-      margin-bottom: 2rem;
+      padding: 1.5rem 0 2rem;
     }
-
     .container {
       max-width: 900px;
       margin: 0 auto;
       padding: 0 2rem;
     }
-
+    .top-btn {
+      background: rgba(255, 255, 255, 0.2);
+      backdrop-filter: blur(10px);
+      color: white;
+      padding: 0.625rem 1.25rem;
+      border-radius: 10px;
+      text-decoration: none;
+      font-size: 0.9375rem;
+      font-weight: 600;
+      transition: all 0.3s;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    .top-btn:hover {
+      background: rgba(255, 255, 255, 0.3);
+      transform: translateY(-2px);
+    }
     .header h1 {
       color: white;
       font-size: 2.5rem;
@@ -65,7 +53,7 @@
     }
 
     .main-content {
-      padding: 0 2rem 2rem 2rem;
+      padding: 2rem;
       max-width: 900px;
       margin: 0 auto;
     }
@@ -77,7 +65,6 @@
       margin-bottom: 2rem;
       box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
     }
-
     .section-title {
       font-size: 1.25rem;
       font-weight: 700;
@@ -97,18 +84,9 @@
       border-radius: 8px;
       margin-bottom: 1.5rem;
     }
+    .info-box p { color: #1e40af; font-size: 0.875rem; line-height: 1.6; margin: 0; }
 
-    .info-box p {
-      color: #1e40af;
-      font-size: 0.875rem;
-      line-height: 1.6;
-      margin: 0;
-    }
-
-    .form-group {
-      margin-bottom: 1.25rem;
-    }
-
+    .form-group { margin-bottom: 1.25rem; }
     .form-group label {
       display: block;
       color: #475569;
@@ -116,8 +94,6 @@
       margin-bottom: 0.5rem;
       font-size: 0.875rem;
     }
-
-    .form-group input[type="text"],
     .form-group textarea {
       width: 100%;
       padding: 0.75rem 1rem;
@@ -126,18 +102,10 @@
       font-family: inherit;
       font-size: 1rem;
       transition: border-color 0.2s;
-    }
-
-    .form-group input:focus,
-    .form-group textarea:focus {
-      outline: none;
-      border-color: #667eea;
-    }
-
-    .form-group textarea {
       min-height: 100px;
       resize: vertical;
     }
+    .form-group textarea:focus { outline: none; border-color: #667eea; }
 
     .btn {
       padding: 0.75rem 1.5rem;
@@ -152,42 +120,17 @@
       gap: 0.5rem;
       font-size: 0.9375rem;
     }
-
     .btn-primary {
       background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
       color: white;
       box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
     }
-
-    .btn-primary:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
-    }
-
-    .btn-secondary {
-      background: #f1f5f9;
-      color: #475569;
-      border: 2px solid #e2e8f0;
-    }
-
-    .btn-secondary:hover {
-      background: #e2e8f0;
-    }
-
-    .btn-sm {
-      padding: 0.5rem 1rem;
-      font-size: 0.8125rem;
-    }
-
-    .btn-danger {
-      background: #fee2e2;
-      color: #dc2626;
-      border: 2px solid #fecaca;
-    }
-
-    .btn-danger:hover {
-      background: #fecaca;
-    }
+    .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4); }
+    .btn-secondary { background: #f1f5f9; color: #475569; border: 2px solid #e2e8f0; }
+    .btn-secondary:hover { background: #e2e8f0; }
+    .btn-sm { padding: 0.5rem 1rem; font-size: 0.8125rem; }
+    .btn-danger { background: #fee2e2; color: #dc2626; border: 2px solid #fecaca; }
+    .btn-danger:hover { background: #fecaca; }
 
     .form-actions {
       display: flex;
@@ -197,111 +140,266 @@
       border-top: 2px solid #e2e8f0;
     }
 
-    .success-message {
-      background: linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%);
-      border-left: 4px solid #10b981;
-      padding: 1rem 1.25rem;
+    /* Device Toggle */
+    .device-toggle {
+      display: inline-flex;
+      background: #f1f5f9;
       border-radius: 8px;
-      margin-bottom: 1.5rem;
-      color: #065f46;
-      font-weight: 500;
+      padding: 4px;
+      gap: 4px;
+      margin-left: auto;
     }
-
-    .error-message {
-      background: linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%);
-      border-left: 4px solid #dc2626;
-      padding: 1rem 1.25rem;
-      border-radius: 8px;
-      margin-bottom: 1.5rem;
-      color: #991b1b;
-      font-weight: 500;
-    }
-
-    .help-text {
-      color: #64748b;
-      font-size: 0.8125rem;
-      margin-top: 0.25rem;
-    }
-
-    /* Image upload area */
-    .image-upload-area {
-      border: 2px dashed #e2e8f0;
-      border-radius: 12px;
-      padding: 2rem;
-      text-align: center;
-      transition: all 0.2s;
-      cursor: pointer;
-      background: #fafafa;
-    }
-
-    .image-upload-area:hover {
-      border-color: #667eea;
-      background: #f8fafc;
-    }
-
-    .image-upload-area.dragover {
-      border-color: #667eea;
-      background: #eff6ff;
-    }
-
-    .image-preview {
-      margin-top: 1rem;
-      position: relative;
-      display: inline-block;
-    }
-
-    .image-preview img {
-      max-width: 100%;
-      max-height: 200px;
-      border-radius: 8px;
-      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-    }
-
-    .image-preview .remove-btn {
-      position: absolute;
-      top: -8px;
-      right: -8px;
-      background: #dc2626;
-      color: white;
+    .device-toggle button {
+      padding: 0.5rem 1rem;
       border: none;
-      border-radius: 50%;
-      width: 24px;
-      height: 24px;
+      background: transparent;
+      border-radius: 6px;
+      font-size: 0.8125rem;
+      font-weight: 500;
+      color: #64748b;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 0.375rem;
+      transition: all 0.2s;
+    }
+    .device-toggle button.active {
+      background: white;
+      color: #0f172a;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    }
+    .device-toggle button:hover:not(.active) { color: #0f172a; }
+
+    /* Banner Preview Card */
+    .banner-card {
+      background: #f8fafc;
+      border-radius: 12px;
+      overflow: hidden;
+      border: 1px solid #e2e8f0;
+    }
+    .banner-card-header {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.75rem 1rem;
+      background: white;
+      border-bottom: 1px solid #e2e8f0;
+    }
+    .banner-card-title {
+      font-size: 0.8125rem;
+      font-weight: 600;
+      color: #475569;
+    }
+    .header-btn {
+      background: #f1f5f9;
+      border: none;
+      width: 32px;
+      height: 32px;
+      border-radius: 6px;
       cursor: pointer;
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 12px;
+      color: #64748b;
+      transition: all 0.2s;
+      margin-left: auto;
     }
+    .header-btn:hover { background: #e2e8f0; color: #0f172a; }
+    .header-btn.adjust { color: #667eea; }
 
-    /* Text paragraph list */
-    .paragraph-list {
+    .banner-preview-container {
+      position: relative;
+      background: #1e293b;
+      overflow: hidden;
+      aspect-ratio: 21/9;
+      transition: aspect-ratio 0.3s ease;
+    }
+    .banner-preview-container.mobile-preview {
+      aspect-ratio: 9/16;
+    }
+    .banner-preview-container img {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      transition: transform 0.1s ease-out;
+    }
+    .banner-placeholder {
       display: flex;
       flex-direction: column;
-      gap: 1rem;
+      align-items: center;
+      justify-content: center;
+      height: 100%;
+      color: #64748b;
+      background: linear-gradient(135deg, #e2e8f0 0%, #cbd5e1 100%);
+      cursor: pointer;
     }
+    .banner-placeholder i { font-size: 3rem; margin-bottom: 0.75rem; opacity: 0.5; }
+    .banner-placeholder p { font-size: 0.875rem; }
 
-    .paragraph-item {
+    .banner-card-footer {
+      padding: 1rem;
+      background: white;
+      border-top: 1px solid #e2e8f0;
       display: flex;
       gap: 0.75rem;
-      align-items: flex-start;
+      flex-wrap: wrap;
+    }
+    .upload-btn {
+      background: #667eea;
+      color: white;
+      border: none;
+      padding: 0.5rem 1rem;
+      border-radius: 6px;
+      font-size: 0.8125rem;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 0.375rem;
+      transition: all 0.2s;
+    }
+    .upload-btn:hover { background: #5a67d8; }
+
+    /* Position Modal */
+    .position-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.5);
+      z-index: 100;
+      backdrop-filter: blur(2px);
+    }
+    .position-overlay.open { display: flex; align-items: center; justify-content: center; }
+
+    .position-modal {
+      background: white;
+      border-radius: 16px;
+      width: 90%;
+      max-width: 600px;
+      max-height: 90vh;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+    .position-modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 1rem 1.25rem;
+      border-bottom: 1px solid #e2e8f0;
+    }
+    .position-modal-title {
+      font-size: 1rem;
+      font-weight: 700;
+      color: #0f172a;
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+    .position-modal-close {
+      background: #f1f5f9;
+      border: none;
+      width: 32px;
+      height: 32px;
+      border-radius: 8px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #64748b;
+      transition: all 0.2s;
+    }
+    .position-modal-close:hover { background: #e2e8f0; color: #0f172a; }
+
+    .position-modal-preview {
+      background: #1e293b;
+      padding: 1.5rem;
+      overflow: hidden;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .position-preview-wrapper {
+      overflow: hidden;
+      border-radius: 8px;
+      width: 100%;
+      aspect-ratio: 21/9;
+      transition: all 0.3s ease;
+    }
+    .position-preview-wrapper.mobile-preview {
+      aspect-ratio: 9/16;
+      width: 50%;
+      margin: 0 auto;
+    }
+    .position-preview-img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
     }
 
-    .paragraph-item textarea {
-      flex: 1;
-      min-height: 80px;
+    .position-modal-controls { padding: 1.25rem; }
+    .position-control { margin-bottom: 1.25rem; }
+    .position-control:last-child { margin-bottom: 0; }
+    .position-control-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 0.5rem;
+    }
+    .position-control-label { font-size: 0.8125rem; font-weight: 600; color: #475569; }
+    .position-control-value { font-size: 0.8125rem; font-weight: 600; color: #667eea; font-family: monospace; }
+    .position-control input[type="range"] {
+      width: 100%;
+      height: 8px;
+      -webkit-appearance: none;
+      background: #e2e8f0;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    .position-control input[type="range"]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      width: 20px;
+      height: 20px;
+      background: #667eea;
+      border-radius: 50%;
+      cursor: pointer;
+      box-shadow: 0 2px 6px rgba(102,126,234,0.4);
     }
 
-    .paragraph-item .remove-paragraph {
-      flex-shrink: 0;
-      margin-top: 0.5rem;
+    .position-modal-footer {
+      display: flex;
+      gap: 0.75rem;
+      padding: 1rem 1.25rem;
+      border-top: 1px solid #e2e8f0;
+      background: #f8fafc;
+    }
+    .position-modal-footer .btn { flex: 1; justify-content: center; }
+
+    /* Animation Settings */
+    .animation-settings {
+      margin-top: 1.5rem;
+      padding: 1rem;
+      background: #f8fafc;
+      border-radius: 8px;
+    }
+    .animation-settings h4 {
+      font-size: 0.875rem;
+      font-weight: 600;
+      margin-bottom: 1rem;
+      color: #475569;
     }
 
-    .add-paragraph-btn {
-      margin-top: 1rem;
-    }
+    /* Paragraph list */
+    .paragraph-list { display: flex; flex-direction: column; gap: 1rem; }
+    .paragraph-item { display: flex; gap: 0.75rem; align-items: flex-start; }
+    .paragraph-item textarea { flex: 1; min-height: 80px; }
+    .paragraph-item .remove-paragraph { flex-shrink: 0; margin-top: 0.5rem; }
+    .add-paragraph-btn { margin-top: 1rem; }
 
-    /* Toast notification */
+    /* Toast */
     .toast {
       position: fixed;
       bottom: 2rem;
@@ -315,38 +413,24 @@
       opacity: 0;
       transition: all 0.3s ease;
     }
-
-    .toast.show {
-      transform: translateY(0);
-      opacity: 1;
-    }
-
-    .toast.success {
-      background: #10b981;
-    }
-
-    .toast.error {
-      background: #dc2626;
-    }
+    .toast.show { transform: translateY(0); opacity: 1; }
+    .toast.success { background: #10b981; }
+    .toast.error { background: #dc2626; }
   </style>
 </head>
 <body>
   {% include "admin/partials/dark_mode_apply.html" %}
 
-  <div class="nav-links">
-    <a href="{% url 'admin_home' %}" class="nav-link">
-      ← Back to Dashboard
-    </a>
-    <a href="{% url 'admin_homepage' %}" class="nav-link">
-      Homepage
-    </a>
-    <a href="{% url 'shop:about' %}" class="nav-link" target="_blank">
-      View About Page ↗
-    </a>
-  </div>
-
   <div class="top-bar">
     <div class="container">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+        <a href="{% url 'admin_home' %}" class="top-btn">
+          <i class="fa-solid fa-arrow-left"></i> Back
+        </a>
+        <a href="{% url 'shop:about' %}" class="top-btn" target="_blank">
+          <i class="fa-solid fa-external-link"></i> View Page
+        </a>
+      </div>
       <div class="header">
         <h1>About Page Settings</h1>
       </div>
@@ -359,97 +443,77 @@
     <!-- Banner Image Section -->
     <div class="section-card">
       <h2 class="section-title">
-        Banner Image
+        <i class="fa-solid fa-image"></i> Banner Image
+        <div class="device-toggle">
+          <button type="button" id="desktop-toggle" class="active" onclick="setPreviewMode('desktop')">
+            <i class="fas fa-desktop"></i> Desktop
+          </button>
+          <button type="button" id="mobile-toggle" onclick="setPreviewMode('mobile')">
+            <i class="fas fa-mobile-alt"></i> Mobile
+          </button>
+        </div>
       </h2>
 
       <div class="info-box">
-        <p>This image appears in the scrolling banner at the top of the About page. For best results, use a wide image (at least 1000px wide).</p>
+        <p>This image appears in the scrolling banner at the top of the About page. For best results, use a wide image (at least 1000px wide). You can set different positions for desktop and mobile views.</p>
       </div>
 
-      <div class="image-upload-area" id="banner-upload-area">
-        <input type="file" id="banner-image-input" accept="image/*" style="display: none;">
-        <svg style="width: 2rem; height: 2rem; color: #94a3b8; margin-bottom: 0.5rem;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/>
-        </svg>
-        <p style="color: #64748b; margin-bottom: 0.5rem;">Click or drag image to upload</p>
-        <p class="help-text">Recommended: Wide format image (PNG, JPG, WebP)</p>
-        <p id="upload-status" style="color: #667eea; margin-top: 0.5rem; display: none;">Uploading...</p>
-      </div>
-
-      <div class="image-preview" id="banner-preview" style="display: none;">
-        <div class="preview-container" style="position: relative; width: 100%; height: 200px; overflow: hidden; border-radius: 8px; background: #0a0a0a;">
-          <img id="banner-preview-img" src="" alt="Banner preview" style="position: absolute; width: 100%; height: 100%; object-fit: cover;">
+      <div class="banner-card">
+        <div class="banner-card-header">
+          <span class="banner-card-title">Banner Preview</span>
+          <span id="device-label" style="font-size: 0.75rem; color: #64748b; background: #f1f5f9; padding: 0.25rem 0.5rem; border-radius: 4px;">Desktop</span>
+          <button class="header-btn adjust" onclick="openPositionModal()" title="Crop & Position" id="crop-btn" style="display: none;">
+            <i class="fas fa-crop-alt"></i>
+          </button>
         </div>
-        <button type="button" class="remove-btn" onclick="removeBannerImage()" style="position: absolute; top: 8px; right: 8px;">
-          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
-            <path d="M18 6L6 18M6 6l12 12"/>
-          </svg>
-        </button>
-
-        <!-- Position Controls -->
-        <div class="position-controls" style="margin-top: 1.5rem; padding: 1rem; background: #f8fafc; border-radius: 8px;">
-          <h4 style="font-size: 0.875rem; font-weight: 600; margin-bottom: 1rem; color: #475569;">Image Position</h4>
-
-          <div class="control-group" style="margin-bottom: 1rem;">
-            <label style="display: flex; justify-content: space-between; font-size: 0.8125rem; color: #64748b; margin-bottom: 0.5rem;">
-              <span>Zoom</span>
-              <span id="zoom-value">100%</span>
-            </label>
-            <input type="range" id="banner-zoom" min="100" max="300" value="100" style="width: 100%;" oninput="updateBannerPosition()">
+        <div class="banner-preview-container" id="banner-preview-container" onclick="triggerUpload()">
+          <div class="banner-placeholder" id="banner-placeholder">
+            <i class="fa-solid fa-cloud-upload-alt"></i>
+            <p>Click to upload banner image</p>
           </div>
-
-          <div class="control-group" style="margin-bottom: 1rem;">
-            <label style="display: flex; justify-content: space-between; font-size: 0.8125rem; color: #64748b; margin-bottom: 0.5rem;">
-              <span>Horizontal Position</span>
-              <span id="pos-x-value">50%</span>
-            </label>
-            <input type="range" id="banner-pos-x" min="0" max="100" value="50" style="width: 100%;" oninput="updateBannerPosition()">
-          </div>
-
-          <div class="control-group" style="margin-bottom: 1rem;">
-            <label style="display: flex; justify-content: space-between; font-size: 0.8125rem; color: #64748b; margin-bottom: 0.5rem;">
-              <span>Vertical Position</span>
-              <span id="pos-y-value">50%</span>
-            </label>
-            <input type="range" id="banner-pos-y" min="0" max="100" value="50" style="width: 100%;" oninput="updateBannerPosition()">
-          </div>
+          <img id="banner-preview-img" src="" alt="Banner preview" style="display: none;">
+        </div>
+        <div class="banner-card-footer">
+          <button type="button" class="upload-btn" onclick="triggerUpload()">
+            <i class="fa-solid fa-upload"></i> Upload Image
+          </button>
+          <button type="button" class="btn btn-secondary btn-sm" onclick="removeBannerImage()" id="remove-btn" style="display: none;">
+            <i class="fa-solid fa-trash"></i> Remove
+          </button>
         </div>
       </div>
 
       <!-- Animation Settings -->
-      <div class="animation-settings" style="margin-top: 1.5rem; padding: 1rem; background: #f8fafc; border-radius: 8px;">
-        <h4 style="font-size: 0.875rem; font-weight: 600; margin-bottom: 1rem; color: #475569;">Animation Settings</h4>
-
+      <div class="animation-settings">
+        <h4><i class="fa-solid fa-film"></i> Animation Settings</h4>
         <label style="display: flex; align-items: center; gap: 0.75rem; cursor: pointer;">
           <input type="checkbox" id="animation-enabled" checked style="width: 1.25rem; height: 1.25rem;">
           <span style="font-size: 0.875rem; color: #475569;">Enable scrolling animation</span>
         </label>
-        <p class="help-text" style="margin-top: 0.5rem; margin-left: 2rem;">When disabled, the banner will display as a static image.</p>
+        <p style="margin-top: 0.5rem; margin-left: 2rem; font-size: 0.8125rem; color: #64748b;">When disabled, the banner will display as a static image.</p>
       </div>
     </div>
 
     <!-- Main Text Content Section -->
     <div class="section-card">
       <h2 class="section-title">
-        Main Text Content
+        <i class="fa-solid fa-paragraph"></i> Main Text Content
       </h2>
 
       <div class="info-box">
         <p>These paragraphs appear in the "Our Story" section of the About page. Each text box becomes a separate paragraph.</p>
       </div>
 
-      <div class="paragraph-list" id="paragraph-list">
-        <!-- Paragraphs will be added here dynamically -->
-      </div>
+      <div class="paragraph-list" id="paragraph-list"></div>
 
       <button type="button" class="btn btn-secondary btn-sm add-paragraph-btn" onclick="addParagraph()">
-        + Add Paragraph
+        <i class="fa-solid fa-plus"></i> Add Paragraph
       </button>
     </div>
 
     <div class="form-actions">
       <button type="button" class="btn btn-primary" onclick="saveSettings()">
-        Save Changes
+        <i class="fa-solid fa-check"></i> Save Changes
       </button>
       <a href="{% url 'admin_home' %}" class="btn btn-secondary">
         Cancel
@@ -457,6 +521,67 @@
     </div>
   </div>
 
+  <!-- Position Modal -->
+  <div class="position-overlay" id="position-modal">
+    <div class="position-modal">
+      <div class="position-modal-header">
+        <span class="position-modal-title">
+          <i class="fa-solid fa-crop-alt"></i>
+          Crop & Position
+          <span id="modal-device-label" style="font-weight: 400; color: #64748b; font-size: 0.875rem;"></span>
+        </span>
+        <div class="device-toggle" style="margin-left: auto; margin-right: 1rem;">
+          <button type="button" id="modal-desktop-toggle" class="active" onclick="setModalPreviewMode('desktop')">
+            <i class="fas fa-desktop"></i>
+          </button>
+          <button type="button" id="modal-mobile-toggle" onclick="setModalPreviewMode('mobile')">
+            <i class="fas fa-mobile-alt"></i>
+          </button>
+        </div>
+        <button class="position-modal-close" onclick="closePositionModal()">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+      <div class="position-modal-preview">
+        <div class="position-preview-wrapper" id="modal-preview-wrapper">
+          <img id="modal-preview-img" class="position-preview-img" src="" alt="Preview">
+        </div>
+      </div>
+      <div class="position-modal-controls">
+        <div class="position-control">
+          <div class="position-control-header">
+            <span class="position-control-label">Zoom</span>
+            <span class="position-control-value" id="modal-zoom-val">100%</span>
+          </div>
+          <input type="range" id="modal-zoom" min="100" max="200" value="100" oninput="updateModalPosition()">
+        </div>
+        <div class="position-control">
+          <div class="position-control-header">
+            <span class="position-control-label">Horizontal Position</span>
+            <span class="position-control-value" id="modal-x-val">50%</span>
+          </div>
+          <input type="range" id="modal-x" min="0" max="100" value="50" oninput="updateModalPosition()">
+        </div>
+        <div class="position-control">
+          <div class="position-control-header">
+            <span class="position-control-label">Vertical Position</span>
+            <span class="position-control-value" id="modal-y-val">50%</span>
+          </div>
+          <input type="range" id="modal-y" min="0" max="100" value="50" oninput="updateModalPosition()">
+        </div>
+      </div>
+      <div class="position-modal-footer">
+        <button class="btn btn-secondary" onclick="resetModalPosition()">
+          <i class="fas fa-undo"></i> Reset
+        </button>
+        <button class="btn btn-primary" onclick="closePositionModal()">
+          <i class="fas fa-check"></i> Done
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <input type="file" id="banner-image-input" accept="image/*" style="display: none;">
   <div class="toast" id="toast"></div>
 
   <script>
@@ -465,26 +590,22 @@
     let bannerZoom = {{ about_settings.banner_zoom|default:100 }};
     let bannerPosX = {{ about_settings.banner_position_x|default:50 }};
     let bannerPosY = {{ about_settings.banner_position_y|default:50 }};
+    let mobilePosX = {{ about_settings.mobile_position_x|default:50 }};
+    let mobilePosY = {{ about_settings.mobile_position_y|default:50 }};
+    let mobileZoom = {{ about_settings.mobile_zoom|default:100 }};
     let animationEnabled = {{ about_settings.animation_enabled|yesno:"true,false,true" }};
     let mainTextParagraphs = {{ about_settings.main_text|safe|default:"[]" }};
+    let previewMode = 'desktop';
+    let modalPreviewMode = 'desktop';
 
-    // Initialize
     document.addEventListener('DOMContentLoaded', function() {
-      // Show existing banner image
       if (bannerImageUrl) {
         showBannerPreview(bannerImageUrl);
       }
 
-      // Initialize position controls
-      document.getElementById('banner-zoom').value = bannerZoom;
-      document.getElementById('banner-pos-x').value = bannerPosX;
-      document.getElementById('banner-pos-y').value = bannerPosY;
       document.getElementById('animation-enabled').checked = animationEnabled;
-      updateBannerPosition();
 
-      // Load existing paragraphs or add default ones
       if (mainTextParagraphs.length === 0) {
-        // Add default paragraphs from the current about page
         mainTextParagraphs = [
           "In our debut collection, we draw inspiration from Japanese gardens — balanced, intentional, and built with purpose.",
           "Relating back to our Chicago roots, we channel that into clean, versatile pieces designed to move wherever life takes you.",
@@ -493,42 +614,53 @@
       }
       renderParagraphs();
 
-      // Set up drag and drop for banner
-      const uploadArea = document.getElementById('banner-upload-area');
-      const fileInput = document.getElementById('banner-image-input');
-
-      uploadArea.addEventListener('click', () => fileInput.click());
-      uploadArea.addEventListener('dragover', (e) => {
-        e.preventDefault();
-        uploadArea.classList.add('dragover');
-      });
-      uploadArea.addEventListener('dragleave', () => {
-        uploadArea.classList.remove('dragover');
-      });
-      uploadArea.addEventListener('drop', (e) => {
-        e.preventDefault();
-        uploadArea.classList.remove('dragover');
-        if (e.dataTransfer.files.length) {
-          handleBannerUpload(e.dataTransfer.files[0]);
-        }
-      });
-
-      fileInput.addEventListener('change', (e) => {
+      document.getElementById('banner-image-input').addEventListener('change', function(e) {
         if (e.target.files.length) {
           handleBannerUpload(e.target.files[0]);
         }
       });
+
+      updateBannerPreview();
     });
+
+    function setPreviewMode(mode) {
+      previewMode = mode;
+      document.getElementById('desktop-toggle').classList.toggle('active', mode === 'desktop');
+      document.getElementById('mobile-toggle').classList.toggle('active', mode === 'mobile');
+      document.getElementById('device-label').textContent = mode === 'desktop' ? 'Desktop' : 'Mobile';
+      document.getElementById('banner-preview-container').classList.toggle('mobile-preview', mode === 'mobile');
+      updateBannerPreview();
+    }
+
+    function setModalPreviewMode(mode) {
+      modalPreviewMode = mode;
+      document.getElementById('modal-desktop-toggle').classList.toggle('active', mode === 'desktop');
+      document.getElementById('modal-mobile-toggle').classList.toggle('active', mode === 'mobile');
+      document.getElementById('modal-device-label').textContent = mode === 'desktop' ? '(Desktop)' : '(Mobile)';
+      document.getElementById('modal-preview-wrapper').classList.toggle('mobile-preview', mode === 'mobile');
+
+      // Load values for current mode
+      const zoom = mode === 'mobile' ? mobileZoom : bannerZoom;
+      const posX = mode === 'mobile' ? mobilePosX : bannerPosX;
+      const posY = mode === 'mobile' ? mobilePosY : bannerPosY;
+
+      document.getElementById('modal-zoom').value = zoom;
+      document.getElementById('modal-x').value = posX;
+      document.getElementById('modal-y').value = posY;
+
+      updateModalPosition();
+    }
+
+    function triggerUpload() {
+      document.getElementById('banner-image-input').click();
+    }
 
     function handleBannerUpload(file) {
       const formData = new FormData();
       formData.append('image_file', file);
       formData.append('action', 'upload_banner_image');
 
-      // Show loading state
-      const uploadStatus = document.getElementById('upload-status');
-      uploadStatus.style.display = 'block';
-      uploadStatus.textContent = 'Uploading...';
+      showToast('Uploading...', 'success');
 
       fetch(window.location.href, {
         method: 'POST',
@@ -538,67 +670,114 @@
         },
         body: formData
       })
-      .then(response => {
-        if (!response.ok) {
-          throw new Error('Server returned ' + response.status);
-        }
-        return response.json();
-      })
+      .then(response => response.json())
       .then(data => {
-        uploadStatus.style.display = 'none';
         if (data.success) {
           bannerImageUrl = data.url;
           showBannerPreview(data.url);
           showToast('Image uploaded successfully', 'success');
         } else {
           showToast('Upload failed: ' + data.error, 'error');
-          console.error('Upload error:', data.error);
         }
       })
       .catch(error => {
-        uploadStatus.style.display = 'none';
         showToast('Upload failed: ' + error.message, 'error');
-        console.error('Upload error:', error);
       });
     }
 
     function showBannerPreview(url) {
-      const preview = document.getElementById('banner-preview');
+      const placeholder = document.getElementById('banner-placeholder');
       const img = document.getElementById('banner-preview-img');
-      const uploadArea = document.getElementById('banner-upload-area');
+      const cropBtn = document.getElementById('crop-btn');
+      const removeBtn = document.getElementById('remove-btn');
 
       img.src = url;
-      preview.style.display = 'inline-block';
-      uploadArea.style.display = 'none';
+      img.style.display = 'block';
+      placeholder.style.display = 'none';
+      cropBtn.style.display = 'flex';
+      removeBtn.style.display = 'inline-flex';
+
+      updateBannerPreview();
     }
 
     function removeBannerImage() {
       bannerImageUrl = '';
-      const preview = document.getElementById('banner-preview');
-      const uploadArea = document.getElementById('banner-upload-area');
+      const placeholder = document.getElementById('banner-placeholder');
+      const img = document.getElementById('banner-preview-img');
+      const cropBtn = document.getElementById('crop-btn');
+      const removeBtn = document.getElementById('remove-btn');
 
-      preview.style.display = 'none';
-      uploadArea.style.display = 'block';
+      img.style.display = 'none';
+      placeholder.style.display = 'flex';
+      cropBtn.style.display = 'none';
+      removeBtn.style.display = 'none';
     }
 
-    function updateBannerPosition() {
-      bannerZoom = parseInt(document.getElementById('banner-zoom').value);
-      bannerPosX = parseInt(document.getElementById('banner-pos-x').value);
-      bannerPosY = parseInt(document.getElementById('banner-pos-y').value);
-
-      // Update labels
-      document.getElementById('zoom-value').textContent = bannerZoom + '%';
-      document.getElementById('pos-x-value').textContent = bannerPosX + '%';
-      document.getElementById('pos-y-value').textContent = bannerPosY + '%';
-
-      // Update preview image
+    function updateBannerPreview() {
       const img = document.getElementById('banner-preview-img');
-      if (img) {
-        const scale = bannerZoom / 100;
-        img.style.transform = `scale(${scale})`;
-        img.style.transformOrigin = `${bannerPosX}% ${bannerPosY}%`;
-        img.style.objectPosition = `${bannerPosX}% ${bannerPosY}%`;
+      if (!img || !bannerImageUrl) return;
+
+      const zoom = previewMode === 'mobile' ? mobileZoom : bannerZoom;
+      const posX = previewMode === 'mobile' ? mobilePosX : bannerPosX;
+      const posY = previewMode === 'mobile' ? mobilePosY : bannerPosY;
+
+      const scale = zoom / 100;
+      img.style.transform = `scale(${scale})`;
+      img.style.transformOrigin = `${posX}% ${posY}%`;
+      img.style.objectPosition = `${posX}% ${posY}%`;
+    }
+
+    function openPositionModal() {
+      if (!bannerImageUrl) return;
+
+      const modal = document.getElementById('position-modal');
+      const previewImg = document.getElementById('modal-preview-img');
+
+      previewImg.src = bannerImageUrl;
+      modal.classList.add('open');
+
+      // Set modal to current preview mode
+      setModalPreviewMode(previewMode);
+    }
+
+    function closePositionModal() {
+      document.getElementById('position-modal').classList.remove('open');
+      updateBannerPreview();
+    }
+
+    function updateModalPosition() {
+      const zoom = parseInt(document.getElementById('modal-zoom').value);
+      const posX = parseInt(document.getElementById('modal-x').value);
+      const posY = parseInt(document.getElementById('modal-y').value);
+
+      document.getElementById('modal-zoom-val').textContent = zoom + '%';
+      document.getElementById('modal-x-val').textContent = posX + '%';
+      document.getElementById('modal-y-val').textContent = posY + '%';
+
+      // Update preview
+      const img = document.getElementById('modal-preview-img');
+      const scale = zoom / 100;
+      img.style.transform = `scale(${scale})`;
+      img.style.transformOrigin = `${posX}% ${posY}%`;
+      img.style.objectPosition = `${posX}% ${posY}%`;
+
+      // Save to correct mode
+      if (modalPreviewMode === 'mobile') {
+        mobileZoom = zoom;
+        mobilePosX = posX;
+        mobilePosY = posY;
+      } else {
+        bannerZoom = zoom;
+        bannerPosX = posX;
+        bannerPosY = posY;
       }
+    }
+
+    function resetModalPosition() {
+      document.getElementById('modal-zoom').value = 100;
+      document.getElementById('modal-x').value = 50;
+      document.getElementById('modal-y').value = 50;
+      updateModalPosition();
     }
 
     function renderParagraphs() {
@@ -610,11 +789,12 @@
         item.className = 'paragraph-item';
         item.innerHTML = `
           <textarea
+            class="form-group"
             placeholder="Enter paragraph text..."
             onchange="updateParagraph(${index}, this.value)"
           >${text}</textarea>
           <button type="button" class="btn btn-danger btn-sm remove-paragraph" onclick="removeParagraph(${index})" title="Remove">
-            ✕
+            <i class="fa-solid fa-times"></i>
           </button>
         `;
         container.appendChild(item);
@@ -624,7 +804,6 @@
     function addParagraph() {
       mainTextParagraphs.push('');
       renderParagraphs();
-      // Focus the new textarea
       const textareas = document.querySelectorAll('.paragraph-item textarea');
       if (textareas.length) {
         textareas[textareas.length - 1].focus();
@@ -641,7 +820,6 @@
     }
 
     function saveSettings() {
-      // Filter out empty paragraphs
       const paragraphs = mainTextParagraphs.filter(p => p.trim() !== '');
       animationEnabled = document.getElementById('animation-enabled').checked;
 
@@ -651,11 +829,12 @@
         banner_zoom: bannerZoom,
         banner_position_x: bannerPosX,
         banner_position_y: bannerPosY,
+        mobile_zoom: mobileZoom,
+        mobile_position_x: mobilePosX,
+        mobile_position_y: mobilePosY,
         animation_enabled: animationEnabled,
         main_text: paragraphs
       };
-
-      console.log('Saving settings:', payload);
 
       fetch(window.location.href, {
         method: 'POST',
@@ -666,14 +845,8 @@
         },
         body: JSON.stringify(payload)
       })
-      .then(response => {
-        if (!response.ok) {
-          throw new Error('Server returned ' + response.status);
-        }
-        return response.json();
-      })
+      .then(response => response.json())
       .then(data => {
-        console.log('Save response:', data);
         if (data.success) {
           showToast('Settings saved successfully', 'success');
         } else {
@@ -681,7 +854,6 @@
         }
       })
       .catch(error => {
-        console.error('Save error:', error);
         showToast('Save failed: ' + error.message, 'error');
       });
     }
@@ -690,11 +862,13 @@
       const toast = document.getElementById('toast');
       toast.textContent = message;
       toast.className = 'toast ' + type + ' show';
-
-      setTimeout(() => {
-        toast.classList.remove('show');
-      }, 3000);
+      setTimeout(() => { toast.classList.remove('show'); }, 3000);
     }
+
+    // Close modal on escape
+    document.addEventListener('keydown', e => {
+      if (e.key === 'Escape') closePositionModal();
+    });
   </script>
 </body>
 </html>

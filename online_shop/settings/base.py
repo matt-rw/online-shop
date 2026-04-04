@@ -80,6 +80,7 @@ MIDDLEWARE = [
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
     "django.middleware.security.SecurityMiddleware",
     "allauth.account.middleware.AccountMiddleware",  # Required by allauth
+    "shop.middleware.EarlyAccessMiddleware",  # Site lock for early access
     "shop.middleware.NoCacheAuthMiddleware",  # Prevent caching on auth pages (CSRF fix)
     "shop.middleware.analytics.VisitorTrackingMiddleware",  # Track visitor analytics
     "shop.middleware.ConnectionLogMiddleware",  # Track connections for security dashboard

@@ -179,6 +179,20 @@ class SiteSettings(models.Model):
         help_text="About page settings: banner_image, main_text, quote, etc."
     )
 
+    # Early access / site lock settings
+    early_access_enabled = models.BooleanField(
+        default=False,
+        help_text="Enable site lock - visitors must enter code to access the site"
+    )
+    early_access_code = models.CharField(
+        max_length=50, blank=True,
+        help_text="Access code visitors must enter to unlock the site"
+    )
+    early_access_include_staff = models.BooleanField(
+        default=False,
+        help_text="If enabled, staff/admin users must also enter the code (useful for testing)"
+    )
+
     updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:

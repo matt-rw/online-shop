@@ -1015,6 +1015,42 @@ def bundle_detail(request, slug):
     return render(request, "shop/bundle_detail.html", context)
 
 
+def early_access_view(request):
+    """
+    Early access code verification page.
+    Users must enter the correct code to unlock the site.
+    """
+    from shop.models.settings import SiteSettings
+
+    site_settings = SiteSettings.load()
+
+    # If early access is disabled, redirect to home
+    if not site_settings.early_access_enabled:
+        return redirect("/")
+
+    # If already verified, redirect to home
+    if request.session.get("early_access_verified"):
+        return redirect("/")
+
+    error = None
+
+    if request.method == "POST":
+        code = request.POST.get("code", "").strip()
+        correct_code = site_settings.early_access_code
+
+        if code and code == correct_code:
+            # Code is correct - mark session as verified
+            request.session["early_access_verified"] = True
+
+            # Redirect to original destination or home
+            next_url = request.session.pop("early_access_next", "/")
+            return redirect(next_url)
+        else:
+            error = "Invalid access code. Please try again."
+
+    return render(request, "shop/early_access.html", {"error": error})
+
+
 def promo_redirect(request, promo_code):
     """
     Handle promotion link clicks - track the click and redirect to the destination.

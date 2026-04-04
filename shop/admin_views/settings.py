@@ -508,6 +508,18 @@ def homepage_settings(request):
             except Exception as e:
                 return JsonResponse({"success": False, "error": str(e)})
 
+        elif action == "save_site_lock":
+            try:
+                data = json.loads(request.body)
+                site_lock_data = data.get("site_lock", {})
+                site_settings.early_access_enabled = site_lock_data.get("enabled", False)
+                site_settings.early_access_include_staff = site_lock_data.get("include_staff", False)
+                site_settings.early_access_code = site_lock_data.get("code", "")
+                site_settings.save()
+                return JsonResponse({"success": True})
+            except Exception as e:
+                return JsonResponse({"success": False, "error": str(e)})
+
         return JsonResponse({"success": False, "error": "Unknown action"})
 
     if request.method == "POST":
@@ -540,11 +552,19 @@ def homepage_settings(request):
         messages.success(request, "Homepage settings updated successfully!")
         return redirect("admin_homepage")
 
+    # Site lock data for template
+    site_lock = {
+        "enabled": site_settings.early_access_enabled,
+        "include_staff": site_settings.early_access_include_staff,
+        "code": site_settings.early_access_code,
+    }
+
     context = {
         "site_settings": site_settings,
         "hero_slides": site_settings.hero_slides or [],
         "gallery_images": site_settings.gallery_images or [],
         "news_ticker": site_settings.news_ticker or {},
+        "site_lock": site_lock,
         "cst_time": timezone.now().astimezone(pytz.timezone("America/Chicago")),
     }
 
@@ -953,6 +973,10 @@ def about_settings(request):
                     about_settings_data['banner_zoom'] = data.get('banner_zoom', 100)
                     about_settings_data['banner_position_x'] = data.get('banner_position_x', 50)
                     about_settings_data['banner_position_y'] = data.get('banner_position_y', 50)
+                    # Mobile-specific position settings
+                    about_settings_data['mobile_zoom'] = data.get('mobile_zoom', 100)
+                    about_settings_data['mobile_position_x'] = data.get('mobile_position_x', 50)
+                    about_settings_data['mobile_position_y'] = data.get('mobile_position_y', 50)
                     about_settings_data['animation_enabled'] = data.get('animation_enabled', True)
                     about_settings_data['main_text'] = data.get('main_text', [])
 

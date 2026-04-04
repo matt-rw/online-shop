@@ -968,6 +968,54 @@
         </button>
       </div>
     </div>
+
+    <!-- Site Lock -->
+    <div class="section-card">
+      <h2 class="section-title"><i class="fas fa-lock"></i> Site Lock (Early Access)</h2>
+      <p style="color: #64748b; font-size: 0.875rem; margin-bottom: 1.5rem;">
+        Require visitors to enter an access code before browsing the site. Staff users bypass the lock automatically.
+      </p>
+
+      <div class="form-group">
+        <label class="toggle-label-wrap">
+          <input type="checkbox" id="site-lock-enabled" onchange="markUnsaved()">
+          <div class="toggle-track"></div>
+          <span class="toggle-text">Enable Site Lock</span>
+        </label>
+      </div>
+
+      <div class="form-group">
+        <label class="toggle-label-wrap">
+          <input type="checkbox" id="site-lock-include-staff" onchange="markUnsaved()">
+          <div class="toggle-track"></div>
+          <span class="toggle-text">Include Staff/Admins</span>
+        </label>
+        <small style="display: block; color: #64748b; font-size: 0.8125rem; margin-top: 0.5rem; margin-left: 52px;">
+          When enabled, staff users must also enter the code. Useful for testing the lock screen.
+        </small>
+      </div>
+
+      <div class="form-group" id="site-lock-code-group">
+        <label for="site-lock-code">Access Code</label>
+        <div style="display: flex; gap: 0.75rem; align-items: center; max-width: 400px;">
+          <input type="text" id="site-lock-code" placeholder="e.g., EARLYBIRD2024"
+                 style="flex: 1; padding: 0.75rem 1rem; border: 2px solid #e2e8f0; border-radius: 8px; font-size: 1rem; font-family: monospace; letter-spacing: 0.05em;"
+                 onchange="markUnsaved()">
+          <button type="button" class="btn btn-secondary btn-sm" onclick="copyAccessCode()" title="Copy to clipboard">
+            <i class="fas fa-copy"></i>
+          </button>
+        </div>
+        <small style="display: block; color: #64748b; font-size: 0.8125rem; margin-top: 0.5rem;">
+          Share this code with customers who should have early access. Case-sensitive.
+        </small>
+      </div>
+
+      <div class="button-group">
+        <button type="button" class="btn btn-primary" onclick="saveSiteLock()" id="save-site-lock-btn">
+          <i class="fas fa-save"></i> Save Site Lock
+        </button>
+      </div>
+    </div>
   </div>
 
   <!-- Position Modal -->
@@ -1083,6 +1131,7 @@
   {{ site_settings.slideshow_settings|json_script:"slideshow-settings-data" }}
   {{ gallery_images|json_script:"gallery-images-data" }}
   {{ news_ticker|json_script:"news-ticker-data" }}
+  {{ site_lock|json_script:"site-lock-data" }}
 
   <script>
     const csrfToken = '{{ csrf_token }}';
@@ -2041,6 +2090,87 @@
       } finally {
         btn.disabled = false;
         btn.innerHTML = '<i class="fas fa-save"></i> Save Ticker';
+      }
+    }
+
+    // ============================================
+    // SITE LOCK (EARLY ACCESS)
+    // ============================================
+    let siteLock = {};
+    try {
+      siteLock = JSON.parse(document.getElementById('site-lock-data').textContent) || {};
+    } catch(e) { siteLock = {}; }
+
+    document.addEventListener('DOMContentLoaded', function() {
+      // Load site lock settings
+      document.getElementById('site-lock-enabled').checked = siteLock.enabled || false;
+      document.getElementById('site-lock-include-staff').checked = siteLock.include_staff || false;
+      document.getElementById('site-lock-code').value = siteLock.code || '';
+    });
+
+    function copyAccessCode() {
+      const codeInput = document.getElementById('site-lock-code');
+      const code = codeInput.value.trim();
+      if (!code) {
+        showToast('No code to copy', 'warning');
+        return;
+      }
+      navigator.clipboard.writeText(code).then(() => {
+        showToast('Code copied!', 'success');
+      }).catch(() => {
+        // Fallback for older browsers
+        codeInput.select();
+        document.execCommand('copy');
+        showToast('Code copied!', 'success');
+      });
+    }
+
+    async function saveSiteLock() {
+      const btn = document.getElementById('save-site-lock-btn');
+      btn.disabled = true;
+      btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
+
+      const siteLockData = {
+        enabled: document.getElementById('site-lock-enabled').checked,
+        include_staff: document.getElementById('site-lock-include-staff').checked,
+        code: document.getElementById('site-lock-code').value.trim()
+      };
+
+      // Validation
+      if (siteLockData.enabled && !siteLockData.code) {
+        showToast('Please enter an access code', 'error');
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fas fa-save"></i> Save Site Lock';
+        return;
+      }
+
+      try {
+        const response = await fetch('{% url "admin_homepage" %}', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-Requested-With': 'XMLHttpRequest',
+            'X-CSRFToken': csrfToken
+          },
+          body: JSON.stringify({
+            action: 'save_site_lock',
+            site_lock: siteLockData
+          })
+        });
+
+        const data = await response.json();
+        if (data.success) {
+          siteLock = siteLockData;
+          markSaved();
+          showToast('Site lock saved!', 'success');
+        } else {
+          showToast('Error: ' + data.error, 'error');
+        }
+      } catch (error) {
+        showToast('Error: ' + error.message, 'error');
+      } finally {
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fas fa-save"></i> Save Site Lock';
       }
     }
   </script>

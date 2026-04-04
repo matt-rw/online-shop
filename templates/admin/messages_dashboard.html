@@ -1337,9 +1337,9 @@
   </div>
 
   <script>
-    const drafts = { {% for d in drafts %}{{ d.id }}:{id:{{ d.id }},type:'{{ d.message_type }}',subject:'{{ d.subject|escapejs }}',content:`{{ d.content|escapejs }}`,scheduled:'{% if d.scheduled_for %}{{ d.scheduled_for|date:"c" }}{% endif %}',updated:'{{ d.updated_at|date:"M j, g:i A" }}',folder:'{{ d.folder_id|default:"" }}'},{% endfor %} };
-    const scheduled = { {% for m in scheduled_messages %}{{ m.id }}:{id:{{ m.id }},type:'{{ m.message_type }}',subject:'{{ m.subject|escapejs }}',content:`{{ m.content|escapejs }}`,scheduled:'{% timezone "America/Chicago" %}{{ m.scheduled_for|date:"M j, Y g:i A" }}{% endtimezone %}',recipients:{{ m.recipient_count }}},{% endfor %} };
-    const sent = { {% for m in messages %}{{ m.id }}:{id:{{ m.id }},type:'{{ m.message_type }}',subject:'{{ m.subject|escapejs }}',content:`{{ m.content|escapejs }}`,sentAt:'{% timezone "America/Chicago" %}{{ m.sent_at|date:"M j, Y g:i A" }}{% endtimezone %}',sentBy:'{{ m.sent_by.username|default:"System" }}',recipients:{{ m.recipient_count }},sentCount:{{ m.sent_count }},failedCount:{{ m.failed_count }}},{% endfor %} };
+    const drafts = { {% for d in drafts %}{{ d.id }}:{id:{{ d.id }},type:'{{ d.message_type }}',subject:'{{ d.subject|escapejs }}',content:'{{ d.content|escapejs }}',scheduled:'{% if d.scheduled_for %}{{ d.scheduled_for|date:"c" }}{% endif %}',updated:'{{ d.updated_at|date:"M j, g:i A" }}',folder:'{{ d.folder_id|default:"" }}'},{% endfor %} };
+    const scheduled = { {% for m in scheduled_messages %}{{ m.id }}:{id:{{ m.id }},type:'{{ m.message_type }}',subject:'{{ m.subject|escapejs }}',content:'{{ m.content|escapejs }}',scheduled:'{% timezone "America/Chicago" %}{{ m.scheduled_for|date:"M j, Y g:i A" }}{% endtimezone %}',recipients:{{ m.recipient_count }}},{% endfor %} };
+    const sent = { {% for m in messages %}{{ m.id }}:{id:{{ m.id }},type:'{{ m.message_type }}',subject:'{{ m.subject|escapejs }}',content:'{{ m.content|escapejs }}',sentAt:'{% timezone "America/Chicago" %}{{ m.sent_at|date:"M j, Y g:i A" }}{% endtimezone %}',sentBy:'{{ m.sent_by.username|default:"System" }}',recipients:{{ m.recipient_count }},sentCount:{{ m.sent_count }},failedCount:{{ m.failed_count }}},{% endfor %} };
 
     let currentId = null, currentStatus = null, msgType = 'email', testMode = false;
     let currentFolder = null;
