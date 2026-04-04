@@ -3,6 +3,44 @@
 from django.db import migrations, models
 
 
+def add_columns_if_not_exist(apps, schema_editor):
+    """Add columns only if they don't already exist (handles partial migrations)."""
+    from django.db import connection
+
+    with connection.cursor() as cursor:
+        # Get existing columns
+        cursor.execute("""
+            SELECT column_name FROM information_schema.columns
+            WHERE table_name = 'shop_sitesettings'
+        """)
+        existing_columns = {row[0] for row in cursor.fetchall()}
+
+        # Add each column if it doesn't exist
+        if 'early_access_enabled' not in existing_columns:
+            cursor.execute("""
+                ALTER TABLE shop_sitesettings
+                ADD COLUMN early_access_enabled BOOLEAN DEFAULT FALSE NOT NULL
+            """)
+
+        if 'early_access_code' not in existing_columns:
+            cursor.execute("""
+                ALTER TABLE shop_sitesettings
+                ADD COLUMN early_access_code VARCHAR(50) DEFAULT '' NOT NULL
+            """)
+
+        if 'early_access_include_staff' not in existing_columns:
+            cursor.execute("""
+                ALTER TABLE shop_sitesettings
+                ADD COLUMN early_access_include_staff BOOLEAN DEFAULT FALSE NOT NULL
+            """)
+
+        if 'early_access_launch_at' not in existing_columns:
+            cursor.execute("""
+                ALTER TABLE shop_sitesettings
+                ADD COLUMN early_access_launch_at TIMESTAMP WITH TIME ZONE NULL
+            """)
+
+
 class Migration(migrations.Migration):
 
     dependencies = [
@@ -10,38 +48,5 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
-        migrations.AddField(
-            model_name="sitesettings",
-            name="early_access_enabled",
-            field=models.BooleanField(
-                default=False,
-                help_text="Enable site lock - visitors must enter code to access the site",
-            ),
-        ),
-        migrations.AddField(
-            model_name="sitesettings",
-            name="early_access_code",
-            field=models.CharField(
-                blank=True,
-                max_length=50,
-                help_text="Access code visitors must enter to unlock the site",
-            ),
-        ),
-        migrations.AddField(
-            model_name="sitesettings",
-            name="early_access_include_staff",
-            field=models.BooleanField(
-                default=False,
-                help_text="If enabled, staff/admin users must also enter the code (useful for testing)",
-            ),
-        ),
-        migrations.AddField(
-            model_name="sitesettings",
-            name="early_access_launch_at",
-            field=models.DateTimeField(
-                null=True,
-                blank=True,
-                help_text="Optional: Site automatically unlocks at this time (leave empty to disable)",
-            ),
-        ),
+        migrations.RunPython(add_columns_if_not_exist, migrations.RunPython.noop),
     ]
