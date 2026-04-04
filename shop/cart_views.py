@@ -1029,7 +1029,7 @@ def checkout_success_view(request):
 
             if not cart_id:
                 messages.error(request, "Invalid checkout session.")
-                return redirect("home:home")
+                return redirect("home")
 
             try:
                 cart = Cart.objects.get(id=cart_id)
@@ -1069,7 +1069,7 @@ def checkout_success_view(request):
 
                     # Extract shipping address from Stripe session or metadata
                     shipping_address = None
-                    stripe_shipping = session.shipping_details or getattr(session, 'shipping', None)
+                    stripe_shipping = getattr(session, 'shipping_details', None) or getattr(session, 'shipping', None)
                     if stripe_shipping and stripe_shipping.address:
                         # Stripe collected the address directly
                         addr = stripe_shipping.address
@@ -1156,7 +1156,7 @@ def checkout_success_view(request):
 
         if not order:
             messages.error(request, "Could not find your order. Please contact support.")
-            return redirect("home:home")
+            return redirect("home")
 
         context = {
             "order": order,
@@ -1170,4 +1170,4 @@ def checkout_success_view(request):
         logger.error(f"Error in checkout success: {e}")
         logger.error(f"Traceback: {traceback.format_exc()}")
         messages.error(request, "There was an error retrieving your order.")
-        return redirect("home:home")
+        return redirect("home")
