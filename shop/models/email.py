@@ -52,6 +52,7 @@ class EmailTemplate(models.Model):
         ("on_subscribe", "On New Subscription"),
         ("on_confirmation", "On Confirmation Request"),
         ("on_order", "On New Order"),
+        ("on_order_admin", "On New Order (Admin)"),
         ("on_shipping", "On Order Shipped"),
         ("scheduled", "Scheduled Campaign"),
     ]

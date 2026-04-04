@@ -249,14 +249,14 @@ def send_order_confirmation(order):
 
         # Build order items list for template
         items_list = []
-        for item in order.items.select_related('variant__product').all():
+        for item in order.items.select_related('variant__product', 'variant__size', 'variant__color').all():
             product_name = item.variant.product.name if item.variant and item.variant.product else "Item"
             variant_info = ""
             if item.variant:
                 if item.variant.size:
-                    variant_info += f" - {item.variant.size.name}"
+                    variant_info += f" - {item.variant.size}"
                 if item.variant.color:
-                    variant_info += f" / {item.variant.color.name}"
+                    variant_info += f" / {item.variant.color}"
 
             items_list.append({
                 "name": product_name + variant_info,
@@ -384,4 +384,92 @@ def send_shipping_notification(order):
 
     except Exception as e:
         logger.error(f"Error sending shipping notification for {order.order_number}: {str(e)}")
+        return False, None
+
+
+def send_order_admin_notification(order):
+    """
+    Send order notification email to admin/shop owner.
+
+    Args:
+        order: The Order object
+
+    Returns:
+        tuple: (success: bool, log_object: EmailLog or None)
+    """
+    from shop.models import EmailTemplate, SiteSettings
+
+    try:
+        # Find active template with on_order_admin trigger
+        template = EmailTemplate.objects.filter(auto_trigger="on_order_admin", is_active=True).first()
+
+        if not template:
+            logger.info("No active admin order notification template found")
+            return False, None
+
+        # Get admin email from site settings
+        site_settings = SiteSettings.load()
+        admin_email = site_settings.contact_email
+
+        if not admin_email:
+            logger.warning("No admin email configured in site settings")
+            return False, None
+
+        # Build order items list for template
+        items_list = []
+        for item in order.items.select_related('variant__product', 'variant__size', 'variant__color').all():
+            product_name = item.variant.product.name if item.variant and item.variant.product else "Item"
+            variant_info = ""
+            if item.variant:
+                if item.variant.size:
+                    variant_info += f" - {item.variant.size}"
+                if item.variant.color:
+                    variant_info += f" / {item.variant.color}"
+
+            items_list.append({
+                "name": product_name + variant_info,
+                "sku": item.sku or "",
+                "quantity": item.quantity,
+                "price": f"${item.line_total:.2f}",
+            })
+
+        # Build shipping address string
+        shipping_str = ""
+        if order.shipping_address:
+            addr = order.shipping_address
+            shipping_str = f"{addr.full_name}\n{addr.line1}"
+            if addr.line2:
+                shipping_str += f"\n{addr.line2}"
+            shipping_str += f"\n{addr.city}, {addr.region} {addr.postal_code}"
+
+        # Get customer info
+        customer_email = order.email or (order.user.email if order.user else "")
+        customer_name = order.customer_name or (order.user.first_name if order.user else "Guest")
+
+        # Build context for template
+        context = {
+            "order_number": order.order_number,
+            "customer_name": customer_name,
+            "customer_email": customer_email,
+            "items": items_list,
+            "items_html": _render_items_html(items_list),
+            "items_text": _render_items_text(items_list),
+            "subtotal": f"${order.subtotal:.2f}",
+            "shipping_cost": f"${order.shipping:.2f}",
+            "tax": f"${order.tax:.2f}",
+            "total": f"${order.total:.2f}",
+            "shipping_address": shipping_str,
+            "order_date": order.created_at.strftime("%B %d, %Y") if order.created_at else "",
+            "order_time": order.created_at.strftime("%I:%M %p") if order.created_at else "",
+        }
+
+        # Send the email
+        return send_from_template(
+            email_address=admin_email,
+            template=template,
+            context=context,
+        )
+
+    except Exception as e:
+        logger.error(f"Error sending admin order notification for {order.order_number}: {str(e)}")
         return False, None
