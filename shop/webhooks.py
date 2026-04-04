@@ -237,7 +237,9 @@ def handle_checkout_session_completed(event):
             logger.error(f"Error sending admin order notification: {e}")
 
     except Exception as e:
+        import traceback
         logger.error(f"Error handling checkout completion: {e}")
+        logger.error(f"Traceback: {traceback.format_exc()}")
 
 
 def handle_payment_intent_succeeded(event):

@@ -1166,6 +1166,8 @@ def checkout_success_view(request):
         return render(request, "shop/checkout_success.html", context)
 
     except Exception as e:
+        import traceback
         logger.error(f"Error in checkout success: {e}")
+        logger.error(f"Traceback: {traceback.format_exc()}")
         messages.error(request, "There was an error retrieving your order.")
         return redirect("home:home")
