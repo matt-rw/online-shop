@@ -308,6 +308,10 @@ def orders_dashboard(request):
                 "label_url": order.label_url,
                 "created_at": order.created_at.isoformat(),
                 "item_count": order.items.count(),
+                # Shipping address for map
+                "shipping_city": order.shipping_address.city if order.shipping_address else "",
+                "shipping_state": order.shipping_address.region if order.shipping_address else "",
+                "shipping_zip": order.shipping_address.postal_code if order.shipping_address else "",
             }
         )
 
@@ -327,6 +331,7 @@ def orders_dashboard(request):
         "test_orders_count": test_orders_count,
         "cst_time": timezone.now().astimezone(pytz.timezone("America/Chicago")),
         "default_tax_rate": default_tax_rate,
+        "site_settings": site_settings,
     }
 
     return render(request, "admin/orders_dashboard.html", context)

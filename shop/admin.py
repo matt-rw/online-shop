@@ -3,6 +3,7 @@ from django.utils import timezone
 from django.utils.html import format_html
 
 from .models import (
+    Address,
     Campaign,
     CampaignMessage,
     Color,
@@ -12,6 +13,8 @@ from .models import (
     EmailTemplate,
     Expense,
     ExpenseCategory,
+    Order,
+    OrderItem,
     PageView,
     Product,
     ProductVariant,
@@ -35,6 +38,37 @@ class ProductAdmin(admin.ModelAdmin):
 class ProductVariantAdmin(admin.ModelAdmin):
     list_display = ("product", "size", "color", "price", "stock_quantity")
     list_filter = ("size", "color")
+
+
+class OrderItemInline(admin.TabularInline):
+    model = OrderItem
+    extra = 0
+    readonly_fields = ("variant", "sku", "quantity", "line_total")
+
+
+@admin.register(Order)
+class OrderAdmin(admin.ModelAdmin):
+    list_display = ("order_number", "customer_name", "email", "status", "total", "created_at")
+    list_filter = ("status", "is_test", "created_at")
+    search_fields = ("order_number", "email", "customer_name", "stripe_checkout_id")
+    readonly_fields = ("order_number", "stripe_checkout_id", "stripe_payment_intent_id", "created_at", "updated_at")
+    inlines = [OrderItemInline]
+
+    fieldsets = (
+        (None, {"fields": ("order_number", "status", "is_test")}),
+        ("Customer", {"fields": ("user", "customer_name", "email", "phone")}),
+        ("Shipping Address", {"fields": ("shipping_address",)}),
+        ("Totals", {"fields": ("subtotal", "discount", "discount_code", "shipping", "tax", "total")}),
+        ("Shipping", {"fields": ("tracking_number", "carrier", "label_url", "label_cost")}),
+        ("Stripe", {"fields": ("stripe_checkout_id", "stripe_payment_intent_id"), "classes": ("collapse",)}),
+        ("Dates", {"fields": ("created_at", "updated_at"), "classes": ("collapse",)}),
+    )
+
+
+@admin.register(Address)
+class AddressAdmin(admin.ModelAdmin):
+    list_display = ("full_name", "city", "region", "postal_code", "country")
+    search_fields = ("full_name", "city", "postal_code")
 
 
 @admin.register(EmailSubscription)

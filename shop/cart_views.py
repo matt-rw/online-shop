@@ -1067,6 +1067,37 @@ def checkout_success_view(request):
                     if session.amount_total:
                         total = Decimal(session.amount_total) / 100
 
+                    # Extract shipping address from Stripe session or metadata
+                    shipping_address = None
+                    stripe_shipping = session.shipping_details or getattr(session, 'shipping', None)
+                    if stripe_shipping and stripe_shipping.address:
+                        # Stripe collected the address directly
+                        addr = stripe_shipping.address
+                        shipping_address = Address.objects.create(
+                            full_name=stripe_shipping.name or "",
+                            line1=addr.line1 or "",
+                            line2=addr.line2 or "",
+                            city=addr.city or "",
+                            region=addr.state or "",
+                            postal_code=addr.postal_code or "",
+                            country=addr.country or "US",
+                            email=customer_email,
+                        )
+                        logger.info(f"Created shipping address from Stripe: {shipping_address.city}, {shipping_address.region}")
+                    elif metadata.get("shipping_line1") and metadata.get("shipping_city"):
+                        # Address was passed in metadata from checkout form
+                        shipping_address = Address.objects.create(
+                            full_name=metadata.get("shipping_name", ""),
+                            line1=metadata.get("shipping_line1", ""),
+                            line2=metadata.get("shipping_line2", "") or "",
+                            city=metadata.get("shipping_city", ""),
+                            region=metadata.get("shipping_region", ""),
+                            postal_code=metadata.get("shipping_postal", ""),
+                            country=metadata.get("shipping_country", "US"),
+                            email=customer_email,
+                        )
+                        logger.info(f"Created shipping address from metadata: {shipping_address.city}, {shipping_address.region}")
+
                     # Create order
                     order = Order.objects.create(
                         user=user,
@@ -1078,6 +1109,7 @@ def checkout_success_view(request):
                         total=total,
                         stripe_checkout_id=session_id,
                         stripe_payment_intent_id=session.payment_intent,
+                        shipping_address=shipping_address,
                     )
 
                     # Create order items from regular cart items

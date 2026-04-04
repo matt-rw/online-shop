@@ -8,6 +8,9 @@
   <link rel="icon" type="image/svg+xml" href="{% static 'admin-favicon.svg' %}">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <!-- Leaflet CSS for maps -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="">
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
   <style>
     {% include "admin/partials/dark_mode_styles.html" %}
     * {
@@ -1179,6 +1182,20 @@
       </div>
     </div>
 
+    <!-- Shipping Map -->
+    <div class="content-card" style="border-radius: 16px; padding: 1.5rem; box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06); margin-bottom: 2rem;">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+        <h2 style="font-size: 1.25rem; font-weight: 700; margin: 0;">
+          <i class="fa-solid fa-map-location-dot" style="color: #10b981; margin-right: 0.5rem;"></i>
+          Shipping Destinations
+        </h2>
+        <div style="font-size: 0.875rem; color: #64748b;">
+          <span id="map-order-count">0</span> orders mapped
+        </div>
+      </div>
+      <div id="orders-map" style="height: 400px; border-radius: 12px; background: #e2e8f0;"></div>
+    </div>
+
     <!-- Orders List -->
     <div class="content-card" style="border-radius: 16px; padding: 2rem; box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);">
       <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
@@ -1258,8 +1275,12 @@
                 {% endif %}
               </td>
               <td>
-                <div style="font-weight: 500;">{{ order.created_at|date:"M d" }}</div>
-                <div style="font-size: 0.75rem; color: #64748b;">{{ order.created_at|date:"Y" }}</div>
+                {% if order.created_at %}
+                <div style="font-weight: 500;">{{ order.created_at|date:"M d, Y" }}</div>
+                <div style="font-size: 0.75rem; color: #64748b;">{{ order.created_at|date:"g:i A" }}</div>
+                {% else %}
+                <span style="color: #94a3b8;">—</span>
+                {% endif %}
               </td>
               <td>
                 {% if order.tracking_number %}
@@ -1530,6 +1551,12 @@
         html += '<div>';
         html += '<h4 style="font-size: 0.75rem; text-transform: uppercase; color: #64748b; margin-bottom: 0.75rem; font-weight: 600;">Summary</h4>';
         html += '<div style="background: white; border: 1px solid #e2e8f0; border-radius: 8px; padding: 0.875rem; font-size: 0.875rem;">';
+        if (order.created_at) {
+          const orderDate = new Date(order.created_at);
+          const dateStr = orderDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+          const timeStr = orderDate.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
+          html += `<div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem; padding-bottom: 0.5rem; border-bottom: 1px solid #e2e8f0;"><span style="color: #64748b;">Ordered</span><span>${dateStr} at ${timeStr}</span></div>`;
+        }
         html += `<div style="display: flex; justify-content: space-between; margin-bottom: 0.375rem;"><span style="color: #64748b;">Subtotal</span><span>$${parseFloat(order.subtotal || 0).toFixed(2)}</span></div>`;
         if (order.discount && parseFloat(order.discount) > 0) {
           html += `<div style="display: flex; justify-content: space-between; margin-bottom: 0.375rem;"><span style="color: #64748b;">Discount${order.discount_code ? ' (' + order.discount_code + ')' : ''}</span><span style="color: #10b981;">-$${parseFloat(order.discount).toFixed(2)}</span></div>`;
@@ -3022,6 +3049,174 @@
       }
       window.location.href = url.toString();
     }
+  </script>
+
+  <!-- Order locations data for map -->
+  <script>
+    const orderMapData = {
+      warehouse: {
+        city: "{{ site_settings.warehouse_city|default:'Chicago'|escapejs }}",
+        state: "{{ site_settings.warehouse_state|default:'IL'|escapejs }}",
+        zip: "{{ site_settings.warehouse_zip|default:'60601'|escapejs }}"
+      },
+      orders: [
+        {% for order in orders %}{% if order.shipping_city %}{
+          id: "{{ order.order_number|escapejs }}",
+          city: "{{ order.shipping_city|escapejs }}",
+          state: "{{ order.shipping_state|escapejs }}",
+          zip: "{{ order.shipping_zip|escapejs }}",
+          customer: "{{ order.customer_name|default:'Customer'|escapejs }}"
+        },{% endif %}{% endfor %}
+      ]
+    };
+  </script>
+
+  <script>
+    // ============================================
+    // SHIPPING MAP WITH LEAFLET
+    // ============================================
+
+    // US State coordinates (approximate centers)
+    const stateCoords = {
+      'AL': [32.806671, -86.791130], 'AK': [61.370716, -152.404419], 'AZ': [33.729759, -111.431221],
+      'AR': [34.969704, -92.373123], 'CA': [36.116203, -119.681564], 'CO': [39.059811, -105.311104],
+      'CT': [41.597782, -72.755371], 'DE': [39.318523, -75.507141], 'FL': [27.766279, -81.686783],
+      'GA': [33.040619, -83.643074], 'HI': [21.094318, -157.498337], 'ID': [44.240459, -114.478828],
+      'IL': [40.349457, -88.986137], 'IN': [39.849426, -86.258278], 'IA': [42.011539, -93.210526],
+      'KS': [38.526600, -96.726486], 'KY': [37.668140, -84.670067], 'LA': [31.169546, -91.867805],
+      'ME': [44.693947, -69.381927], 'MD': [39.063946, -76.802101], 'MA': [42.230171, -71.530106],
+      'MI': [43.326618, -84.536095], 'MN': [45.694454, -93.900192], 'MS': [32.741646, -89.678696],
+      'MO': [38.456085, -92.288368], 'MT': [46.921925, -110.454353], 'NE': [41.125370, -98.268082],
+      'NV': [38.313515, -117.055374], 'NH': [43.452492, -71.563896], 'NJ': [40.298904, -74.521011],
+      'NM': [34.840515, -106.248482], 'NY': [42.165726, -74.948051], 'NC': [35.630066, -79.806419],
+      'ND': [47.528912, -99.784012], 'OH': [40.388783, -82.764915], 'OK': [35.565342, -96.928917],
+      'OR': [44.572021, -122.070938], 'PA': [40.590752, -77.209755], 'RI': [41.680893, -71.511780],
+      'SC': [33.856892, -80.945007], 'SD': [44.299782, -99.438828], 'TN': [35.747845, -86.692345],
+      'TX': [31.054487, -97.563461], 'UT': [40.150032, -111.862434], 'VT': [44.045876, -72.710686],
+      'VA': [37.769337, -78.169968], 'WA': [47.400902, -121.490494], 'WV': [38.491226, -80.954453],
+      'WI': [44.268543, -89.616508], 'WY': [42.755966, -107.302490], 'DC': [38.897438, -77.026817]
+    };
+
+    // Major city coordinates for better accuracy
+    const cityCoords = {
+      'new york': [40.7128, -74.0060], 'los angeles': [34.0522, -118.2437], 'chicago': [41.8781, -87.6298],
+      'houston': [29.7604, -95.3698], 'phoenix': [33.4484, -112.0740], 'philadelphia': [39.9526, -75.1652],
+      'san antonio': [29.4241, -98.4936], 'san diego': [32.7157, -117.1611], 'dallas': [32.7767, -96.7970],
+      'san jose': [37.3382, -121.8863], 'austin': [30.2672, -97.7431], 'jacksonville': [30.3322, -81.6557],
+      'fort worth': [32.7555, -97.3308], 'columbus': [39.9612, -82.9988], 'charlotte': [35.2271, -80.8431],
+      'san francisco': [37.7749, -122.4194], 'indianapolis': [39.7684, -86.1581], 'seattle': [47.6062, -122.3321],
+      'denver': [39.7392, -104.9903], 'boston': [42.3601, -71.0589], 'nashville': [36.1627, -86.7816],
+      'detroit': [42.3314, -83.0458], 'portland': [45.5152, -122.6784], 'las vegas': [36.1699, -115.1398],
+      'atlanta': [33.7490, -84.3880], 'miami': [25.7617, -80.1918], 'minneapolis': [44.9778, -93.2650],
+      'orlando': [28.5383, -81.3792], 'tampa': [27.9506, -82.4572], 'st louis': [38.6270, -90.1994],
+      'pittsburgh': [40.4406, -79.9959], 'cincinnati': [39.1031, -84.5120], 'cleveland': [41.4993, -81.6944],
+      'kansas city': [39.0997, -94.5786], 'new orleans': [29.9511, -90.0715], 'milwaukee': [43.0389, -87.9065],
+      'raleigh': [35.7796, -78.6382], 'sacramento': [38.5816, -121.4944], 'memphis': [35.1495, -90.0490],
+      'salt lake city': [40.7608, -111.8910], 'baltimore': [39.2904, -76.6122], 'oklahoma city': [35.4676, -97.5164]
+    };
+
+    // Geocode cache
+    const geocodeCache = {};
+
+    function getCoordinates(city, state, zip) {
+      // Try city lookup first
+      const cityKey = city.toLowerCase().trim();
+      if (cityCoords[cityKey]) {
+        return cityCoords[cityKey];
+      }
+
+      // Try state lookup as fallback
+      const stateKey = state.toUpperCase().trim();
+      if (stateCoords[stateKey]) {
+        // Add small random offset so markers don't stack
+        const coords = stateCoords[stateKey];
+        return [coords[0] + (Math.random() - 0.5) * 2, coords[1] + (Math.random() - 0.5) * 2];
+      }
+
+      return null;
+    }
+
+    function initOrdersMap() {
+      const mapContainer = document.getElementById('orders-map');
+      if (!mapContainer) return;
+
+      // Use order data from template
+      const data = orderMapData;
+
+      // Get warehouse coordinates
+      const warehouseCoords = getCoordinates(data.warehouse.city, data.warehouse.state, data.warehouse.zip);
+      if (!warehouseCoords) {
+        mapContainer.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:100%;color:#64748b;">Warehouse location not configured</div>';
+        return;
+      }
+
+      // Initialize map centered on US
+      const map = L.map('orders-map').setView([39.8283, -98.5795], 4);
+
+      // Add OpenStreetMap tiles
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        maxZoom: 19,
+        attribution: '© OpenStreetMap'
+      }).addTo(map);
+
+      // Custom icons
+      const warehouseIcon = L.divIcon({
+        className: 'warehouse-marker',
+        html: '<div style="background:#10b981;color:white;width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:14px;box-shadow:0 2px 8px rgba(0,0,0,0.3);border:3px solid white;"><i class="fa-solid fa-warehouse"></i></div>',
+        iconSize: [32, 32],
+        iconAnchor: [16, 16]
+      });
+
+      const orderIcon = L.divIcon({
+        className: 'order-marker',
+        html: '<div style="background:#3b82f6;color:white;width:12px;height:12px;border-radius:50%;box-shadow:0 2px 4px rgba(0,0,0,0.3);border:2px solid white;"></div>',
+        iconSize: [12, 12],
+        iconAnchor: [6, 6]
+      });
+
+      // Add warehouse marker
+      L.marker(warehouseCoords, { icon: warehouseIcon })
+        .addTo(map)
+        .bindPopup('<strong>Warehouse</strong><br>' + data.warehouse.city + ', ' + data.warehouse.state);
+
+      // Track mapped orders
+      let mappedCount = 0;
+      const bounds = L.latLngBounds([warehouseCoords]);
+
+      // Add order markers and lines
+      data.orders.forEach(order => {
+        const coords = getCoordinates(order.city, order.state, order.zip);
+        if (coords) {
+          // Add marker
+          L.marker(coords, { icon: orderIcon })
+            .addTo(map)
+            .bindPopup('<strong>' + order.id + '</strong><br>' + order.customer + '<br>' + order.city + ', ' + order.state);
+
+          // Draw curved line from warehouse
+          const latlngs = [warehouseCoords, coords];
+          const line = L.polyline(latlngs, {
+            color: '#10b981',
+            weight: 1.5,
+            opacity: 0.4,
+            dashArray: '5, 5'
+          }).addTo(map);
+
+          bounds.extend(coords);
+          mappedCount++;
+        }
+      });
+
+      // Update count
+      document.getElementById('map-order-count').textContent = mappedCount;
+
+      // Fit map to show all markers
+      if (mappedCount > 0) {
+        map.fitBounds(bounds, { padding: [30, 30] });
+      }
+    }
+
+    // Initialize map when DOM is ready
+    document.addEventListener('DOMContentLoaded', initOrdersMap);
   </script>
 </body>
 </html>

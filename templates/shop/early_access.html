@@ -217,8 +217,6 @@
       <div class="logo-text">Blueprint</div>
     </div>
 
-    <h1>Early Access</h1>
-
     {% if launch_at %}
     <div class="countdown" id="countdown">
       <div class="countdown-label">Launching in</div>
@@ -243,7 +241,11 @@
       <div class="countdown-date" id="launch-date"></div>
     </div>
     <div class="divider">or enter code</div>
-    {% else %}
+    {% endif %}
+
+    <h1>Early Access</h1>
+
+    {% if not launch_at %}
     <p class="subtitle">Enter your access code to preview the site before launch.</p>
     {% endif %}
 
