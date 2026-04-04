@@ -510,11 +510,26 @@ def homepage_settings(request):
 
         elif action == "save_site_lock":
             try:
+                from datetime import datetime as dt
+                import pytz
+
                 data = json.loads(request.body)
                 site_lock_data = data.get("site_lock", {})
                 site_settings.early_access_enabled = site_lock_data.get("enabled", False)
                 site_settings.early_access_include_staff = site_lock_data.get("include_staff", False)
                 site_settings.early_access_code = site_lock_data.get("code", "")
+
+                # Handle launch time - input is in Central Time
+                launch_at = site_lock_data.get("launch_at")
+                if launch_at:
+                    # Parse as naive datetime, then localize to Central Time
+                    central = pytz.timezone("America/Chicago")
+                    naive_dt = dt.fromisoformat(launch_at.replace('Z', '').replace('+00:00', ''))
+                    # Make it timezone-aware in Central Time
+                    site_settings.early_access_launch_at = central.localize(naive_dt)
+                else:
+                    site_settings.early_access_launch_at = None
+
                 site_settings.save()
                 return JsonResponse({"success": True})
             except Exception as e:
@@ -557,6 +572,7 @@ def homepage_settings(request):
         "enabled": site_settings.early_access_enabled,
         "include_staff": site_settings.early_access_include_staff,
         "code": site_settings.early_access_code,
+        "launch_at": site_settings.early_access_launch_at.isoformat() if site_settings.early_access_launch_at else None,
     }
 
     context = {

@@ -35,4 +35,13 @@ class Migration(migrations.Migration):
                 help_text="If enabled, staff/admin users must also enter the code (useful for testing)",
             ),
         ),
+        migrations.AddField(
+            model_name="sitesettings",
+            name="early_access_launch_at",
+            field=models.DateTimeField(
+                null=True,
+                blank=True,
+                help_text="Optional: Site automatically unlocks at this time (leave empty to disable)",
+            ),
+        ),
     ]

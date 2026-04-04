@@ -64,6 +64,72 @@
       line-height: 1.5;
     }
 
+    /* Countdown Timer */
+    .countdown {
+      margin-bottom: 2rem;
+    }
+
+    .countdown-label {
+      color: #888;
+      font-size: 0.8125rem;
+      margin-bottom: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+    }
+
+    .countdown-timer {
+      display: flex;
+      justify-content: center;
+      gap: 0.75rem;
+    }
+
+    .countdown-unit {
+      background: #151515;
+      border: 1px solid #333;
+      border-radius: 8px;
+      padding: 0.75rem 1rem;
+      min-width: 70px;
+    }
+
+    .countdown-value {
+      font-size: 1.75rem;
+      font-weight: 700;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .countdown-unit-label {
+      font-size: 0.6875rem;
+      color: #666;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-top: 0.25rem;
+    }
+
+    .countdown-date {
+      color: #666;
+      font-size: 0.8125rem;
+      margin-top: 1rem;
+    }
+
+    .divider {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      margin: 1.5rem 0;
+      color: #444;
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+    }
+
+    .divider::before,
+    .divider::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: #333;
+    }
+
     .form-group {
       margin-bottom: 1rem;
     }
@@ -152,7 +218,34 @@
     </div>
 
     <h1>Early Access</h1>
+
+    {% if launch_at %}
+    <div class="countdown" id="countdown">
+      <div class="countdown-label">Launching in</div>
+      <div class="countdown-timer">
+        <div class="countdown-unit">
+          <div class="countdown-value" id="days">--</div>
+          <div class="countdown-unit-label">Days</div>
+        </div>
+        <div class="countdown-unit">
+          <div class="countdown-value" id="hours">--</div>
+          <div class="countdown-unit-label">Hours</div>
+        </div>
+        <div class="countdown-unit">
+          <div class="countdown-value" id="minutes">--</div>
+          <div class="countdown-unit-label">Mins</div>
+        </div>
+        <div class="countdown-unit">
+          <div class="countdown-value" id="seconds">--</div>
+          <div class="countdown-unit-label">Secs</div>
+        </div>
+      </div>
+      <div class="countdown-date" id="launch-date"></div>
+    </div>
+    <div class="divider">or enter code</div>
+    {% else %}
     <p class="subtitle">Enter your access code to preview the site before launch.</p>
+    {% endif %}
 
     {% if error %}
     <div class="error">{{ error }}</div>
@@ -170,5 +263,47 @@
       <a href="https://blueprnt.store">blueprnt.store</a>
     </div>
   </div>
+
+  {% if launch_at %}
+  <script>
+    const launchAt = new Date('{{ launch_at }}');
+
+    // Format launch date for display (Central Time)
+    const options = {
+      weekday: 'long',
+      month: 'long',
+      day: 'numeric',
+      hour: 'numeric',
+      minute: '2-digit',
+      timeZoneName: 'short',
+      timeZone: 'America/Chicago'
+    };
+    document.getElementById('launch-date').textContent = launchAt.toLocaleString('en-US', options);
+
+    function updateCountdown() {
+      const now = new Date();
+      const diff = launchAt - now;
+
+      if (diff <= 0) {
+        // Launch time reached - reload to unlock
+        window.location.reload();
+        return;
+      }
+
+      const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+      const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+      const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+      const seconds = Math.floor((diff % (1000 * 60)) / 1000);
+
+      document.getElementById('days').textContent = String(days).padStart(2, '0');
+      document.getElementById('hours').textContent = String(hours).padStart(2, '0');
+      document.getElementById('minutes').textContent = String(minutes).padStart(2, '0');
+      document.getElementById('seconds').textContent = String(seconds).padStart(2, '0');
+    }
+
+    updateCountdown();
+    setInterval(updateCountdown, 1000);
+  </script>
+  {% endif %}
 </body>
 </html>

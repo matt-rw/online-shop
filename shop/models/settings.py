@@ -192,6 +192,10 @@ class SiteSettings(models.Model):
         default=False,
         help_text="If enabled, staff/admin users must also enter the code (useful for testing)"
     )
+    early_access_launch_at = models.DateTimeField(
+        null=True, blank=True,
+        help_text="Optional: Site automatically unlocks at this time (leave empty to disable)"
+    )
 
     updated_at = models.DateTimeField(auto_now=True)
 

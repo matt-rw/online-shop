@@ -1010,6 +1010,24 @@
         </small>
       </div>
 
+      <div class="form-group">
+        <label for="site-lock-launch">Launch Time (Optional)</label>
+        <div style="display: flex; gap: 0.75rem; align-items: center; max-width: 400px;">
+          <input type="datetime-local" id="site-lock-launch"
+                 style="flex: 1; padding: 0.75rem 1rem; border: 2px solid #e2e8f0; border-radius: 8px; font-size: 1rem;"
+                 onchange="markUnsaved(); updateLaunchPreview();">
+          <button type="button" class="btn btn-secondary btn-sm" onclick="clearLaunchTime()" title="Clear">
+            <i class="fas fa-times"></i>
+          </button>
+        </div>
+        <small style="display: block; color: #64748b; font-size: 0.8125rem; margin-top: 0.5rem;">
+          Site automatically unlocks at this time. A countdown timer will be shown on the lock screen.
+        </small>
+        <div id="launch-preview" style="margin-top: 0.75rem; padding: 0.75rem 1rem; background: #f8fafc; border-radius: 8px; font-size: 0.875rem; display: none;">
+          <strong>Launches:</strong> <span id="launch-preview-text"></span>
+        </div>
+      </div>
+
       <div class="button-group">
         <button type="button" class="btn btn-primary" onclick="saveSiteLock()" id="save-site-lock-btn">
           <i class="fas fa-save"></i> Save Site Lock
@@ -2106,7 +2124,48 @@
       document.getElementById('site-lock-enabled').checked = siteLock.enabled || false;
       document.getElementById('site-lock-include-staff').checked = siteLock.include_staff || false;
       document.getElementById('site-lock-code').value = siteLock.code || '';
+
+      // Load launch time - the server stores in Central Time, so just extract the datetime portion
+      if (siteLock.launch_at) {
+        // ISO format is like "2024-04-05T10:00:00-05:00" - slice first 16 chars for datetime-local
+        document.getElementById('site-lock-launch').value = siteLock.launch_at.slice(0, 16);
+        updateLaunchPreview();
+      }
     });
+
+    function updateLaunchPreview() {
+      const input = document.getElementById('site-lock-launch');
+      const preview = document.getElementById('launch-preview');
+      const previewText = document.getElementById('launch-preview-text');
+
+      if (input.value) {
+        // Parse the datetime-local value and format for display
+        // Note: This displays what the user entered, which is Central Time
+        const parts = input.value.split('T');
+        const dateParts = parts[0].split('-');
+        const timeParts = parts[1].split(':');
+
+        const date = new Date(dateParts[0], dateParts[1] - 1, dateParts[2], timeParts[0], timeParts[1]);
+        const options = {
+          weekday: 'long',
+          month: 'long',
+          day: 'numeric',
+          year: 'numeric',
+          hour: 'numeric',
+          minute: '2-digit'
+        };
+        previewText.textContent = date.toLocaleString('en-US', options) + ' CT';
+        preview.style.display = 'block';
+      } else {
+        preview.style.display = 'none';
+      }
+    }
+
+    function clearLaunchTime() {
+      document.getElementById('site-lock-launch').value = '';
+      document.getElementById('launch-preview').style.display = 'none';
+      markUnsaved();
+    }
 
     function copyAccessCode() {
       const codeInput = document.getElementById('site-lock-code');
@@ -2130,10 +2189,15 @@
       btn.disabled = true;
       btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
 
+      // Get launch time - send as-is, backend interprets as Central Time
+      const launchInput = document.getElementById('site-lock-launch').value;
+      const launchAt = launchInput || null;
+
       const siteLockData = {
         enabled: document.getElementById('site-lock-enabled').checked,
         include_staff: document.getElementById('site-lock-include-staff').checked,
-        code: document.getElementById('site-lock-code').value.trim()
+        code: document.getElementById('site-lock-code').value.trim(),
+        launch_at: launchAt
       };
 
       // Validation

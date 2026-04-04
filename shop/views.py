@@ -1020,6 +1020,7 @@ def early_access_view(request):
     Early access code verification page.
     Users must enter the correct code to unlock the site.
     """
+    from django.utils import timezone
     from shop.models.settings import SiteSettings
 
     site_settings = SiteSettings.load()
@@ -1027,6 +1028,11 @@ def early_access_view(request):
     # If early access is disabled, redirect to home
     if not site_settings.early_access_enabled:
         return redirect("/")
+
+    # If launch time has passed, redirect to home
+    if site_settings.early_access_launch_at:
+        if timezone.now() >= site_settings.early_access_launch_at:
+            return redirect("/")
 
     # If already verified, redirect to home
     if request.session.get("early_access_verified"):
@@ -1048,7 +1054,15 @@ def early_access_view(request):
         else:
             error = "Invalid access code. Please try again."
 
-    return render(request, "shop/early_access.html", {"error": error})
+    # Prepare launch time for template (as ISO string for JavaScript)
+    launch_at_iso = None
+    if site_settings.early_access_launch_at:
+        launch_at_iso = site_settings.early_access_launch_at.isoformat()
+
+    return render(request, "shop/early_access.html", {
+        "error": error,
+        "launch_at": launch_at_iso,
+    })
 
 
 def promo_redirect(request, promo_code):

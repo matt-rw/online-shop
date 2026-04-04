@@ -1,5 +1,6 @@
 from django.shortcuts import redirect
 from django.urls import reverse
+from django.utils import timezone
 
 
 class EarlyAccessMiddleware:
@@ -36,6 +37,11 @@ class EarlyAccessMiddleware:
         # Skip if early access is not enabled
         if not site_settings.early_access_enabled:
             return self.get_response(request)
+
+        # Skip if launch time has passed (auto-unlock)
+        if site_settings.early_access_launch_at:
+            if timezone.now() >= site_settings.early_access_launch_at:
+                return self.get_response(request)
 
         # Skip for staff users (unless include_staff is enabled)
         if request.user.is_authenticated and request.user.is_staff:

@@ -298,13 +298,22 @@ def cart_view(request):
     cart_items_with_images = []
     for item in cart_items:
         image = None
+        # Try variant images first
         if item.variant.images and item.variant.images[0]:
             img = item.variant.images[0]
-            # Ensure image has proper static prefix
-            if not img.startswith(("/", "http")):
+            if img and not img.startswith(("/", "http", "data:")):
                 image = f"/static/{img}"
-            else:
+            elif img:
                 image = img
+        # Fallback to product images
+        if not image and item.variant.product.images:
+            for img in item.variant.product.images:
+                if img:
+                    if not img.startswith(("/", "http", "data:")):
+                        image = f"/static/{img}"
+                    else:
+                        image = img
+                    break
         cart_items_with_images.append({
             "item": item,
             "image": image,
@@ -597,13 +606,22 @@ def checkout_view(request):
     cart_items_with_images = []
     for item in cart_items:
         image = None
+        # Try variant images first
         if item.variant.images and item.variant.images[0]:
             img = item.variant.images[0]
-            # Ensure image has proper static prefix
-            if not img.startswith(("/", "http")):
+            if img and not img.startswith(("/", "http", "data:")):
                 image = f"/static/{img}"
-            else:
+            elif img:
                 image = img
+        # Fallback to product images
+        if not image and item.variant.product.images:
+            for img in item.variant.product.images:
+                if img:
+                    if not img.startswith(("/", "http", "data:")):
+                        image = f"/static/{img}"
+                    else:
+                        image = img
+                    break
         cart_items_with_images.append({
             "item": item,
             "variant": item.variant,
