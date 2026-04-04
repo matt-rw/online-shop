@@ -7,6 +7,7 @@ from decimal import Decimal
 
 from django.conf import settings
 from django.contrib.auth import get_user_model
+from django.db.models import F
 from django.http import HttpResponse, JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_POST
@@ -139,6 +140,10 @@ def handle_checkout_session_completed(event):
         subtotal = Decimal(metadata.get("subtotal", "0"))
         shipping_cost = Decimal(metadata.get("shipping_cost", "0"))
 
+        # Get discount info from metadata
+        discount_code = metadata.get("discount_code", "")
+        discount_amount = Decimal(metadata.get("discount_amount", "0"))
+
         # Get tax from Stripe (amount is in cents)
         tax_amount = Decimal("0.00")
         total_details = session.get("total_details", {})
@@ -187,6 +192,8 @@ def handle_checkout_session_completed(event):
             email=customer_email,
             status=OrderStatus.PAID,
             subtotal=subtotal,
+            discount=discount_amount,
+            discount_code=discount_code,
             shipping=shipping_cost,
             tax=tax_amount,
             total=total,
@@ -194,6 +201,13 @@ def handle_checkout_session_completed(event):
             stripe_payment_intent_id=payment_intent_id,
             shipping_address=shipping_address,
         )
+
+        # Increment discount usage if a code was used
+        if discount_code:
+            from .models import Discount
+            Discount.objects.filter(code__iexact=discount_code).update(
+                times_used=F("times_used") + 1
+            )
 
         # Create order items from cart
         for item in cart_items:

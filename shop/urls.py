@@ -49,6 +49,7 @@ urlpatterns = [
     # Checkout
     path("checkout/", cart_views.checkout_view, name="checkout"),
     path("checkout/shipping-rates/", cart_views.get_shipping_rates_view, name="get_shipping_rates"),
+    path("checkout/apply-promo/", cart_views.apply_promo_code, name="apply_promo_code"),
     path(
         "checkout/create-session/",
         cart_views.create_checkout_session,

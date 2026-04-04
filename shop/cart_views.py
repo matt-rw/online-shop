@@ -839,6 +839,69 @@ def get_shipping_rates_view(request):
 
 @ratelimit(key="ip", rate="10/m", method="POST", block=True)
 @require_POST
+def apply_promo_code(request):
+    """
+    AJAX endpoint to validate and apply a promo/discount code.
+    """
+    import json
+    from django.utils import timezone
+    from .models import Discount
+
+    try:
+        data = json.loads(request.body)
+    except json.JSONDecodeError:
+        return JsonResponse({"success": False, "error": "Invalid request"}, status=400)
+
+    code = data.get("code", "").strip()
+    subtotal = Decimal(str(data.get("subtotal", 0)))
+
+    if not code:
+        return JsonResponse({"success": False, "error": "Please enter a promo code"})
+
+    try:
+        discount = Discount.objects.get(code__iexact=code, is_active=True)
+    except Discount.DoesNotExist:
+        return JsonResponse({"success": False, "error": "Invalid promo code"})
+
+    # Check validity dates
+    now = timezone.now()
+    if discount.valid_from and now < discount.valid_from:
+        return JsonResponse({"success": False, "error": "This code is not yet active"})
+    if discount.valid_until and now > discount.valid_until:
+        return JsonResponse({"success": False, "error": "This code has expired"})
+
+    # Check max uses
+    if discount.max_uses and discount.times_used >= discount.max_uses:
+        return JsonResponse({"success": False, "error": "This code has reached its usage limit"})
+
+    # Check minimum purchase
+    if discount.min_purchase_amount and subtotal < discount.min_purchase_amount:
+        return JsonResponse({
+            "success": False,
+            "error": f"Minimum purchase of ${discount.min_purchase_amount:.2f} required"
+        })
+
+    # Calculate discount amount
+    discount_amount = Decimal("0.00")
+    if discount.discount_type == "percentage":
+        discount_amount = (subtotal * discount.value / 100).quantize(Decimal("0.01"))
+    elif discount.discount_type == "fixed":
+        discount_amount = min(discount.value, subtotal)
+    elif discount.discount_type == "free_shipping":
+        # Handle in shipping calculation
+        discount_amount = Decimal("0.00")
+
+    return JsonResponse({
+        "success": True,
+        "discount_id": discount.id,
+        "discount_amount": float(discount_amount),
+        "discount_type": discount.discount_type,
+        "message": f"Code '{code.upper()}' applied! You saved ${discount_amount:.2f}"
+    })
+
+
+@ratelimit(key="ip", rate="10/m", method="POST", block=True)
+@require_POST
 def create_checkout_session(request):
     """
     Create a Stripe Checkout Session and redirect to Stripe hosted checkout.
@@ -938,25 +1001,60 @@ def create_checkout_session(request):
                 }
             )
 
+        # Handle discount/promo code
+        discount_id = request.POST.get("discount_id", "")
+        discount_amount = Decimal("0.00")
+        discount_code = ""
+        stripe_coupon_id = None
+        if discount_id:
+            try:
+                from .models import Discount
+                discount_obj = Discount.objects.get(id=discount_id, is_active=True)
+                discount_code = discount_obj.code
+                # Calculate discount amount
+                if discount_obj.discount_type == "percentage":
+                    discount_amount = (subtotal * discount_obj.value / 100).quantize(Decimal("0.01"))
+                    # Create a Stripe coupon for percentage discount
+                    stripe_coupon = stripe.Coupon.create(
+                        percent_off=float(discount_obj.value),
+                        duration="once",
+                        name=f"Promo: {discount_code.upper()}"
+                    )
+                    stripe_coupon_id = stripe_coupon.id
+                elif discount_obj.discount_type == "fixed":
+                    discount_amount = min(discount_obj.value, subtotal)
+                    # Create a Stripe coupon for fixed discount
+                    stripe_coupon = stripe.Coupon.create(
+                        amount_off=int(discount_amount * 100),
+                        currency="usd",
+                        duration="once",
+                        name=f"Promo: {discount_code.upper()}"
+                    )
+                    stripe_coupon_id = stripe_coupon.id
+            except Exception as e:
+                logger.warning(f"Error applying discount {discount_id}: {e}")
+
         # Create Stripe checkout session with automatic tax calculation
         # Note: Stripe Tax must be enabled in your Stripe Dashboard first
         # Order will be created in webhook after successful payment
         # Test orders are exempt from tax
-        session = stripe.checkout.Session.create(
-            line_items=line_items,
-            mode="payment",
-            automatic_tax={"enabled": not is_test_order},
-            success_url=request.build_absolute_uri("/shop/checkout/success/")
+        session_params = {
+            "line_items": line_items,
+            "mode": "payment",
+            "automatic_tax": {"enabled": not is_test_order},
+            "success_url": request.build_absolute_uri("/shop/checkout/success/")
             + "?session_id={CHECKOUT_SESSION_ID}",
-            cancel_url=request.build_absolute_uri("/shop/checkout/"),
-            customer_email=customer_email if customer_email else None,
-            metadata={
+            "cancel_url": request.build_absolute_uri("/shop/checkout/"),
+            "customer_email": customer_email if customer_email else None,
+            "metadata": {
                 "cart_id": str(cart.id),
                 "user_id": str(request.user.id) if request.user.is_authenticated else "",
                 "customer_email": customer_email or "",
                 "subtotal": str(subtotal),
                 "shipping_cost": str(shipping_cost),
                 "is_test_order": "true" if is_test_order else "false",
+                "discount_code": discount_code,
+                "discount_amount": str(discount_amount),
                 # Shipping address
                 "shipping_name": request.POST.get("shipping_name", ""),
                 "shipping_line1": request.POST.get("shipping_line1", ""),
@@ -966,7 +1064,13 @@ def create_checkout_session(request):
                 "shipping_postal": request.POST.get("shipping_postal", ""),
                 "shipping_country": request.POST.get("shipping_country", "US"),
             },
-        )
+        }
+
+        # Add discount coupon if available
+        if stripe_coupon_id:
+            session_params["discounts"] = [{"coupon": stripe_coupon_id}]
+
+        session = stripe.checkout.Session.create(**session_params)
 
         logger.info(f"Created Stripe checkout session {session.id} for cart {cart.id}")
 
