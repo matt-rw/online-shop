@@ -4,7 +4,8 @@ Order management admin views.
 
 import json
 import logging
-from datetime import datetime
+from collections import defaultdict
+from datetime import datetime, timedelta
 from decimal import Decimal
 
 from django.conf import settings
@@ -13,7 +14,7 @@ logger = logging.getLogger(__name__)
 from django.contrib import messages
 from django.contrib.admin.views.decorators import staff_member_required
 from django.contrib.auth import get_user_model
-from django.db.models import Q, Sum
+from django.db.models import Avg, Count, F, Q, Sum
 from django.http import JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
@@ -247,17 +248,233 @@ def orders_dashboard(request):
     from shop.models import OrderStatus
 
     real_orders = Order.objects.filter(is_test=False)
+    paid_statuses = [OrderStatus.PAID, OrderStatus.SHIPPED, OrderStatus.FULFILLED]
+    paid_orders = real_orders.filter(status__in=paid_statuses)
+
+    # Basic stats
+    total_count = real_orders.count()
+    total_revenue = paid_orders.aggregate(Sum("total"))["total__sum"] or 0
+
+    # Calculate total profit and AOV
+    total_profit = 0
+    orders_with_profit = 0
+    for order in paid_orders.prefetch_related("items"):
+        order_cost = 0
+        has_cost = False
+        for item in order.items.all():
+            if item.unit_cost is not None:
+                order_cost += float(item.unit_cost) * item.quantity
+                has_cost = True
+        if has_cost:
+            product_revenue = float(order.total) - float(order.shipping) - float(order.tax)
+            total_profit += product_revenue - order_cost
+            orders_with_profit += 1
+
+    # Time periods
+    now = timezone.now()
+    last_24h = now - timedelta(hours=24)
+    last_7d = now - timedelta(days=7)
+    month_start = now.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+
+    # Orders today / last 24 hours
+    orders_24h = paid_orders.filter(created_at__gte=last_24h).count()
+    revenue_24h = paid_orders.filter(created_at__gte=last_24h).aggregate(Sum("total"))["total__sum"] or 0
+
+    # Orders last 7 days
+    orders_7d = paid_orders.filter(created_at__gte=last_7d).count()
+    revenue_7d = paid_orders.filter(created_at__gte=last_7d).aggregate(Sum("total"))["total__sum"] or 0
+
+    # Orders this month
+    orders_this_month = paid_orders.filter(created_at__gte=month_start).count()
+    revenue_this_month = paid_orders.filter(created_at__gte=month_start).aggregate(Sum("total"))["total__sum"] or 0
+
+    # Last month for comparison
+    last_month_start = (month_start - timedelta(days=1)).replace(day=1)
+    last_month_end = month_start - timedelta(seconds=1)
+    orders_last_month = paid_orders.filter(created_at__gte=last_month_start, created_at__lte=last_month_end).count()
+    revenue_last_month = paid_orders.filter(created_at__gte=last_month_start, created_at__lte=last_month_end).aggregate(Sum("total"))["total__sum"] or 0
+
     stats = {
-        "total": real_orders.count(),
+        "total": total_count,
         "pending": real_orders.filter(status=OrderStatus.CREATED).count(),
         "processing": real_orders.filter(status=OrderStatus.AWAITING_PAYMENT).count(),
         "shipped": real_orders.filter(status=OrderStatus.SHIPPED).count(),
         "delivered": real_orders.filter(status=OrderStatus.FULFILLED).count(),
-        "total_revenue": real_orders.filter(status=OrderStatus.PAID).aggregate(Sum("total"))[
-            "total__sum"
-        ]
-        or 0,
+        "total_revenue": total_revenue,
+        # New metrics
+        "aov": float(total_revenue) / paid_orders.count() if paid_orders.count() > 0 else 0,
+        "total_profit": total_profit,
+        "profit_margin": (total_profit / float(total_revenue) * 100) if total_revenue > 0 and total_profit else 0,
+        # Time-based metrics
+        "orders_24h": orders_24h,
+        "revenue_24h": float(revenue_24h),
+        "orders_7d": orders_7d,
+        "revenue_7d": float(revenue_7d),
+        "orders_this_month": orders_this_month,
+        "revenue_this_month": float(revenue_this_month),
+        "orders_last_month": orders_last_month,
+        "revenue_last_month": float(revenue_last_month),
+        "month_over_month_orders": ((orders_this_month - orders_last_month) / orders_last_month * 100) if orders_last_month > 0 else 0,
+        "month_over_month_revenue": ((float(revenue_this_month) - float(revenue_last_month)) / float(revenue_last_month) * 100) if revenue_last_month > 0 else 0,
     }
+
+    # Revenue over time (last 90 days) for chart with filtering
+    ninety_days_ago = now - timedelta(days=90)
+    daily_revenue = defaultdict(float)
+    daily_orders = defaultdict(int)
+
+    for order in paid_orders.filter(created_at__gte=ninety_days_ago):
+        day_key = order.created_at.strftime("%Y-%m-%d")
+        daily_revenue[day_key] += float(order.total)
+        daily_orders[day_key] += 1
+
+    # Fill in all 90 days with data (JS will filter)
+    chart_data = []
+    for i in range(90):
+        day = (now - timedelta(days=89-i)).strftime("%Y-%m-%d")
+        chart_data.append({
+            "date": day,
+            "revenue": daily_revenue.get(day, 0),
+            "orders": daily_orders.get(day, 0),
+        })
+
+    # Top selling products (by quantity)
+    top_products = OrderItem.objects.filter(
+        order__is_test=False,
+        order__status__in=paid_statuses,
+        variant__isnull=False
+    ).values(
+        "variant__product__name",
+        "variant__product__id"
+    ).annotate(
+        total_qty=Sum("quantity"),
+        total_revenue=Sum("line_total")
+    ).order_by("-total_qty")[:5]
+
+    # Promo code analytics
+    promo_stats = paid_orders.exclude(
+        discount_code__isnull=True
+    ).exclude(
+        discount_code=""
+    ).values("discount_code").annotate(
+        usage_count=Count("id"),
+        total_discount=Sum("discount"),
+        total_revenue=Sum("total")
+    ).order_by("-usage_count")[:5]
+
+    # Geographic breakdown (top states)
+    geo_stats = paid_orders.filter(
+        shipping_address__isnull=False
+    ).exclude(
+        shipping_address__region=""
+    ).values("shipping_address__region").annotate(
+        order_count=Count("id"),
+        total_revenue=Sum("total")
+    ).order_by("-order_count")[:10]
+
+    # Fulfillment metrics
+    shipped_orders = real_orders.filter(
+        status__in=[OrderStatus.SHIPPED, OrderStatus.FULFILLED],
+        tracking_number__isnull=False
+    ).exclude(tracking_number="")
+
+    # Carrier breakdown
+    carrier_stats = shipped_orders.values("carrier").annotate(
+        count=Count("id")
+    ).order_by("-count")
+
+    # Calculate average time to ship (for orders that have updated_at after created_at)
+    # This is an approximation since we don't track exact ship date
+    avg_fulfillment_days = None
+    if shipped_orders.exists():
+        # Use orders shipped in last 90 days for this metric
+        recent_shipped = shipped_orders.filter(created_at__gte=now - timedelta(days=90))
+        if recent_shipped.exists():
+            total_days = 0
+            count = 0
+            for order in recent_shipped:
+                if order.updated_at and order.created_at:
+                    days = (order.updated_at - order.created_at).days
+                    if days >= 0 and days < 30:  # Reasonable range
+                        total_days += days
+                        count += 1
+            if count > 0:
+                avg_fulfillment_days = round(total_days / count, 1)
+
+    # Ready to ship - PAID orders without tracking, with smart priority scoring
+    ready_to_ship = []
+    orders_to_ship = real_orders.filter(
+        status=OrderStatus.PAID
+    ).filter(
+        Q(tracking_number__isnull=True) | Q(tracking_number="")
+    ).select_related("shipping_address").prefetch_related("items__variant__product")
+
+    for order in orders_to_ship:
+        # Calculate time waiting
+        time_waiting = now - order.created_at
+        hours_waiting = time_waiting.total_seconds() / 3600
+        days_waiting = time_waiting.days
+
+        # Smart priority score (higher = more urgent)
+        # Base: hours waiting (capped at 168 = 1 week)
+        priority_score = min(hours_waiting, 168)
+        # Bonus for high-value orders (every $50 adds 2 points)
+        priority_score += float(order.total) / 50 * 2
+        # Bonus for multi-item orders
+        item_count = order.items.count()
+        priority_score += item_count * 0.5
+
+        # Priority level
+        if days_waiting >= 3:
+            priority = "urgent"
+        elif days_waiting >= 1:
+            priority = "high"
+        else:
+            priority = "normal"
+
+        # Time display (smart formatting)
+        if hours_waiting < 1:
+            time_display = "Just now"
+        elif hours_waiting < 24:
+            time_display = f"{int(hours_waiting)}h ago"
+        else:
+            time_display = f"{days_waiting}d ago"
+
+        # Customer name
+        if order.customer_name:
+            customer = order.customer_name
+        elif order.user:
+            customer = f"{order.user.first_name} {order.user.last_name}".strip() or order.user.email
+        else:
+            customer = "Guest"
+
+        # Compact item list
+        items = []
+        for item in order.items.all():
+            if item.variant and item.variant.product:
+                name = item.variant.product.name
+                # Shorten long names
+                if len(name) > 20:
+                    name = name[:18] + "..."
+                items.append({"name": name, "qty": item.quantity})
+
+        ready_to_ship.append({
+            "id": order.id,
+            "order_number": order.order_number,
+            "customer": customer,
+            "total": float(order.total),
+            "priority": priority,
+            "priority_score": priority_score,
+            "time_display": time_display,
+            "days_waiting": days_waiting,
+            "items": items,
+            "item_count": item_count,
+            "state": order.shipping_address.region if order.shipping_address else "",
+        })
+
+    # Sort by priority score (highest first) and limit
+    ready_to_ship.sort(key=lambda x: x["priority_score"], reverse=True)
+    ready_to_ship = ready_to_ship[:8]
 
     # Prepare orders data
     # Sort by -id for stability (edited orders won't jump around)
@@ -334,6 +551,14 @@ def orders_dashboard(request):
         "cst_time": timezone.now().astimezone(pytz.timezone("America/Chicago")),
         "default_tax_rate": default_tax_rate,
         "site_settings": site_settings,
+        # Analytics data
+        "chart_data": json.dumps(chart_data),
+        "top_products": list(top_products),
+        "promo_stats": list(promo_stats),
+        "geo_stats": list(geo_stats),
+        "carrier_stats": list(carrier_stats),
+        "avg_fulfillment_days": avg_fulfillment_days,
+        "ready_to_ship": ready_to_ship,
     }
 
     return render(request, "admin/orders_dashboard.html", context)

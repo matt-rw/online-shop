@@ -11,8 +11,11 @@
   <!-- Leaflet CSS for maps -->
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="">
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+  <!-- Chart.js for analytics -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <style>
     {% include "admin/partials/dark_mode_styles.html" %}
+    {% include "admin/partials/stats_carousel_styles.html" %}
     * {
       margin: 0;
       padding: 0;
@@ -28,7 +31,7 @@
     }
 
     .nav-links {
-      background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+      background: linear-gradient(135deg, #52796f 0%, #3a5a52 100%);
       padding: 1rem 2rem;
       display: flex;
       gap: 0.75rem;
@@ -55,7 +58,7 @@
     }
 
     .top-bar {
-      background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+      background: linear-gradient(135deg, #52796f 0%, #3a5a52 100%);
       padding: 2rem 0;
       box-shadow: 0 4px 20px rgba(16, 185, 129, 0.15);
       margin-bottom: 2rem;
@@ -87,16 +90,6 @@
       margin: 0 auto;
     }
 
-    .stats-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-      gap: 1.5rem;
-      margin-bottom: 3rem;
-      margin-top: -4rem;
-      position: relative;
-      z-index: 10;
-    }
-
     .stat-card {
       background: white;
       border-radius: 16px;
@@ -116,7 +109,7 @@
       left: 0;
       right: 0;
       height: 4px;
-      background: linear-gradient(90deg, #10b981, #059669);
+      background: linear-gradient(90deg, #52796f, #3a5a52);
       opacity: 0;
       transition: opacity 0.3s;
     }
@@ -140,7 +133,7 @@
     }
 
     .stat-card .number {
-      background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+      background: linear-gradient(135deg, #52796f 0%, #3a5a52 100%);
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
       background-clip: text;
@@ -152,7 +145,7 @@
     .stat-card .icon {
       font-size: 1.75rem;
       margin-bottom: 0.75rem;
-      color: #10b981;
+      color: #52796f;
     }
 
     .btn {
@@ -175,7 +168,7 @@
 
     .btn-primary {
       background: white;
-      color: #10b981;
+      color: #52796f;
       padding: 0.875rem 1.75rem;
       border-radius: 12px;
       text-decoration: none;
@@ -218,7 +211,7 @@
       padding: 1.5rem;
       margin-bottom: 1rem;
       box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
-      border-left: 4px solid #10b981;
+      border-left: 4px solid #52796f;
     }
 
     .status-badge {
@@ -242,8 +235,8 @@
     }
 
     .status-badge.paid {
-      background: #d1fae5;
-      color: #065f46;
+      background: #d8e2dc;
+      color: #354f52;
     }
 
     .status-badge.shipped {
@@ -252,13 +245,13 @@
     }
 
     .status-badge.fulfilled {
-      background: #d1fae5;
-      color: #065f46;
+      background: #d8e2dc;
+      color: #354f52;
     }
 
     .tracking-info {
-      background: #f0fdf4;
-      border: 1px solid #bbf7d0;
+      background: #eef2f0;
+      border: 1px solid #b8c9c4;
       border-radius: 8px;
       padding: 1rem;
       margin-top: 1rem;
@@ -322,7 +315,7 @@
     .form-group input:focus,
     .form-group select:focus {
       outline: none;
-      border-color: #10b981;
+      border-color: #52796f;
       background: white;
       box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1);
     }
@@ -346,7 +339,7 @@
 
     .form-group textarea:focus {
       outline: none;
-      border-color: #10b981;
+      border-color: #52796f;
       background: white;
       box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1);
     }
@@ -373,12 +366,12 @@
     }
 
     .btn-shipping.generate {
-      color: #10b981;
-      border-color: #10b981;
+      color: #52796f;
+      border-color: #52796f;
     }
 
     .btn-shipping.generate:hover {
-      background: #f0fdf4;
+      background: #eef2f0;
       transform: translateY(-1px);
       box-shadow: 0 2px 8px rgba(16, 185, 129, 0.15);
     }
@@ -455,8 +448,8 @@
     }
 
     .success-message {
-      background: #d1fae5;
-      color: #065f46;
+      background: #d8e2dc;
+      color: #354f52;
       padding: 0.75rem 1rem;
       border-radius: 8px;
       margin-bottom: 1rem;
@@ -502,7 +495,7 @@
 
     .product-search-input:focus {
       outline: none;
-      border-color: #10b981;
+      border-color: #52796f;
       background-color: white;
       box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1);
     }
@@ -529,8 +522,8 @@
     }
 
     .browse-products-btn.active {
-      background: #10b981;
-      border-color: #10b981;
+      background: #52796f;
+      border-color: #52796f;
       color: white;
     }
 
@@ -564,7 +557,7 @@
     }
 
     .product-result-item:hover {
-      background: linear-gradient(135deg, #f0fdf4 0%, #ecfdf5 100%);
+      background: linear-gradient(135deg, #eef2f0 0%, #e8edeb 100%);
     }
 
     .product-result-item:last-child {
@@ -616,13 +609,13 @@
 
     .product-result-price {
       font-weight: 600;
-      color: #10b981;
+      color: #52796f;
       font-size: 0.9375rem;
       white-space: nowrap;
     }
 
     .product-result-add {
-      background: #10b981;
+      background: #52796f;
       color: white;
       border: none;
       border-radius: 6px;
@@ -693,7 +686,7 @@
 
     .line-item-qty:focus {
       outline: none;
-      border-color: #10b981;
+      border-color: #52796f;
       box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1);
     }
 
@@ -754,7 +747,7 @@
     }
 
     .totals-input-wrapper:focus-within {
-      border-color: #10b981;
+      border-color: #52796f;
       box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1);
     }
 
@@ -833,8 +826,8 @@
     }
 
     .quick-btn.active {
-      background: #10b981;
-      border-color: #10b981;
+      background: #52796f;
+      border-color: #52796f;
       color: white;
     }
 
@@ -952,7 +945,7 @@
     }
 
     .orders-table .profit-positive {
-      color: #10b981;
+      color: #52796f;
       font-weight: 500;
     }
 
@@ -1029,8 +1022,8 @@
     }
 
     .status-badge-sm.paid {
-      background: #d1fae5;
-      color: #065f46;
+      background: #d8e2dc;
+      color: #354f52;
     }
 
     .status-badge-sm.shipped {
@@ -1039,8 +1032,8 @@
     }
 
     .status-badge-sm.fulfilled {
-      background: #d1fae5;
-      color: #065f46;
+      background: #d8e2dc;
+      color: #354f52;
     }
 
     .status-badge-sm.canceled {
@@ -1085,13 +1078,13 @@
     }
 
     .shipping-rate-option:hover {
-      border-color: #10b981;
-      background: #f0fdf4;
+      border-color: #52796f;
+      background: #eef2f0;
     }
 
     .shipping-rate-option.selected {
-      border-color: #10b981;
-      background: #d1fae5;
+      border-color: #52796f;
+      background: #d8e2dc;
     }
 
     .shipping-rate-info {
@@ -1113,7 +1106,7 @@
 
     .shipping-rate-delivery {
       font-size: 0.6875rem;
-      color: #10b981;
+      color: #52796f;
     }
 
     .shipping-rate-price {
@@ -1158,64 +1151,196 @@
   </div>
 
   <div class="main-content">
-    <!-- Stats Grid -->
-    <div class="stats-grid">
-      <div class="stat-card">
-        <div class="icon"><i class="fa-solid fa-shopping-cart"></i></div>
-        <h3>Total Orders</h3>
-        <div class="number">{{ stats.total }}</div>
-      </div>
-      <div class="stat-card">
-        <div class="icon"><i class="fa-solid fa-clock"></i></div>
-        <h3>Pending</h3>
-        <div class="number">{{ stats.pending }}</div>
-      </div>
-      <div class="stat-card">
-        <div class="icon"><i class="fa-solid fa-truck"></i></div>
-        <h3>Shipped</h3>
-        <div class="number">{{ stats.shipped }}</div>
-      </div>
-      <div class="stat-card">
-        <div class="icon"><i class="fa-solid fa-dollar-sign"></i></div>
-        <h3>Revenue</h3>
-        <div class="number">${{ stats.total_revenue|floatformat:0 }}</div>
+    <!-- Stats Row 1 (4 cards) -->
+    <div class="stats-carousel stats-top">
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="icon"><i class="fa-solid fa-shopping-cart"></i></div>
+          <h3>Total Orders</h3>
+          <div class="number">{{ stats.total }}</div>
+        </div>
+        <div class="stat-card">
+          <div class="icon"><i class="fa-solid fa-dollar-sign"></i></div>
+          <h3>Revenue</h3>
+          <div class="number">${{ stats.total_revenue|floatformat:0 }}</div>
+        </div>
+        <div class="stat-card">
+          <div class="icon"><i class="fa-solid fa-receipt"></i></div>
+          <h3>Avg Order Value</h3>
+          <div class="number">${{ stats.aov|floatformat:2 }}</div>
+        </div>
+        <div class="stat-card">
+          <div class="icon"><i class="fa-solid fa-coins"></i></div>
+          <h3>Total Profit</h3>
+          <div class="number">${{ stats.total_profit|floatformat:0 }}</div>
+        </div>
       </div>
     </div>
 
-    <!-- Shipping Map -->
-    <div class="content-card" style="border-radius: 16px; padding: 1.5rem; box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06); margin-bottom: 2rem;">
-      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
-        <h2 style="font-size: 1.25rem; font-weight: 700; margin: 0;">
-          <i class="fa-solid fa-map-location-dot" style="color: #10b981; margin-right: 0.5rem;"></i>
-          Shipping Destinations
+    <!-- Shipping Map (Full Width) -->
+    <div class="content-card" style="border-radius: 12px; padding: 1rem; box-shadow: 0 1px 8px rgba(0, 0, 0, 0.05); background: white; margin-bottom: 1.5rem;">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
+        <h2 style="font-size: 0.875rem; font-weight: 600; margin: 0; color: #374151;">
+          <i class="fa-solid fa-map-location-dot" style="color: #52796f; margin-right: 0.375rem;"></i>
+          Destinations <span style="font-weight: 400; color: #94a3b8;">(<span id="map-order-count">0</span>)</span>
         </h2>
-        <div style="font-size: 0.875rem; color: #64748b;">
-          <span id="map-order-count">0</span> orders mapped
+        <div style="display: flex; align-items: center; gap: 1rem;">
+          {% if ready_to_ship %}
+          <button onclick="toggleShippingPanel()" id="shippingPanelBtn" style="padding: 0.5rem 1rem; font-size: 0.875rem; border: 1px solid #f59e0b; background: #fffbeb; color: #b45309; border-radius: 8px; cursor: pointer; font-weight: 600;">
+            <i class="fa-solid fa-truck-fast"></i> Ship ({{ ready_to_ship|length }})
+          </button>
+          {% endif %}
+          <div style="display: flex; background: #f1f5f9; border-radius: 8px; padding: 4px;">
+            <button class="map-region-btn" data-region="world" onclick="setMapRegion('world')" style="padding: 0.5rem 1rem; font-size: 0.875rem; border: none; background: transparent; color: #64748b; border-radius: 6px; cursor: pointer; font-weight: 500; transition: all 0.15s;">World</button>
+            <button class="map-region-btn active" data-region="us" onclick="setMapRegion('us')" style="padding: 0.5rem 1rem; font-size: 0.875rem; border: none; background: #52796f; color: white; border-radius: 6px; cursor: pointer; font-weight: 500; transition: all 0.15s; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">US</button>
+            <button class="map-region-btn" data-region="local" onclick="setMapRegion('local')" style="padding: 0.5rem 1rem; font-size: 0.875rem; border: none; background: transparent; color: #64748b; border-radius: 6px; cursor: pointer; font-weight: 500; transition: all 0.15s;">Local</button>
+          </div>
+          <div style="display: flex; background: #f1f5f9; border-radius: 8px; padding: 4px;">
+            <button class="map-filter-btn active" data-days="all" onclick="filterMap('all')" style="padding: 0.5rem 1rem; font-size: 0.875rem; border: none; background: #52796f; color: white; border-radius: 6px; cursor: pointer; font-weight: 500; transition: all 0.15s; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">All</button>
+            <button class="map-filter-btn" data-days="7" onclick="filterMap(7)" style="padding: 0.5rem 1rem; font-size: 0.875rem; border: none; background: transparent; color: #64748b; border-radius: 6px; cursor: pointer; font-weight: 500; transition: all 0.15s;">7d</button>
+            <button class="map-filter-btn" data-days="30" onclick="filterMap(30)" style="padding: 0.5rem 1rem; font-size: 0.875rem; border: none; background: transparent; color: #64748b; border-radius: 6px; cursor: pointer; font-weight: 500; transition: all 0.15s;">30d</button>
+          </div>
+          <select id="mapStyleSelect" onchange="setMapStyle(this.value)" style="padding: 0.5rem 0.75rem; font-size: 0.875rem; border: 1px solid #e2e8f0; background: white; border-radius: 6px; cursor: pointer; color: #374151; font-weight: 500;">
+            <option value="satellite">Satellite</option>
+            <option value="osm">Default</option>
+            <option value="dark">Dark</option>
+            <option value="gray">Gray</option>
+            <option value="topo">Topo</option>
+          </select>
         </div>
       </div>
-      <div id="orders-map" style="height: 400px; border-radius: 12px; background: #e2e8f0;"></div>
+      <div id="orders-map" style="height: 320px; border-radius: 8px; background: #f1f5f9;"></div>
+    </div>
+
+    <!-- Stats Row 2 (4 cards) -->
+    <div class="stats-carousel">
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="icon"><i class="fa-solid fa-percent"></i></div>
+          <h3>Profit Margin</h3>
+          <div class="number">{{ stats.profit_margin|floatformat:1 }}%</div>
+        </div>
+        <div class="stat-card">
+          <div class="icon"><i class="fa-solid fa-calendar"></i></div>
+          <h3>This Month</h3>
+          <div class="number">{{ stats.orders_this_month }}</div>
+          {% if stats.month_over_month_orders %}
+          <div style="font-size: 0.75rem; margin-top: 0.25rem; {% if stats.month_over_month_orders > 0 %}color: #52796f;{% else %}color: #ef4444;{% endif %}">
+            {% if stats.month_over_month_orders > 0 %}+{% endif %}{{ stats.month_over_month_orders|floatformat:0 }}% vs last
+          </div>
+          {% endif %}
+        </div>
+        <div class="stat-card">
+          <div class="icon"><i class="fa-solid fa-clock"></i></div>
+          <h3>Pending</h3>
+          <div class="number">{{ stats.pending }}</div>
+        </div>
+        <div class="stat-card">
+          <div class="icon"><i class="fa-solid fa-truck"></i></div>
+          <h3>Shipped</h3>
+          <div class="number">{{ stats.shipped }}</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Needs Shipping Panel (hidden by default) -->
+    <div id="shippingPanel" style="display: none; margin-bottom: 2rem;">
+      <div class="content-card" style="border-radius: 16px; padding: 1.25rem; box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06); border: 2px solid #fde68a;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+          <h3 style="font-size: 1rem; font-weight: 700; margin: 0; color: #92400e;">
+            <i class="fa-solid fa-truck-fast" style="margin-right: 0.5rem;"></i>
+            Needs Shipping
+          </h3>
+          <button onclick="toggleShippingPanel()" style="padding: 0.25rem 0.5rem; font-size: 0.75rem; border: none; background: transparent; color: #64748b; cursor: pointer;">
+            <i class="fa-solid fa-times"></i> Close
+          </button>
+        </div>
+        {% if ready_to_ship %}
+        <table style="width: 100%; border-collapse: collapse;">
+          <thead>
+            <tr style="border-bottom: 1px solid #fde68a;">
+              <th style="text-align: left; padding: 0.5rem 0; font-size: 0.7rem; font-weight: 600; color: #92400e; text-transform: uppercase;">Order</th>
+              <th style="text-align: left; padding: 0.5rem 0; font-size: 0.7rem; font-weight: 600; color: #92400e; text-transform: uppercase;">Items</th>
+              <th style="text-align: right; padding: 0.5rem 0; font-size: 0.7rem; font-weight: 600; color: #92400e; text-transform: uppercase;">Total</th>
+              <th style="text-align: right; padding: 0.5rem 0; font-size: 0.7rem; font-weight: 600; color: #92400e; text-transform: uppercase;">Wait</th>
+              <th style="width: 70px;"></th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for order in ready_to_ship %}
+            <tr style="border-bottom: 1px solid #fef3c7;">
+              <td style="padding: 0.625rem 0.5rem 0.625rem 0;">
+                <div style="font-weight: 600; color: #0f172a; font-size: 0.8125rem;">{{ order.order_number }}</div>
+                <div style="font-size: 0.7rem; color: #64748b;">{{ order.customer|truncatechars:18 }}{% if order.state %} · {{ order.state }}{% endif %}</div>
+              </td>
+              <td style="padding: 0.625rem 0.5rem;">
+                <div style="display: flex; flex-wrap: wrap; gap: 0.25rem;">
+                  {% for item in order.items|slice:":2" %}
+                  <span style="background: #fef3c7; padding: 0.125rem 0.375rem; border-radius: 3px; font-size: 0.7rem; color: #92400e;">{{ item.qty }}× {{ item.name|truncatechars:12 }}</span>
+                  {% endfor %}
+                  {% if order.item_count > 2 %}<span style="font-size: 0.7rem; color: #b45309;">+{{ order.item_count|add:"-2" }}</span>{% endif %}
+                </div>
+              </td>
+              <td style="padding: 0.625rem 0.5rem; text-align: right; font-weight: 600; color: #0f172a; font-size: 0.8125rem;">${{ order.total|floatformat:0 }}</td>
+              <td style="padding: 0.625rem 0.5rem; text-align: right;">
+                <span style="font-size: 0.7rem; font-weight: 600; {% if order.priority == 'urgent' %}color: #dc2626;{% elif order.priority == 'high' %}color: #d97706;{% else %}color: #64748b;{% endif %}">{{ order.time_display }}</span>
+              </td>
+              <td style="padding: 0.625rem 0 0.625rem 0.5rem; text-align: right;">
+                <button onclick="generateLabel({{ order.id }})" style="padding: 0.3rem 0.5rem; background: #52796f; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 0.7rem; font-weight: 500;">
+                  <i class="fa-solid fa-tag"></i> Ship
+                </button>
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+        {% endif %}
+      </div>
     </div>
 
     <!-- Orders List -->
-    <div class="content-card" style="border-radius: 16px; padding: 2rem; box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);">
-      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
-        <h2 style="font-size: 1.5rem; font-weight: 700; margin: 0;">All Orders ({{ orders|length }})</h2>
-        {% if test_orders_count > 0 %}
-        <div style="display: flex; align-items: center; gap: 0.75rem;">
-          <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer; font-size: 0.875rem; color: #64748b;">
-            <input type="checkbox" id="showTestOrders" {% if show_test_orders %}checked{% endif %} onchange="toggleTestOrders(this.checked)" style="width: 16px; height: 16px; accent-color: #f59e0b; cursor: pointer;">
-            Show test orders ({{ test_orders_count }})
-          </label>
-          <a href="{% url 'admin_test_center' %}" style="font-size: 0.875rem; color: #f59e0b; text-decoration: none; font-weight: 500;">
-            <i class="fa-solid fa-flask"></i> Test Center
-          </a>
+    <div class="content-card" style="border-radius: 12px; padding: 1rem 1.25rem; box-shadow: 0 1px 8px rgba(0, 0, 0, 0.05); background: white;">
+      <!-- Search and Filter Controls -->
+      <div style="display: flex; gap: 0.75rem; margin-bottom: 1rem; flex-wrap: wrap; align-items: center;">
+        <div style="flex: 1; min-width: 180px; position: relative;">
+          <i class="fa-solid fa-search" style="position: absolute; left: 0.75rem; top: 50%; transform: translateY(-50%); color: #94a3b8; font-size: 0.75rem;"></i>
+          <input type="text" id="orderSearch" placeholder="Search orders..."
+            style="width: 100%; padding: 0.5rem 0.75rem 0.5rem 2rem; border: 1px solid #e2e8f0; border-radius: 6px; font-size: 0.8125rem;"
+            oninput="filterOrders()">
         </div>
+        <select id="statusFilter" onchange="filterOrders()" style="padding: 0.5rem 0.625rem; border: 1px solid #e2e8f0; border-radius: 6px; font-size: 0.8125rem;">
+          <option value="">All Statuses</option>
+          <option value="CREATED">Created</option>
+          <option value="AWAITING_PAYMENT">Awaiting</option>
+          <option value="PAID">Paid</option>
+          <option value="SHIPPED">Shipped</option>
+          <option value="FULFILLED">Fulfilled</option>
+          <option value="CANCELED">Canceled</option>
+          <option value="REFUNDED">Refunded</option>
+        </select>
+        <select id="sortBy" onchange="sortOrders()" style="padding: 0.5rem 0.625rem; border: 1px solid #e2e8f0; border-radius: 6px; font-size: 0.8125rem;">
+          <option value="date-desc">Newest</option>
+          <option value="date-asc">Oldest</option>
+          <option value="total-desc">High $</option>
+          <option value="total-asc">Low $</option>
+          <option value="profit-desc">Profit</option>
+        </select>
+        <span style="color: #94a3b8; font-size: 0.75rem;"><span id="visibleOrderCount">{{ orders|length }}</span> orders</span>
+        {% if test_orders_count > 0 %}
+        <label style="display: flex; align-items: center; gap: 0.375rem; cursor: pointer; font-size: 0.75rem; color: #64748b;">
+          <input type="checkbox" id="showTestOrders" {% if show_test_orders %}checked{% endif %} onchange="toggleTestOrders(this.checked)" style="width: 14px; height: 14px; accent-color: #f59e0b; cursor: pointer;">
+          Test ({{ test_orders_count }})
+        </label>
         {% endif %}
+        <button onclick="exportOrdersCSV()" style="padding: 0.375rem 0.625rem; font-size: 0.75rem; border: 1px solid #e2e8f0; background: white; border-radius: 6px; cursor: pointer; color: #64748b;">
+          <i class="fa-solid fa-download"></i> CSV
+        </button>
       </div>
 
       {% if orders %}
-        <table class="orders-table">
-          <thead>
+        <div style="max-height: 380px; overflow-y: auto; border: 1px solid #e2e8f0; border-radius: 8px;">
+        <table class="orders-table" style="margin: 0;">
+          <thead style="position: sticky; top: 0; background: #f8fafc; z-index: 1;">
             <tr>
               <th>Order</th>
               <th>Customer</th>
@@ -1258,7 +1383,7 @@
               <td class="amount-cell">${{ order.total|floatformat:2 }}</td>
               <td>
                 {% if order.discount and order.discount > 0 %}
-                <span style="color: #10b981; font-weight: 500;">-${{ order.discount|floatformat:2 }}</span>
+                <span style="color: #52796f; font-weight: 500;">-${{ order.discount|floatformat:2 }}</span>
                 {% if order.discount_code %}
                 <div style="font-size: 0.65rem; color: #64748b;">{{ order.discount_code }}</div>
                 {% endif %}
@@ -1294,7 +1419,7 @@
               <td>
                 {% if order.tracking_number %}
                 <div style="display: flex; align-items: center; gap: 0.5rem;" onclick="event.stopPropagation();">
-                  <a href="#" onclick="showTrackingDetails('{{ order.tracking_number }}', '{{ order.carrier }}', '{{ order.label_url|default:"" }}')" style="color: #10b981; text-decoration: none; font-size: 0.75rem;">
+                  <a href="#" onclick="showTrackingDetails('{{ order.tracking_number }}', '{{ order.carrier }}', '{{ order.label_url|default:"" }}')" style="color: #52796f; text-decoration: none; font-size: 0.75rem;">
                     <i class="fa-solid fa-check-circle"></i> {{ order.carrier }}
                   </a>
                   <button class="btn-icon" onclick="generateLabel({{ order.id }})" title="Regenerate Label" style="font-size: 0.7rem; padding: 0.2rem 0.4rem;">
@@ -1350,12 +1475,42 @@
             {% endfor %}
           </tbody>
         </table>
+        </div>
       {% else %}
         <div style="text-align: center; padding: 4rem 2rem; color: #64748b;">
           <i class="fa-solid fa-shopping-cart" style="font-size: 4rem; opacity: 0.3; margin-bottom: 1rem;"></i>
           <p>No customer orders yet.</p>
         </div>
       {% endif %}
+    </div>
+
+    <!-- Revenue & Orders Chart -->
+    <div class="content-card" style="border-radius: 12px; padding: 1rem; box-shadow: 0 1px 8px rgba(0, 0, 0, 0.05); background: white; margin-top: 1.5rem;">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
+        <h2 style="font-size: 0.875rem; font-weight: 600; margin: 0; color: #374151;">
+          <i class="fa-solid fa-chart-line" style="color: #52796f; margin-right: 0.375rem;"></i>
+          Revenue & Orders
+        </h2>
+        <div style="display: flex; align-items: center; gap: 1rem;">
+          <div style="display: flex; background: #f1f5f9; border-radius: 8px; padding: 4px;">
+            <button class="chart-filter-btn" data-days="7" onclick="filterChart(7)" style="padding: 0.5rem 1rem; font-size: 0.875rem; border: none; background: transparent; color: #64748b; border-radius: 6px; cursor: pointer; font-weight: 500; transition: all 0.15s;">7d</button>
+            <button class="chart-filter-btn active" data-days="30" onclick="filterChart(30)" style="padding: 0.5rem 1rem; font-size: 0.875rem; border: none; background: #52796f; color: white; border-radius: 6px; cursor: pointer; font-weight: 500; transition: all 0.15s; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">30d</button>
+            <button class="chart-filter-btn" data-days="90" onclick="filterChart(90)" style="padding: 0.5rem 1rem; font-size: 0.875rem; border: none; background: transparent; color: #64748b; border-radius: 6px; cursor: pointer; font-weight: 500; transition: all 0.15s;">90d</button>
+          </div>
+          <div style="display: flex; gap: 0.5rem; font-size: 0.875rem;">
+            <button onclick="toggleChartDataset(0)" id="legendRevenue" style="display: flex; align-items: center; gap: 0.375rem; color: #94a3b8; font-weight: 500; background: none; border: none; cursor: pointer; padding: 0.25rem 0.5rem; border-radius: 4px; opacity: 0.5; transition: all 0.15s;"><span style="display: inline-block; width: 14px; height: 3px; background: #52796f; border-radius: 2px;"></span>Revenue</button>
+            <button onclick="toggleChartDataset(1)" id="legendOrders" style="display: flex; align-items: center; gap: 0.375rem; color: #6366f1; font-weight: 500; background: #eef2ff; border: none; cursor: pointer; padding: 0.25rem 0.5rem; border-radius: 4px; transition: all 0.15s;"><span style="display: inline-block; width: 14px; height: 3px; background: #6366f1; border-radius: 2px;"></span>Orders</button>
+          </div>
+        </div>
+      </div>
+      <div style="display: flex; gap: 1.5rem; margin-bottom: 0.5rem; font-size: 0.875rem; color: #64748b;">
+        <span><strong style="color: #52796f; font-size: 1.125rem;" id="summaryRevenue">$0</strong> revenue</span>
+        <span><strong style="color: #6366f1; font-size: 1.125rem;" id="summaryOrders">0</strong> orders</span>
+        <span><strong style="color: #0f172a;" id="summaryAvg">$0</strong>/day avg</span>
+      </div>
+      <div style="height: 280px; position: relative;">
+        <canvas id="revenueChart"></canvas>
+      </div>
     </div>
   </div>
 
@@ -1447,7 +1602,7 @@
       <input type="hidden" id="ratesOrderId">
 
       <div style="display: flex; gap: 1rem; margin-top: 1.5rem;">
-        <button type="button" id="purchaseLabelBtn" class="btn" onclick="purchaseSelectedRate()" disabled style="flex: 1; background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white; box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);">
+        <button type="button" id="purchaseLabelBtn" class="btn" onclick="purchaseSelectedRate()" disabled style="flex: 1; background: linear-gradient(135deg, #52796f 0%, #3a5a52 100%); color: white; box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);">
           <i class="fa-solid fa-tag"></i> Purchase Label
         </button>
         <button type="button" class="btn btn-secondary" onclick="closeShippingRatesModal()">
@@ -1549,9 +1704,9 @@
 
         // Tracking info below address
         if (order.tracking_number) {
-          html += '<div style="margin-top: 0.75rem; background: #ecfdf5; border: 1px solid #a7f3d0; border-radius: 8px; padding: 0.625rem 0.875rem;">';
-          html += `<div style="font-size: 0.7rem; text-transform: uppercase; color: #059669; font-weight: 600; margin-bottom: 0.25rem;"><i class="fa-solid fa-truck"></i> Tracking</div>`;
-          html += `<div style="font-size: 0.875rem; color: #065f46;">${order.carrier}: ${order.tracking_number}</div>`;
+          html += '<div style="margin-top: 0.75rem; background: #e8edeb; border: 1px solid #a8bdb6; border-radius: 8px; padding: 0.625rem 0.875rem;">';
+          html += `<div style="font-size: 0.7rem; text-transform: uppercase; color: #3a5a52; font-weight: 600; margin-bottom: 0.25rem;"><i class="fa-solid fa-truck"></i> Tracking</div>`;
+          html += `<div style="font-size: 0.875rem; color: #354f52;">${order.carrier}: ${order.tracking_number}</div>`;
           html += '</div>';
         }
         html += '</div>';
@@ -1568,7 +1723,7 @@
         }
         html += `<div style="display: flex; justify-content: space-between; margin-bottom: 0.375rem;"><span style="color: #64748b;">Subtotal</span><span>$${parseFloat(order.subtotal || 0).toFixed(2)}</span></div>`;
         if (order.discount && parseFloat(order.discount) > 0) {
-          html += `<div style="display: flex; justify-content: space-between; margin-bottom: 0.375rem;"><span style="color: #64748b;">Discount${order.discount_code ? ' (' + order.discount_code + ')' : ''}</span><span style="color: #10b981;">-$${parseFloat(order.discount).toFixed(2)}</span></div>`;
+          html += `<div style="display: flex; justify-content: space-between; margin-bottom: 0.375rem;"><span style="color: #64748b;">Discount${order.discount_code ? ' (' + order.discount_code + ')' : ''}</span><span style="color: #52796f;">-$${parseFloat(order.discount).toFixed(2)}</span></div>`;
         }
         html += `<div style="display: flex; justify-content: space-between; margin-bottom: 0.375rem;"><span style="color: #64748b;">Tax</span><span>$${parseFloat(order.tax || 0).toFixed(2)}</span></div>`;
         html += `<div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;"><span style="color: #64748b;">Shipping</span><span>$${parseFloat(order.shipping || 0).toFixed(2)}</span></div>`;
@@ -2366,7 +2521,7 @@
       if (browseMode) {
         // Just flash the button to indicate item was added
         const btn = document.getElementById('browseProductsBtn');
-        btn.style.background = '#059669';
+        btn.style.background = '#3a5a52';
         setTimeout(() => { btn.style.background = ''; }, 200);
       } else {
         document.getElementById('productSearchInput').value = '';
@@ -3078,7 +3233,8 @@
           zip: "{{ order.shipping_zip|escapejs }}",
           lat: {{ order.shipping_lat|default:"null" }},
           lng: {{ order.shipping_lng|default:"null" }},
-          customer: "{{ order.customer_name|default:'Customer'|escapejs }}"
+          customer: "{{ order.customer_name|default:'Customer'|escapejs }}",
+          created_at: "{{ order.created_at }}"
         },{% endif %}{% endfor %}
       ]
     };
@@ -3217,19 +3373,31 @@
 
       const data = orderMapData;
 
-      // Initialize map centered on US
-      const map = L.map('orders-map').setView([39.8283, -98.5795], 4);
+      // Initialize map centered on US (zoomed out more)
+      const map = L.map('orders-map').setView([39.8283, -98.5795], 3);
 
-      // Add OpenStreetMap tiles
-      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      // Tile layer providers
+      window.mapTileProviders = {
+        osm: { url: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', attr: '© OpenStreetMap' },
+        positron: { url: 'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', attr: '© CartoDB' },
+        dark: { url: 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', attr: '© CartoDB' },
+        voyager: { url: 'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', attr: '© CartoDB' },
+        esri: { url: 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}', attr: '© Esri' },
+        satellite: { url: 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', attr: '© Esri' },
+        topo: { url: 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer/tile/{z}/{y}/{x}', attr: '© Esri' },
+        gray: { url: 'https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Light_Gray_Base/MapServer/tile/{z}/{y}/{x}', attr: '© Esri' }
+      };
+
+      // Add default tile layer (satellite)
+      window.currentTileLayer = L.tileLayer(window.mapTileProviders.satellite.url, {
         maxZoom: 19,
-        attribution: '© OpenStreetMap'
+        attribution: window.mapTileProviders.satellite.attr
       }).addTo(map);
 
       // Custom icons
       const warehouseIcon = L.divIcon({
         className: 'warehouse-marker',
-        html: '<div style="background:#10b981;color:white;width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:14px;box-shadow:0 2px 8px rgba(0,0,0,0.3);border:3px solid white;"><i class="fa-solid fa-warehouse"></i></div>',
+        html: '<div style="background:#52796f;color:white;width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:14px;box-shadow:0 2px 8px rgba(0,0,0,0.3);border:3px solid white;"><i class="fa-solid fa-warehouse"></i></div>',
         iconSize: [32, 32],
         iconAnchor: [16, 16]
       });
@@ -3258,22 +3426,48 @@
         .addTo(map)
         .bindPopup('<strong>Warehouse</strong><br>' + data.warehouse.city + ', ' + data.warehouse.state);
 
+      // Store map state globally for filtering
+      window.ordersMap = map;
+      window.ordersMapData = data;
+      window.warehouseCoords = warehouseCoords;
+      window.warehouseIcon = warehouseIcon;
+      window.orderIcon = orderIcon;
+      window.orderMarkers = L.layerGroup().addTo(map);
+
+      // Render orders with optional date filter
+      await renderOrderMarkers('all');
+    }
+
+    async function renderOrderMarkers(filterDays) {
+      const map = window.ordersMap;
+      const data = window.ordersMapData;
+      const warehouseCoords = window.warehouseCoords;
+      const orderIcon = window.orderIcon;
+      const orderMarkers = window.orderMarkers;
+
+      if (!map || !data) return;
+
+      // Clear existing order markers
+      orderMarkers.clearLayers();
+
+      // Filter orders by date
+      let filteredOrders = data.orders;
+      if (filterDays !== 'all') {
+        const cutoffDate = new Date();
+        cutoffDate.setDate(cutoffDate.getDate() - filterDays);
+        filteredOrders = data.orders.filter(order => {
+          const orderDate = new Date(order.created_at);
+          return orderDate >= cutoffDate;
+        });
+      }
+
       // Track mapped orders
       let mappedCount = 0;
       const bounds = L.latLngBounds([warehouseCoords]);
-      let needsApiCall = 0;
-
-      // Count how many need API calls (not in cache)
-      for (const order of data.orders) {
-        const cacheKey = `${order.city}|${order.state}|${order.zip}`.toLowerCase();
-        if (!geocodeCache[cacheKey] && !getQuickCoordinates(order.city, order.state, order.zip)) {
-          needsApiCall++;
-        }
-      }
 
       // Process orders - use stored coordinates when available, geocode as fallback
       let apiCallsMade = 0;
-      for (const order of data.orders) {
+      for (const order of filteredOrders) {
         let coords = null;
 
         // Use stored coordinates if available (most accurate)
@@ -3294,18 +3488,19 @@
         }
 
         if (coords) {
-          // Add marker
-          L.marker(coords, { icon: orderIcon })
-            .addTo(map)
+          // Add marker to layer group
+          const marker = L.marker(coords, { icon: orderIcon })
             .bindPopup('<strong>' + order.id + '</strong><br>' + order.customer + '<br>' + order.city + ', ' + order.state);
+          orderMarkers.addLayer(marker);
 
           // Draw line from warehouse
-          L.polyline([warehouseCoords, coords], {
-            color: '#10b981',
+          const line = L.polyline([warehouseCoords, coords], {
+            color: '#52796f',
             weight: 1.5,
             opacity: 0.4,
             dashArray: '5, 5'
-          }).addTo(map);
+          });
+          orderMarkers.addLayer(line);
 
           bounds.extend(coords);
           mappedCount++;
@@ -3321,8 +3516,407 @@
       }
     }
 
+    function filterMap(days) {
+      // Update button styles
+      document.querySelectorAll('.map-filter-btn').forEach(btn => {
+        const btnDays = btn.dataset.days;
+        if (btnDays === String(days)) {
+          btn.style.background = '#52796f';
+          btn.style.color = 'white';
+          btn.style.boxShadow = '0 1px 3px rgba(0,0,0,0.1)';
+        } else {
+          btn.style.background = 'transparent';
+          btn.style.color = '#64748b';
+          btn.style.boxShadow = 'none';
+        }
+      });
+
+      // Re-render markers with filter
+      renderOrderMarkers(days);
+    }
+
+    // Set map region (World, US, Local)
+    function setMapRegion(region) {
+      const map = window.ordersMap;
+      const warehouseCoords = window.warehouseCoords;
+      if (!map) return;
+
+      // Update button styles
+      document.querySelectorAll('.map-region-btn').forEach(btn => {
+        const btnRegion = btn.dataset.region;
+        if (btnRegion === region) {
+          btn.style.background = '#52796f';
+          btn.style.color = 'white';
+          btn.style.boxShadow = '0 1px 3px rgba(0,0,0,0.1)';
+        } else {
+          btn.style.background = 'transparent';
+          btn.style.color = '#64748b';
+          btn.style.boxShadow = 'none';
+        }
+      });
+
+      // Set view based on region
+      if (region === 'world') {
+        map.setView([30, 0], 1);
+      } else if (region === 'us') {
+        map.setView([38, -96], 4);
+      } else if (region === 'local' && warehouseCoords) {
+        map.setView(warehouseCoords, 11);
+      }
+    }
+
+    // Switch map tile style
+    function setMapStyle(style) {
+      const map = window.ordersMap;
+      if (!map || !window.mapTileProviders[style]) return;
+
+      // Remove current tile layer
+      if (window.currentTileLayer) {
+        map.removeLayer(window.currentTileLayer);
+      }
+
+      // Add new tile layer
+      const provider = window.mapTileProviders[style];
+      window.currentTileLayer = L.tileLayer(provider.url, {
+        maxZoom: 19,
+        attribution: provider.attr
+      }).addTo(map);
+    }
+
     // Initialize map when DOM is ready
-    document.addEventListener('DOMContentLoaded', initOrdersMap);
+    document.addEventListener('DOMContentLoaded', function() {
+      initOrdersMap();
+      // Ensure dropdown matches default satellite style
+      document.getElementById('mapStyleSelect').value = 'satellite';
+    });
+  </script>
+
+  <!-- Revenue Chart and Table Functions -->
+  <script>
+    // Chart Data from backend (90 days)
+    const allChartData = {{ chart_data|safe }};
+    let revenueChart = null;
+    let currentChartDays = 30;
+
+    // Initialize Revenue Chart
+    document.addEventListener('DOMContentLoaded', function() {
+      initChart(30);
+    });
+
+    function initChart(days) {
+      const ctx = document.getElementById('revenueChart');
+      if (!ctx || !allChartData || allChartData.length === 0) return;
+
+      // Filter data to last N days
+      const filteredData = allChartData.slice(-days);
+
+      const labels = filteredData.map(d => {
+        const date = new Date(d.date);
+        return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+      });
+      const revenueData = filteredData.map(d => d.revenue);
+      const ordersData = filteredData.map(d => d.orders);
+
+      // Calculate summary
+      const totalOrders = ordersData.reduce((a, b) => a + b, 0);
+      const totalRevenue = revenueData.reduce((a, b) => a + b, 0);
+      const avgPerDay = totalRevenue / days;
+
+      document.getElementById('summaryOrders').textContent = totalOrders;
+      document.getElementById('summaryRevenue').textContent = '$' + totalRevenue.toLocaleString('en-US', {minimumFractionDigits: 0, maximumFractionDigits: 0});
+      document.getElementById('summaryAvg').textContent = '$' + avgPerDay.toLocaleString('en-US', {minimumFractionDigits: 0, maximumFractionDigits: 0});
+
+      // Destroy existing chart if exists
+      if (revenueChart) {
+        revenueChart.destroy();
+      }
+
+      revenueChart = new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels: labels,
+          datasets: [
+            {
+              label: 'Revenue',
+              data: revenueData,
+              borderColor: '#52796f',
+              backgroundColor: 'rgba(82, 121, 111, 0.1)',
+              fill: true,
+              tension: 0.3,
+              yAxisID: 'y',
+              hidden: true,
+            },
+            {
+              label: 'Orders',
+              data: ordersData,
+              borderColor: '#6366f1',
+              backgroundColor: 'rgba(99, 102, 241, 0.15)',
+              fill: true,
+              tension: 0.3,
+              yAxisID: 'y1',
+            }
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          interaction: {
+            mode: 'index',
+            intersect: false,
+          },
+          plugins: {
+            legend: { display: false },
+            tooltip: {
+              backgroundColor: 'rgba(15, 23, 42, 0.9)',
+              titleColor: 'white',
+              bodyColor: 'white',
+              padding: 12,
+              cornerRadius: 8,
+              callbacks: {
+                label: function(context) {
+                  if (context.dataset.label === 'Revenue') {
+                    return 'Revenue: $' + context.raw.toFixed(2);
+                  }
+                  return 'Orders: ' + context.raw;
+                }
+              }
+            }
+          },
+          scales: {
+            x: {
+              grid: { display: false },
+              ticks: { maxTicksLimit: days <= 7 ? 7 : 10, color: '#94a3b8' }
+            },
+            y: {
+              type: 'linear',
+              display: true,
+              position: 'left',
+              grid: { color: 'rgba(226, 232, 240, 0.5)' },
+              ticks: {
+                color: '#52796f',
+                callback: function(value) { return '$' + value; }
+              }
+            },
+            y1: {
+              type: 'linear',
+              display: true,
+              position: 'right',
+              grid: { drawOnChartArea: false },
+              ticks: {
+                color: '#6366f1',
+                stepSize: 1
+              }
+            }
+          }
+        }
+      });
+    }
+
+    // Toggle chart dataset visibility
+    function toggleChartDataset(index) {
+      if (!revenueChart) return;
+
+      const meta = revenueChart.getDatasetMeta(index);
+      meta.hidden = !meta.hidden;
+      revenueChart.update();
+
+      // Update legend button styles
+      const legendRevenue = document.getElementById('legendRevenue');
+      const legendOrders = document.getElementById('legendOrders');
+
+      const revenueMeta = revenueChart.getDatasetMeta(0);
+      const ordersMeta = revenueChart.getDatasetMeta(1);
+
+      if (revenueMeta.hidden) {
+        legendRevenue.style.opacity = '0.5';
+        legendRevenue.style.color = '#94a3b8';
+        legendRevenue.style.background = 'none';
+      } else {
+        legendRevenue.style.opacity = '1';
+        legendRevenue.style.color = '#52796f';
+        legendRevenue.style.background = '#e8edeb';
+      }
+
+      if (ordersMeta.hidden) {
+        legendOrders.style.opacity = '0.5';
+        legendOrders.style.color = '#94a3b8';
+        legendOrders.style.background = 'none';
+      } else {
+        legendOrders.style.opacity = '1';
+        legendOrders.style.color = '#6366f1';
+        legendOrders.style.background = '#eef2ff';
+      }
+    }
+
+    function filterChart(days) {
+      currentChartDays = days;
+
+      // Update button styles
+      document.querySelectorAll('.chart-filter-btn').forEach(btn => {
+        const btnDays = parseInt(btn.dataset.days);
+        if (btnDays === days) {
+          btn.style.background = '#52796f';
+          btn.style.color = 'white';
+          btn.style.boxShadow = '0 1px 3px rgba(0,0,0,0.1)';
+        } else {
+          btn.style.background = 'transparent';
+          btn.style.color = '#64748b';
+          btn.style.boxShadow = 'none';
+        }
+      });
+
+      // Re-render chart with new filter
+      initChart(days);
+    }
+
+    // Toggle shipping panel visibility
+    function toggleShippingPanel() {
+      const panel = document.getElementById('shippingPanel');
+      const btn = document.getElementById('shippingPanelBtn');
+      if (panel.style.display === 'none') {
+        panel.style.display = 'block';
+        if (btn) {
+          btn.style.background = '#f59e0b';
+          btn.style.color = 'white';
+          btn.style.borderColor = '#f59e0b';
+        }
+      } else {
+        panel.style.display = 'none';
+        if (btn) {
+          btn.style.background = '#fffbeb';
+          btn.style.color = '#b45309';
+          btn.style.borderColor = '#f59e0b';
+        }
+      }
+    }
+
+    // ============================================
+    // TABLE SEARCH, FILTER, SORT, EXPORT
+    // ============================================
+
+    // Store original order of rows for reset
+    const orderRows = document.querySelectorAll('.order-row');
+    const ordersTableBody = document.querySelector('.orders-table tbody');
+
+    function filterOrders() {
+      const searchTerm = document.getElementById('orderSearch').value.toLowerCase();
+      const statusFilter = document.getElementById('statusFilter').value;
+      let visibleCount = 0;
+
+      orderRows.forEach(row => {
+        const detailsRow = document.getElementById('order-details-row-' + row.dataset.orderId);
+        const text = row.innerText.toLowerCase();
+        const status = row.querySelector('.status-badge-sm')?.innerText.toUpperCase().replace(' ', '_') || '';
+
+        const matchesSearch = !searchTerm || text.includes(searchTerm);
+        const matchesStatus = !statusFilter || status === statusFilter;
+
+        if (matchesSearch && matchesStatus) {
+          row.style.display = '';
+          visibleCount++;
+        } else {
+          row.style.display = 'none';
+          if (detailsRow) detailsRow.style.display = 'none';
+        }
+      });
+
+      document.getElementById('visibleOrderCount').textContent = visibleCount;
+    }
+
+    function sortOrders() {
+      const sortBy = document.getElementById('sortBy').value;
+      const rows = Array.from(orderRows);
+
+      rows.sort((a, b) => {
+        if (sortBy === 'date-desc' || sortBy === 'date-asc') {
+          const dateA = new Date(a.querySelector('td:nth-child(7)')?.innerText || 0);
+          const dateB = new Date(b.querySelector('td:nth-child(7)')?.innerText || 0);
+          return sortBy === 'date-desc' ? dateB - dateA : dateA - dateB;
+        }
+        if (sortBy === 'total-desc' || sortBy === 'total-asc') {
+          const totalA = parseFloat(a.querySelector('.amount-cell')?.innerText.replace(/[$,]/g, '') || 0);
+          const totalB = parseFloat(b.querySelector('.amount-cell')?.innerText.replace(/[$,]/g, '') || 0);
+          return sortBy === 'total-desc' ? totalB - totalA : totalA - totalB;
+        }
+        if (sortBy === 'profit-desc') {
+          const profitA = parseFloat(a.querySelector('.profit-positive, .profit-negative')?.innerText.replace(/[$,]/g, '') || 0);
+          const profitB = parseFloat(b.querySelector('.profit-positive, .profit-negative')?.innerText.replace(/[$,]/g, '') || 0);
+          return profitB - profitA;
+        }
+        return 0;
+      });
+
+      // Re-append rows in new order
+      rows.forEach(row => {
+        const detailsRow = document.getElementById('order-details-row-' + row.dataset.orderId);
+        ordersTableBody.appendChild(row);
+        if (detailsRow) ordersTableBody.appendChild(detailsRow);
+      });
+    }
+
+    function exportOrdersCSV() {
+      const orders = {{ orders_json|safe }};
+      if (!orders || orders.length === 0) {
+        alert('No orders to export');
+        return;
+      }
+
+      // CSV headers
+      const headers = [
+        'Order Number', 'Date', 'Customer Name', 'Email', 'Phone',
+        'Status', 'Subtotal', 'Discount', 'Discount Code', 'Tax',
+        'Shipping', 'Total', 'Profit', 'City', 'State', 'Carrier', 'Tracking'
+      ];
+
+      // Build CSV content
+      let csv = headers.join(',') + '\n';
+
+      orders.forEach(order => {
+        const row = [
+          order.order_number || '',
+          order.created_at ? new Date(order.created_at).toLocaleDateString() : '',
+          `"${(order.customer_name || '').replace(/"/g, '""')}"`,
+          order.customer_email || '',
+          order.customer_phone || '',
+          order.status || '',
+          order.subtotal || 0,
+          order.discount || 0,
+          order.discount_code || '',
+          order.tax || 0,
+          order.shipping || 0,
+          order.total || 0,
+          order.profit !== null ? order.profit.toFixed(2) : '',
+          order.shipping_city || '',
+          order.shipping_state || '',
+          order.carrier || '',
+          order.tracking_number || ''
+        ];
+        csv += row.join(',') + '\n';
+      });
+
+      // Download
+      const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+      const link = document.createElement('a');
+      const url = URL.createObjectURL(blob);
+      link.setAttribute('href', url);
+      link.setAttribute('download', `orders_export_${new Date().toISOString().split('T')[0]}.csv`);
+      link.style.visibility = 'hidden';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    }
+
+    function showTrackingDetails(tracking, carrier, labelUrl) {
+      let message = `Carrier: ${carrier}\nTracking: ${tracking}`;
+      if (labelUrl) {
+        message += '\n\nOpen shipping label?';
+        if (confirm(message)) {
+          window.open(labelUrl, '_blank');
+        }
+      } else {
+        alert(message);
+      }
+    }
   </script>
 </body>
 </html>

@@ -717,6 +717,11 @@ def warehouse_settings(request):
     site_settings = SiteSettings.load()
 
     if request.method == "POST":
+        # Track if address changed for geocoding
+        old_city = site_settings.warehouse_city
+        old_state = site_settings.warehouse_state
+        old_zip = site_settings.warehouse_zip
+
         # Update warehouse address fields
         site_settings.warehouse_name = request.POST.get("warehouse_name", "").strip()
         site_settings.warehouse_street1 = request.POST.get("warehouse_street1", "").strip()
@@ -737,7 +742,24 @@ def warehouse_settings(request):
             pass
 
         site_settings.save()
-        messages.success(request, "Warehouse settings saved successfully!")
+
+        # Auto-geocode warehouse if address changed
+        address_changed = (
+            old_city != site_settings.warehouse_city or
+            old_state != site_settings.warehouse_state or
+            old_zip != site_settings.warehouse_zip
+        )
+        if address_changed and site_settings.warehouse_city and site_settings.warehouse_state:
+            try:
+                coords = site_settings.geocode_warehouse()
+                if coords:
+                    messages.success(request, f"Warehouse settings saved and location geocoded!")
+                else:
+                    messages.warning(request, "Warehouse settings saved, but geocoding failed. Map may not show accurate location.")
+            except Exception as e:
+                messages.warning(request, f"Warehouse settings saved, but geocoding failed: {e}")
+        else:
+            messages.success(request, "Warehouse settings saved successfully!")
         return redirect("admin_warehouse_settings")
 
     context = {

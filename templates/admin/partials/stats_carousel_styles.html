@@ -1,0 +1,65 @@
+/* Stats Carousel - Mobile-friendly stat cards */
+.stats-carousel {
+  margin-bottom: 1.5rem;
+  position: relative;
+  z-index: 10;
+}
+
+.stats-carousel.stats-top {
+  margin-top: -4rem;
+}
+
+.stats-carousel + .stats-carousel {
+  margin-top: 0;
+}
+
+.stats-carousel .stats-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1rem;
+}
+
+/* Mobile carousel */
+@media (max-width: 768px) {
+  .stats-carousel {
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+    padding-bottom: 0.5rem;
+  }
+
+  .stats-carousel.stats-top {
+    margin-top: -3rem;
+  }
+
+  .stats-carousel::-webkit-scrollbar {
+    display: none;
+  }
+
+  .stats-carousel .stats-grid {
+    display: flex;
+    gap: 0.75rem;
+    padding: 0 0.5rem;
+  }
+
+  .stats-carousel .stat-card {
+    flex: 0 0 140px;
+    scroll-snap-align: start;
+    padding: 1rem;
+  }
+
+  .stats-carousel .stat-card .icon {
+    font-size: 1.25rem;
+    margin-bottom: 0.5rem;
+  }
+
+  .stats-carousel .stat-card h3 {
+    font-size: 0.65rem;
+  }
+
+  .stats-carousel .stat-card .number {
+    font-size: 1.5rem;
+  }
+}
