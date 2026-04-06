@@ -150,6 +150,30 @@ class SiteSettings(models.Model):
         blank=True,
         help_text="Warehouse contact email"
     )
+    warehouse_latitude = models.FloatField(
+        null=True, blank=True,
+        help_text="Warehouse latitude (auto-populated from address)"
+    )
+    warehouse_longitude = models.FloatField(
+        null=True, blank=True,
+        help_text="Warehouse longitude (auto-populated from address)"
+    )
+
+    def geocode_warehouse(self):
+        """Geocode warehouse address and save coordinates."""
+        from shop.utils.geocoding import geocode_address
+        if self.warehouse_city and self.warehouse_state:
+            coords = geocode_address(
+                self.warehouse_city,
+                self.warehouse_state,
+                self.warehouse_zip,
+                self.warehouse_country or 'US'
+            )
+            if coords:
+                self.warehouse_latitude, self.warehouse_longitude = coords
+                self.save(update_fields=['warehouse_latitude', 'warehouse_longitude'])
+            return coords
+        return None
 
     # Default shipping weight for products without weight set
     default_product_weight_oz = models.DecimalField(

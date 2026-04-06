@@ -312,6 +312,8 @@ def orders_dashboard(request):
                 "shipping_city": order.shipping_address.city if order.shipping_address else "",
                 "shipping_state": order.shipping_address.region if order.shipping_address else "",
                 "shipping_zip": order.shipping_address.postal_code if order.shipping_address else "",
+                "shipping_lat": order.shipping_address.latitude if order.shipping_address else None,
+                "shipping_lng": order.shipping_address.longitude if order.shipping_address else None,
             }
         )
 

@@ -69,6 +69,17 @@ class Address(models.Model):
     postal_code = models.CharField(max_length=20)
     country = models.CharField(max_length=2)
     email = models.EmailField(blank=True)
+    latitude = models.FloatField(null=True, blank=True)
+    longitude = models.FloatField(null=True, blank=True)
+
+    def geocode(self):
+        """Geocode this address using Nominatim and save coordinates."""
+        from shop.utils.geocoding import geocode_address
+        coords = geocode_address(self.city, self.region, self.postal_code, self.country)
+        if coords:
+            self.latitude, self.longitude = coords
+            self.save(update_fields=['latitude', 'longitude'])
+        return coords
 
 
 class OrderStatus(models.TextChoices):

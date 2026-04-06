@@ -172,6 +172,11 @@ def handle_checkout_session_completed(event):
                 email=customer_email,
             )
             logger.info(f"Created shipping address from Stripe: {shipping_address.city}, {shipping_address.region}")
+            # Geocode the address for map display
+            try:
+                shipping_address.geocode()
+            except Exception as e:
+                logger.warning(f"Failed to geocode address: {e}")
         elif metadata.get("shipping_line1") and metadata.get("shipping_city"):
             # Address was passed in metadata from checkout form
             shipping_address = Address.objects.create(
@@ -185,6 +190,11 @@ def handle_checkout_session_completed(event):
                 email=customer_email,
             )
             logger.info(f"Created shipping address from metadata: {shipping_address.city}, {shipping_address.region}")
+            # Geocode the address for map display
+            try:
+                shipping_address.geocode()
+            except Exception as e:
+                logger.warning(f"Failed to geocode address: {e}")
 
         # Create the order
         order = Order.objects.create(

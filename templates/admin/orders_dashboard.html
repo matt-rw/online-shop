@@ -1224,6 +1224,7 @@
               <th>Discount</th>
               <th>Profit</th>
               <th>Date</th>
+              <th>Destination</th>
               <th>Shipping</th>
               <th style="text-align: right;">Actions</th>
             </tr>
@@ -1276,8 +1277,16 @@
               </td>
               <td>
                 {% if order.created_at %}
-                <div style="font-weight: 500;">{{ order.created_at|date:"M d, Y" }}</div>
+                <div style="font-weight: 500;">{{ order.created_at|date:"m/d/Y" }}</div>
                 <div style="font-size: 0.75rem; color: #64748b;">{{ order.created_at|date:"g:i A" }}</div>
+                {% else %}
+                <span style="color: #94a3b8;">—</span>
+                {% endif %}
+              </td>
+              <td>
+                {% if order.shipping_address %}
+                <div style="font-weight: 500;">{{ order.shipping_address.region|default:"" }}</div>
+                <div style="font-size: 0.75rem; color: #64748b;">{{ order.shipping_address.country|default:"US" }}</div>
                 {% else %}
                 <span style="color: #94a3b8;">—</span>
                 {% endif %}
@@ -3057,7 +3066,9 @@
       warehouse: {
         city: "{{ site_settings.warehouse_city|default:'Chicago'|escapejs }}",
         state: "{{ site_settings.warehouse_state|default:'IL'|escapejs }}",
-        zip: "{{ site_settings.warehouse_zip|default:'60601'|escapejs }}"
+        zip: "{{ site_settings.warehouse_zip|default:'60601'|escapejs }}",
+        lat: {{ site_settings.warehouse_latitude|default:"null" }},
+        lng: {{ site_settings.warehouse_longitude|default:"null" }}
       },
       orders: [
         {% for order in orders %}{% if order.shipping_city %}{
@@ -3065,6 +3076,8 @@
           city: "{{ order.shipping_city|escapejs }}",
           state: "{{ order.shipping_state|escapejs }}",
           zip: "{{ order.shipping_zip|escapejs }}",
+          lat: {{ order.shipping_lat|default:"null" }},
+          lng: {{ order.shipping_lng|default:"null" }},
           customer: "{{ order.customer_name|default:'Customer'|escapejs }}"
         },{% endif %}{% endfor %}
       ]
@@ -3115,40 +3128,94 @@
       'salt lake city': [40.7608, -111.8910], 'baltimore': [39.2904, -76.6122], 'oklahoma city': [35.4676, -97.5164]
     };
 
-    // Geocode cache
-    const geocodeCache = {};
+    // Geocode cache - persisted to localStorage
+    const GEOCODE_CACHE_KEY = 'orderMapGeocodeCache';
+    let geocodeCache = {};
 
-    function getCoordinates(city, state, zip) {
-      // Try city lookup first
+    // Load cache from localStorage
+    try {
+      const cached = localStorage.getItem(GEOCODE_CACHE_KEY);
+      if (cached) geocodeCache = JSON.parse(cached);
+    } catch (e) {
+      console.warn('Could not load geocode cache:', e);
+    }
+
+    // Save cache to localStorage
+    function saveGeocodeCache() {
+      try {
+        localStorage.setItem(GEOCODE_CACHE_KEY, JSON.stringify(geocodeCache));
+      } catch (e) {
+        console.warn('Could not save geocode cache:', e);
+      }
+    }
+
+    // Quick lookup for known cities (instant, no API call needed)
+    function getQuickCoordinates(city, state, zip) {
       const cityKey = city.toLowerCase().trim();
-      if (cityCoords[cityKey]) {
-        return cityCoords[cityKey];
+      if (cityCoords[cityKey]) return cityCoords[cityKey];
+      return null;
+    }
+
+    // Geocode using Nominatim (OpenStreetMap) - async
+    async function geocodeLocation(city, state, zip, country = 'US') {
+      const cacheKey = `${city}|${state}|${zip}`.toLowerCase();
+
+      // Check memory/localStorage cache first
+      if (geocodeCache[cacheKey]) {
+        return geocodeCache[cacheKey];
       }
 
-      // Try state lookup as fallback
+      // Check quick lookup table
+      const quick = getQuickCoordinates(city, state, zip);
+      if (quick) {
+        geocodeCache[cacheKey] = quick;
+        return quick;
+      }
+
+      // Use Nominatim API for geocoding
+      try {
+        const query = encodeURIComponent(`${city}, ${state}, ${zip}, ${country}`);
+        const response = await fetch(`https://nominatim.openstreetmap.org/search?q=${query}&format=json&limit=1`, {
+          headers: { 'User-Agent': 'BlueprintApparelAdmin/1.0' }
+        });
+
+        if (response.ok) {
+          const data = await response.json();
+          if (data && data.length > 0) {
+            const coords = [parseFloat(data[0].lat), parseFloat(data[0].lon)];
+            geocodeCache[cacheKey] = coords;
+            saveGeocodeCache();
+            return coords;
+          }
+        }
+      } catch (e) {
+        console.warn('Geocoding failed for', city, state, e);
+      }
+
+      // Fallback to state center with small offset
       const stateKey = state.toUpperCase().trim();
       if (stateCoords[stateKey]) {
-        // Add small random offset so markers don't stack
         const coords = stateCoords[stateKey];
-        return [coords[0] + (Math.random() - 0.5) * 2, coords[1] + (Math.random() - 0.5) * 2];
+        const fallback = [coords[0] + (Math.random() - 0.5) * 1, coords[1] + (Math.random() - 0.5) * 1];
+        geocodeCache[cacheKey] = fallback;
+        saveGeocodeCache();
+        return fallback;
       }
 
       return null;
     }
 
-    function initOrdersMap() {
+    // Delay helper for rate limiting
+    const delay = ms => new Promise(resolve => setTimeout(resolve, ms));
+
+    async function initOrdersMap() {
       const mapContainer = document.getElementById('orders-map');
       if (!mapContainer) return;
 
-      // Use order data from template
-      const data = orderMapData;
+      // Show loading state
+      mapContainer.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:100%;color:#64748b;"><i class="fa-solid fa-spinner fa-spin" style="margin-right:0.5rem;"></i> Loading map...</div>';
 
-      // Get warehouse coordinates
-      const warehouseCoords = getCoordinates(data.warehouse.city, data.warehouse.state, data.warehouse.zip);
-      if (!warehouseCoords) {
-        mapContainer.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:100%;color:#64748b;">Warehouse location not configured</div>';
-        return;
-      }
+      const data = orderMapData;
 
       // Initialize map centered on US
       const map = L.map('orders-map').setView([39.8283, -98.5795], 4);
@@ -3174,6 +3241,18 @@
         iconAnchor: [6, 6]
       });
 
+      // Get warehouse coordinates (use stored if available, otherwise geocode)
+      let warehouseCoords = null;
+      if (data.warehouse.lat && data.warehouse.lng) {
+        warehouseCoords = [data.warehouse.lat, data.warehouse.lng];
+      } else {
+        warehouseCoords = await geocodeLocation(data.warehouse.city, data.warehouse.state, data.warehouse.zip);
+      }
+      if (!warehouseCoords) {
+        console.warn('Could not get warehouse location');
+        return;
+      }
+
       // Add warehouse marker
       L.marker(warehouseCoords, { icon: warehouseIcon })
         .addTo(map)
@@ -3182,19 +3261,46 @@
       // Track mapped orders
       let mappedCount = 0;
       const bounds = L.latLngBounds([warehouseCoords]);
+      let needsApiCall = 0;
 
-      // Add order markers and lines
-      data.orders.forEach(order => {
-        const coords = getCoordinates(order.city, order.state, order.zip);
+      // Count how many need API calls (not in cache)
+      for (const order of data.orders) {
+        const cacheKey = `${order.city}|${order.state}|${order.zip}`.toLowerCase();
+        if (!geocodeCache[cacheKey] && !getQuickCoordinates(order.city, order.state, order.zip)) {
+          needsApiCall++;
+        }
+      }
+
+      // Process orders - use stored coordinates when available, geocode as fallback
+      let apiCallsMade = 0;
+      for (const order of data.orders) {
+        let coords = null;
+
+        // Use stored coordinates if available (most accurate)
+        if (order.lat && order.lng) {
+          coords = [order.lat, order.lng];
+        } else {
+          // Fall back to geocoding
+          const cacheKey = `${order.city}|${order.state}|${order.zip}`.toLowerCase();
+          const needsApi = !geocodeCache[cacheKey] && !getQuickCoordinates(order.city, order.state, order.zip);
+
+          // Rate limit: wait 1 second between API calls (Nominatim policy)
+          if (needsApi && apiCallsMade > 0) {
+            await delay(1000);
+          }
+
+          coords = await geocodeLocation(order.city, order.state, order.zip);
+          if (needsApi) apiCallsMade++;
+        }
+
         if (coords) {
           // Add marker
           L.marker(coords, { icon: orderIcon })
             .addTo(map)
             .bindPopup('<strong>' + order.id + '</strong><br>' + order.customer + '<br>' + order.city + ', ' + order.state);
 
-          // Draw curved line from warehouse
-          const latlngs = [warehouseCoords, coords];
-          const line = L.polyline(latlngs, {
+          // Draw line from warehouse
+          L.polyline([warehouseCoords, coords], {
             color: '#10b981',
             weight: 1.5,
             opacity: 0.4,
@@ -3204,7 +3310,7 @@
           bounds.extend(coords);
           mappedCount++;
         }
-      });
+      }
 
       // Update count
       document.getElementById('map-order-count').textContent = mappedCount;
