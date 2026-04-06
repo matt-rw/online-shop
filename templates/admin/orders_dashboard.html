@@ -14,6 +14,8 @@
   <!-- Chart.js for analytics -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <style>
+    {% include "admin/partials/sidebar_styles.html" %}
+    :root { --sidebar-gradient-start: #52796f; --sidebar-gradient-end: #3a5a52; --sidebar-shadow-color: rgba(82, 121, 111, 0.15); }
     {% include "admin/partials/dark_mode_styles.html" %}
     {% include "admin/partials/stats_carousel_styles.html" %}
     * {
@@ -1282,9 +1284,7 @@
   {% include "admin/partials/dark_mode_apply.html" %}
 </head>
 <body>
-  <div class="nav-links">
-    <a href="{% url 'admin_home' %}" class="nav-link">← Back</a>
-  </div>
+  {% include "admin/partials/sidebar.html" %}
 
   <div class="top-bar">
     <div class="container">

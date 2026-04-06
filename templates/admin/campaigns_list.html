@@ -10,6 +10,7 @@
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/nouislider@15.7.1/dist/nouislider.min.css">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
   <style>
+    {% include "admin/partials/sidebar_styles.html" %}
     {% include "admin/partials/dark_mode_styles.html" %}
     * {
       margin: 0;
@@ -2071,9 +2072,7 @@
   {% include "admin/partials/dark_mode_apply.html" %}
 </head>
 <body>
-  <div class="nav-links">
-    <a href="{% url 'admin_home' %}" class="nav-link">← Back</a>
-  </div>
+  {% include "admin/partials/sidebar.html" %}
 
   <div class="top-bar">
     <div class="container">

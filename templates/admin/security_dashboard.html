@@ -10,6 +10,7 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
   <style>
+    {% include "admin/partials/sidebar_styles.html" %}
     {% include "admin/partials/dark_mode_styles.html" %}
     * {
       margin: 0;
@@ -295,9 +296,7 @@
   {% include "admin/partials/dark_mode_apply.html" %}
 </head>
 <body>
-  <div class="nav-links">
-    <a href="{% url 'admin_home' %}" class="nav-link">← Back</a>
-  </div>
+  {% include "admin/partials/sidebar.html" %}
 
   <div class="top-bar">
     <div class="container">

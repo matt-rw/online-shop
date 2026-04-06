@@ -9,6 +9,8 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
   <style>
+    {% include "admin/partials/sidebar_styles.html" %}
+    :root { --sidebar-gradient-start: #ef4444; --sidebar-gradient-end: #dc2626; --sidebar-shadow-color: rgba(239, 68, 68, 0.15); }
     {% include "admin/partials/dark_mode_styles.html" %}
     * {
       margin: 0;
@@ -492,10 +494,7 @@
   {% include "admin/partials/dark_mode_apply.html" %}
 </head>
 <body>
-  <div class="nav-links">
-    <a href="{% url 'admin_home' %}" class="nav-link"><i class="fa-solid fa-arrow-left"></i> Back</a>
-    <a href="{% url 'admin_orders' %}" class="nav-link"><i class="fa-solid fa-shopping-cart"></i> Orders</a>
-  </div>
+  {% include "admin/partials/sidebar.html" %}
 
   <div class="top-bar">
     <div class="container">

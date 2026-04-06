@@ -9,6 +9,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
   <style>
+    {% include "admin/partials/sidebar_styles.html" %}
     {% include "admin/partials/dark_mode_styles.html" %}
     * { margin: 0; padding: 0; box-sizing: border-box; }
 
@@ -419,14 +420,12 @@
   </style>
 </head>
 <body>
+  {% include "admin/partials/sidebar.html" %}
   {% include "admin/partials/dark_mode_apply.html" %}
 
   <div class="top-bar">
     <div class="container">
-      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
-        <a href="{% url 'admin_home' %}" class="top-btn">
-          <i class="fa-solid fa-arrow-left"></i> Back
-        </a>
+      <div style="display: flex; justify-content: flex-end; align-items: center; margin-bottom: 1rem;">
         <a href="{% url 'shop:about' %}" class="top-btn" target="_blank">
           <i class="fa-solid fa-external-link"></i> View Page
         </a>

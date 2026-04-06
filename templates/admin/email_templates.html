@@ -10,6 +10,7 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
   <script src="https://editor.unlayer.com/embed.js"></script>
   <style>
+    {% include "admin/partials/sidebar_styles.html" %}
     {% include "admin/partials/dark_mode_styles.html" %}
     * {
       margin: 0;
@@ -1307,9 +1308,7 @@
   {% include "admin/partials/dark_mode_apply.html" %}
 </head>
 <body>
-  <div class="nav-links">
-    <a href="{% url 'admin_home' %}" class="nav-link"><i class="fa-solid fa-arrow-left"></i> Back</a>
-  </div>
+  {% include "admin/partials/sidebar.html" %}
 
   <div class="top-bar">
     <div class="container">

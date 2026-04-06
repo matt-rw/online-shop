@@ -1,0 +1,367 @@
+<!-- Admin Sidebar Navigation -->
+<nav class="admin-sidebar" id="adminSidebar">
+  <!-- Brand/Logo with Toggle -->
+  <div class="sidebar-header">
+    <a href="{% url 'admin_home' %}" class="sidebar-brand">
+      <div class="sidebar-brand-icon">BP</div>
+      <span class="sidebar-brand-text">Blueprint Admin</span>
+    </a>
+    <button class="sidebar-toggle" onclick="toggleSidebar()" title="Toggle sidebar">
+      <i class="fa-solid fa-chevron-left"></i>
+    </button>
+  </div>
+
+  <!-- Navigation -->
+  <div class="sidebar-nav">
+    <!-- Products Section -->
+    <div class="sidebar-section" data-section="products">
+      <button class="sidebar-section-header" onclick="toggleSidebarSection('products')">
+        <span class="sidebar-section-icon">🛍️</span>
+        <span class="sidebar-section-text">Products</span>
+        <span class="sidebar-section-chevron">▶</span>
+        <span class="sidebar-tooltip">Products</span>
+      </button>
+      <div class="sidebar-section-items">
+        <a href="{% url 'admin_products' %}" class="sidebar-item" data-page="products">
+          <span class="sidebar-item-icon">📦</span>
+          <span>Manage Products</span>
+        </a>
+        <a href="{% url 'admin_bundles' %}" class="sidebar-item" data-page="bundles">
+          <span class="sidebar-item-icon">🎁</span>
+          <span>Bundles</span>
+        </a>
+        <a href="{% url 'admin_categories' %}" class="sidebar-item" data-page="categories">
+          <span class="sidebar-item-icon">📁</span>
+          <span>Categories</span>
+        </a>
+        <a href="{% url 'admin_attributes' %}" class="sidebar-item" data-page="attributes">
+          <span class="sidebar-item-icon">🎨</span>
+          <span>Attributes</span>
+        </a>
+        <a href="{% url 'promotions_dashboard' %}" class="sidebar-item" data-page="promotions">
+          <span class="sidebar-item-icon">🏷️</span>
+          <span>Promotions</span>
+        </a>
+        <a href="{% url 'admin_shipments' %}" class="sidebar-item" data-page="shipments">
+          <span class="sidebar-item-icon">🚚</span>
+          <span>Shipments</span>
+        </a>
+      </div>
+    </div>
+
+    <!-- Marketing Section -->
+    <div class="sidebar-section" data-section="marketing">
+      <button class="sidebar-section-header" onclick="toggleSidebarSection('marketing')">
+        <span class="sidebar-section-icon">📨</span>
+        <span class="sidebar-section-text">Marketing</span>
+        <span class="sidebar-section-chevron">▶</span>
+        <span class="sidebar-tooltip">Marketing</span>
+      </button>
+      <div class="sidebar-section-items">
+        <a href="{% url 'admin_campaigns_list' %}" class="sidebar-item" data-page="campaigns">
+          <span class="sidebar-item-icon">🎯</span>
+          <span>Campaigns</span>
+        </a>
+        <a href="{% url 'admin_messages' %}" class="sidebar-item" data-page="messages">
+          <span class="sidebar-item-icon">💬</span>
+          <span>Messages</span>
+        </a>
+        <a href="{% url 'admin_ab_testing' %}" class="sidebar-item" data-page="ab_testing">
+          <span class="sidebar-item-icon">🧪</span>
+          <span>A/B Testing</span>
+        </a>
+        <a href="/bp-manage/subscribers/" class="sidebar-item" data-page="subscribers">
+          <span class="sidebar-item-icon">👥</span>
+          <span>Subscribers</span>
+        </a>
+        <a href="/bp-manage/email/templates/" class="sidebar-item" data-page="templates">
+          <span class="sidebar-item-icon">📝</span>
+          <span>Templates</span>
+        </a>
+        <a href="{% url 'admin_visitors' %}" class="sidebar-item" data-page="visitors">
+          <span class="sidebar-item-icon">👁️</span>
+          <span>Visitors</span>
+        </a>
+      </div>
+    </div>
+
+    <!-- Orders & Fulfillment Section -->
+    <div class="sidebar-section" data-section="orders">
+      <button class="sidebar-section-header" onclick="toggleSidebarSection('orders')">
+        <span class="sidebar-section-icon">📦</span>
+        <span class="sidebar-section-text">Orders</span>
+        <span class="sidebar-section-chevron">▶</span>
+        <span class="sidebar-tooltip">Orders & Fulfillment</span>
+      </button>
+      <div class="sidebar-section-items">
+        <a href="{% url 'admin_orders' %}" class="sidebar-item" data-page="orders">
+          <span class="sidebar-item-icon">📦</span>
+          <span>Orders</span>
+        </a>
+        <a href="{% url 'admin_users' %}" class="sidebar-item" data-page="customers">
+          <span class="sidebar-item-icon">👥</span>
+          <span>Customers</span>
+        </a>
+        <a href="{% url 'admin_returns' %}" class="sidebar-item" data-page="returns">
+          <span class="sidebar-item-icon">↩️</span>
+          <span>Returns & Exchanges</span>
+        </a>
+      </div>
+    </div>
+
+    <!-- Finances Section -->
+    <div class="sidebar-section" data-section="finances">
+      <button class="sidebar-section-header" onclick="toggleSidebarSection('finances')">
+        <span class="sidebar-section-icon">📈</span>
+        <span class="sidebar-section-text">Finances</span>
+        <span class="sidebar-section-chevron">▶</span>
+        <span class="sidebar-tooltip">Finances</span>
+      </button>
+      <div class="sidebar-section-items">
+        <a href="{% url 'admin_finance' %}" class="sidebar-item" data-page="finance">
+          <span class="sidebar-item-icon">💰</span>
+          <span>Finances</span>
+        </a>
+        <a href="{% url 'admin_test_center' %}" class="sidebar-item" data-page="test_center">
+          <span class="sidebar-item-icon">🧪</span>
+          <span>Test Center</span>
+        </a>
+      </div>
+    </div>
+
+    <!-- Website Customization Section -->
+    <div class="sidebar-section" data-section="website">
+      <button class="sidebar-section-header" onclick="toggleSidebarSection('website')">
+        <span class="sidebar-section-icon">🎨</span>
+        <span class="sidebar-section-text">Website</span>
+        <span class="sidebar-section-chevron">▶</span>
+        <span class="sidebar-tooltip">Website Customization</span>
+      </button>
+      <div class="sidebar-section-items">
+        <a href="/bp-manage/homepage/" class="sidebar-item" data-page="homepage">
+          <span class="sidebar-item-icon">🏠</span>
+          <span>Homepage</span>
+        </a>
+        <a href="{% url 'admin_lookbook' %}" class="sidebar-item" data-page="lookbook">
+          <span class="sidebar-item-icon">📖</span>
+          <span>Lookbook</span>
+        </a>
+        <a href="{% url 'admin_about_settings' %}" class="sidebar-item" data-page="about">
+          <span class="sidebar-item-icon">ℹ️</span>
+          <span>About Page</span>
+        </a>
+      </div>
+    </div>
+
+    <!-- Settings Section -->
+    <div class="sidebar-section" data-section="settings">
+      <button class="sidebar-section-header" onclick="toggleSidebarSection('settings')">
+        <span class="sidebar-section-icon">⚙️</span>
+        <span class="sidebar-section-text">Settings</span>
+        <span class="sidebar-section-chevron">▶</span>
+        <span class="sidebar-tooltip">Settings</span>
+      </button>
+      <div class="sidebar-section-items">
+        <a href="/bp-manage/security/" class="sidebar-item" data-page="security">
+          <span class="sidebar-item-icon">🔒</span>
+          <span>Security</span>
+        </a>
+        <a href="{% url 'admin_warehouse_settings' %}" class="sidebar-item" data-page="warehouse">
+          <span class="sidebar-item-icon">🏭</span>
+          <span>Warehouse</span>
+        </a>
+        <a href="{% url 'two_factor_setup' %}" class="sidebar-item" data-page="2fa">
+          <span class="sidebar-item-icon">🔐</span>
+          <span>2FA</span>
+        </a>
+        <a href="/bp-djadmin/" class="sidebar-item" data-page="django_admin">
+          <span class="sidebar-item-icon">⚡</span>
+          <span>Django Admin</span>
+        </a>
+        <a href="{% url 'admin_bug_reports' %}" class="sidebar-item" data-page="bug_reports">
+          <span class="sidebar-item-icon">🐛</span>
+          <span>Bug Reports</span>
+        </a>
+        <a href="{% url 'admin_scheduled_reports' %}" class="sidebar-item" data-page="scheduled_reports">
+          <span class="sidebar-item-icon">📊</span>
+          <span>Scheduled Reports</span>
+        </a>
+      </div>
+    </div>
+  </div>
+</nav>
+
+<!-- Mobile Menu Button -->
+<button class="mobile-menu-btn" onclick="toggleMobileSidebar()">
+  <i class="fa-solid fa-bars"></i>
+</button>
+
+<script>
+// Sidebar functionality
+(function() {
+  const SIDEBAR_STATE_KEY = 'adminSidebarCollapsed';
+  const SIDEBAR_SECTIONS_KEY = 'adminSidebarSections';
+
+  // Initialize sidebar state from localStorage
+  function initSidebar() {
+    const sidebar = document.getElementById('adminSidebar');
+    if (!sidebar) return;
+
+    // Disable transitions during initial load to prevent animation
+    sidebar.classList.add('no-transition');
+    document.body.classList.add('no-transition');
+
+    // Add class to body for layout offset
+    document.body.classList.add('has-sidebar');
+
+    // Restore collapsed state
+    const isCollapsed = localStorage.getItem(SIDEBAR_STATE_KEY) === 'true';
+    if (isCollapsed) {
+      sidebar.classList.add('collapsed');
+      document.body.classList.add('sidebar-collapsed');
+    }
+
+    // Restore section states
+    const sectionStates = JSON.parse(localStorage.getItem(SIDEBAR_SECTIONS_KEY) || '{}');
+    document.querySelectorAll('.sidebar-section').forEach(section => {
+      const sectionName = section.dataset.section;
+      if (sectionStates[sectionName]) {
+        section.classList.add('expanded');
+      }
+    });
+
+    // Highlight current page and expand its section
+    highlightCurrentPage();
+
+    // Re-enable transitions after a brief delay
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        sidebar.classList.remove('no-transition');
+        document.body.classList.remove('no-transition');
+      });
+    });
+  }
+
+  // Toggle sidebar collapsed state
+  window.toggleSidebar = function() {
+    const sidebar = document.getElementById('adminSidebar');
+    if (!sidebar) return;
+
+    sidebar.classList.toggle('collapsed');
+    document.body.classList.toggle('sidebar-collapsed');
+
+    // Save state to localStorage
+    localStorage.setItem(SIDEBAR_STATE_KEY, sidebar.classList.contains('collapsed'));
+  };
+
+  // Toggle section expanded state
+  window.toggleSidebarSection = function(sectionName) {
+    const sidebar = document.getElementById('adminSidebar');
+    if (sidebar && sidebar.classList.contains('collapsed')) {
+      // If sidebar is collapsed, expand it first
+      toggleSidebar();
+    }
+
+    const section = document.querySelector(`.sidebar-section[data-section="${sectionName}"]`);
+    if (!section) return;
+
+    section.classList.toggle('expanded');
+
+    // Save section states to localStorage
+    const sectionStates = JSON.parse(localStorage.getItem(SIDEBAR_SECTIONS_KEY) || '{}');
+    sectionStates[sectionName] = section.classList.contains('expanded');
+    localStorage.setItem(SIDEBAR_SECTIONS_KEY, JSON.stringify(sectionStates));
+  };
+
+  // Toggle mobile sidebar
+  window.toggleMobileSidebar = function() {
+    const sidebar = document.getElementById('adminSidebar');
+    if (!sidebar) return;
+
+    sidebar.classList.toggle('mobile-open');
+  };
+
+  // Highlight current page in sidebar
+  function highlightCurrentPage() {
+    const currentPath = window.location.pathname;
+
+    // Map of URL patterns to page identifiers
+    const pageMatches = {
+      '/bp-manage/$': 'home',
+      '/bp-manage/products': 'products',
+      '/bp-manage/bundles': 'bundles',
+      '/bp-manage/categories': 'categories',
+      '/bp-manage/attributes': 'attributes',
+      '/bp-manage/promotions': 'promotions',
+      '/bp-manage/shipments': 'shipments',
+      '/bp-manage/campaigns': 'campaigns',
+      '/bp-manage/messages': 'messages',
+      '/bp-manage/ab-testing': 'ab_testing',
+      '/bp-manage/subscribers': 'subscribers',
+      '/bp-manage/email/templates': 'templates',
+      '/bp-manage/visitors': 'visitors',
+      '/bp-manage/orders': 'orders',
+      '/bp-manage/users': 'customers',
+      '/bp-manage/returns': 'returns',
+      '/bp-manage/finance': 'finance',
+      '/bp-manage/test-center': 'test_center',
+      '/bp-manage/homepage': 'homepage',
+      '/bp-manage/lookbook': 'lookbook',
+      '/bp-manage/about': 'about',
+      '/bp-manage/security': 'security',
+      '/bp-manage/warehouse': 'warehouse',
+      '/bp-manage/two-factor': '2fa',
+      '/bp-djadmin': 'django_admin',
+      '/bp-manage/bug-reports': 'bug_reports',
+      '/bp-manage/scheduled-reports': 'scheduled_reports'
+    };
+
+    // Find matching page
+    let matchedPage = null;
+    for (const [pattern, page] of Object.entries(pageMatches)) {
+      if (new RegExp(pattern).test(currentPath)) {
+        matchedPage = page;
+        break;
+      }
+    }
+
+    if (matchedPage) {
+      // Find and highlight the matching item
+      const item = document.querySelector(`.sidebar-item[data-page="${matchedPage}"]`);
+      if (item) {
+        item.classList.add('active');
+
+        // Expand the parent section
+        const section = item.closest('.sidebar-section');
+        if (section) {
+          section.classList.add('expanded');
+
+          // Save section state
+          const sectionStates = JSON.parse(localStorage.getItem(SIDEBAR_SECTIONS_KEY) || '{}');
+          sectionStates[section.dataset.section] = true;
+          localStorage.setItem(SIDEBAR_SECTIONS_KEY, JSON.stringify(sectionStates));
+        }
+      }
+    }
+  }
+
+  // Close mobile sidebar when clicking outside
+  document.addEventListener('click', function(e) {
+    const sidebar = document.getElementById('adminSidebar');
+    const mobileBtn = document.querySelector('.mobile-menu-btn');
+
+    if (sidebar && sidebar.classList.contains('mobile-open')) {
+      if (!sidebar.contains(e.target) && !mobileBtn.contains(e.target)) {
+        sidebar.classList.remove('mobile-open');
+      }
+    }
+  });
+
+  // Initialize on DOM ready
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initSidebar);
+  } else {
+    initSidebar();
+  }
+})();
+</script>

@@ -10,6 +10,7 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
   <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
   <style>
+    {% include "admin/partials/sidebar_styles.html" %}
     {% include "admin/partials/dark_mode_styles.html" %}
     * { margin: 0; padding: 0; box-sizing: border-box; }
 
@@ -757,10 +758,7 @@
   {% include "admin/partials/dark_mode_apply.html" %}
 </head>
 <body>
-  <div class="nav-links">
-    <a href="{% url 'admin_home' %}" class="nav-link"><i class="fas fa-arrow-left"></i> Back</a>
-    <a href="{% url 'home' %}" class="nav-link" target="_blank"><i class="fas fa-external-link-alt"></i> View Site</a>
-  </div>
+  {% include "admin/partials/sidebar.html" %}
 
   <div class="top-bar">
     <div class="container">

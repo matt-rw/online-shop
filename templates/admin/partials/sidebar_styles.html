@@ -1,0 +1,381 @@
+/* Admin Sidebar Styles - Using CSS Variables for theme colors */
+
+/* Default sidebar colors (purple - matches admin home) */
+:root {
+  --sidebar-gradient-start: #667eea;
+  --sidebar-gradient-end: #764ba2;
+  --sidebar-shadow-color: rgba(102, 126, 234, 0.15);
+}
+
+.admin-sidebar {
+  position: fixed;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 240px;
+  background: linear-gradient(180deg, var(--sidebar-gradient-start) 0%, var(--sidebar-gradient-end) 100%);
+  z-index: 1000;
+  transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  overflow-x: hidden;
+  overflow-y: auto;
+  box-shadow: 4px 0 20px var(--sidebar-shadow-color);
+}
+
+.admin-sidebar.collapsed {
+  width: 60px;
+}
+
+.admin-sidebar::-webkit-scrollbar {
+  width: 6px;
+}
+
+.admin-sidebar::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.admin-sidebar::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.3);
+  border-radius: 3px;
+}
+
+.admin-sidebar::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.5);
+}
+
+/* Sidebar Header (Brand + Toggle) */
+.sidebar-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.75rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* Sidebar Brand/Logo */
+.sidebar-brand {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  text-decoration: none;
+  color: white;
+  transition: all 0.2s;
+  padding: 0.5rem;
+  border-radius: 8px;
+  flex: 1;
+  min-width: 0;
+}
+
+.sidebar-brand:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.sidebar-brand-icon {
+  width: 32px;
+  height: 32px;
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.125rem;
+  flex-shrink: 0;
+  font-weight: 700;
+}
+
+.sidebar-brand-text {
+  font-weight: 700;
+  font-size: 1rem;
+  white-space: nowrap;
+  opacity: 1;
+  transition: opacity 0.2s;
+}
+
+.admin-sidebar.collapsed .sidebar-brand-text {
+  opacity: 0;
+  width: 0;
+  overflow: hidden;
+}
+
+.admin-sidebar.collapsed .sidebar-header {
+  justify-content: center;
+  padding: 0.75rem 0.5rem;
+}
+
+.admin-sidebar.collapsed .sidebar-brand {
+  padding: 0.5rem;
+  flex: 0;
+}
+
+/* Toggle Button */
+.sidebar-toggle {
+  width: 28px;
+  height: 28px;
+  background: rgba(255, 255, 255, 0.15);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 6px;
+  color: white;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+  font-size: 0.75rem;
+  flex-shrink: 0;
+}
+
+.sidebar-toggle:hover {
+  background: rgba(255, 255, 255, 0.25);
+}
+
+.sidebar-toggle i {
+  transition: transform 0.3s;
+}
+
+.admin-sidebar.collapsed .sidebar-toggle {
+  margin: 0 auto;
+}
+
+/* No transition class for initial page load */
+.admin-sidebar.no-transition,
+.admin-sidebar.no-transition *,
+body.no-transition .nav-links,
+body.no-transition .top-bar,
+body.no-transition .main-content {
+  transition: none !important;
+}
+
+.admin-sidebar.collapsed .sidebar-toggle i {
+  transform: rotate(180deg);
+}
+
+/* Navigation */
+.sidebar-nav {
+  padding: 0.75rem 0;
+}
+
+/* Section Headers */
+.sidebar-section {
+  margin-bottom: 0.25rem;
+}
+
+.sidebar-section-header {
+  display: flex;
+  align-items: center;
+  padding: 0.75rem 1rem;
+  color: rgba(255, 255, 255, 0.95);
+  font-weight: 600;
+  font-size: 0.875rem;
+  cursor: pointer;
+  transition: all 0.2s;
+  gap: 0.75rem;
+  position: relative;
+  border: none;
+  background: none;
+  width: 100%;
+  text-align: left;
+}
+
+.sidebar-section-header:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.sidebar-section-icon {
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1rem;
+  flex-shrink: 0;
+}
+
+.sidebar-section-text {
+  flex: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  opacity: 1;
+  transition: opacity 0.2s;
+}
+
+.admin-sidebar.collapsed .sidebar-section-text {
+  opacity: 0;
+  width: 0;
+}
+
+.sidebar-section-chevron {
+  font-size: 0.625rem;
+  color: rgba(255, 255, 255, 0.6);
+  transition: transform 0.2s;
+  flex-shrink: 0;
+}
+
+.sidebar-section.expanded .sidebar-section-chevron {
+  transform: rotate(90deg);
+}
+
+.admin-sidebar.collapsed .sidebar-section-chevron {
+  display: none;
+}
+
+/* Section Items */
+.sidebar-section-items {
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  background: rgba(0, 0, 0, 0.1);
+}
+
+.sidebar-section.expanded .sidebar-section-items {
+  max-height: 500px;
+}
+
+.admin-sidebar.collapsed .sidebar-section-items {
+  display: none;
+}
+
+.sidebar-item {
+  display: flex;
+  align-items: center;
+  padding: 0.625rem 1rem 0.625rem 2.75rem;
+  color: rgba(255, 255, 255, 0.8);
+  text-decoration: none;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  transition: all 0.2s;
+  gap: 0.625rem;
+  white-space: nowrap;
+}
+
+.sidebar-item:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: white;
+}
+
+.sidebar-item.active {
+  background: rgba(255, 255, 255, 0.15);
+  color: white;
+  font-weight: 600;
+}
+
+.sidebar-item-icon {
+  font-size: 0.875rem;
+  width: 20px;
+  text-align: center;
+  flex-shrink: 0;
+}
+
+/* Tooltip for collapsed state */
+.sidebar-tooltip {
+  position: absolute;
+  left: 100%;
+  top: 50%;
+  transform: translateY(-50%);
+  background: #1e293b;
+  color: white;
+  padding: 0.5rem 0.75rem;
+  border-radius: 6px;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  white-space: nowrap;
+  opacity: 0;
+  visibility: hidden;
+  transition: all 0.2s;
+  margin-left: 0.5rem;
+  z-index: 1001;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+.sidebar-tooltip::before {
+  content: '';
+  position: absolute;
+  right: 100%;
+  top: 50%;
+  transform: translateY(-50%);
+  border: 6px solid transparent;
+  border-right-color: #1e293b;
+}
+
+.admin-sidebar.collapsed .sidebar-section-header:hover .sidebar-tooltip {
+  opacity: 1;
+  visibility: visible;
+}
+
+/* Body offset when sidebar is present */
+body.has-sidebar .nav-links,
+body.has-sidebar .top-bar,
+body.has-sidebar .main-content {
+  margin-left: 240px;
+  transition: margin-left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+body.has-sidebar.sidebar-collapsed .nav-links,
+body.has-sidebar.sidebar-collapsed .top-bar,
+body.has-sidebar.sidebar-collapsed .main-content {
+  margin-left: 60px;
+}
+
+/* Dark Mode Support - slightly darker version of the theme colors */
+[data-theme='dark'] .admin-sidebar {
+  background: linear-gradient(180deg,
+    color-mix(in srgb, var(--sidebar-gradient-start) 80%, black) 0%,
+    color-mix(in srgb, var(--sidebar-gradient-end) 80%, black) 100%);
+}
+
+[data-theme='dark'] .sidebar-tooltip {
+  background: #0f172a;
+}
+
+[data-theme='dark'] .sidebar-tooltip::before {
+  border-right-color: #0f172a;
+}
+
+/* Mobile responsive - hide sidebar on small screens */
+@media (max-width: 1024px) {
+  .admin-sidebar {
+    transform: translateX(-100%);
+  }
+
+  .admin-sidebar.mobile-open {
+    transform: translateX(0);
+  }
+
+  body.has-sidebar .nav-links,
+  body.has-sidebar .top-bar,
+  body.has-sidebar .main-content {
+    margin-left: 0;
+  }
+
+  body.has-sidebar.sidebar-collapsed .nav-links,
+  body.has-sidebar.sidebar-collapsed .top-bar,
+  body.has-sidebar.sidebar-collapsed .main-content {
+    margin-left: 0;
+  }
+
+  .mobile-menu-btn {
+    display: flex !important;
+  }
+}
+
+/* Mobile menu button (hidden by default) */
+.mobile-menu-btn {
+  display: none;
+  position: fixed;
+  top: 1rem;
+  left: 1rem;
+  z-index: 999;
+  width: 40px;
+  height: 40px;
+  background: linear-gradient(135deg, var(--sidebar-gradient-start) 0%, var(--sidebar-gradient-end) 100%);
+  border: none;
+  border-radius: 10px;
+  color: white;
+  cursor: pointer;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.125rem;
+  box-shadow: 0 4px 12px var(--sidebar-shadow-color);
+}
+
+.mobile-menu-btn:hover {
+  transform: scale(1.05);
+}

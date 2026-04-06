@@ -13,6 +13,8 @@
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="">
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
   <style>
+    {% include "admin/partials/sidebar_styles.html" %}
+    :root { --sidebar-gradient-start: #06b6d4; --sidebar-gradient-end: #0891b2; --sidebar-shadow-color: rgba(6, 182, 212, 0.15); }
     {% include "admin/partials/dark_mode_styles.html" %}
     * {
       margin: 0;
@@ -393,9 +395,7 @@
   {% include "admin/partials/dark_mode_apply.html" %}
 </head>
 <body>
-  <div class="nav-links">
-    <a href="{% url 'admin_home' %}" class="nav-link">← Back</a>
-  </div>
+  {% include "admin/partials/sidebar.html" %}
 
   <div class="top-bar">
     <div class="container">
