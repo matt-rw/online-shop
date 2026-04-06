@@ -199,6 +199,7 @@ def handle_checkout_session_completed(event):
         # Create the order
         order = Order.objects.create(
             user=user,
+            customer_name=shipping_address.full_name if shipping_address else "",
             email=customer_email,
             status=OrderStatus.PAID,
             subtotal=subtotal,

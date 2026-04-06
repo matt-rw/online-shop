@@ -1261,7 +1261,7 @@
         </h3>
         <div style="display: flex; gap: 0.5rem;">
           <button class="log-filter-btn active" data-filter="all" onclick="filterDeliveryLog('all')" style="padding: 0.375rem 0.75rem; font-size: 0.75rem; border: 1px solid #e2e8f0; background: #52796f; color: white; border-radius: 6px; cursor: pointer; font-weight: 500;">All</button>
-          <button class="log-filter-btn" data-filter="failed" onclick="filterDeliveryLog('failed')" style="padding: 0.375rem 0.75rem; font-size: 0.75rem; border: 1px solid #e2e8f0; background: white; color: #64748b; border-radius: 6px; cursor: pointer; font-weight: 500;">Failed</button>
+          <button class="log-filter-btn" data-filter="failed" onclick="filterDeliveryLog('failed')" style="padding: 0.375rem 0.75rem; font-size: 0.75rem; border: 1px solid #e2e8f0; background: white; color: #64748b; border-radius: 6px; cursor: pointer; font-weight: 500;">Has Failed</button>
         </div>
       </div>
       {% if delivery_logs %}
@@ -1269,19 +1269,23 @@
         <table style="width: 100%; border-collapse: collapse; font-size: 0.875rem;">
           <thead>
             <tr style="border-bottom: 2px solid #e2e8f0;">
+              <th style="width: 30px; padding: 0.75rem 0.5rem;"></th>
               <th style="text-align: left; padding: 0.75rem 0.5rem; font-size: 0.7rem; font-weight: 600; color: #64748b; text-transform: uppercase;">Type</th>
-              <th style="text-align: left; padding: 0.75rem 0.5rem; font-size: 0.7rem; font-weight: 600; color: #64748b; text-transform: uppercase;">Recipient</th>
-              <th style="text-align: left; padding: 0.75rem 0.5rem; font-size: 0.7rem; font-weight: 600; color: #64748b; text-transform: uppercase;">Subject/Message</th>
-              <th style="text-align: center; padding: 0.75rem 0.5rem; font-size: 0.7rem; font-weight: 600; color: #64748b; text-transform: uppercase;">Status</th>
+              <th style="text-align: left; padding: 0.75rem 0.5rem; font-size: 0.7rem; font-weight: 600; color: #64748b; text-transform: uppercase;">Subject</th>
+              <th style="text-align: center; padding: 0.75rem 0.5rem; font-size: 0.7rem; font-weight: 600; color: #64748b; text-transform: uppercase;">Recipients</th>
+              <th style="text-align: center; padding: 0.75rem 0.5rem; font-size: 0.7rem; font-weight: 600; color: #64748b; text-transform: uppercase;">Delivered</th>
+              <th style="text-align: center; padding: 0.75rem 0.5rem; font-size: 0.7rem; font-weight: 600; color: #64748b; text-transform: uppercase;">Failed</th>
               <th style="text-align: left; padding: 0.75rem 0.5rem; font-size: 0.7rem; font-weight: 600; color: #64748b; text-transform: uppercase;">Sent</th>
-              <th style="text-align: left; padding: 0.75rem 0.5rem; font-size: 0.7rem; font-weight: 600; color: #64748b; text-transform: uppercase;">Error</th>
             </tr>
           </thead>
           <tbody>
             {% for log in delivery_logs %}
-            <tr class="delivery-log-row" data-status="{{ log.status }}" style="border-bottom: 1px solid #f1f5f9; {% if log.status == 'failed' %}background: #fef2f2;{% endif %}">
+            <tr class="delivery-log-row" data-has-failed="{{ log.failed_count }}" onclick="toggleRecipients({{ log.id }})" style="border-bottom: 1px solid #f1f5f9; cursor: pointer; transition: background 0.15s; {% if log.failed_count > 0 %}background: #fefce8;{% endif %}" onmouseover="this.style.background='#f8fafc'" onmouseout="this.style.background='{% if log.failed_count > 0 %}#fefce8{% else %}white{% endif %}'">
+              <td style="padding: 0.75rem 0.5rem; text-align: center;">
+                <i class="fa-solid fa-chevron-right expand-icon" id="expand-{{ log.id }}" style="color: #94a3b8; font-size: 0.7rem; transition: transform 0.2s;"></i>
+              </td>
               <td style="padding: 0.75rem 0.5rem;">
-                {% if log.type == 'email' %}
+                {% if log.message_type == 'email' %}
                 <span style="display: inline-flex; align-items: center; justify-content: center; width: 28px; height: 28px; background: #dbeafe; border-radius: 6px;">
                   <i class="fa-solid fa-envelope" style="color: #3b82f6; font-size: 0.75rem;"></i>
                 </span>
@@ -1291,47 +1295,74 @@
                 </span>
                 {% endif %}
               </td>
-              <td style="padding: 0.75rem 0.5rem; font-weight: 500; color: #374151;">{{ log.recipient|truncatechars:25 }}</td>
-              <td style="padding: 0.75rem 0.5rem; color: #64748b;">{{ log.subject }}</td>
+              <td style="padding: 0.75rem 0.5rem; font-weight: 500; color: #374151;">{{ log.subject }}</td>
+              <td style="padding: 0.75rem 0.5rem; text-align: center; font-weight: 600; color: #475569;">{{ log.total_recipients }}</td>
               <td style="padding: 0.75rem 0.5rem; text-align: center;">
-                {% if log.status == 'delivered' %}
                 <span style="display: inline-flex; align-items: center; gap: 0.25rem; padding: 0.25rem 0.5rem; background: #dcfce7; color: #166534; border-radius: 4px; font-size: 0.7rem; font-weight: 600;">
-                  <i class="fa-solid fa-circle-check"></i> Delivered
+                  <i class="fa-solid fa-circle-check"></i> {{ log.delivered_count }}
                 </span>
-                {% elif log.status == 'sent' %}
-                <span style="display: inline-flex; align-items: center; gap: 0.25rem; padding: 0.25rem 0.5rem; background: #dbeafe; color: #1e40af; border-radius: 4px; font-size: 0.7rem; font-weight: 600;">
-                  <i class="fa-solid fa-paper-plane"></i> Sent
-                </span>
-                {% elif log.status == 'queued' %}
-                <span style="display: inline-flex; align-items: center; gap: 0.25rem; padding: 0.25rem 0.5rem; background: #f1f5f9; color: #475569; border-radius: 4px; font-size: 0.7rem; font-weight: 600;">
-                  <i class="fa-solid fa-clock"></i> Queued
-                </span>
-                {% elif log.status == 'failed' %}
+              </td>
+              <td style="padding: 0.75rem 0.5rem; text-align: center;">
+                {% if log.failed_count > 0 %}
                 <span style="display: inline-flex; align-items: center; gap: 0.25rem; padding: 0.25rem 0.5rem; background: #fef2f2; color: #dc2626; border-radius: 4px; font-size: 0.7rem; font-weight: 600;">
-                  <i class="fa-solid fa-circle-xmark"></i> Failed
-                </span>
-                {% elif log.status == 'bounced' %}
-                <span style="display: inline-flex; align-items: center; gap: 0.25rem; padding: 0.25rem 0.5rem; background: #fef3c7; color: #b45309; border-radius: 4px; font-size: 0.7rem; font-weight: 600;">
-                  <i class="fa-solid fa-rotate-left"></i> Bounced
+                  <i class="fa-solid fa-circle-xmark"></i> {{ log.failed_count }}
                 </span>
                 {% else %}
-                <span style="display: inline-flex; align-items: center; gap: 0.25rem; padding: 0.25rem 0.5rem; background: #f1f5f9; color: #475569; border-radius: 4px; font-size: 0.7rem; font-weight: 600;">
-                  {{ log.status|title }}
-                </span>
+                <span style="color: #94a3b8;">0</span>
                 {% endif %}
               </td>
               <td style="padding: 0.75rem 0.5rem; color: #64748b; font-size: 0.8125rem;">
-                {% load tz %}
                 {{ log.sent_at|timezone:"America/Chicago"|date:"M j, g:i A" }}
               </td>
-              <td style="padding: 0.75rem 0.5rem;">
-                {% if log.error_message %}
-                <span class="error-preview" style="color: #dc2626; font-size: 0.75rem; cursor: pointer;" onclick="showErrorDetails('{{ log.error_message|escapejs }}')" title="{{ log.error_message }}">
-                  <i class="fa-solid fa-triangle-exclamation"></i> {{ log.error_message|truncatechars:30 }}
-                </span>
-                {% else %}
-                <span style="color: #94a3b8;">—</span>
-                {% endif %}
+            </tr>
+            <!-- Expanded recipients row -->
+            <tr id="recipients-{{ log.id }}" style="display: none;">
+              <td colspan="7" style="padding: 0; background: #f8fafc;">
+                <div style="padding: 1rem 1.5rem; border-left: 3px solid #52796f;">
+                  <div style="font-size: 0.75rem; font-weight: 600; color: #64748b; text-transform: uppercase; margin-bottom: 0.75rem;">
+                    Recipients ({{ log.total_recipients }})
+                  </div>
+                  <table style="width: 100%; border-collapse: collapse; font-size: 0.8125rem;">
+                    <thead>
+                      <tr style="border-bottom: 1px solid #e2e8f0;">
+                        <th style="text-align: left; padding: 0.5rem; font-size: 0.65rem; font-weight: 600; color: #94a3b8; text-transform: uppercase;">Type</th>
+                        <th style="text-align: left; padding: 0.5rem; font-size: 0.65rem; font-weight: 600; color: #94a3b8; text-transform: uppercase;">Recipient</th>
+                        <th style="text-align: center; padding: 0.5rem; font-size: 0.65rem; font-weight: 600; color: #94a3b8; text-transform: uppercase;">Status</th>
+                        <th style="text-align: left; padding: 0.5rem; font-size: 0.65rem; font-weight: 600; color: #94a3b8; text-transform: uppercase;">Error</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {% for r in log.recipients %}
+                      <tr style="border-bottom: 1px solid #f1f5f9; {% if r.status == 'failed' or r.status == 'bounced' or r.status == 'undelivered' %}background: #fef2f2;{% endif %}">
+                        <td style="padding: 0.5rem;">
+                          {% if r.type == 'email' %}
+                          <i class="fa-solid fa-envelope" style="color: #3b82f6; font-size: 0.7rem;"></i>
+                          {% else %}
+                          <i class="fa-solid fa-message" style="color: #22c55e; font-size: 0.7rem;"></i>
+                          {% endif %}
+                        </td>
+                        <td style="padding: 0.5rem; color: #374151;">{{ r.recipient }}</td>
+                        <td style="padding: 0.5rem; text-align: center;">
+                          {% if r.status == 'delivered' %}
+                          <span style="padding: 0.125rem 0.375rem; background: #dcfce7; color: #166534; border-radius: 3px; font-size: 0.65rem; font-weight: 600;">Delivered</span>
+                          {% elif r.status == 'sent' %}
+                          <span style="padding: 0.125rem 0.375rem; background: #dbeafe; color: #1e40af; border-radius: 3px; font-size: 0.65rem; font-weight: 600;">Sent</span>
+                          {% elif r.status == 'failed' or r.status == 'undelivered' %}
+                          <span style="padding: 0.125rem 0.375rem; background: #fef2f2; color: #dc2626; border-radius: 3px; font-size: 0.65rem; font-weight: 600;">Failed</span>
+                          {% elif r.status == 'bounced' %}
+                          <span style="padding: 0.125rem 0.375rem; background: #fef3c7; color: #b45309; border-radius: 3px; font-size: 0.65rem; font-weight: 600;">Bounced</span>
+                          {% else %}
+                          <span style="padding: 0.125rem 0.375rem; background: #f1f5f9; color: #475569; border-radius: 3px; font-size: 0.65rem; font-weight: 600;">{{ r.status|title }}</span>
+                          {% endif %}
+                        </td>
+                        <td style="padding: 0.5rem; color: #dc2626; font-size: 0.75rem;">
+                          {% if r.error_message %}{{ r.error_message|truncatechars:50 }}{% else %}<span style="color: #94a3b8;">—</span>{% endif %}
+                        </td>
+                      </tr>
+                      {% endfor %}
+                    </tbody>
+                  </table>
+                </div>
               </td>
             </tr>
             {% endfor %}
@@ -2246,6 +2277,20 @@
       }
     });
 
+    // Toggle recipients expansion
+    function toggleRecipients(logId) {
+      const recipientsRow = document.getElementById('recipients-' + logId);
+      const expandIcon = document.getElementById('expand-' + logId);
+
+      if (recipientsRow.style.display === 'none') {
+        recipientsRow.style.display = '';
+        expandIcon.style.transform = 'rotate(90deg)';
+      } else {
+        recipientsRow.style.display = 'none';
+        expandIcon.style.transform = 'rotate(0deg)';
+      }
+    }
+
     // Delivery log filtering
     function filterDeliveryLog(filter) {
       // Update button states
@@ -2261,12 +2306,18 @@
         }
       });
 
-      // Filter rows
+      // Filter rows - show messages that have failed recipients
       document.querySelectorAll('.delivery-log-row').forEach(row => {
+        const recipientsRow = row.nextElementSibling;
         if (filter === 'all') {
           row.style.display = '';
         } else if (filter === 'failed') {
-          row.style.display = row.dataset.status === 'failed' ? '' : 'none';
+          const hasFailed = parseInt(row.dataset.hasFailed) > 0;
+          row.style.display = hasFailed ? '' : 'none';
+          // Also hide expanded recipients if filtering
+          if (!hasFailed && recipientsRow) {
+            recipientsRow.style.display = 'none';
+          }
         }
       });
     }

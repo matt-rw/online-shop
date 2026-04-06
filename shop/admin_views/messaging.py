@@ -1272,36 +1272,65 @@ def messages_dashboard(request):
     folders = MessageFolder.objects.filter(is_archived=False)
     archived_folders = MessageFolder.objects.filter(is_archived=True)
 
-    # Get recent delivery logs (combined email and SMS, most recent 10)
-    recent_email_logs = EmailLog.objects.select_related("quick_message").order_by("-sent_at")[:10]
-    recent_sms_logs = SMSLog.objects.select_related("quick_message").order_by("-sent_at")[:10]
+    # Get recent bulk message sends (QuickMessages with delivery logs)
+    recent_quick_messages = QuickMessage.objects.exclude(
+        status__in=["draft", "scheduled"]
+    ).order_by("-created_at")[:10]
 
-    # Combine and format logs for display
+    # Build delivery log grouped by message
     delivery_logs = []
-    for log in recent_email_logs:
-        delivery_logs.append({
-            "id": log.id,
-            "type": "email",
-            "recipient": log.email_address,
-            "subject": log.subject[:50] + "..." if len(log.subject) > 50 else log.subject,
-            "status": log.status,
-            "error_message": log.error_message,
-            "sent_at": log.sent_at,
-        })
-    for log in recent_sms_logs:
-        delivery_logs.append({
-            "id": log.id,
-            "type": "sms",
-            "recipient": log.phone_number,
-            "subject": (log.message_body[:50] + "...") if len(log.message_body) > 50 else log.message_body,
-            "status": log.status,
-            "error_message": log.error_message,
-            "sent_at": log.sent_at,
-        })
+    for qm in recent_quick_messages:
+        # Get all logs for this quick message
+        email_logs = list(EmailLog.objects.filter(quick_message=qm).order_by("-sent_at"))
+        sms_logs = list(SMSLog.objects.filter(quick_message=qm).order_by("-sent_at"))
 
-    # Sort by sent_at descending and limit to 10
-    delivery_logs.sort(key=lambda x: x["sent_at"], reverse=True)
-    delivery_logs = delivery_logs[:10]
+        recipients = []
+        failed_count = 0
+        delivered_count = 0
+
+        for log in email_logs:
+            is_failed = log.status in ["failed", "bounced"]
+            if is_failed:
+                failed_count += 1
+            elif log.status in ["delivered", "sent"]:
+                delivered_count += 1
+            recipients.append({
+                "type": "email",
+                "recipient": log.email_address,
+                "status": log.status,
+                "error_message": log.error_message or "",
+                "sent_at": log.sent_at,
+            })
+
+        for log in sms_logs:
+            is_failed = log.status in ["failed", "undelivered"]
+            if is_failed:
+                failed_count += 1
+            elif log.status in ["delivered", "sent"]:
+                delivered_count += 1
+            recipients.append({
+                "type": "sms",
+                "recipient": log.phone_number,
+                "status": log.status,
+                "error_message": log.error_message or "",
+                "sent_at": log.sent_at,
+            })
+
+        # Sort recipients by sent_at descending
+        recipients.sort(key=lambda x: x["sent_at"], reverse=True)
+
+        total_recipients = len(recipients)
+        if total_recipients > 0:
+            delivery_logs.append({
+                "id": qm.id,
+                "message_type": qm.message_type,
+                "subject": qm.subject[:50] + "..." if len(qm.subject) > 50 else qm.subject,
+                "sent_at": qm.created_at,
+                "total_recipients": total_recipients,
+                "delivered_count": delivered_count,
+                "failed_count": failed_count,
+                "recipients": recipients,
+            })
 
     context = {
         "messages": messages[:100],  # Limit to 100 most recent

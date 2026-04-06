@@ -1983,10 +1983,13 @@
         }
         html += '</div>';
 
-        // Edit button for manual orders
+        // Edit buttons
+        html += '<div style="display: flex; gap: 0.5rem; margin-top: 0.75rem;">';
+        html += `<button onclick="event.stopPropagation(); editOrderDetails(${orderId})" class="btn btn-secondary" style="flex: 1;"><i class="fa-solid fa-user-pen"></i> Edit Details</button>`;
         if (isManual) {
-          html += `<button onclick="event.stopPropagation(); editManualOrder(${orderId})" class="btn btn-secondary" style="margin-top: 0.75rem; width: 100%;"><i class="fa-solid fa-edit"></i> Edit Order</button>`;
+          html += `<button onclick="event.stopPropagation(); editManualOrder(${orderId})" class="btn btn-secondary" style="flex: 1;"><i class="fa-solid fa-edit"></i> Edit All</button>`;
         }
+        html += '</div>';
         html += '</div>';
 
         html += '</div>';
@@ -2557,6 +2560,78 @@
     function closeManualOrderModal() {
       document.getElementById('manualOrderModal').style.display = 'none';
       manualOrderLineItems = [];
+    }
+
+    // Edit Details Modal Functions (for customer info and address only)
+    async function editOrderDetails(orderId) {
+      try {
+        const response = await fetch(`?action=get_order&order_id=${orderId}`);
+        const data = await response.json();
+        if (!data.success) {
+          alert('Failed to load order details');
+          return;
+        }
+        const order = data.order;
+
+        // Populate form fields
+        document.getElementById('editDetailsOrderId').value = orderId;
+        document.getElementById('editDetailsName').value = order.customer_name || '';
+        document.getElementById('editDetailsEmail').value = order.email || '';
+        document.getElementById('editDetailsPhone').value = order.phone || '';
+
+        // Populate shipping address
+        if (order.shipping_address) {
+          document.getElementById('editDetailsLine1').value = order.shipping_address.line1 || '';
+          document.getElementById('editDetailsLine2').value = order.shipping_address.line2 || '';
+          document.getElementById('editDetailsCity').value = order.shipping_address.city || '';
+          document.getElementById('editDetailsRegion').value = order.shipping_address.region || '';
+          document.getElementById('editDetailsPostal').value = order.shipping_address.postal_code || '';
+          document.getElementById('editDetailsCountry').value = order.shipping_address.country || 'US';
+        } else {
+          document.getElementById('editDetailsLine1').value = '';
+          document.getElementById('editDetailsLine2').value = '';
+          document.getElementById('editDetailsCity').value = '';
+          document.getElementById('editDetailsRegion').value = '';
+          document.getElementById('editDetailsPostal').value = '';
+          document.getElementById('editDetailsCountry').value = 'US';
+        }
+
+        document.getElementById('editDetailsModal').style.display = 'flex';
+      } catch (error) {
+        console.error('Error:', error);
+        alert('Failed to load order details');
+      }
+    }
+
+    function closeEditDetailsModal() {
+      document.getElementById('editDetailsModal').style.display = 'none';
+    }
+
+    async function submitEditDetails(event) {
+      event.preventDefault();
+      const form = event.target;
+      const formData = new FormData(form);
+
+      try {
+        const response = await fetch('', {
+          method: 'POST',
+          body: formData,
+          headers: {
+            'X-Requested-With': 'XMLHttpRequest'
+          }
+        });
+        const data = await response.json();
+
+        if (data.success) {
+          closeEditDetailsModal();
+          location.reload();
+        } else {
+          alert(data.error || 'Failed to update order');
+        }
+      } catch (error) {
+        console.error('Error:', error);
+        alert('Failed to update order');
+      }
     }
 
     function removeShippingAddress() {
@@ -3476,11 +3551,93 @@
     </div>
   </div>
 
+  <!-- Edit Order Details Modal (for all orders - customer info and address only) -->
+  <div class="modal-overlay" id="editDetailsModal">
+    <div class="modal-content" style="max-width: 500px;">
+      <h2 style="font-size: 1.5rem; font-weight: 700; margin-bottom: 1rem;">Edit Order Details</h2>
+      <form id="editDetailsForm" onsubmit="submitEditDetails(event)">
+        {% csrf_token %}
+        <input type="hidden" name="action" value="edit_details">
+        <input type="hidden" name="order_id" id="editDetailsOrderId" value="">
+
+        <div class="form-group">
+          <label for="editDetailsName">Customer Name</label>
+          <input type="text" name="customer_name" id="editDetailsName" placeholder="John Smith">
+        </div>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+          <div class="form-group">
+            <label for="editDetailsEmail">Email</label>
+            <input type="email" name="customer_email" id="editDetailsEmail" placeholder="customer@example.com">
+          </div>
+          <div class="form-group">
+            <label for="editDetailsPhone">Phone</label>
+            <input type="tel" name="customer_phone" id="editDetailsPhone" placeholder="(555) 123-4567">
+          </div>
+        </div>
+
+        <hr style="margin: 1.25rem 0; border: none; border-top: 1px solid #e2e8f0;">
+        <h3 style="font-size: 1rem; font-weight: 600; margin-bottom: 1rem; color: #475569;">
+          <i class="fa-solid fa-truck" style="margin-right: 0.5rem;"></i> Shipping Address
+        </h3>
+
+        <div class="form-group">
+          <label for="editDetailsLine1">Street Address</label>
+          <input type="text" name="shipping_line1" id="editDetailsLine1" placeholder="123 Main St">
+        </div>
+        <div class="form-group">
+          <label for="editDetailsLine2">Apt, Suite, etc.</label>
+          <input type="text" name="shipping_line2" id="editDetailsLine2" placeholder="Apt 4B">
+        </div>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+          <div class="form-group">
+            <label for="editDetailsCity">City</label>
+            <input type="text" name="shipping_city" id="editDetailsCity" placeholder="Chicago">
+          </div>
+          <div class="form-group">
+            <label for="editDetailsRegion">State / Region</label>
+            <input type="text" name="shipping_region" id="editDetailsRegion" placeholder="IL">
+          </div>
+        </div>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+          <div class="form-group">
+            <label for="editDetailsPostal">Postal Code</label>
+            <input type="text" name="shipping_postal" id="editDetailsPostal" placeholder="60601">
+          </div>
+          <div class="form-group">
+            <label for="editDetailsCountry">Country</label>
+            <select name="shipping_country" id="editDetailsCountry">
+              <option value="US" selected>United States</option>
+              <option value="CA">Canada</option>
+              <option value="GB">United Kingdom</option>
+              <option value="AU">Australia</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="form-actions" style="margin-top: 1.5rem; display: flex; gap: 0.75rem; justify-content: flex-end;">
+          <button type="submit" class="btn-primary" style="background: linear-gradient(135deg, #52796f 0%, #3a5a52 100%);">
+            <i class="fa-solid fa-check"></i> Save Changes
+          </button>
+          <button type="button" class="btn-secondary" onclick="closeEditDetailsModal()">
+            Cancel
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
   <script>
     // Close manual order modal on overlay click
     document.getElementById('manualOrderModal').addEventListener('click', function(e) {
       if (e.target === this) {
         closeManualOrderModal();
+      }
+    });
+
+    // Close edit details modal on overlay click
+    document.getElementById('editDetailsModal').addEventListener('click', function(e) {
+      if (e.target === this) {
+        closeEditDetailsModal();
       }
     });
 

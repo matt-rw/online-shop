@@ -116,6 +116,73 @@ def orders_dashboard(request):
             except Exception as e:
                 return JsonResponse({"success": False, "error": str(e)})
 
+        elif action == "edit_details":
+            # Edit customer info and shipping address for any order
+            try:
+                order_id = request.POST.get("order_id")
+                order = Order.objects.select_related("shipping_address").get(id=order_id)
+
+                # Update customer info
+                customer_name = request.POST.get("customer_name", "").strip()
+                customer_email = request.POST.get("customer_email", "").strip()
+                customer_phone = request.POST.get("customer_phone", "").strip()
+
+                order.customer_name = customer_name
+                order.email = customer_email
+                order.phone = customer_phone
+                order.save(update_fields=["customer_name", "email", "phone"])
+
+                # Update or create shipping address
+                shipping_line1 = request.POST.get("shipping_line1", "").strip()
+                shipping_line2 = request.POST.get("shipping_line2", "").strip()
+                shipping_city = request.POST.get("shipping_city", "").strip()
+                shipping_region = request.POST.get("shipping_region", "").strip()
+                shipping_postal = request.POST.get("shipping_postal", "").strip()
+                shipping_country = request.POST.get("shipping_country", "US").strip()
+
+                if shipping_line1 and shipping_city and shipping_postal:
+                    if order.shipping_address:
+                        # Update existing address
+                        order.shipping_address.full_name = customer_name or order.shipping_address.full_name
+                        order.shipping_address.line1 = shipping_line1
+                        order.shipping_address.line2 = shipping_line2
+                        order.shipping_address.city = shipping_city
+                        order.shipping_address.region = shipping_region
+                        order.shipping_address.postal_code = shipping_postal
+                        order.shipping_address.country = shipping_country
+                        order.shipping_address.email = customer_email
+                        order.shipping_address.save()
+                        # Re-geocode the updated address
+                        try:
+                            order.shipping_address.geocode()
+                        except Exception:
+                            pass
+                    else:
+                        # Create new address
+                        from shop.models import Address
+                        order.shipping_address = Address.objects.create(
+                            full_name=customer_name or "Customer",
+                            line1=shipping_line1,
+                            line2=shipping_line2,
+                            city=shipping_city,
+                            region=shipping_region,
+                            postal_code=shipping_postal,
+                            country=shipping_country,
+                            email=customer_email,
+                        )
+                        order.save(update_fields=["shipping_address"])
+                        # Geocode the new address
+                        try:
+                            order.shipping_address.geocode()
+                        except Exception:
+                            pass
+
+                return JsonResponse({"success": True})
+            except Order.DoesNotExist:
+                return JsonResponse({"success": False, "error": "Order not found"})
+            except Exception as e:
+                return JsonResponse({"success": False, "error": str(e)})
+
         elif action == "get_order_items":
             try:
                 order_id = request.POST.get("order_id")
@@ -228,7 +295,7 @@ def orders_dashboard(request):
                 "success": True,
                 "order": {
                     "id": order.id,
-                    "customer_name": order.customer_name,
+                    "customer_name": order.customer_name or (order.shipping_address.full_name if order.shipping_address else ""),
                     "email": order.email,
                     "phone": order.phone,
                     "status": order.status,
@@ -460,6 +527,8 @@ def orders_dashboard(request):
         # Customer name
         if order.customer_name:
             customer = order.customer_name
+        elif order.shipping_address and order.shipping_address.full_name:
+            customer = order.shipping_address.full_name
         elif order.user:
             customer = f"{order.user.first_name} {order.user.last_name}".strip() or order.user.email
         else:
@@ -497,9 +566,11 @@ def orders_dashboard(request):
     # Sort by -id for stability (edited orders won't jump around)
     orders_data = []
     for order in orders.order_by("-id")[:50]:  # Limit to 50 most recent
-        # Use customer_name for manual orders, otherwise use user's name
+        # Use customer_name for manual orders, otherwise use shipping address name or user's name
         if order.customer_name:
             user_name = order.customer_name
+        elif order.shipping_address and order.shipping_address.full_name:
+            user_name = order.shipping_address.full_name
         elif order.user:
             user_name = f"{order.user.first_name} {order.user.last_name}".strip() or order.user.email
         else:
