@@ -894,7 +894,7 @@
     .orders-table th {
       text-align: left;
       padding: 0.75rem 1rem;
-      font-size: 0.7rem;
+      font-size: 0.75rem;
       font-weight: 600;
       text-transform: uppercase;
       letter-spacing: 0.05em;
@@ -904,9 +904,9 @@
     }
 
     .orders-table td {
-      padding: 0.875rem 1rem;
+      padding: 1rem;
       border-bottom: 1px solid #f1f5f9;
-      font-size: 0.875rem;
+      font-size: 0.9375rem;
       vertical-align: middle;
     }
 
@@ -916,15 +916,17 @@
 
     .orders-table .order-id {
       font-weight: 600;
+      font-size: 1rem;
       color: #0f172a;
     }
 
     .orders-table .customer-cell {
-      max-width: 180px;
+      max-width: 200px;
     }
 
     .orders-table .customer-name {
-      font-weight: 500;
+      font-weight: 600;
+      font-size: 0.9375rem;
       color: #0f172a;
       white-space: nowrap;
       overflow: hidden;
@@ -932,7 +934,7 @@
     }
 
     .orders-table .customer-email {
-      font-size: 0.75rem;
+      font-size: 0.8125rem;
       color: #64748b;
       white-space: nowrap;
       overflow: hidden;
@@ -940,18 +942,21 @@
     }
 
     .orders-table .amount-cell {
-      font-weight: 600;
+      font-weight: 700;
+      font-size: 1rem;
       color: #0f172a;
     }
 
     .orders-table .profit-positive {
-      color: #52796f;
-      font-weight: 500;
+      color: #166534;
+      font-weight: 600;
+      font-size: 0.9375rem;
     }
 
     .orders-table .profit-negative {
-      color: #ef4444;
-      font-weight: 500;
+      color: #dc2626;
+      font-weight: 600;
+      font-size: 0.9375rem;
     }
 
     .orders-table .actions-cell {
@@ -1036,13 +1041,20 @@
     }
 
     .status-badge-sm {
-      display: inline-block;
-      padding: 0.25rem 0.5rem;
-      border-radius: 6px;
-      font-size: 0.6875rem;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.5rem 0.875rem;
+      border-radius: 8px;
+      font-size: 0.875rem;
       font-weight: 600;
       text-transform: uppercase;
-      letter-spacing: 0.03em;
+      letter-spacing: 0.02em;
+      white-space: nowrap;
+    }
+
+    .status-badge-sm i {
+      font-size: 0.875rem;
     }
 
     .status-badge-sm.created {
@@ -1051,23 +1063,23 @@
     }
 
     .status-badge-sm.awaiting_payment {
-      background: #dbeafe;
-      color: #1e40af;
+      background: #e0e7ff;
+      color: #3730a3;
     }
 
     .status-badge-sm.paid {
-      background: #d8e2dc;
-      color: #354f52;
+      background: #dcfce7;
+      color: #166534;
     }
 
     .status-badge-sm.shipped {
       background: #dbeafe;
-      color: #1e3a8a;
+      color: #1e40af;
     }
 
     .status-badge-sm.fulfilled {
-      background: #d8e2dc;
-      color: #354f52;
+      background: #d1fae5;
+      color: #065f46;
     }
 
     .status-badge-sm.canceled {
@@ -1080,9 +1092,108 @@
       color: #92400e;
     }
 
+    .status-badge-sm.return_requested {
+      background: #fae8ff;
+      color: #86198f;
+    }
+
     .status-badge-sm.failed {
       background: #fee2e2;
       color: #991b1b;
+    }
+
+    /* Filter Dropdown */
+    .filter-dropdown {
+      position: relative;
+    }
+
+    .filter-dropdown-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.625rem 1rem;
+      border: 1px solid #e2e8f0;
+      background: white;
+      color: #1e293b;
+      border-radius: 8px;
+      font-size: 0.9375rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+
+    .filter-dropdown-btn:hover {
+      background: #f8fafc;
+      border-color: #cbd5e1;
+    }
+
+    .filter-dropdown-btn.active {
+      background: #f0fdf4;
+      border-color: #22c55e;
+      color: #166534;
+    }
+
+    .filter-dropdown-menu {
+      display: none;
+      position: absolute;
+      top: calc(100% + 4px);
+      left: 0;
+      min-width: 200px;
+      background: white;
+      border: 1px solid #e2e8f0;
+      border-radius: 10px;
+      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.12);
+      z-index: 100;
+      padding: 0.5rem;
+    }
+
+    .filter-dropdown-menu.open {
+      display: block;
+    }
+
+    .filter-dropdown-item {
+      display: flex;
+      align-items: center;
+      gap: 0.625rem;
+      padding: 0.625rem 0.875rem;
+      border-radius: 6px;
+      font-size: 0.9375rem;
+      color: #475569;
+      cursor: pointer;
+      transition: all 0.1s;
+    }
+
+    .filter-dropdown-item:hover {
+      background: #f1f5f9;
+      color: #1e293b;
+    }
+
+    .filter-dropdown-item.active {
+      background: #f0fdf4;
+      color: #166534;
+      font-weight: 600;
+    }
+
+    .filter-dropdown-item i {
+      width: 1.25rem;
+      text-align: center;
+      font-size: 0.875rem;
+    }
+
+    .filter-dropdown-divider {
+      height: 1px;
+      background: #e2e8f0;
+      margin: 0.375rem 0;
+    }
+
+    .filter-select {
+      padding: 0.625rem 1rem;
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+      font-size: 0.9375rem;
+      font-weight: 500;
+      background: white;
+      color: #1e293b;
     }
 
     .manual-order-badge {
@@ -1337,37 +1448,84 @@
       <!-- Search and Filter Controls -->
       <div style="display: flex; gap: 0.75rem; margin-bottom: 1rem; flex-wrap: wrap; align-items: center;">
         <div style="flex: 1; min-width: 180px; position: relative;">
-          <i class="fa-solid fa-search" style="position: absolute; left: 0.75rem; top: 50%; transform: translateY(-50%); color: #94a3b8; font-size: 0.75rem;"></i>
+          <i class="fa-solid fa-search" style="position: absolute; left: 0.75rem; top: 50%; transform: translateY(-50%); color: #94a3b8; font-size: 0.8rem;"></i>
           <input type="text" id="orderSearch" placeholder="Search orders..."
-            style="width: 100%; padding: 0.5rem 0.75rem 0.5rem 2rem; border: 1px solid #e2e8f0; border-radius: 6px; font-size: 0.8125rem;"
+            style="width: 100%; padding: 0.625rem 0.875rem 0.625rem 2.25rem; border: 1px solid #e2e8f0; border-radius: 8px; font-size: 0.9375rem;"
             oninput="filterOrders()">
         </div>
-        <select id="statusFilter" onchange="filterOrders()" style="padding: 0.5rem 0.625rem; border: 1px solid #e2e8f0; border-radius: 6px; font-size: 0.8125rem;">
-          <option value="">All Statuses</option>
+
+        <!-- Status Filter Dropdown -->
+        <div class="filter-dropdown" style="position: relative;">
+          <button onclick="toggleFilterDropdown('status')" class="filter-dropdown-btn" id="statusDropdownBtn">
+            <i class="fa-solid fa-filter"></i>
+            <span id="statusFilterLabel">All Orders</span>
+            <i class="fa-solid fa-chevron-down" style="font-size: 0.7rem; margin-left: 0.25rem;"></i>
+          </button>
+          <div class="filter-dropdown-menu" id="statusDropdownMenu">
+            <div class="filter-dropdown-item active" data-status="" onclick="setStatusFilter('')">
+              <i class="fa-solid fa-list"></i> All Orders
+            </div>
+            <div class="filter-dropdown-divider"></div>
+            <div class="filter-dropdown-item" data-status="PAID" onclick="setStatusFilter('PAID')">
+              <i class="fa-solid fa-box"></i> Ready to Ship
+            </div>
+            <div class="filter-dropdown-item" data-status="SHIPPED" onclick="setStatusFilter('SHIPPED')">
+              <i class="fa-solid fa-truck"></i> In Transit
+            </div>
+            <div class="filter-dropdown-item" data-status="FULFILLED" onclick="setStatusFilter('FULFILLED')">
+              <i class="fa-solid fa-circle-check"></i> Delivered
+            </div>
+            <div class="filter-dropdown-divider"></div>
+            <div class="filter-dropdown-item" data-status="CREATED" onclick="setStatusFilter('CREATED')">
+              <i class="fa-solid fa-clock"></i> Pending
+            </div>
+            <div class="filter-dropdown-item" data-status="AWAITING_PAYMENT" onclick="setStatusFilter('AWAITING_PAYMENT')">
+              <i class="fa-solid fa-credit-card"></i> Awaiting Payment
+            </div>
+            <div class="filter-dropdown-divider"></div>
+            <div class="filter-dropdown-item" data-status="RETURN_REQUESTED" onclick="setStatusFilter('RETURN_REQUESTED')">
+              <i class="fa-solid fa-box-open"></i> Return Requested
+            </div>
+            <div class="filter-dropdown-item" data-status="REFUNDED" onclick="setStatusFilter('REFUNDED')">
+              <i class="fa-solid fa-rotate-left"></i> Refunded
+            </div>
+            <div class="filter-dropdown-item" data-status="CANCELED" onclick="setStatusFilter('CANCELED')">
+              <i class="fa-solid fa-ban"></i> Canceled
+            </div>
+          </div>
+        </div>
+        <select id="statusFilter" onchange="filterOrders();" style="display: none;">
+          <option value="">All</option>
           <option value="CREATED">Created</option>
           <option value="AWAITING_PAYMENT">Awaiting</option>
           <option value="PAID">Paid</option>
           <option value="SHIPPED">Shipped</option>
           <option value="FULFILLED">Fulfilled</option>
+          <option value="RETURN_REQUESTED">Return Requested</option>
           <option value="CANCELED">Canceled</option>
           <option value="REFUNDED">Refunded</option>
         </select>
-        <select id="sortBy" onchange="sortOrders()" style="padding: 0.5rem 0.625rem; border: 1px solid #e2e8f0; border-radius: 6px; font-size: 0.8125rem;">
+
+        <!-- Sort Dropdown -->
+        <select id="sortBy" onchange="sortOrders()" class="filter-select">
           <option value="date-desc">Newest</option>
           <option value="date-asc">Oldest</option>
-          <option value="total-desc">High $</option>
-          <option value="total-asc">Low $</option>
-          <option value="profit-desc">Profit</option>
+          <option value="total-desc">Highest $</option>
+          <option value="total-asc">Lowest $</option>
+          <option value="profit-desc">Most Profit</option>
         </select>
-        <span style="color: #94a3b8; font-size: 0.75rem;"><span id="visibleOrderCount">{{ orders|length }}</span> orders</span>
+
+        <span style="color: #64748b; font-size: 0.875rem; font-weight: 500;"><span id="visibleOrderCount">{{ orders|length }}</span> orders</span>
+
         {% if test_orders_count > 0 %}
-        <label style="display: flex; align-items: center; gap: 0.375rem; cursor: pointer; font-size: 0.75rem; color: #64748b;">
-          <input type="checkbox" id="showTestOrders" {% if show_test_orders %}checked{% endif %} onchange="toggleTestOrders(this.checked)" style="width: 14px; height: 14px; accent-color: #f59e0b; cursor: pointer;">
+        <label style="display: flex; align-items: center; gap: 0.375rem; cursor: pointer; font-size: 0.8125rem; color: #64748b;">
+          <input type="checkbox" id="showTestOrders" {% if show_test_orders %}checked{% endif %} onchange="toggleTestOrders(this.checked)" style="width: 16px; height: 16px; accent-color: #f59e0b; cursor: pointer;">
           Test ({{ test_orders_count }})
         </label>
         {% endif %}
-        <button onclick="exportOrdersCSV()" style="padding: 0.375rem 0.625rem; font-size: 0.75rem; border: 1px solid #e2e8f0; background: white; border-radius: 6px; cursor: pointer; color: #64748b;">
-          <i class="fa-solid fa-download"></i> CSV
+
+        <button onclick="exportOrdersCSV()" class="filter-select" style="cursor: pointer;">
+          <i class="fa-solid fa-download"></i> Export
         </button>
       </div>
 
@@ -1376,10 +1534,10 @@
         <table class="orders-table" style="margin: 0;">
           <thead style="position: sticky; top: 0; background: #f8fafc; z-index: 1;">
             <tr>
+              <th>Status</th>
               <th>Order</th>
               <th>Customer</th>
               <th>Items</th>
-              <th>Status</th>
               <th>Total</th>
               <th>Cost</th>
               <th>Profit</th>
@@ -1392,6 +1550,21 @@
           <tbody>
             {% for order in orders %}
             <tr class="order-row{% if order.exclude_from_stats %} excluded-order{% endif %}" data-order-id="{{ order.id }}" data-exclude-stats="{{ order.exclude_from_stats|yesno:'true,false' }}" data-is-manual="{% if order.stripe_payment_intent|slice:':7' == 'MANUAL_' %}true{% else %}false{% endif %}" onclick="toggleOrderExpand(this, event)" style="cursor: pointer;">
+              <td>
+                <span class="status-badge-sm {{ order.status|lower }}">
+                  {% if order.status == 'CREATED' %}<i class="fa-solid fa-clock"></i> Pending
+                  {% elif order.status == 'AWAITING_PAYMENT' %}<i class="fa-solid fa-credit-card"></i> Awaiting Payment
+                  {% elif order.status == 'PAID' %}<i class="fa-solid fa-box"></i> Ready to Ship
+                  {% elif order.status == 'SHIPPED' %}<i class="fa-solid fa-truck"></i> In Transit
+                  {% elif order.status == 'FULFILLED' %}<i class="fa-solid fa-circle-check"></i> Delivered
+                  {% elif order.status == 'CANCELED' %}<i class="fa-solid fa-ban"></i> Canceled
+                  {% elif order.status == 'RETURN_REQUESTED' %}<i class="fa-solid fa-box-open"></i> Return Requested
+                  {% elif order.status == 'REFUNDED' %}<i class="fa-solid fa-rotate-left"></i> Refunded
+                  {% elif order.status == 'FAILED' %}<i class="fa-solid fa-triangle-exclamation"></i> Error
+                  {% else %}{{ order.status|title }}
+                  {% endif %}
+                </span>
+              </td>
               <td>
                 <div style="display: flex; align-items: center; gap: 0.5rem;">
                   <i class="fa-solid fa-chevron-right expand-icon" style="color: #94a3b8; font-size: 0.7rem; transition: transform 0.2s;"></i>
@@ -1421,9 +1594,6 @@
                 {% else %}
                 <span style="color: #94a3b8;">—</span>
                 {% endif %}
-              </td>
-              <td>
-                <span class="status-badge-sm {{ order.status|lower }}">{{ order.status|title }}</span>
               </td>
               <td class="amount-cell">${{ order.total|floatformat:2 }}</td>
               <td>
@@ -3897,6 +4067,49 @@
     const orderRows = document.querySelectorAll('.order-row');
     const ordersTableBody = document.querySelector('.orders-table tbody');
 
+    function toggleFilterDropdown(type) {
+      const menu = document.getElementById(type + 'DropdownMenu');
+      const isOpen = menu.classList.contains('open');
+
+      // Close all dropdowns first
+      document.querySelectorAll('.filter-dropdown-menu').forEach(m => m.classList.remove('open'));
+
+      if (!isOpen) {
+        menu.classList.add('open');
+      }
+    }
+
+    // Close dropdown when clicking outside
+    document.addEventListener('click', function(e) {
+      if (!e.target.closest('.filter-dropdown')) {
+        document.querySelectorAll('.filter-dropdown-menu').forEach(m => m.classList.remove('open'));
+      }
+    });
+
+    function setStatusFilter(status) {
+      // Update hidden select
+      document.getElementById('statusFilter').value = status;
+
+      // Update dropdown item states
+      document.querySelectorAll('#statusDropdownMenu .filter-dropdown-item').forEach(item => {
+        item.classList.toggle('active', item.dataset.status === status);
+      });
+
+      // Update button label
+      const activeItem = document.querySelector(`#statusDropdownMenu .filter-dropdown-item[data-status="${status}"]`);
+      const label = activeItem ? activeItem.textContent.trim() : 'All Orders';
+      document.getElementById('statusFilterLabel').textContent = label;
+
+      // Update button style
+      const btn = document.getElementById('statusDropdownBtn');
+      btn.classList.toggle('active', status !== '');
+
+      // Close dropdown
+      document.getElementById('statusDropdownMenu').classList.remove('open');
+
+      filterOrders();
+    }
+
     function filterOrders() {
       const searchTerm = document.getElementById('orderSearch').value.toLowerCase();
       const statusFilter = document.getElementById('statusFilter').value;
@@ -3905,7 +4118,10 @@
       orderRows.forEach(row => {
         const detailsRow = document.getElementById('order-details-row-' + row.dataset.orderId);
         const text = row.innerText.toLowerCase();
-        const status = row.querySelector('.status-badge-sm')?.innerText.toUpperCase().replace(' ', '_') || '';
+        // Get status from the badge's class (e.g., "status-badge-sm paid" -> "PAID")
+        const badge = row.querySelector('.status-badge-sm');
+        const statusClass = badge ? [...badge.classList].find(c => c !== 'status-badge-sm') : '';
+        const status = statusClass ? statusClass.toUpperCase() : '';
 
         const matchesSearch = !searchTerm || text.includes(searchTerm);
         const matchesStatus = !statusFilter || status === statusFilter;

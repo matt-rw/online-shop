@@ -88,9 +88,10 @@ class OrderStatus(models.TextChoices):
     PAID = "PAID", "Paid"
     FAILED = "FAILED", "Failed"
     CANCELED = "CANCELED", "Canceled"
-    REFUNDED = "REFUNDED", "Refunded"
     SHIPPED = "SHIPPED", "Shipped"
     FULFILLED = "FULFILLED", "Fulfilled"
+    RETURN_REQUESTED = "RETURN_REQUESTED", "Return requested"
+    REFUNDED = "REFUNDED", "Refunded"
 
 
 class Order(models.Model):

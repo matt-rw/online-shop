@@ -220,7 +220,7 @@
   .poster-scroll-container {
     overflow: hidden;
     width: 100%;
-    height: 500px;
+    aspect-ratio: 21/9;
   }
 
   .poster-scroll-track {
@@ -244,7 +244,7 @@
   /* Static banner (no animation) */
   .poster-static {
     width: 100%;
-    height: 500px;
+    aspect-ratio: 21/9;
     overflow: hidden;
   }
 
@@ -252,6 +252,14 @@
     width: 100%;
     height: 100%;
     object-fit: cover;
+  }
+
+  /* Mobile: taller banner */
+  @media (max-width: 768px) {
+    .poster-scroll-container,
+    .poster-static {
+      aspect-ratio: 16/9;
+    }
   }
 
   @keyframes scroll-right {

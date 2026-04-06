@@ -1195,14 +1195,19 @@
               {% csrf_token %}
               <input type="hidden" name="draft_id" id="draftId" value="">
 
-              <div class="form-row" style="display: flex; gap: 1rem; align-items: center; flex-wrap: wrap;">
+              <div class="form-row" style="display: flex; gap: 0.75rem; align-items: center; flex-wrap: wrap;">
                 <div class="type-toggle">
                   <button type="button" class="type-btn active" id="typeEmail" onclick="setType('email')">📧 Email</button>
                   <button type="button" class="type-btn" id="typeSMS" onclick="setType('sms')">💬 SMS</button>
                 </div>
                 <input type="hidden" name="message_type" id="messageType" value="email">
 
-                <div style="display: flex; align-items: center; gap: 0.5rem;">
+                <button type="button" id="testModeBtn" onclick="toggleTest()" style="padding: 0.375rem 0.75rem; border: 1px solid #e2e8f0; background: white; color: #64748b; border-radius: 6px; font-size: 0.8125rem; font-weight: 500; cursor: pointer; transition: all 0.15s; display: flex; align-items: center; gap: 0.375rem;">
+                  <i class="fa-solid fa-flask" style="font-size: 0.75rem;"></i> Test
+                </button>
+                <input type="checkbox" id="testToggle" style="display: none;">
+
+                <div style="display: flex; align-items: center; gap: 0.5rem; margin-left: auto;">
                   <label style="font-size: 0.8125rem; color: #64748b;">Save to:</label>
                   <select name="folder_id" id="folderSelect" class="form-input" style="width: auto; padding: 0.5rem 0.75rem;">
                     <option value="">No folder</option>
@@ -1211,10 +1216,6 @@
                     {% endfor %}
                   </select>
                 </div>
-              </div>
-
-              <div class="option-row">
-                <label><input type="checkbox" id="testToggle" onchange="toggleTest()" style="accent-color: #f59e0b;"> Test Mode</label>
               </div>
 
               <div class="test-row" id="testRow">
@@ -1656,7 +1657,22 @@
     }
 
     function toggleTest() {
-      testMode = document.getElementById('testToggle').checked;
+      const checkbox = document.getElementById('testToggle');
+      const btn = document.getElementById('testModeBtn');
+      checkbox.checked = !checkbox.checked;
+      testMode = checkbox.checked;
+
+      // Update button style
+      if (testMode) {
+        btn.style.background = '#fef3c7';
+        btn.style.borderColor = '#f59e0b';
+        btn.style.color = '#92400e';
+      } else {
+        btn.style.background = 'white';
+        btn.style.borderColor = '#e2e8f0';
+        btn.style.color = '#64748b';
+      }
+
       document.getElementById('testRow').classList.toggle('active', testMode);
       if (testMode) {
         // Load saved test recipient based on message type
