@@ -16,97 +16,152 @@
       min-height: 100vh;
     }
 
-    /* Top Bar */
-    .top-bar {
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-      padding: 1.5rem 0 4rem;
+    /* Nav Links */
+    .nav-links {
+      background: linear-gradient(135deg, #52796f 0%, #3a5a52 100%);
+      padding: 1rem 2rem;
+      display: flex;
+      gap: 0.75rem;
+      align-items: center;
     }
-    .top-btn {
-      background: rgba(255, 255, 255, 0.2);
+    .nav-link {
+      background: rgba(255, 255, 255, 0.15);
       backdrop-filter: blur(10px);
       color: white;
-      padding: 0.625rem 1.25rem;
-      border-radius: 10px;
+      padding: 0.5rem 1rem;
+      border-radius: 8px;
       text-decoration: none;
-      font-size: 0.9375rem;
-      font-weight: 600;
+      font-size: 0.875rem;
+      font-weight: 500;
       transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-      border: 1px solid rgba(255, 255, 255, 0.2);
-      display: inline-flex;
-      align-items: center;
-      gap: 0.5rem;
-      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-      cursor: pointer;
+      border: 1px solid rgba(255, 255, 255, 0.1);
     }
-    .top-btn:hover {
-      background: rgba(255, 255, 255, 0.3);
-      transform: translateY(-2px);
-      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+    .nav-link:hover {
+      background: rgba(255, 255, 255, 0.25);
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    }
+
+    /* Top Bar */
+    .top-bar {
+      background: linear-gradient(135deg, #52796f 0%, #3a5a52 100%);
+      padding: 2rem 0 5rem;
+      box-shadow: 0 4px 20px rgba(16, 185, 129, 0.15);
     }
     .top-bar .container {
-      max-width: 1200px;
+      max-width: 1400px;
       margin: 0 auto;
       padding: 0 2rem;
+    }
+    .header {
       display: flex;
-      align-items: center;
       justify-content: space-between;
+      align-items: center;
     }
     .top-bar h1 {
       color: white;
-      font-size: 2rem;
+      font-size: 2.5rem;
       font-weight: 800;
+      letter-spacing: -0.02em;
     }
-    .compose-btn {
+    .header-action-btn {
       background: white;
-      color: #667eea;
+      color: #52796f;
       border: none;
-      padding: 0.75rem 1.5rem;
-      border-radius: 10px;
-      font-size: 0.9375rem;
-      font-weight: 600;
+      padding: 0.875rem 1.75rem;
+      border-radius: 12px;
+      font-size: 1rem;
+      font-weight: 700;
       cursor: pointer;
-      display: flex;
+      display: inline-flex;
       align-items: center;
       gap: 0.5rem;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-      transition: all 0.2s;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      transition: all 0.3s;
     }
-    .compose-btn:hover { transform: translateY(-2px); box-shadow: 0 6px 16px rgba(0,0,0,0.2); }
+    .header-action-btn:hover { transform: translateY(-2px); box-shadow: 0 4px 16px rgba(0,0,0,0.15); }
+    .top-btn {
+      background: rgba(255, 255, 255, 0.15);
+      backdrop-filter: blur(10px);
+      color: white;
+      padding: 0.5rem 1rem;
+      border-radius: 8px;
+      text-decoration: none;
+      font-size: 0.875rem;
+      font-weight: 500;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      cursor: pointer;
+    }
+    .top-btn:hover {
+      background: rgba(255, 255, 255, 0.25);
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    }
 
     /* Main Container */
     .main-container {
-      max-width: 1200px;
-      margin: -3rem auto 2rem;
+      max-width: 1400px;
+      margin: 0 auto 2rem;
       padding: 0 2rem;
     }
 
-    /* Stats Row */
-    .stats-row {
-      display: flex;
-      gap: 1rem;
-      margin-bottom: 1.5rem;
-    }
+    /* Stats Carousel */
+    {% include "admin/partials/stats_carousel_styles.html" %}
+
     .stat-card {
       background: white;
-      padding: 1.25rem 1.5rem;
-      border-radius: 12px;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+      border-radius: 16px;
+      padding: 1.75rem;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
       text-align: center;
-      flex: 1;
+      border: 1px solid rgba(226, 232, 240, 0.8);
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      position: relative;
+      overflow: hidden;
+    }
+    .stat-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 4px;
+      background: linear-gradient(90deg, #52796f, #3a5a52);
+      opacity: 0;
+      transition: opacity 0.3s;
+    }
+    .stat-card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 12px 28px rgba(0, 0, 0, 0.12);
+    }
+    .stat-card:hover::before {
+      opacity: 1;
+    }
+    .stat-card h3 {
+      color: #64748b;
+      font-size: 0.75rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      margin-bottom: 0.75rem;
     }
     .stat-card .number {
-      font-size: 1.75rem;
-      font-weight: 800;
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      background: linear-gradient(135deg, #52796f 0%, #3a5a52 100%);
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
       background-clip: text;
+      font-size: 2.25rem;
+      font-weight: 800;
+      letter-spacing: -0.02em;
     }
-    .stat-card .label {
-      font-size: 0.8125rem;
-      color: #64748b;
-      font-weight: 500;
-      margin-top: 0.25rem;
+    .stat-card .icon {
+      font-size: 1.75rem;
+      margin-bottom: 0.75rem;
+      color: #52796f;
     }
 
     /* File Explorer */
@@ -133,14 +188,14 @@
       padding: 0.5rem 1rem;
       border-radius: 8px;
       font-size: 0.875rem;
-      font-weight: 500;
+      font-weight: 600;
       cursor: pointer;
       border: 1px solid #e2e8f0;
       background: white;
       color: #475569;
       transition: all 0.15s;
     }
-    .back-btn:hover { background: #f1f5f9; }
+    .back-btn:hover { background: #f1f5f9; color: #1e293b; }
     .current-folder-title {
       font-size: 1.125rem;
       font-weight: 600;
@@ -249,14 +304,13 @@
       text-align: center;
     }
     .folder-name {
-      font-size: 0.9375rem;
+      font-size: 0.875rem;
       color: #334155;
       font-weight: 600;
       text-align: center;
-      max-width: 120px;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      white-space: nowrap;
+      max-width: 150px;
+      word-wrap: break-word;
+      line-height: 1.3;
     }
     .folder-menu-btn {
       position: absolute;
@@ -389,14 +443,14 @@
       padding: 0.5rem 1rem;
       border-radius: 8px;
       font-size: 0.875rem;
-      font-weight: 500;
+      font-weight: 600;
       cursor: pointer;
       border: 1px solid #e2e8f0;
       background: white;
       color: #475569;
       transition: all 0.15s;
     }
-    .back-btn:hover { background: #f1f5f9; }
+    .back-btn:hover { background: #f1f5f9; color: #1e293b; }
     .message-actions { display: flex; gap: 0.5rem; }
     .action-btn {
       padding: 0.5rem 1rem;
@@ -645,8 +699,8 @@
     }
     .btn-secondary { background: #f1f5f9; color: #475569; }
     .btn-secondary:hover { background: #e2e8f0; }
-    .btn-primary { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; }
-    .btn-primary:hover { transform: translateY(-1px); box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4); }
+    .btn-primary { background: linear-gradient(135deg, #52796f 0%, #3a5a52 100%); color: white; }
+    .btn-primary:hover { transform: translateY(-1px); box-shadow: 0 4px 12px rgba(82, 121, 111, 0.4); }
 
     /* Compose with Preview */
     .compose-split {
@@ -894,35 +948,34 @@
   </style>
 </head>
 <body>
-  <div class="top-bar">
-    <div class="container">
-      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
-        <a href="{% url 'admin_home' %}" class="top-btn">
-          <i class="fa-solid fa-arrow-left"></i> Back
-        </a>
-        <div style="display: flex; gap: 0.75rem;">
-          <div class="settings-dropdown">
-            <button class="top-btn" onclick="toggleTestSettings(event)" title="Test Settings">
-              <i class="fa-solid fa-gear"></i>
-            </button>
-            <div class="test-settings-popover" id="testSettingsPopover">
-              <div class="test-settings-header">Default Test Recipients</div>
-              <div class="test-settings-field">
-                <label>Email</label>
-                <input type="email" id="defaultTestEmail" class="form-input" placeholder="test@example.com">
-              </div>
-              <div class="test-settings-field">
-                <label>Phone</label>
-                <input type="tel" id="defaultTestPhone" class="form-input" placeholder="+1234567890">
-              </div>
-              <button type="button" class="btn btn-primary" style="width: 100%; padding: 0.5rem;" onclick="saveTestSettings()">Save</button>
-            </div>
+  <div class="nav-links">
+    <a href="{% url 'admin_home' %}" class="nav-link" id="mainBackBtn" onclick="return handleBackClick(event)">← Back</a>
+    <div style="margin-left: auto; display: flex; gap: 0.75rem; align-items: center;">
+      <div class="settings-dropdown">
+        <button class="top-btn" onclick="toggleTestSettings(event)" title="Test Settings">
+          <i class="fa-solid fa-gear"></i>
+        </button>
+        <div class="test-settings-popover" id="testSettingsPopover">
+          <div class="test-settings-header">Default Test Recipients</div>
+          <div class="test-settings-field">
+            <label>Email</label>
+            <input type="email" id="defaultTestEmail" class="form-input" placeholder="test@example.com">
           </div>
+          <div class="test-settings-field">
+            <label>Phone</label>
+            <input type="tel" id="defaultTestPhone" class="form-input" placeholder="+1234567890">
+          </div>
+          <button type="button" class="btn btn-primary" style="width: 100%; padding: 0.5rem;" onclick="saveTestSettings()">Save</button>
         </div>
       </div>
-      <div style="display: flex; justify-content: space-between; align-items: center;">
+    </div>
+  </div>
+
+  <div class="top-bar">
+    <div class="container">
+      <div class="header">
         <h1>Messages</h1>
-        <button class="compose-btn" onclick="openCompose()">
+        <button class="header-action-btn" onclick="openCompose()">
           <i class="fa-solid fa-plus"></i> Compose
         </button>
       </div>
@@ -930,31 +983,53 @@
   </div>
 
   <div class="main-container">
-    <!-- Stats -->
-    <div class="stats-row">
-      <div class="stat-card">
-        <div class="number">{{ stats.total_messages }}</div>
-        <div class="label">Total Sent</div>
+    <!-- Stats Carousel -->
+    <div class="stats-carousel stats-top">
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="icon"><i class="fa-solid fa-paper-plane"></i></div>
+          <h3>Total Sent</h3>
+          <div class="number">{{ stats.total_messages }}</div>
+        </div>
+        <div class="stat-card">
+          <div class="icon"><i class="fa-solid fa-circle-check"></i></div>
+          <h3>Delivered</h3>
+          <div class="number">{{ stats.total_sent }}</div>
+        </div>
+        <div class="stat-card">
+          <div class="icon"><i class="fa-solid fa-file-pen"></i></div>
+          <h3>Drafts</h3>
+          <div class="number">{{ stats.draft_count }}</div>
+        </div>
+        <div class="stat-card">
+          <div class="icon"><i class="fa-solid fa-clock"></i></div>
+          <h3>Scheduled</h3>
+          <div class="number">{{ stats.scheduled_count }}</div>
+        </div>
       </div>
-      <div class="stat-card">
-        <div class="number">{{ stats.total_sent }}</div>
-        <div class="label">Delivered</div>
-      </div>
-      <div class="stat-card">
-        <div class="number">{{ stats.draft_count }}</div>
-        <div class="label">Drafts</div>
-      </div>
-      <div class="stat-card">
-        <div class="number">{{ stats.scheduled_count }}</div>
-        <div class="label">Scheduled</div>
-      </div>
-      <div class="stat-card">
-        <div class="number">{{ stats.email_sub_count }}</div>
-        <div class="label">Email Subs</div>
-      </div>
-      <div class="stat-card">
-        <div class="number">{{ stats.sms_sub_count }}</div>
-        <div class="label">SMS Subs</div>
+    </div>
+    <div class="stats-carousel">
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="icon"><i class="fa-solid fa-envelope"></i></div>
+          <h3>Email Subs</h3>
+          <div class="number">{{ stats.email_sub_count }}</div>
+        </div>
+        <div class="stat-card">
+          <div class="icon"><i class="fa-solid fa-message"></i></div>
+          <h3>SMS Subs</h3>
+          <div class="number">{{ stats.sms_sub_count }}</div>
+        </div>
+        <div class="stat-card">
+          <div class="icon"><i class="fa-solid fa-folder"></i></div>
+          <h3>Folders</h3>
+          <div class="number">{{ folders|length }}</div>
+        </div>
+        <div class="stat-card">
+          <div class="icon"><i class="fa-solid fa-archive"></i></div>
+          <h3>Archived</h3>
+          <div class="number">{{ archived_messages|length }}</div>
+        </div>
       </div>
     </div>
 
@@ -1176,6 +1251,102 @@
     </button>
   </div>
 
+  <!-- Delivery Log Section -->
+  <div class="main-container" style="margin-top: 1.5rem;">
+    <div class="content-card" style="border-radius: 12px; padding: 1.25rem; box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06); background: white;">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+        <h3 style="font-size: 1rem; font-weight: 700; margin: 0; color: #1e293b;">
+          <i class="fa-solid fa-list-check" style="color: #52796f; margin-right: 0.5rem;"></i>
+          Recent Delivery Log
+        </h3>
+        <div style="display: flex; gap: 0.5rem;">
+          <button class="log-filter-btn active" data-filter="all" onclick="filterDeliveryLog('all')" style="padding: 0.375rem 0.75rem; font-size: 0.75rem; border: 1px solid #e2e8f0; background: #52796f; color: white; border-radius: 6px; cursor: pointer; font-weight: 500;">All</button>
+          <button class="log-filter-btn" data-filter="failed" onclick="filterDeliveryLog('failed')" style="padding: 0.375rem 0.75rem; font-size: 0.75rem; border: 1px solid #e2e8f0; background: white; color: #64748b; border-radius: 6px; cursor: pointer; font-weight: 500;">Failed</button>
+        </div>
+      </div>
+      {% if delivery_logs %}
+      <div style="overflow-x: auto;">
+        <table style="width: 100%; border-collapse: collapse; font-size: 0.875rem;">
+          <thead>
+            <tr style="border-bottom: 2px solid #e2e8f0;">
+              <th style="text-align: left; padding: 0.75rem 0.5rem; font-size: 0.7rem; font-weight: 600; color: #64748b; text-transform: uppercase;">Type</th>
+              <th style="text-align: left; padding: 0.75rem 0.5rem; font-size: 0.7rem; font-weight: 600; color: #64748b; text-transform: uppercase;">Recipient</th>
+              <th style="text-align: left; padding: 0.75rem 0.5rem; font-size: 0.7rem; font-weight: 600; color: #64748b; text-transform: uppercase;">Subject/Message</th>
+              <th style="text-align: center; padding: 0.75rem 0.5rem; font-size: 0.7rem; font-weight: 600; color: #64748b; text-transform: uppercase;">Status</th>
+              <th style="text-align: left; padding: 0.75rem 0.5rem; font-size: 0.7rem; font-weight: 600; color: #64748b; text-transform: uppercase;">Sent</th>
+              <th style="text-align: left; padding: 0.75rem 0.5rem; font-size: 0.7rem; font-weight: 600; color: #64748b; text-transform: uppercase;">Error</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for log in delivery_logs %}
+            <tr class="delivery-log-row" data-status="{{ log.status }}" style="border-bottom: 1px solid #f1f5f9; {% if log.status == 'failed' %}background: #fef2f2;{% endif %}">
+              <td style="padding: 0.75rem 0.5rem;">
+                {% if log.type == 'email' %}
+                <span style="display: inline-flex; align-items: center; justify-content: center; width: 28px; height: 28px; background: #dbeafe; border-radius: 6px;">
+                  <i class="fa-solid fa-envelope" style="color: #3b82f6; font-size: 0.75rem;"></i>
+                </span>
+                {% else %}
+                <span style="display: inline-flex; align-items: center; justify-content: center; width: 28px; height: 28px; background: #dcfce7; border-radius: 6px;">
+                  <i class="fa-solid fa-message" style="color: #22c55e; font-size: 0.75rem;"></i>
+                </span>
+                {% endif %}
+              </td>
+              <td style="padding: 0.75rem 0.5rem; font-weight: 500; color: #374151;">{{ log.recipient|truncatechars:25 }}</td>
+              <td style="padding: 0.75rem 0.5rem; color: #64748b;">{{ log.subject }}</td>
+              <td style="padding: 0.75rem 0.5rem; text-align: center;">
+                {% if log.status == 'delivered' %}
+                <span style="display: inline-flex; align-items: center; gap: 0.25rem; padding: 0.25rem 0.5rem; background: #dcfce7; color: #166534; border-radius: 4px; font-size: 0.7rem; font-weight: 600;">
+                  <i class="fa-solid fa-circle-check"></i> Delivered
+                </span>
+                {% elif log.status == 'sent' %}
+                <span style="display: inline-flex; align-items: center; gap: 0.25rem; padding: 0.25rem 0.5rem; background: #dbeafe; color: #1e40af; border-radius: 4px; font-size: 0.7rem; font-weight: 600;">
+                  <i class="fa-solid fa-paper-plane"></i> Sent
+                </span>
+                {% elif log.status == 'queued' %}
+                <span style="display: inline-flex; align-items: center; gap: 0.25rem; padding: 0.25rem 0.5rem; background: #f1f5f9; color: #475569; border-radius: 4px; font-size: 0.7rem; font-weight: 600;">
+                  <i class="fa-solid fa-clock"></i> Queued
+                </span>
+                {% elif log.status == 'failed' %}
+                <span style="display: inline-flex; align-items: center; gap: 0.25rem; padding: 0.25rem 0.5rem; background: #fef2f2; color: #dc2626; border-radius: 4px; font-size: 0.7rem; font-weight: 600;">
+                  <i class="fa-solid fa-circle-xmark"></i> Failed
+                </span>
+                {% elif log.status == 'bounced' %}
+                <span style="display: inline-flex; align-items: center; gap: 0.25rem; padding: 0.25rem 0.5rem; background: #fef3c7; color: #b45309; border-radius: 4px; font-size: 0.7rem; font-weight: 600;">
+                  <i class="fa-solid fa-rotate-left"></i> Bounced
+                </span>
+                {% else %}
+                <span style="display: inline-flex; align-items: center; gap: 0.25rem; padding: 0.25rem 0.5rem; background: #f1f5f9; color: #475569; border-radius: 4px; font-size: 0.7rem; font-weight: 600;">
+                  {{ log.status|title }}
+                </span>
+                {% endif %}
+              </td>
+              <td style="padding: 0.75rem 0.5rem; color: #64748b; font-size: 0.8125rem;">
+                {% load tz %}
+                {{ log.sent_at|timezone:"America/Chicago"|date:"M j, g:i A" }}
+              </td>
+              <td style="padding: 0.75rem 0.5rem;">
+                {% if log.error_message %}
+                <span class="error-preview" style="color: #dc2626; font-size: 0.75rem; cursor: pointer;" onclick="showErrorDetails('{{ log.error_message|escapejs }}')" title="{{ log.error_message }}">
+                  <i class="fa-solid fa-triangle-exclamation"></i> {{ log.error_message|truncatechars:30 }}
+                </span>
+                {% else %}
+                <span style="color: #94a3b8;">—</span>
+                {% endif %}
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      {% else %}
+      <div style="text-align: center; padding: 2rem; color: #64748b;">
+        <i class="fa-solid fa-inbox" style="font-size: 1.5rem; margin-bottom: 0.5rem; display: block;"></i>
+        No delivery logs yet. Send a message to see delivery status here.
+      </div>
+      {% endif %}
+    </div>
+  </div>
+
   <!-- Compose Modal -->
   <div class="modal-overlay" id="composeModal">
     <div class="modal" id="composeModalInner" style="max-width: 650px; transition: max-width 0.3s;">
@@ -1382,6 +1553,17 @@
       document.getElementById('folderContentsView').style.display = 'none';
       document.getElementById('foldersView').style.display = 'block';
       closeMessageView();
+    }
+
+    function handleBackClick(event) {
+      // If viewing a folder, go back to folders view instead of admin home
+      if (currentFolder !== null) {
+        event.preventDefault();
+        backToFolders();
+        return false;
+      }
+      // Otherwise, let the link work normally (go to admin home)
+      return true;
     }
 
     function toggleFilter(status) {
@@ -2063,6 +2245,58 @@
         closeFolderContextMenu();
       }
     });
+
+    // Delivery log filtering
+    function filterDeliveryLog(filter) {
+      // Update button states
+      document.querySelectorAll('.log-filter-btn').forEach(btn => {
+        if (btn.dataset.filter === filter) {
+          btn.style.background = '#52796f';
+          btn.style.color = 'white';
+          btn.classList.add('active');
+        } else {
+          btn.style.background = 'white';
+          btn.style.color = '#64748b';
+          btn.classList.remove('active');
+        }
+      });
+
+      // Filter rows
+      document.querySelectorAll('.delivery-log-row').forEach(row => {
+        if (filter === 'all') {
+          row.style.display = '';
+        } else if (filter === 'failed') {
+          row.style.display = row.dataset.status === 'failed' ? '' : 'none';
+        }
+      });
+    }
+
+    // Show error details in alert (or could be a modal)
+    function showErrorDetails(errorMessage) {
+      // Categorize error
+      let category = 'Unknown Error';
+      const msg = errorMessage.toLowerCase();
+
+      if (msg.includes('smtp') || msg.includes('connection')) {
+        category = 'Connection Error';
+      } else if (msg.includes('invalid') && msg.includes('email')) {
+        category = 'Invalid Email Address';
+      } else if (msg.includes('invalid') && msg.includes('phone')) {
+        category = 'Invalid Phone Number';
+      } else if (msg.includes('rate limit') || msg.includes('quota')) {
+        category = 'Rate Limit Exceeded';
+      } else if (msg.includes('authentication') || msg.includes('unauthorized')) {
+        category = 'Authentication Error';
+      } else if (msg.includes('not configured') || msg.includes('missing')) {
+        category = 'Configuration Error';
+      } else if (msg.includes('timeout')) {
+        category = 'Timeout Error';
+      } else if (msg.includes('bounce') || msg.includes('rejected')) {
+        category = 'Message Rejected';
+      }
+
+      alert(`Error Category: ${category}\n\nDetails:\n${errorMessage}`);
+    }
   </script>
 </body>
 </html>

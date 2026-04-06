@@ -1322,39 +1322,106 @@
       </div>
     </div>
 
-    <!-- Shipping Map (Full Width) -->
+    <!-- Shipping Map / Ready to Ship Panel (Full Width) -->
     <div class="content-card" style="border-radius: 12px; padding: 1rem; box-shadow: 0 1px 8px rgba(0, 0, 0, 0.05); background: white; margin-bottom: 1.5rem;">
+      <!-- Shared Header -->
       <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
-        <h2 style="font-size: 0.875rem; font-weight: 600; margin: 0; color: #374151;">
-          <i class="fa-solid fa-map-location-dot" style="color: #52796f; margin-right: 0.375rem;"></i>
-          Destinations <span style="font-weight: 400; color: #94a3b8;">(<span id="map-order-count">0</span>)</span>
-        </h2>
         <div style="display: flex; align-items: center; gap: 1rem;">
+          <!-- Title changes based on view -->
+          <h2 id="mapShipTitle" style="font-size: 0.875rem; font-weight: 600; margin: 0; color: #374151;">
+            <i class="fa-solid fa-map-location-dot" style="color: #52796f; margin-right: 0.375rem;"></i>
+            Destinations <span style="font-weight: 400; color: #94a3b8;">(<span id="map-order-count">0</span>)</span>
+          </h2>
+        </div>
+        <div style="display: flex; align-items: center; gap: 1rem;">
+          <!-- Map Controls (hidden when showing ship view) -->
+          <div id="mapControls" style="display: flex; align-items: center; gap: 1rem;">
+            <div style="display: flex; background: #f1f5f9; border-radius: 8px; padding: 4px;">
+              <button class="map-region-btn" data-region="world" onclick="setMapRegion('world')" style="padding: 0.5rem 1rem; font-size: 0.875rem; border: none; background: transparent; color: #64748b; border-radius: 6px; cursor: pointer; font-weight: 500; transition: all 0.15s;">World</button>
+              <button class="map-region-btn active" data-region="us" onclick="setMapRegion('us')" style="padding: 0.5rem 1rem; font-size: 0.875rem; border: none; background: #52796f; color: white; border-radius: 6px; cursor: pointer; font-weight: 500; transition: all 0.15s; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">US</button>
+              <button class="map-region-btn" data-region="local" onclick="setMapRegion('local')" style="padding: 0.5rem 1rem; font-size: 0.875rem; border: none; background: transparent; color: #64748b; border-radius: 6px; cursor: pointer; font-weight: 500; transition: all 0.15s;">Local</button>
+            </div>
+            <div style="display: flex; background: #f1f5f9; border-radius: 8px; padding: 4px;">
+              <button class="map-filter-btn active" data-days="all" onclick="filterMap('all')" style="padding: 0.5rem 1rem; font-size: 0.875rem; border: none; background: #52796f; color: white; border-radius: 6px; cursor: pointer; font-weight: 500; transition: all 0.15s; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">All</button>
+              <button class="map-filter-btn" data-days="7" onclick="filterMap(7)" style="padding: 0.5rem 1rem; font-size: 0.875rem; border: none; background: transparent; color: #64748b; border-radius: 6px; cursor: pointer; font-weight: 500; transition: all 0.15s;">7d</button>
+              <button class="map-filter-btn" data-days="30" onclick="filterMap(30)" style="padding: 0.5rem 1rem; font-size: 0.875rem; border: none; background: transparent; color: #64748b; border-radius: 6px; cursor: pointer; font-weight: 500; transition: all 0.15s;">30d</button>
+            </div>
+            <select id="mapStyleSelect" onchange="setMapStyle(this.value)" style="padding: 0.5rem 0.75rem; font-size: 0.875rem; border: 1px solid #e2e8f0; background: white; border-radius: 6px; cursor: pointer; color: #374151; font-weight: 500;">
+              <option value="satellite">Satellite</option>
+              <option value="osm">Default</option>
+              <option value="dark">Dark</option>
+              <option value="gray">Gray</option>
+              <option value="topo">Topo</option>
+            </select>
+          </div>
+          <!-- Toggle Button (always at far right) -->
           {% if ready_to_ship %}
-          <button onclick="toggleShippingPanel()" id="shippingPanelBtn" style="padding: 0.5rem 1rem; font-size: 0.875rem; border: 1px solid #f59e0b; background: #fffbeb; color: #b45309; border-radius: 8px; cursor: pointer; font-weight: 600;">
-            <i class="fa-solid fa-truck-fast"></i> Ship ({{ ready_to_ship|length }})
+          <button onclick="toggleShippingPanel()" id="shippingPanelBtn" style="padding: 0.5rem 1rem; font-size: 0.875rem; border: 1px solid #e2e8f0; background: #f8fafc; color: #374151; border-radius: 8px; cursor: pointer; font-weight: 600; min-width: 110px;">
+            <i class="fa-solid fa-truck-fast" id="toggleIcon"></i> <span id="toggleLabel">Ship ({{ ready_to_ship|length }})</span>
           </button>
           {% endif %}
-          <div style="display: flex; background: #f1f5f9; border-radius: 8px; padding: 4px;">
-            <button class="map-region-btn" data-region="world" onclick="setMapRegion('world')" style="padding: 0.5rem 1rem; font-size: 0.875rem; border: none; background: transparent; color: #64748b; border-radius: 6px; cursor: pointer; font-weight: 500; transition: all 0.15s;">World</button>
-            <button class="map-region-btn active" data-region="us" onclick="setMapRegion('us')" style="padding: 0.5rem 1rem; font-size: 0.875rem; border: none; background: #52796f; color: white; border-radius: 6px; cursor: pointer; font-weight: 500; transition: all 0.15s; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">US</button>
-            <button class="map-region-btn" data-region="local" onclick="setMapRegion('local')" style="padding: 0.5rem 1rem; font-size: 0.875rem; border: none; background: transparent; color: #64748b; border-radius: 6px; cursor: pointer; font-weight: 500; transition: all 0.15s;">Local</button>
-          </div>
-          <div style="display: flex; background: #f1f5f9; border-radius: 8px; padding: 4px;">
-            <button class="map-filter-btn active" data-days="all" onclick="filterMap('all')" style="padding: 0.5rem 1rem; font-size: 0.875rem; border: none; background: #52796f; color: white; border-radius: 6px; cursor: pointer; font-weight: 500; transition: all 0.15s; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">All</button>
-            <button class="map-filter-btn" data-days="7" onclick="filterMap(7)" style="padding: 0.5rem 1rem; font-size: 0.875rem; border: none; background: transparent; color: #64748b; border-radius: 6px; cursor: pointer; font-weight: 500; transition: all 0.15s;">7d</button>
-            <button class="map-filter-btn" data-days="30" onclick="filterMap(30)" style="padding: 0.5rem 1rem; font-size: 0.875rem; border: none; background: transparent; color: #64748b; border-radius: 6px; cursor: pointer; font-weight: 500; transition: all 0.15s;">30d</button>
-          </div>
-          <select id="mapStyleSelect" onchange="setMapStyle(this.value)" style="padding: 0.5rem 0.75rem; font-size: 0.875rem; border: 1px solid #e2e8f0; background: white; border-radius: 6px; cursor: pointer; color: #374151; font-weight: 500;">
-            <option value="satellite">Satellite</option>
-            <option value="osm">Default</option>
-            <option value="dark">Dark</option>
-            <option value="gray">Gray</option>
-            <option value="topo">Topo</option>
-          </select>
         </div>
       </div>
-      <div id="orders-map" style="height: 320px; border-radius: 8px; background: #f1f5f9;"></div>
+
+      <!-- Map View (default) -->
+      <div id="mapViewContainer">
+        <div id="orders-map" style="height: 320px; border-radius: 8px; background: #f1f5f9;"></div>
+      </div>
+
+      <!-- Ready to Ship View (hidden by default) -->
+      <div id="shipViewContainer" style="display: none;">
+        {% if ready_to_ship %}
+        <div style="height: 320px; overflow-y: auto; border-radius: 8px; background: #f8fafc;">
+          <table style="width: 100%; border-collapse: collapse;">
+            <thead>
+              <tr style="border-bottom: 2px solid #e2e8f0; position: sticky; top: 0; background: #f8fafc;">
+                <th style="text-align: left; padding: 0.75rem 0.75rem; font-size: 0.75rem; font-weight: 600; color: #64748b; text-transform: uppercase;">Order</th>
+                <th style="text-align: left; padding: 0.75rem 0.5rem; font-size: 0.75rem; font-weight: 600; color: #64748b; text-transform: uppercase;">Customer</th>
+                <th style="text-align: left; padding: 0.75rem 0.5rem; font-size: 0.75rem; font-weight: 600; color: #64748b; text-transform: uppercase;">Items</th>
+                <th style="text-align: right; padding: 0.75rem 0.5rem; font-size: 0.75rem; font-weight: 600; color: #64748b; text-transform: uppercase;">Total</th>
+                <th style="text-align: right; padding: 0.75rem 0.5rem; font-size: 0.75rem; font-weight: 600; color: #64748b; text-transform: uppercase;">Waiting</th>
+                <th style="width: 100px;"></th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for order in ready_to_ship %}
+              <tr style="border-bottom: 1px solid #e2e8f0; background: white;">
+                <td style="padding: 0.875rem 0.75rem;">
+                  <div style="font-weight: 700; color: #0f172a; font-size: 0.9375rem;">{{ order.order_number }}</div>
+                </td>
+                <td style="padding: 0.875rem 0.5rem;">
+                  <div style="font-weight: 500; color: #374151; font-size: 0.875rem;">{{ order.customer|truncatechars:20 }}</div>
+                  <div style="font-size: 0.75rem; color: #64748b;">{% if order.state %}{{ order.city|truncatechars:12 }}, {{ order.state }}{% endif %}</div>
+                </td>
+                <td style="padding: 0.875rem 0.5rem;">
+                  <div style="display: flex; flex-wrap: wrap; gap: 0.375rem;">
+                    {% for item in order.items|slice:":3" %}
+                    <span style="background: #f1f5f9; padding: 0.25rem 0.5rem; border-radius: 4px; font-size: 0.75rem; color: #475569; font-weight: 500;">{{ item.qty }}× {{ item.name|truncatechars:15 }}</span>
+                    {% endfor %}
+                    {% if order.item_count > 3 %}<span style="font-size: 0.75rem; color: #64748b; font-weight: 500;">+{{ order.item_count|add:"-3" }} more</span>{% endif %}
+                  </div>
+                </td>
+                <td style="padding: 0.875rem 0.5rem; text-align: right; font-weight: 700; color: #0f172a; font-size: 0.9375rem;">${{ order.total|floatformat:0 }}</td>
+                <td style="padding: 0.875rem 0.5rem; text-align: right;">
+                  <span style="font-size: 0.8125rem; font-weight: 600; padding: 0.25rem 0.5rem; border-radius: 4px; {% if order.priority == 'urgent' %}background: #fef2f2; color: #dc2626;{% elif order.priority == 'high' %}background: #fffbeb; color: #d97706;{% else %}background: #f1f5f9; color: #64748b;{% endif %}">{{ order.time_display }}</span>
+                </td>
+                <td style="padding: 0.875rem 0.5rem; text-align: right;">
+                  <button onclick="generateLabel({{ order.id }})" style="padding: 0.5rem 0.875rem; background: linear-gradient(135deg, #52796f 0%, #3a5a52 100%); color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 0.8125rem; font-weight: 600; box-shadow: 0 2px 4px rgba(82, 121, 111, 0.3);">
+                    <i class="fa-solid fa-tag"></i> Ship
+                  </button>
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+        {% else %}
+        <div style="text-align: center; padding: 3rem; color: #64748b; background: #f8fafc; border-radius: 8px; height: 320px; display: flex; flex-direction: column; align-items: center; justify-content: center;">
+          <i class="fa-solid fa-circle-check" style="font-size: 2rem; color: #52796f; margin-bottom: 0.5rem;"></i>
+          <p style="margin: 0;">All caught up! No orders waiting to ship.</p>
+        </div>
+        {% endif %}
+      </div>
     </div>
 
     <!-- Stats Row 2 (4 cards) -->
@@ -1385,61 +1452,6 @@
           <h3>Shipped</h3>
           <div class="number">{{ stats.shipped }}</div>
         </div>
-      </div>
-    </div>
-
-    <!-- Needs Shipping Panel (hidden by default) -->
-    <div id="shippingPanel" style="display: none; margin-bottom: 2rem;">
-      <div class="content-card" style="border-radius: 16px; padding: 1.25rem; box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06); border: 2px solid #fde68a;">
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
-          <h3 style="font-size: 1rem; font-weight: 700; margin: 0; color: #92400e;">
-            <i class="fa-solid fa-truck-fast" style="margin-right: 0.5rem;"></i>
-            Needs Shipping
-          </h3>
-          <button onclick="toggleShippingPanel()" style="padding: 0.25rem 0.5rem; font-size: 0.75rem; border: none; background: transparent; color: #64748b; cursor: pointer;">
-            <i class="fa-solid fa-times"></i> Close
-          </button>
-        </div>
-        {% if ready_to_ship %}
-        <table style="width: 100%; border-collapse: collapse;">
-          <thead>
-            <tr style="border-bottom: 1px solid #fde68a;">
-              <th style="text-align: left; padding: 0.5rem 0; font-size: 0.7rem; font-weight: 600; color: #92400e; text-transform: uppercase;">Order</th>
-              <th style="text-align: left; padding: 0.5rem 0; font-size: 0.7rem; font-weight: 600; color: #92400e; text-transform: uppercase;">Items</th>
-              <th style="text-align: right; padding: 0.5rem 0; font-size: 0.7rem; font-weight: 600; color: #92400e; text-transform: uppercase;">Total</th>
-              <th style="text-align: right; padding: 0.5rem 0; font-size: 0.7rem; font-weight: 600; color: #92400e; text-transform: uppercase;">Wait</th>
-              <th style="width: 70px;"></th>
-            </tr>
-          </thead>
-          <tbody>
-            {% for order in ready_to_ship %}
-            <tr style="border-bottom: 1px solid #fef3c7;">
-              <td style="padding: 0.625rem 0.5rem 0.625rem 0;">
-                <div style="font-weight: 600; color: #0f172a; font-size: 0.8125rem;">{{ order.order_number }}</div>
-                <div style="font-size: 0.7rem; color: #64748b;">{{ order.customer|truncatechars:18 }}{% if order.state %} · {{ order.state }}{% endif %}</div>
-              </td>
-              <td style="padding: 0.625rem 0.5rem;">
-                <div style="display: flex; flex-wrap: wrap; gap: 0.25rem;">
-                  {% for item in order.items|slice:":2" %}
-                  <span style="background: #fef3c7; padding: 0.125rem 0.375rem; border-radius: 3px; font-size: 0.7rem; color: #92400e;">{{ item.qty }}× {{ item.name|truncatechars:12 }}</span>
-                  {% endfor %}
-                  {% if order.item_count > 2 %}<span style="font-size: 0.7rem; color: #b45309;">+{{ order.item_count|add:"-2" }}</span>{% endif %}
-                </div>
-              </td>
-              <td style="padding: 0.625rem 0.5rem; text-align: right; font-weight: 600; color: #0f172a; font-size: 0.8125rem;">${{ order.total|floatformat:0 }}</td>
-              <td style="padding: 0.625rem 0.5rem; text-align: right;">
-                <span style="font-size: 0.7rem; font-weight: 600; {% if order.priority == 'urgent' %}color: #dc2626;{% elif order.priority == 'high' %}color: #d97706;{% else %}color: #64748b;{% endif %}">{{ order.time_display }}</span>
-              </td>
-              <td style="padding: 0.625rem 0 0.625rem 0.5rem; text-align: right;">
-                <button onclick="generateLabel({{ order.id }})" style="padding: 0.3rem 0.5rem; background: #52796f; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 0.7rem; font-weight: 500;">
-                  <i class="fa-solid fa-tag"></i> Ship
-                </button>
-              </td>
-            </tr>
-            {% endfor %}
-          </tbody>
-        </table>
-        {% endif %}
       </div>
     </div>
 
@@ -1535,10 +1547,10 @@
           <thead style="position: sticky; top: 0; background: #f8fafc; z-index: 1;">
             <tr>
               <th>Status</th>
-              <th>Order</th>
-              <th>Customer</th>
-              <th>Items</th>
               <th>Total</th>
+              <th>Order</th>
+              <th>Name</th>
+              <th>Items</th>
               <th>Cost</th>
               <th>Profit</th>
               <th>Date</th>
@@ -1565,6 +1577,7 @@
                   {% endif %}
                 </span>
               </td>
+              <td class="amount-cell">${{ order.total|floatformat:2 }}</td>
               <td>
                 <div style="display: flex; align-items: center; gap: 0.5rem;">
                   <i class="fa-solid fa-chevron-right expand-icon" style="color: #94a3b8; font-size: 0.7rem; transition: transform 0.2s;"></i>
@@ -1595,7 +1608,6 @@
                 <span style="color: #94a3b8;">—</span>
                 {% endif %}
               </td>
-              <td class="amount-cell">${{ order.total|floatformat:2 }}</td>
               <td>
                 {% if order.cost != None %}
                 <span style="color: #64748b; font-size: 0.8rem;">${{ order.cost|floatformat:2 }}</span>
@@ -3641,6 +3653,8 @@
       mapContainer.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:100%;color:#64748b;"><i class="fa-solid fa-spinner fa-spin" style="margin-right:0.5rem;"></i> Loading map...</div>';
 
       const data = orderMapData;
+      console.log('Map data:', data);
+      console.log('Orders with locations:', data.orders.length);
 
       // Initialize map centered on US (zoomed out more)
       const map = L.map('orders-map').setView([39.8283, -98.5795], 3);
@@ -3673,9 +3687,9 @@
 
       const orderIcon = L.divIcon({
         className: 'order-marker',
-        html: '<div style="background:#3b82f6;color:white;width:12px;height:12px;border-radius:50%;box-shadow:0 2px 4px rgba(0,0,0,0.3);border:2px solid white;"></div>',
-        iconSize: [12, 12],
-        iconAnchor: [6, 6]
+        html: '<div style="background:#fbbf24;color:white;width:16px;height:16px;border-radius:50%;box-shadow:0 0 10px rgba(251,191,36,0.7), 0 2px 6px rgba(0,0,0,0.3);border:2px solid white;"></div>',
+        iconSize: [16, 16],
+        iconAnchor: [8, 8]
       });
 
       // Get warehouse coordinates (use stored if available, otherwise geocode)
@@ -3714,7 +3728,11 @@
       const orderIcon = window.orderIcon;
       const orderMarkers = window.orderMarkers;
 
-      if (!map || !data) return;
+      if (!map || !data) {
+        console.log('Map or data missing:', { map: !!map, data: !!data });
+        return;
+      }
+      console.log('Rendering markers for', data.orders.length, 'orders, filter:', filterDays);
 
       // Clear existing order markers
       orderMarkers.clearLayers();
@@ -3764,10 +3782,10 @@
 
           // Draw line from warehouse
           const line = L.polyline([warehouseCoords, coords], {
-            color: '#52796f',
-            weight: 1.5,
-            opacity: 0.4,
-            dashArray: '5, 5'
+            color: '#fbbf24',
+            weight: 2,
+            opacity: 0.6,
+            dashArray: '6, 4'
           });
           orderMarkers.addLayer(line);
 
@@ -3777,6 +3795,7 @@
       }
 
       // Update count
+      console.log('Mapped', mappedCount, 'orders to map');
       document.getElementById('map-order-count').textContent = mappedCount;
 
       // Fit map to show all markers
@@ -4038,24 +4057,33 @@
       initChart(days);
     }
 
-    // Toggle shipping panel visibility
+    // Toggle between map view and shipping panel view
     function toggleShippingPanel() {
-      const panel = document.getElementById('shippingPanel');
+      const mapView = document.getElementById('mapViewContainer');
+      const shipView = document.getElementById('shipViewContainer');
+      const mapControls = document.getElementById('mapControls');
       const btn = document.getElementById('shippingPanelBtn');
-      if (panel.style.display === 'none') {
-        panel.style.display = 'block';
-        if (btn) {
-          btn.style.background = '#f59e0b';
-          btn.style.color = 'white';
-          btn.style.borderColor = '#f59e0b';
-        }
+      const toggleIcon = document.getElementById('toggleIcon');
+      const toggleLabel = document.getElementById('toggleLabel');
+      const title = document.getElementById('mapShipTitle');
+      const readyCount = {{ ready_to_ship|length|default:0 }};
+
+      if (mapView.style.display !== 'none') {
+        // Switch to shipping view
+        mapView.style.display = 'none';
+        shipView.style.display = 'block';
+        mapControls.style.display = 'none';
+        if (toggleIcon) toggleIcon.className = 'fa-solid fa-map';
+        if (toggleLabel) toggleLabel.textContent = 'Map';
+        if (title) title.innerHTML = '<i class="fa-solid fa-truck-fast" style="color: #52796f; margin-right: 0.375rem;"></i>Ready to Ship <span style="font-weight: 400; color: #94a3b8;">(' + readyCount + ')</span>';
       } else {
-        panel.style.display = 'none';
-        if (btn) {
-          btn.style.background = '#fffbeb';
-          btn.style.color = '#b45309';
-          btn.style.borderColor = '#f59e0b';
-        }
+        // Switch back to map view
+        mapView.style.display = 'block';
+        shipView.style.display = 'none';
+        mapControls.style.display = 'flex';
+        if (toggleIcon) toggleIcon.className = 'fa-solid fa-truck-fast';
+        if (toggleLabel) toggleLabel.textContent = 'Ship (' + readyCount + ')';
+        if (title) title.innerHTML = '<i class="fa-solid fa-map-location-dot" style="color: #52796f; margin-right: 0.375rem;"></i>Destinations <span style="font-weight: 400; color: #94a3b8;">(<span id="map-order-count">' + (window.ordersMap ? window.orderMarkers.getLayers().filter(l => l instanceof L.Marker).length : 0) + '</span>)</span>';
       }
     }
 

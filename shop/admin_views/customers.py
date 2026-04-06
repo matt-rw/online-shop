@@ -530,14 +530,12 @@ def users_dashboard(request):
                 "last_name": user.last_name,
                 "full_name": f"{user.first_name} {user.last_name}".strip() or user.username,
                 "phone": phone,
-                "date_joined": user.date_joined.isoformat(),
-                "last_login": user.last_login.isoformat() if user.last_login else None,
+                "date_joined": user.date_joined,
+                "last_login": user.last_login,
                 "is_active": user.is_active,
                 "order_count": user.order_count or 0,
                 "total_spent": float(user.total_spent) if user.total_spent else 0,
-                "last_order_date": (
-                    user.last_order_date.isoformat() if user.last_order_date else None
-                ),
+                "last_order_date": user.last_order_date,
                 "current_cart": current_cart,
                 "page_views_count": 0,  # Can't link VisitorSession to User directly
                 "last_visit": None,  # Can't link VisitorSession to User directly

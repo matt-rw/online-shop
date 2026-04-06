@@ -1272,6 +1272,37 @@ def messages_dashboard(request):
     folders = MessageFolder.objects.filter(is_archived=False)
     archived_folders = MessageFolder.objects.filter(is_archived=True)
 
+    # Get recent delivery logs (combined email and SMS, most recent 10)
+    recent_email_logs = EmailLog.objects.select_related("quick_message").order_by("-sent_at")[:10]
+    recent_sms_logs = SMSLog.objects.select_related("quick_message").order_by("-sent_at")[:10]
+
+    # Combine and format logs for display
+    delivery_logs = []
+    for log in recent_email_logs:
+        delivery_logs.append({
+            "id": log.id,
+            "type": "email",
+            "recipient": log.email_address,
+            "subject": log.subject[:50] + "..." if len(log.subject) > 50 else log.subject,
+            "status": log.status,
+            "error_message": log.error_message,
+            "sent_at": log.sent_at,
+        })
+    for log in recent_sms_logs:
+        delivery_logs.append({
+            "id": log.id,
+            "type": "sms",
+            "recipient": log.phone_number,
+            "subject": (log.message_body[:50] + "...") if len(log.message_body) > 50 else log.message_body,
+            "status": log.status,
+            "error_message": log.error_message,
+            "sent_at": log.sent_at,
+        })
+
+    # Sort by sent_at descending and limit to 10
+    delivery_logs.sort(key=lambda x: x["sent_at"], reverse=True)
+    delivery_logs = delivery_logs[:10]
+
     context = {
         "messages": messages[:100],  # Limit to 100 most recent
         "drafts": drafts,
@@ -1296,6 +1327,7 @@ def messages_dashboard(request):
         "default_test_email": site_settings.default_test_email,
         "default_test_phone": site_settings.default_test_phone,
         "cst_time": timezone.now().astimezone(pytz.timezone("America/Chicago")),
+        "delivery_logs": delivery_logs,
     }
 
     return render(request, "admin/messages_dashboard.html", context)
