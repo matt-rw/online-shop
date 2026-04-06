@@ -82,6 +82,20 @@ class Address(models.Model):
         return coords
 
 
+class OrderTag(models.Model):
+    """Customizable tags for categorizing orders (e.g., Influencer, Wholesale, Sample)."""
+    name = models.CharField(max_length=50, unique=True)
+    color = models.CharField(max_length=7, default="#6366f1", help_text="Hex color code")
+    icon = models.CharField(max_length=50, blank=True, help_text="FontAwesome icon name (e.g., fa-star)")
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["name"]
+
+    def __str__(self):
+        return self.name
+
+
 class OrderStatus(models.TextChoices):
     CREATED = "CREATED", "Created"
     AWAITING_PAYMENT = "AWAITING_PAYMENT", "Awaiting payment"
@@ -152,6 +166,9 @@ class Order(models.Model):
         db_index=True,
         help_text="Exclude this order from revenue/profit calculations"
     )
+
+    # Custom tags for categorizing orders
+    tags = models.ManyToManyField(OrderTag, blank=True, related_name="orders")
 
     # Shipping label tracking
     tracking_number = models.CharField(max_length=255, blank=True)

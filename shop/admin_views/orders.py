@@ -27,6 +27,7 @@ from shop.models import (
     Order,
     OrderItem,
     OrderStatus,
+    OrderTag,
     ProductVariant,
 )
 
@@ -56,6 +57,76 @@ def orders_dashboard(request):
                 return JsonResponse({"success": True})
             except Order.DoesNotExist:
                 return JsonResponse({"success": False, "error": "Order not found"})
+            except Exception as e:
+                return JsonResponse({"success": False, "error": str(e)})
+
+        elif action == "calculate_tax":
+            # Calculate tax using Stripe Tax API based on address
+            try:
+                import stripe
+                from decimal import Decimal
+
+                subtotal = Decimal(request.POST.get("subtotal", "0"))
+                shipping_cost = Decimal(request.POST.get("shipping", "0"))
+
+                # Address fields
+                line1 = request.POST.get("line1", "").strip()
+                city = request.POST.get("city", "").strip()
+                state = request.POST.get("state", "").strip()
+                postal_code = request.POST.get("postal_code", "").strip()
+                country = request.POST.get("country", "US").strip()
+
+                if not all([line1, city, state, postal_code]):
+                    return JsonResponse({"success": False, "error": "Complete address required for tax calculation"})
+
+                if subtotal <= 0:
+                    return JsonResponse({"success": False, "error": "Subtotal must be greater than 0"})
+
+                # Build line items for Stripe Tax Calculation
+                line_items = [{
+                    "amount": int(subtotal * 100),  # Convert to cents
+                    "reference": "manual_order_subtotal",
+                    "tax_behavior": "exclusive",
+                }]
+
+                # Add shipping if present
+                shipping_cost_cents = int(shipping_cost * 100) if shipping_cost > 0 else 0
+
+                # Create tax calculation
+                calculation = stripe.tax.Calculation.create(
+                    currency="usd",
+                    line_items=line_items,
+                    customer_details={
+                        "address": {
+                            "line1": line1,
+                            "city": city,
+                            "state": state,
+                            "postal_code": postal_code,
+                            "country": country,
+                        },
+                        "address_source": "shipping",
+                    },
+                    shipping_cost={"amount": shipping_cost_cents} if shipping_cost_cents > 0 else None,
+                )
+
+                # Extract tax amount (in cents, convert to dollars)
+                tax_amount = Decimal(calculation.tax_amount_exclusive) / 100
+
+                return JsonResponse({
+                    "success": True,
+                    "tax_amount": float(tax_amount),
+                    "tax_breakdown": [
+                        {
+                            "jurisdiction": item.jurisdiction.display_name,
+                            "rate": float(item.tax_rate_details.percentage_decimal) * 100,
+                            "amount": float(Decimal(item.amount) / 100),
+                        }
+                        for item in calculation.tax_breakdown
+                    ] if calculation.tax_breakdown else []
+                })
+
+            except stripe.error.StripeError as e:
+                return JsonResponse({"success": False, "error": f"Stripe error: {str(e)}"})
             except Exception as e:
                 return JsonResponse({"success": False, "error": str(e)})
 
@@ -180,6 +251,84 @@ def orders_dashboard(request):
                 return JsonResponse({"success": True})
             except Order.DoesNotExist:
                 return JsonResponse({"success": False, "error": "Order not found"})
+            except Exception as e:
+                return JsonResponse({"success": False, "error": str(e)})
+
+        # Tag management actions
+        elif action == "get_tags":
+            # Get all available tags
+            tags = OrderTag.objects.all()
+            return JsonResponse({
+                "success": True,
+                "tags": [{"id": t.id, "name": t.name, "color": t.color, "icon": t.icon} for t in tags]
+            })
+
+        elif action == "create_tag":
+            try:
+                name = request.POST.get("name", "").strip()
+                color = request.POST.get("color", "#6366f1").strip()
+                icon = request.POST.get("icon", "").strip()
+                if not name:
+                    return JsonResponse({"success": False, "error": "Tag name is required"})
+                tag = OrderTag.objects.create(name=name, color=color, icon=icon)
+                return JsonResponse({
+                    "success": True,
+                    "tag": {"id": tag.id, "name": tag.name, "color": tag.color, "icon": tag.icon}
+                })
+            except Exception as e:
+                return JsonResponse({"success": False, "error": str(e)})
+
+        elif action == "update_tag":
+            try:
+                tag_id = request.POST.get("tag_id")
+                tag = OrderTag.objects.get(id=tag_id)
+                tag.name = request.POST.get("name", tag.name).strip()
+                tag.color = request.POST.get("color", tag.color).strip()
+                tag.icon = request.POST.get("icon", tag.icon).strip()
+                tag.save()
+                return JsonResponse({
+                    "success": True,
+                    "tag": {"id": tag.id, "name": tag.name, "color": tag.color, "icon": tag.icon}
+                })
+            except OrderTag.DoesNotExist:
+                return JsonResponse({"success": False, "error": "Tag not found"})
+            except Exception as e:
+                return JsonResponse({"success": False, "error": str(e)})
+
+        elif action == "delete_tag":
+            try:
+                tag_id = request.POST.get("tag_id")
+                tag = OrderTag.objects.get(id=tag_id)
+                tag.delete()
+                return JsonResponse({"success": True})
+            except OrderTag.DoesNotExist:
+                return JsonResponse({"success": False, "error": "Tag not found"})
+            except Exception as e:
+                return JsonResponse({"success": False, "error": str(e)})
+
+        elif action == "add_tag_to_order":
+            try:
+                order_id = request.POST.get("order_id")
+                tag_id = request.POST.get("tag_id")
+                order = Order.objects.get(id=order_id)
+                tag = OrderTag.objects.get(id=tag_id)
+                order.tags.add(tag)
+                return JsonResponse({"success": True})
+            except (Order.DoesNotExist, OrderTag.DoesNotExist) as e:
+                return JsonResponse({"success": False, "error": "Order or tag not found"})
+            except Exception as e:
+                return JsonResponse({"success": False, "error": str(e)})
+
+        elif action == "remove_tag_from_order":
+            try:
+                order_id = request.POST.get("order_id")
+                tag_id = request.POST.get("tag_id")
+                order = Order.objects.get(id=order_id)
+                tag = OrderTag.objects.get(id=tag_id)
+                order.tags.remove(tag)
+                return JsonResponse({"success": True})
+            except (Order.DoesNotExist, OrderTag.DoesNotExist) as e:
+                return JsonResponse({"success": False, "error": "Order or tag not found"})
             except Exception as e:
                 return JsonResponse({"success": False, "error": str(e)})
 
@@ -323,7 +472,7 @@ def orders_dashboard(request):
     show_test_orders = request.GET.get("show_test", "false").lower() == "true"
 
     # Get orders (exclude test orders by default)
-    orders = Order.objects.all().select_related("user", "shipping_address").prefetch_related("items")
+    orders = Order.objects.all().select_related("user", "shipping_address").prefetch_related("items", "tags")
     if not show_test_orders:
         orders = orders.filter(is_test=False)
 
@@ -594,7 +743,9 @@ def orders_dashboard(request):
 
         # Calculate actual revenue received for products (excludes shipping/tax, includes discounts)
         actual_product_revenue = float(order.total) - float(order.shipping) - float(order.tax)
-        profit = actual_product_revenue - total_cost if items_with_cost > 0 else None
+        # Include shipping label cost in profit calculation
+        label_cost = float(order.label_cost or 0)
+        profit = actual_product_revenue - total_cost - label_cost if items_with_cost > 0 else None
 
         orders_data.append(
             {
@@ -617,6 +768,7 @@ def orders_dashboard(request):
                 "tracking_number": order.tracking_number,
                 "carrier": order.carrier,
                 "label_url": order.label_url,
+                "label_cost": float(order.label_cost) if order.label_cost else None,
                 "created_at": order.created_at.isoformat(),
                 "item_count": order.items.count(),
                 "sku_summary": sku_summary,
@@ -627,6 +779,7 @@ def orders_dashboard(request):
                 "shipping_zip": order.shipping_address.postal_code if order.shipping_address else "",
                 "shipping_lat": order.shipping_address.latitude if order.shipping_address else None,
                 "shipping_lng": order.shipping_address.longitude if order.shipping_address else None,
+                "tags": [{"id": t.id, "name": t.name, "color": t.color, "icon": t.icon} for t in order.tags.all()],
             }
         )
 
@@ -638,6 +791,9 @@ def orders_dashboard(request):
     site_settings = SiteSettings.load()
     default_tax_rate = float(site_settings.default_tax_rate or 0)
 
+    # Get all available tags
+    all_tags = list(OrderTag.objects.all().values("id", "name", "color", "icon"))
+
     context = {
         "orders": orders_data,
         "orders_json": json.dumps(orders_data),
@@ -647,6 +803,8 @@ def orders_dashboard(request):
         "cst_time": timezone.now().astimezone(pytz.timezone("America/Chicago")),
         "default_tax_rate": default_tax_rate,
         "site_settings": site_settings,
+        "all_tags": all_tags,
+        "all_tags_json": json.dumps(all_tags),
         # Analytics data
         "chart_data": json.dumps(chart_data),
         "top_products": list(top_products),
