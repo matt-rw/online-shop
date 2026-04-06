@@ -100,6 +100,22 @@ def orders_dashboard(request):
             except Exception as e:
                 return JsonResponse({"success": False, "error": str(e)})
 
+        elif action == "toggle_exclude_stats":
+            try:
+                order_id = request.POST.get("order_id")
+                order = Order.objects.get(id=order_id)
+                order.exclude_from_stats = not order.exclude_from_stats
+                order.save(update_fields=["exclude_from_stats"])
+                return JsonResponse({
+                    "success": True,
+                    "excluded": order.exclude_from_stats,
+                    "message": f"Order {'excluded from' if order.exclude_from_stats else 'included in'} stats"
+                })
+            except Order.DoesNotExist:
+                return JsonResponse({"success": False, "error": "Order not found"})
+            except Exception as e:
+                return JsonResponse({"success": False, "error": str(e)})
+
         elif action == "get_order_items":
             try:
                 order_id = request.POST.get("order_id")
@@ -249,7 +265,8 @@ def orders_dashboard(request):
 
     real_orders = Order.objects.filter(is_test=False)
     paid_statuses = [OrderStatus.PAID, OrderStatus.SHIPPED, OrderStatus.FULFILLED]
-    paid_orders = real_orders.filter(status__in=paid_statuses)
+    # Exclude orders marked as exclude_from_stats for revenue/profit calculations
+    paid_orders = real_orders.filter(status__in=paid_statuses, exclude_from_stats=False)
 
     # Basic stats
     total_count = real_orders.count()
@@ -488,15 +505,21 @@ def orders_dashboard(request):
         else:
             user_name = "Guest"
 
-        # Calculate profit for this order
+        # Calculate profit for this order and build SKU summary
         # Profit = actual product revenue - cost
         # Actual product revenue = total - shipping - tax (what customer paid for products after discounts)
         total_cost = 0
         items_with_cost = 0
+        sku_parts = []
         for item in order.items.all():
             if item.unit_cost is not None:
                 total_cost += float(item.unit_cost) * item.quantity
                 items_with_cost += 1
+            # Build compact SKU summary
+            sku_parts.append(f"{item.sku}({item.quantity})")
+
+        # Create compact SKU summary string
+        sku_summary = ", ".join(sku_parts) if sku_parts else ""
 
         # Calculate actual revenue received for products (excludes shipping/tax, includes discounts)
         actual_product_revenue = float(order.total) - float(order.shipping) - float(order.tax)
@@ -525,6 +548,8 @@ def orders_dashboard(request):
                 "label_url": order.label_url,
                 "created_at": order.created_at.isoformat(),
                 "item_count": order.items.count(),
+                "sku_summary": sku_summary,
+                "exclude_from_stats": order.exclude_from_stats,
                 # Shipping address for map
                 "shipping_city": order.shipping_address.city if order.shipping_address else "",
                 "shipping_state": order.shipping_address.region if order.shipping_address else "",

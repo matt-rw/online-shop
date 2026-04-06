@@ -145,6 +145,13 @@ class Order(models.Model):
         help_text="Test orders created via Test Center"
     )
 
+    # Exclude from stats (for personal orders, samples, etc.)
+    exclude_from_stats = models.BooleanField(
+        default=False,
+        db_index=True,
+        help_text="Exclude this order from revenue/profit calculations"
+    )
+
     # Shipping label tracking
     tracking_number = models.CharField(max_length=255, blank=True)
     carrier = models.CharField(max_length=100, blank=True)  # e.g., USPS, UPS, FedEx

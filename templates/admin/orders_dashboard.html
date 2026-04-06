@@ -1001,6 +1001,40 @@
       background: #fef2f2;
     }
 
+    .orders-table .btn-icon.exclude-toggle {
+      color: #94a3b8;
+      border-color: #e2e8f0;
+    }
+
+    .orders-table .btn-icon.exclude-toggle:hover {
+      color: #f59e0b;
+      border-color: #f59e0b;
+      background: #fffbeb;
+    }
+
+    .orders-table .btn-icon.exclude-toggle.active {
+      color: #f59e0b;
+      border-color: #f59e0b;
+      background: #fef3c7;
+    }
+
+    .exclude-badge {
+      display: inline-flex;
+      align-items: center;
+      margin-left: 0.25rem;
+      color: #f59e0b;
+      font-size: 0.65rem;
+    }
+
+    .excluded-order {
+      opacity: 0.6;
+      background: #fffbeb !important;
+    }
+
+    .excluded-order:hover {
+      opacity: 0.8;
+    }
+
     .status-badge-sm {
       display: inline-block;
       padding: 0.25rem 0.5rem;
@@ -1344,19 +1378,20 @@
             <tr>
               <th>Order</th>
               <th>Customer</th>
+              <th>Items</th>
               <th>Status</th>
               <th>Total</th>
-              <th>Discount</th>
+              <th>Cost</th>
               <th>Profit</th>
               <th>Date</th>
-              <th>Destination</th>
-              <th>Shipping</th>
+              <th>Dest</th>
+              <th>Ship</th>
               <th style="text-align: right;">Actions</th>
             </tr>
           </thead>
           <tbody>
             {% for order in orders %}
-            <tr class="order-row" data-order-id="{{ order.id }}" data-is-manual="{% if order.stripe_payment_intent|slice:':7' == 'MANUAL_' %}true{% else %}false{% endif %}" onclick="toggleOrderExpand(this, event)" style="cursor: pointer;">
+            <tr class="order-row{% if order.exclude_from_stats %} excluded-order{% endif %}" data-order-id="{{ order.id }}" data-exclude-stats="{{ order.exclude_from_stats|yesno:'true,false' }}" data-is-manual="{% if order.stripe_payment_intent|slice:':7' == 'MANUAL_' %}true{% else %}false{% endif %}" onclick="toggleOrderExpand(this, event)" style="cursor: pointer;">
               <td>
                 <div style="display: flex; align-items: center; gap: 0.5rem;">
                   <i class="fa-solid fa-chevron-right expand-icon" style="color: #94a3b8; font-size: 0.7rem; transition: transform 0.2s;"></i>
@@ -1364,6 +1399,9 @@
                     <span class="order-id">{{ order.order_number }}</span>
                     {% if order.stripe_payment_intent|slice:":7" == "MANUAL_" %}
                     <span class="manual-order-badge"><i class="fa-solid fa-pen"></i> Manual</span>
+                    {% endif %}
+                    {% if order.exclude_from_stats %}
+                    <span class="exclude-badge" title="Excluded from stats"><i class="fa-solid fa-ban"></i></span>
                     {% endif %}
                   </div>
                 </div>
@@ -1377,16 +1415,20 @@
                 </div>
                 {% endif %}
               </td>
+              <td class="items-cell" style="max-width: 140px;">
+                {% if order.sku_summary %}
+                <div style="font-size: 0.7rem; color: #64748b; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" title="{{ order.sku_summary }}">{{ order.sku_summary }}</div>
+                {% else %}
+                <span style="color: #94a3b8;">—</span>
+                {% endif %}
+              </td>
               <td>
                 <span class="status-badge-sm {{ order.status|lower }}">{{ order.status|title }}</span>
               </td>
               <td class="amount-cell">${{ order.total|floatformat:2 }}</td>
               <td>
-                {% if order.discount and order.discount > 0 %}
-                <span style="color: #52796f; font-weight: 500;">-${{ order.discount|floatformat:2 }}</span>
-                {% if order.discount_code %}
-                <div style="font-size: 0.65rem; color: #64748b;">{{ order.discount_code }}</div>
-                {% endif %}
+                {% if order.cost != None %}
+                <span style="color: #64748b; font-size: 0.8rem;">${{ order.cost|floatformat:2 }}</span>
                 {% else %}
                 <span style="color: #94a3b8;">—</span>
                 {% endif %}
@@ -1459,12 +1501,15 @@
                     <i class="fa-solid fa-external-link-alt"></i>
                   </a>
                   {% endif %}
+                  <button class="btn-icon exclude-toggle {% if order.exclude_from_stats %}active{% endif %}" onclick="toggleExcludeStats({{ order.id }})" title="{% if order.exclude_from_stats %}Include in stats{% else %}Exclude from stats{% endif %}">
+                    <i class="fa-solid fa-ban"></i>
+                  </button>
                 </div>
               </td>
             </tr>
             <!-- Expandable Order Details Row -->
             <tr class="order-details-row" id="order-details-row-{{ order.id }}" style="display: none;">
-              <td colspan="9" style="padding: 0; background: #f8fafc; border-bottom: 2px solid #e2e8f0;">
+              <td colspan="11" style="padding: 0; background: #f8fafc; border-bottom: 2px solid #e2e8f0;">
                 <div class="order-details-content" id="order-details-content-{{ order.id }}" style="padding: 1.5rem;">
                   <div style="text-align: center; color: #64748b;">
                     <i class="fa-solid fa-spinner fa-spin"></i> Loading...
@@ -2107,6 +2152,60 @@
         closeRefundModal();
       }
     });
+
+    // Toggle exclude from stats
+    async function toggleExcludeStats(orderId) {
+      try {
+        const formData = new FormData();
+        formData.append('action', 'toggle_exclude_stats');
+        formData.append('order_id', orderId);
+
+        const response = await fetch('{% url "admin_orders" %}', {
+          method: 'POST',
+          headers: {
+            'X-CSRFToken': getCookie('csrftoken')
+          },
+          body: formData
+        });
+
+        const data = await response.json();
+
+        if (data.success) {
+          // Update UI
+          const row = document.querySelector(`tr[data-order-id="${orderId}"]`);
+          const btn = row.querySelector('.exclude-toggle');
+          const orderCell = row.querySelector('td:first-child .order-id').parentElement;
+
+          if (data.excluded) {
+            row.classList.add('excluded-order');
+            row.dataset.excludeStats = 'true';
+            btn.classList.add('active');
+            btn.title = 'Include in stats';
+            // Add badge if not present
+            if (!orderCell.querySelector('.exclude-badge')) {
+              const badge = document.createElement('span');
+              badge.className = 'exclude-badge';
+              badge.title = 'Excluded from stats';
+              badge.innerHTML = '<i class="fa-solid fa-ban"></i>';
+              orderCell.appendChild(badge);
+            }
+          } else {
+            row.classList.remove('excluded-order');
+            row.dataset.excludeStats = 'false';
+            btn.classList.remove('active');
+            btn.title = 'Exclude from stats';
+            // Remove badge
+            const badge = orderCell.querySelector('.exclude-badge');
+            if (badge) badge.remove();
+          }
+        } else {
+          alert('Error: ' + data.error);
+        }
+      } catch (error) {
+        console.error('Error:', error);
+        alert('Error updating order. Please try again.');
+      }
+    }
 
     // Manual Order Modal Functions
     let manualOrderLineItems = [];
