@@ -1682,8 +1682,11 @@
               </td>
               <td class="actions-cell" style="text-align: right;" onclick="event.stopPropagation();">
                 <div style="display: flex; gap: 0.25rem; justify-content: flex-end;">
+                  <button class="btn-icon" onclick="editOrderDetails({{ order.id }})" title="Edit Details">
+                    <i class="fa-solid fa-user-pen"></i>
+                  </button>
                   {% if order.stripe_payment_intent|slice:":7" == "MANUAL_" %}
-                  <button class="btn-icon edit" onclick="editManualOrder({{ order.id }})" title="Edit Order">
+                  <button class="btn-icon edit" onclick="editManualOrder({{ order.id }})" title="Edit All">
                     <i class="fa-solid fa-edit"></i>
                   </button>
                   {% endif %}
@@ -2596,7 +2599,7 @@
     // Edit Details Modal Functions (for customer info and address only)
     async function editOrderDetails(orderId) {
       try {
-        const response = await fetch(`?action=get_order&order_id=${orderId}`);
+        const response = await fetch(`?get_order=${orderId}`);
         const data = await response.json();
         if (!data.success) {
           alert('Failed to load order details');

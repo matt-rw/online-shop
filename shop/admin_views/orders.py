@@ -354,7 +354,7 @@ def orders_dashboard(request):
 
                     # Calculate weight for this item
                     item_weight = None
-                    if item.variant:
+                    if item.variant and item.variant.product:
                         # Priority: variant weight > product weight
                         if item.variant.weight_oz:
                             item_weight = float(item.variant.weight_oz)
@@ -366,10 +366,17 @@ def orders_dashboard(request):
                     else:
                         missing_weights.append(item.sku)
 
+                    # Safely build variant name
+                    variant_name = item.sku
+                    if item.variant and item.variant.product:
+                        size_label = item.variant.size.label if item.variant.size else ""
+                        color_name = item.variant.color.name if item.variant.color else ""
+                        variant_name = f"{item.variant.product.name} - {size_label} {color_name}".strip()
+
                     items_data.append({
                         "id": item.id,
                         "sku": item.sku,
-                        "variant_name": f"{item.variant.product.name} - {item.variant.size.label if item.variant and item.variant.size else ''} {item.variant.color.name if item.variant and item.variant.color else ''}" if item.variant else item.sku,
+                        "variant_name": variant_name,
                         "quantity": item.quantity,
                         "line_total": float(item.line_total),
                         "unit_cost": float(item.unit_cost) if item.unit_cost else None,
@@ -406,7 +413,7 @@ def orders_dashboard(request):
 
                 # Calculate weight for this item
                 item_weight = None
-                if item.variant:
+                if item.variant and item.variant.product:
                     if item.variant.weight_oz:
                         item_weight = float(item.variant.weight_oz)
                     elif item.variant.product.weight_oz:
@@ -417,10 +424,21 @@ def orders_dashboard(request):
                 else:
                     missing_weights.append(item.sku)
 
+                # Safely get product and variant info
+                product_name = item.sku
+                display_name = item.sku
+                variant_id = None
+                if item.variant:
+                    variant_id = item.variant.id
+                    if item.variant.product:
+                        product_name = item.variant.product.name
+                        size_label = item.variant.size.label if item.variant.size else ""
+                        display_name = f"{product_name} - {size_label}" if size_label else product_name
+
                 items_data.append({
-                    "variant_id": item.variant.id if item.variant else None,
-                    "product_name": item.variant.product.name if item.variant else item.sku,
-                    "display_name": f"{item.variant.product.name} - {item.variant.size.label if item.variant and item.variant.size else ''}" if item.variant else item.sku,
+                    "variant_id": variant_id,
+                    "product_name": product_name,
+                    "display_name": display_name,
                     "sku": item.sku,
                     "quantity": item.quantity,
                     "unit_price": unit_price,

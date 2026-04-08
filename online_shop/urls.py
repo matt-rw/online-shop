@@ -13,6 +13,9 @@ def custom_404(request, exception):
 
 
 def custom_500(request):
+    # Serve admin-styled 500 page for admin URLs
+    if request.path.startswith('/bp-manage/') or request.path.startswith('/bp-djadmin/'):
+        return render(request, 'admin/500.html', status=500)
     return render(request, '500.html', status=500)
 
 
