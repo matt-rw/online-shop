@@ -190,7 +190,7 @@
 <!-- Section Footer -->
 <div class="border-t border-black bg-white">
   <div class="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center">
-    <span class="text-xs tracking-wider text-neutral-500">Free shipping on orders over $100</span>
+    <span class="text-xs tracking-wider text-neutral-500">{% if free_shipping_threshold > 0 %}Free shipping on orders over ${{ free_shipping_threshold|floatformat:0 }}{% else %}Free shipping with promo code{% endif %}</span>
     <span class="text-xs tracking-widest uppercase font-medium">Blueprint Apparel</span>
   </div>
 </div>

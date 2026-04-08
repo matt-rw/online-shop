@@ -9,6 +9,7 @@ from urllib.parse import urlparse
 from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
+from django.db import models
 from django.http import JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.views.decorators.http import require_http_methods, require_POST
@@ -33,6 +34,29 @@ from .models import Address, Bundle, Cart, CartItem, Order, OrderItem, ProductVa
 
 logger = logging.getLogger(__name__)
 stripe.api_key = settings.STRIPE_SECRET_KEY
+
+
+def get_auto_free_shipping_threshold():
+    """
+    Get the automatic free shipping threshold from active Discount.
+    Returns (threshold, discount_name) or (None, None) if no auto free shipping is active.
+    """
+    from django.utils import timezone
+    from .models import Discount
+
+    now = timezone.now()
+    auto_discount = Discount.objects.filter(
+        discount_type="auto_free_shipping",
+        is_active=True,
+        valid_from__lte=now,
+    ).filter(
+        # Valid until is either null (no expiration) or in the future
+        models.Q(valid_until__isnull=True) | models.Q(valid_until__gte=now)
+    ).first()
+
+    if auto_discount and auto_discount.min_purchase_amount:
+        return (auto_discount.min_purchase_amount, auto_discount.name)
+    return (None, None)
 
 
 def _get_safe_referer(request, default="/"):
@@ -88,8 +112,12 @@ def create_express_checkout_intent(request):
 
         # Calculate amounts
         subtotal = variant.price * quantity
-        # Free shipping over $100, otherwise $7.99
-        shipping = Decimal("0.00") if subtotal >= Decimal("100.00") else Decimal("7.99")
+        # Check for auto free shipping threshold
+        threshold, _ = get_auto_free_shipping_threshold()
+        if threshold and subtotal >= threshold:
+            shipping = Decimal("0.00")
+        else:
+            shipping = Decimal("7.99")  # Default shipping for express checkout
         total = subtotal + shipping
 
         # Create PaymentIntent
@@ -359,9 +387,9 @@ def cart_view(request):
 
     # Calculate totals
     subtotal = get_cart_total(cart)
-    # Shipping is calculated at checkout based on destination
-    # Free shipping on orders $100+
-    free_shipping = subtotal >= Decimal("100.00")
+    # Check for auto free shipping threshold
+    threshold, _ = get_auto_free_shipping_threshold()
+    free_shipping = threshold and subtotal >= threshold
 
     context = {
         "cart": cart,
@@ -631,8 +659,9 @@ def checkout_view(request):
 
     # Calculate totals
     subtotal = get_cart_total(cart)
-    # Free shipping on orders $100+
-    free_shipping = subtotal >= Decimal("100.00")
+    # Check for auto free shipping threshold
+    threshold, _ = get_auto_free_shipping_threshold()
+    free_shipping = threshold and subtotal >= threshold
 
     # Get saved addresses and user info for logged-in users
     saved_addresses = []
@@ -705,8 +734,12 @@ def get_shipping_rates_view(request):
     # Calculate cart subtotal for free shipping threshold
     subtotal = get_cart_total(cart)
 
-    # Free shipping for test orders or orders $100+
-    if is_test_order or subtotal >= Decimal("100.00"):
+    # Check for auto free shipping threshold
+    threshold, promo_name = get_auto_free_shipping_threshold()
+
+    # Free shipping for test orders or orders meeting threshold
+    if is_test_order or (threshold and subtotal >= threshold):
+        description = "Free shipping" if is_test_order else f"Free standard shipping on orders ${threshold:.0f}+"
         return JsonResponse({
             "success": True,
             "rates": [{
@@ -715,7 +748,7 @@ def get_shipping_rates_view(request):
                 "service": "Free Shipping",
                 "rate": 0.00,
                 "delivery_days": "5-7",
-                "description": "Free shipping" if is_test_order else "Free standard shipping on orders $100+"
+                "description": description
             }],
             "free_shipping": True
         })
@@ -842,6 +875,7 @@ def get_shipping_rates_view(request):
 def apply_promo_code(request):
     """
     AJAX endpoint to validate and apply a promo/discount code.
+    Supports stacking: one free_shipping code + one percentage/fixed code.
     """
     import json
     from django.utils import timezone
@@ -854,6 +888,8 @@ def apply_promo_code(request):
 
     code = data.get("code", "").strip()
     subtotal = Decimal(str(data.get("subtotal", 0)))
+    existing_discount_id = data.get("existing_discount_id")
+    existing_discount_type = data.get("existing_discount_type")
 
     if not code:
         return JsonResponse({"success": False, "error": "Please enter a promo code"})
@@ -881,6 +917,35 @@ def apply_promo_code(request):
             "error": f"Minimum purchase of ${discount.min_purchase_amount:.2f} required"
         })
 
+    # Stacking validation: check if new code is compatible with existing discount
+    if existing_discount_id:
+        new_type = discount.discount_type
+        # Stacking rules:
+        # - Allow: free_shipping + percentage
+        # - Allow: free_shipping + fixed
+        # - Reject: percentage + percentage
+        # - Reject: fixed + fixed
+        # - Reject: free_shipping + free_shipping
+        if new_type == existing_discount_type:
+            if new_type == "free_shipping":
+                return JsonResponse({
+                    "success": False,
+                    "error": "You already have a free shipping code applied"
+                })
+            else:
+                return JsonResponse({
+                    "success": False,
+                    "error": "You can only apply one value discount code"
+                })
+        # Check that we're combining free_shipping with percentage/fixed
+        value_types = {"percentage", "fixed"}
+        if not ((new_type == "free_shipping" and existing_discount_type in value_types) or
+                (existing_discount_type == "free_shipping" and new_type in value_types)):
+            return JsonResponse({
+                "success": False,
+                "error": "These discount codes cannot be combined"
+            })
+
     # Calculate discount amount
     discount_amount = Decimal("0.00")
     if discount.discount_type == "percentage":
@@ -891,12 +956,19 @@ def apply_promo_code(request):
         # Handle in shipping calculation
         discount_amount = Decimal("0.00")
 
+    # Build success message based on discount type
+    if discount.discount_type == "free_shipping":
+        message = f"Code '{code.upper()}' applied! Free shipping!"
+    else:
+        message = f"Code '{code.upper()}' applied! You saved ${discount_amount:.2f}"
+
     return JsonResponse({
         "success": True,
         "discount_id": discount.id,
         "discount_amount": float(discount_amount),
         "discount_type": discount.discount_type,
-        "message": f"Code '{code.upper()}' applied! You saved ${discount_amount:.2f}"
+        "discount_code": discount.code,
+        "message": message
     })
 
 
@@ -967,13 +1039,31 @@ def create_checkout_session(request):
         except (ValueError, TypeError):
             shipping_cost = Decimal("0.00")
 
+        # Check if free shipping promo code is applied
+        has_free_shipping_code = bool(request.POST.get("free_shipping_discount_id", ""))
+
+        # Check for auto free shipping threshold
+        threshold, _ = get_auto_free_shipping_threshold()
+        threshold_met = threshold and subtotal >= threshold
+
+        # Track whether free shipping code is actually used (for incrementing times_used)
+        free_shipping_code_used = False
+
         # Test orders are exempt from shipping
         if is_test_order:
             shipping_cost = Decimal("0.00")
-        # Validate shipping - free only if subtotal >= $100
-        elif subtotal < Decimal("100.00") and shipping_cost <= 0:
-            # Fallback to standard rate if no shipping selected
-            shipping_cost = Decimal("7.99")
+        # Orders meeting threshold get free shipping (priority over promo code)
+        elif threshold_met:
+            shipping_cost = Decimal("0.00")
+            # Don't mark code as used - threshold covers it
+        # If free shipping code is applied and threshold NOT met, use the code
+        elif has_free_shipping_code:
+            shipping_cost = Decimal("0.00")
+            free_shipping_code_used = True
+        # Require shipping selection for orders under threshold
+        elif shipping_cost <= 0:
+            messages.error(request, "Please select a shipping method.")
+            return redirect("shop:checkout")
 
         # Get customer email from form (fallback to user account email)
         customer_email = request.POST.get("email", "").strip()
@@ -1001,13 +1091,33 @@ def create_checkout_session(request):
                 }
             )
 
-        # Handle discount/promo code (applied locally, not via Stripe coupons)
+        # Handle discount/promo codes (supports stacking: free_shipping + value discount)
         discount_id = request.POST.get("discount_id", "")
+        free_shipping_discount_id = request.POST.get("free_shipping_discount_id", "")
         discount_amount = Decimal("0.00")
         discount_code = ""
+        free_shipping_code = ""
+
+        from .models import Discount
+
+        # Process free shipping discount - only record if code is actually used (not covered by threshold)
+        if free_shipping_discount_id and free_shipping_code_used:
+            try:
+                free_shipping_obj = Discount.objects.get(id=free_shipping_discount_id, is_active=True)
+                if free_shipping_obj.discount_type == "free_shipping":
+                    free_shipping_code = free_shipping_obj.code
+                    # Remove any shipping line item (shipping already zeroed above)
+                    line_items = [
+                        item for item in line_items
+                        if item["price_data"]["product_data"]["name"] not in ["Shipping", "Free Shipping"]
+                    ]
+                    logger.info(f"Applied free shipping discount: {free_shipping_code}")
+            except Exception as e:
+                logger.warning(f"Error applying free shipping discount {free_shipping_discount_id}: {e}")
+
+        # Process value discount (percentage/fixed)
         if discount_id:
             try:
-                from .models import Discount
                 discount_obj = Discount.objects.get(id=discount_id, is_active=True)
                 discount_code = discount_obj.code
                 # Calculate discount amount
@@ -1016,15 +1126,20 @@ def create_checkout_session(request):
                 elif discount_obj.discount_type == "fixed":
                     discount_amount = min(discount_obj.value, subtotal)
                 elif discount_obj.discount_type == "free_shipping":
-                    # Zero out shipping cost and remove shipping line item if added
-                    shipping_cost = Decimal("0.00")
-                    line_items = [
-                        item for item in line_items
-                        if item["price_data"]["product_data"]["name"] not in ["Shipping", "Free Shipping"]
-                    ]
-                    logger.info(f"Applied free shipping discount: {discount_code}")
+                    # If only a free_shipping code was passed via discount_id (no stacking)
+                    # Only use it if threshold doesn't already cover free shipping
+                    if not threshold_met:
+                        free_shipping_code = discount_obj.code
+                        free_shipping_code_used = True
+                        shipping_cost = Decimal("0.00")
+                        line_items = [
+                            item for item in line_items
+                            if item["price_data"]["product_data"]["name"] not in ["Shipping", "Free Shipping"]
+                        ]
+                        logger.info(f"Applied free shipping discount: {free_shipping_code}")
+                    discount_code = ""  # Clear it - we track free_shipping separately
 
-                # Apply discount by proportionally reducing line item prices
+                # Apply value discount by proportionally reducing line item prices
                 if discount_amount > 0 and subtotal > 0:
                     discount_ratio = (subtotal - discount_amount) / subtotal
                     adjusted_line_items = []
@@ -1073,6 +1188,7 @@ def create_checkout_session(request):
                 "is_test_order": "true" if is_test_order else "false",
                 "discount_code": discount_code,
                 "discount_amount": str(discount_amount),
+                "free_shipping_code": free_shipping_code,
                 # Shipping address
                 "shipping_name": request.POST.get("shipping_name", ""),
                 "shipping_line1": request.POST.get("shipping_line1", ""),
@@ -1216,12 +1332,20 @@ def checkout_success_view(request):
                         )
                         logger.info(f"Created shipping address from metadata: {shipping_address.city}, {shipping_address.region}")
 
+                    # Get discount codes from metadata
+                    discount_code = metadata.get("discount_code", "")
+                    discount_amount = Decimal(metadata.get("discount_amount", "0"))
+                    free_shipping_code = metadata.get("free_shipping_code", "")
+
                     # Create order
                     order = Order.objects.create(
                         user=user,
                         email=customer_email,
                         status="PAID",
                         subtotal=subtotal,
+                        discount=discount_amount,
+                        discount_code=discount_code,
+                        free_shipping_code=free_shipping_code,
                         shipping=shipping_cost,
                         tax=tax_amount,
                         total=total,

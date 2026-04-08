@@ -235,7 +235,7 @@
 <!-- Section Divider -->
 <div class="border-t border-black">
   <div class="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center">
-    <span class="text-xs tracking-wider text-neutral-500">Free shipping on orders over $100</span>
+    <span class="text-xs tracking-wider text-neutral-500">{% if free_shipping_threshold > 0 %}Free shipping on orders over ${{ free_shipping_threshold|floatformat:0 }}{% else %}Free shipping with promo code{% endif %}</span>
     <span class="text-xs tracking-widest uppercase font-medium">Blueprint Apparel</span>
   </div>
 </div>
@@ -343,10 +343,12 @@ async function removeItem(itemId) {
   }
 }
 
+const freeShippingThreshold = {{ free_shipping_threshold }};
+
 function updateTotals(cartTotal) {
   const subtotal = parseFloat(cartTotal);
-  // Free shipping on orders $100+, otherwise calculated at checkout
-  const freeShipping = subtotal >= 100;
+  // Free shipping on orders meeting threshold
+  const freeShipping = freeShippingThreshold > 0 && subtotal >= freeShippingThreshold;
   const shippingEl = document.getElementById('shipping');
 
   document.getElementById('subtotal').textContent = '$' + subtotal.toFixed(2);

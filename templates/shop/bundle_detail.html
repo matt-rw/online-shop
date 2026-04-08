@@ -269,7 +269,7 @@
               </svg>
             </summary>
             <ul class="space-y-2 text-sm text-neutral-600 leading-relaxed">
-              <li>Free shipping on orders over $100</li>
+              <li>{% if free_shipping_threshold > 0 %}Free shipping on orders over ${{ free_shipping_threshold|floatformat:0 }}{% else %}Free shipping with promo code{% endif %}</li>
               <li>Standard shipping: 5-7 business days</li>
               <li>Returns for store credit within 30 days</li>
             </ul>

@@ -3,6 +3,7 @@ Context processors to make data available in all templates.
 """
 
 from django.core.cache import cache
+from django.db import models
 
 from .cart_utils import get_cart_count, get_cart_total, get_or_create_cart
 
@@ -63,16 +64,32 @@ def site_settings_context(request):
 
     try:
         site_settings = SiteSettings.load()
+
+        # Get auto free shipping threshold from Discount model
+        from django.utils import timezone
+        from .models import Discount
+        now = timezone.now()
+        auto_discount = Discount.objects.filter(
+            discount_type="auto_free_shipping",
+            is_active=True,
+            valid_from__lte=now,
+        ).filter(
+            models.Q(valid_until__isnull=True) | models.Q(valid_until__gte=now)
+        ).first()
+        free_shipping_threshold = float(auto_discount.min_purchase_amount) if auto_discount and auto_discount.min_purchase_amount else 0
+
         data = {
             "site_settings": site_settings,
             "gallery_images": site_settings.gallery_images or [],
             "hero_slides": site_settings.hero_slides or [],
+            "free_shipping_threshold": free_shipping_threshold,
         }
     except Exception:
         data = {
             "site_settings": None,
             "gallery_images": [],
             "hero_slides": [],
+            "free_shipping_threshold": 0,
         }
 
     # Cache for 5 minutes

@@ -421,7 +421,8 @@ class Discount(models.Model):
         ("percentage", "Percentage Off"),
         ("fixed", "Fixed Amount Off"),
         ("bogo", "Buy One Get One"),
-        ("free_shipping", "Free Shipping"),
+        ("free_shipping", "Free Shipping Code"),
+        ("auto_free_shipping", "Free Shipping Threshold"),
     ]
 
     name = models.CharField(max_length=200, help_text="Internal name for this discount")

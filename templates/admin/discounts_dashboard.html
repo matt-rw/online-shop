@@ -213,6 +213,10 @@
       background: linear-gradient(135deg, #e0e7ff 0%, #c7d2fe 100%);
       color: #3730a3;
     }
+    .badge.auto_free_shipping {
+      background: linear-gradient(135deg, #d1fae5 0%, #6ee7b7 100%);
+      color: #065f46;
+    }
     .btn {
       padding: 0.5rem 1rem;
       border-radius: 8px;
@@ -498,6 +502,8 @@
                   BOGO
                 {% elif discount.discount_type == 'free_shipping' %}
                   FREE SHIPPING
+                {% elif discount.discount_type == 'auto_free_shipping' %}
+                  FREE SHIPPING ${{ discount.min_purchase_amount|floatformat:0 }}+
                 {% endif %}
               </span>
             </td>
@@ -601,7 +607,8 @@
                 <option value="percentage">Percentage Off</option>
                 <option value="fixed">Fixed Amount Off</option>
                 <option value="bogo">Buy One Get One</option>
-                <option value="free_shipping">Free Shipping</option>
+                <option value="free_shipping">Free Shipping Code</option>
+                <option value="auto_free_shipping">Free Shipping Threshold</option>
               </select>
             </div>
 
@@ -730,7 +737,8 @@
                 <option value="percentage">Percentage Off</option>
                 <option value="fixed">Fixed Amount Off</option>
                 <option value="bogo">Buy One Get One</option>
-                <option value="free_shipping">Free Shipping</option>
+                <option value="free_shipping">Free Shipping Code</option>
+                <option value="auto_free_shipping">Free Shipping Threshold</option>
               </select>
             </div>
 
@@ -849,6 +857,19 @@
       const valueGroup = document.getElementById('valueGroup');
       const valueInput = document.getElementById('value');
       const valueHelp = document.getElementById('valueHelp');
+      const codeInput = document.getElementById('code');
+      const codeGroup = codeInput.closest('.form-group');
+      const minPurchaseInput = document.getElementById('min_purchase_amount');
+      const minPurchaseHelp = minPurchaseInput.nextElementSibling;
+      const maxUsesInput = document.getElementById('max_uses');
+      const maxUsesGroup = maxUsesInput.closest('.form-group');
+
+      // Reset field visibility
+      codeGroup.style.display = 'block';
+      codeInput.required = false;
+      minPurchaseInput.required = false;
+      if (minPurchaseHelp) minPurchaseHelp.textContent = 'Minimum order amount to qualify';
+      maxUsesGroup.style.display = 'block';
 
       if (discountType === 'percentage') {
         valueInput.placeholder = 'e.g., 20';
@@ -868,6 +889,19 @@
         valueInput.required = false;
         valueInput.value = '0';
         valueGroup.style.display = 'none';
+      } else if (discountType === 'auto_free_shipping') {
+        valueInput.required = false;
+        valueInput.value = '0';
+        valueGroup.style.display = 'none';
+        // Hide code field - automatic discounts don't need a code
+        codeGroup.style.display = 'none';
+        codeInput.value = '';
+        // Make min purchase required - this is the threshold
+        minPurchaseInput.required = true;
+        if (minPurchaseHelp) minPurchaseHelp.textContent = 'Order threshold for free shipping (e.g., 100 for free shipping on orders $100+)';
+        // Hide max uses - threshold applies unlimited times
+        maxUsesGroup.style.display = 'none';
+        maxUsesInput.value = '';
       }
     }
 
@@ -932,6 +966,19 @@
       const valueGroup = document.getElementById('editValueGroup');
       const valueInput = document.getElementById('edit_value');
       const valueHelp = document.getElementById('editValueHelp');
+      const codeInput = document.getElementById('edit_code');
+      const codeGroup = codeInput.closest('.form-group');
+      const minPurchaseInput = document.getElementById('edit_min_purchase_amount');
+      const minPurchaseHelp = minPurchaseInput.nextElementSibling;
+      const maxUsesInput = document.getElementById('edit_max_uses');
+      const maxUsesGroup = maxUsesInput.closest('.form-group');
+
+      // Reset field visibility
+      codeGroup.style.display = 'block';
+      codeInput.required = false;
+      minPurchaseInput.required = false;
+      if (minPurchaseHelp) minPurchaseHelp.textContent = 'Minimum order amount to qualify';
+      maxUsesGroup.style.display = 'block';
 
       if (discountType === 'percentage') {
         valueInput.placeholder = 'e.g., 20';
@@ -946,6 +993,18 @@
       } else if (discountType === 'bogo' || discountType === 'free_shipping') {
         valueInput.required = false;
         valueGroup.style.display = 'none';
+      } else if (discountType === 'auto_free_shipping') {
+        valueInput.required = false;
+        valueGroup.style.display = 'none';
+        // Hide code field - automatic discounts don't need a code
+        codeGroup.style.display = 'none';
+        codeInput.value = '';
+        // Make min purchase required - this is the threshold
+        minPurchaseInput.required = true;
+        if (minPurchaseHelp) minPurchaseHelp.textContent = 'Order threshold for free shipping (e.g., 100 for free shipping on orders $100+)';
+        // Hide max uses - threshold applies unlimited times
+        maxUsesGroup.style.display = 'none';
+        maxUsesInput.value = '';
       }
     }
 

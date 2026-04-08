@@ -2,11 +2,14 @@ from django.contrib import admin
 from django.utils import timezone
 from django.utils.html import format_html
 
+from django import forms
+
 from .models import (
     Address,
     Campaign,
     CampaignMessage,
     Color,
+    Discount,
     EmailCampaign,
     EmailLog,
     EmailSubscription,
@@ -58,7 +61,7 @@ class OrderAdmin(admin.ModelAdmin):
         (None, {"fields": ("order_number", "status", "is_test")}),
         ("Customer", {"fields": ("user", "customer_name", "email", "phone")}),
         ("Shipping Address", {"fields": ("shipping_address",)}),
-        ("Totals", {"fields": ("subtotal", "discount", "discount_code", "shipping", "tax", "total")}),
+        ("Totals", {"fields": ("subtotal", "discount", "discount_code", "free_shipping_code", "shipping", "tax", "total")}),
         ("Shipping", {"fields": ("tracking_number", "carrier", "label_url", "label_cost")}),
         ("Stripe", {"fields": ("stripe_checkout_id", "stripe_payment_intent_id"), "classes": ("collapse",)}),
         ("Dates", {"fields": ("created_at", "updated_at"), "classes": ("collapse",)}),
@@ -69,6 +72,102 @@ class OrderAdmin(admin.ModelAdmin):
 class AddressAdmin(admin.ModelAdmin):
     list_display = ("full_name", "city", "region", "postal_code", "country")
     search_fields = ("full_name", "city", "postal_code")
+
+
+class DiscountAdminForm(forms.ModelForm):
+    """Custom form for Discount with validation."""
+
+    class Meta:
+        model = Discount
+        fields = "__all__"
+        help_texts = {
+            "code": "Leave blank for automatic discounts (no code required). Required for promo code discounts.",
+            "discount_type": "Choose 'Free Shipping (Automatic)' for threshold-based free shipping that applies automatically.",
+            "min_purchase_amount": "For automatic free shipping, this is the order minimum to qualify.",
+        }
+
+    def clean(self):
+        cleaned_data = super().clean()
+        discount_type = cleaned_data.get("discount_type")
+        is_active = cleaned_data.get("is_active")
+        code = cleaned_data.get("code")
+
+        # Validate: auto_free_shipping must not have a code
+        if discount_type == "auto_free_shipping" and code:
+            raise forms.ValidationError(
+                "Automatic free shipping discounts cannot have a code. Leave the code field blank."
+            )
+
+        # Validate: promo code types must have a code
+        if discount_type in ("percentage", "fixed", "free_shipping") and not code:
+            raise forms.ValidationError(
+                "This discount type requires a promo code. Enter a code or use 'Free Shipping (Automatic)' for no-code discounts."
+            )
+
+        # Validate: only one active auto_free_shipping allowed
+        if discount_type == "auto_free_shipping" and is_active:
+            existing = Discount.objects.filter(
+                discount_type="auto_free_shipping",
+                is_active=True,
+            )
+            # Exclude current instance if editing
+            if self.instance.pk:
+                existing = existing.exclude(pk=self.instance.pk)
+
+            if existing.exists():
+                raise forms.ValidationError(
+                    f"Only one automatic free shipping threshold can be active at a time. "
+                    f"Please deactivate '{existing.first().name}' first."
+                )
+
+        return cleaned_data
+
+
+@admin.register(Discount)
+class DiscountAdmin(admin.ModelAdmin):
+    """Admin for managing discounts and promotions."""
+
+    form = DiscountAdminForm
+    list_display = ("name", "code_display", "discount_type", "value_display", "is_active", "times_used", "valid_until")
+    list_filter = ("discount_type", "is_active")
+    search_fields = ("name", "code")
+    readonly_fields = ("times_used",)
+
+    fieldsets = (
+        (None, {
+            "fields": ("name", "discount_type", "code"),
+            "description": "For automatic free shipping (no code required), select 'Free Shipping (Automatic)' and leave code blank."
+        }),
+        ("Discount Value", {
+            "fields": ("value", "min_purchase_amount"),
+            "description": "For automatic free shipping, set 'Min purchase amount' as the order threshold (e.g., 100 for free shipping on orders $100+)."
+        }),
+        ("Validity", {
+            "fields": ("is_active", "valid_from", "valid_until", "max_uses", "times_used"),
+        }),
+        ("Product Targeting", {
+            "fields": ("applies_to_all", "products"),
+            "classes": ("collapse",),
+        }),
+    )
+
+    def code_display(self, obj):
+        if obj.code:
+            return obj.code.upper()
+        return format_html('<span style="color: #666; font-style: italic;">Automatic (no code)</span>')
+    code_display.short_description = "Code"
+
+    def value_display(self, obj):
+        if obj.discount_type == "percentage":
+            return f"{obj.value}%"
+        elif obj.discount_type == "fixed":
+            return f"${obj.value}"
+        elif obj.discount_type in ("free_shipping", "auto_free_shipping"):
+            if obj.min_purchase_amount:
+                return f"Free shipping on ${obj.min_purchase_amount}+"
+            return "Free shipping"
+        return str(obj.value)
+    value_display.short_description = "Value"
 
 
 @admin.register(EmailSubscription)
@@ -673,7 +772,7 @@ class SiteSettingsAdmin(admin.ModelAdmin):
                     "warehouse_country",
                     "warehouse_phone",
                 ),
-                "description": "Required for EasyPost shipping label generation.",
+                "description": "Warehouse address for EasyPost shipping labels.",
             },
         ),
     )

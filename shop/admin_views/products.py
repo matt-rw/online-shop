@@ -1238,17 +1238,41 @@ def promotions_dashboard(request):
 
         elif action == "create_discount":
             try:
+                discount_type = request.POST.get("discount_type")
+                is_active = request.POST.get("is_active") == "on"
+
+                # Validate: only one active auto_free_shipping allowed
+                if discount_type == "auto_free_shipping" and is_active:
+                    existing = Discount.objects.filter(
+                        discount_type="auto_free_shipping",
+                        is_active=True,
+                    ).first()
+                    if existing:
+                        messages.error(
+                            request,
+                            f"Only one Free Shipping Threshold can be active at a time. "
+                            f"Please deactivate '{existing.name}' first."
+                        )
+                        return redirect("promotions_dashboard")
+
+                # Validate: auto_free_shipping requires min_purchase_amount
+                if discount_type == "auto_free_shipping":
+                    min_purchase = request.POST.get("min_purchase_amount")
+                    if not min_purchase:
+                        messages.error(request, "Free Shipping Threshold requires a minimum purchase amount.")
+                        return redirect("promotions_dashboard")
+
                 discount = Discount(
                     name=request.POST.get("name"),
-                    code=request.POST.get("code"),
-                    discount_type=request.POST.get("discount_type"),
-                    value=request.POST.get("value"),
+                    code=request.POST.get("code") if discount_type != "auto_free_shipping" else "",
+                    discount_type=discount_type,
+                    value=request.POST.get("value") or 0,
                     min_purchase_amount=request.POST.get("min_purchase_amount") or None,
                     max_uses=request.POST.get("max_uses") or None,
                     valid_from=request.POST.get("valid_from"),
                     valid_until=request.POST.get("valid_until") or None,
                     applies_to_all=request.POST.get("applies_to_all") == "on",
-                    is_active=request.POST.get("is_active") == "on",
+                    is_active=is_active,
                     link_destination=request.POST.get("link_destination", ""),
                     landing_url=request.POST.get("landing_url", ""),
                 )
@@ -1264,16 +1288,40 @@ def promotions_dashboard(request):
                 discount_id = request.POST.get("discount_id")
                 discount = Discount.objects.get(id=discount_id)
 
+                discount_type = request.POST.get("discount_type")
+                is_active = request.POST.get("is_active") == "on"
+
+                # Validate: only one active auto_free_shipping allowed
+                if discount_type == "auto_free_shipping" and is_active:
+                    existing = Discount.objects.filter(
+                        discount_type="auto_free_shipping",
+                        is_active=True,
+                    ).exclude(pk=discount.pk).first()
+                    if existing:
+                        messages.error(
+                            request,
+                            f"Only one Free Shipping Threshold can be active at a time. "
+                            f"Please deactivate '{existing.name}' first."
+                        )
+                        return redirect("promotions_dashboard")
+
+                # Validate: auto_free_shipping requires min_purchase_amount
+                if discount_type == "auto_free_shipping":
+                    min_purchase = request.POST.get("min_purchase_amount")
+                    if not min_purchase:
+                        messages.error(request, "Free Shipping Threshold requires a minimum purchase amount.")
+                        return redirect("promotions_dashboard")
+
                 discount.name = request.POST.get("name")
-                discount.code = request.POST.get("code", "")
-                discount.discount_type = request.POST.get("discount_type")
-                discount.value = request.POST.get("value")
+                discount.code = request.POST.get("code", "") if discount_type != "auto_free_shipping" else ""
+                discount.discount_type = discount_type
+                discount.value = request.POST.get("value") or 0
                 discount.valid_from = request.POST.get("valid_from")
                 discount.valid_until = request.POST.get("valid_until") or None
                 discount.min_purchase_amount = request.POST.get("min_purchase_amount") or None
                 discount.max_uses = request.POST.get("max_uses") or None
                 discount.applies_to_all = request.POST.get("applies_to_all") == "on"
-                discount.is_active = request.POST.get("is_active") == "on"
+                discount.is_active = is_active
                 discount.link_destination = request.POST.get("link_destination", "")
                 discount.landing_url = request.POST.get("landing_url", "")
 
