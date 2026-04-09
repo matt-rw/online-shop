@@ -83,6 +83,7 @@ def site_settings_context(request):
             "gallery_images": site_settings.gallery_images or [],
             "hero_slides": site_settings.hero_slides or [],
             "free_shipping_threshold": free_shipping_threshold,
+            "default_product_image": site_settings.default_product_image or "",
         }
     except Exception:
         data = {
@@ -90,6 +91,7 @@ def site_settings_context(request):
             "gallery_images": [],
             "hero_slides": [],
             "free_shipping_threshold": 0,
+            "default_product_image": "",
         }
 
     # Cache for 5 minutes

@@ -741,6 +741,10 @@ def warehouse_settings(request):
         except (ValueError, TypeError):
             pass
 
+        # Update default product image
+        default_product_image = request.POST.get("default_product_image", "").strip()
+        site_settings.default_product_image = default_product_image
+
         site_settings.save()
 
         # Auto-geocode warehouse if address changed

@@ -1,4 +1,5 @@
 {% load static %}
+{% load json_filters %}
 <!DOCTYPE html>
 <html lang="en" data-theme="light">
 <head>
@@ -593,7 +594,7 @@
     let mobilePosY = {{ about_settings.mobile_position_y|default:50 }};
     let mobileZoom = {{ about_settings.mobile_zoom|default:100 }};
     let animationEnabled = {{ about_settings.animation_enabled|yesno:"true,false,true" }};
-    let mainTextParagraphs = {{ about_settings.main_text|safe|default:"[]" }};
+    let mainTextParagraphs = {{ about_settings.main_text|to_json }};
     let previewMode = 'desktop';
     let modalPreviewMode = 'desktop';
 

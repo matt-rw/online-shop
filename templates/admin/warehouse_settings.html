@@ -308,6 +308,26 @@
         </div>
       </div>
 
+      <!-- Default Product Image -->
+      <div class="settings-card">
+        <h2 class="section-title">
+          <i class="fa-solid fa-image"></i> Default Product Image
+        </h2>
+
+        <div class="form-group">
+          <label for="default_product_image">Fallback Image URL</label>
+          <input type="url" id="default_product_image" name="default_product_image" value="{{ site_settings.default_product_image }}" placeholder="https://example.com/placeholder.jpg" style="max-width: 500px;">
+          <p class="help-text">Shown when a product has no images. Leave empty to show nothing.</p>
+        </div>
+
+        {% if site_settings.default_product_image %}
+        <div style="margin-top: 1rem;">
+          <p style="font-size: 0.75rem; color: #64748b; margin-bottom: 0.5rem;">Current image:</p>
+          <img src="{{ site_settings.default_product_image }}" alt="Default product image" style="max-width: 150px; max-height: 200px; border: 1px solid #e2e8f0; border-radius: 4px;">
+        </div>
+        {% endif %}
+      </div>
+
       <div class="form-actions">
         <button type="submit" class="btn btn-primary">
           <i class="fa-solid fa-save"></i> Save Settings

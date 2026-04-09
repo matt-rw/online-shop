@@ -657,16 +657,14 @@ def product_detail(request, slug):
                     images.append(img_path)
                     seen_images.add(img_path)
 
-    # Fallback to placeholder if no images at all
+    # Fallback to default product image from site settings if no images
     if not images:
-        if product.category_legacy and "bottom" in product.category_legacy.lower():
-            images = ["/static/images/white_bg_bottom.webp"]
-        elif product.slug and "pants" in product.slug.lower():
-            images = ["/static/images/white_bg_bottom.webp"]
-        else:
-            images = ["/static/images/white_bg_top.webp"]
+        from .models import SiteSettings
+        site_settings = SiteSettings.load()
+        if site_settings.default_product_image:
+            images = [site_settings.default_product_image]
 
-    main_image = images[0] if images else "/static/images/white_bg_top.webp"
+    main_image = images[0] if images else ""
 
     # Get default variant (first active one with stock, or just first)
     default_variant = None
@@ -745,10 +743,15 @@ def shop(request):
     # Get all categories for filter
     categories = Category.objects.all()
 
+    # Get default product image from site settings
+    from .models import SiteSettings
+    site_settings = SiteSettings.load()
+    default_image = site_settings.default_product_image or ""
+
     # Build product data with images (no extra queries due to prefetch)
     product_list = []
     for product in products:
-        # Get first variant image, then product-level images, then placeholder
+        # Get first variant image, then product-level images, then default
         first_variant = product.active_variants[0] if product.active_variants else None
         if first_variant and first_variant.images:
             image = first_variant.images[0]
@@ -759,10 +762,8 @@ def shop(request):
             image = product.images[0]
             if image and not image.startswith(("/", "http", "data:")):
                 image = f"/static/{image}"
-        elif "pants" in product.slug.lower() or "bottom" in product.name.lower():
-            image = "/static/images/white_bg_bottom.webp"
         else:
-            image = "/static/images/white_bg_top.webp"
+            image = default_image
 
         product_list.append({
             "product": product,
@@ -798,7 +799,7 @@ def shop(request):
                     if image and not image.startswith(("/", "http", "data:")):
                         image = f"/static/{image}"
                 else:
-                    image = "/static/images/white_bg_top.webp"
+                    image = default_image
 
             bundle_list.append({
                 "bundle": bundle,
@@ -947,9 +948,11 @@ def bundle_detail(request, slug):
     """Bundle detail page."""
     from django.shortcuts import get_object_or_404
 
-    from .models import Bundle
+    from .models import Bundle, SiteSettings
 
     bundle = get_object_or_404(Bundle, slug=slug, is_active=True)
+    site_settings = SiteSettings.load()
+    default_image = site_settings.default_product_image or ""
 
     # Get available sizes (sizes with stock for ALL component products)
     available_sizes = bundle.get_available_sizes()
@@ -983,7 +986,7 @@ def bundle_detail(request, slug):
                         images.append(img)
                     break  # Just take first image from each product
 
-    main_image = images[0] if images else "/static/images/white_bg_top.webp"
+    main_image = images[0] if images else default_image
 
     # Get component products
     components = []
@@ -999,7 +1002,7 @@ def bundle_detail(request, slug):
         components.append({
             "product": product,
             "quantity": item.quantity,
-            "image": product_image or "/static/images/white_bg_top.webp",
+            "image": product_image or default_image,
         })
 
     context = {

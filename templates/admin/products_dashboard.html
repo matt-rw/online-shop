@@ -1,4 +1,5 @@
 {% load static %}
+{% load json_filters %}
 <!DOCTYPE html>
 <html lang="en" data-theme="light">
 <head>
@@ -696,7 +697,7 @@
                   data-base-cost="{{ product.base_cost|default:0 }}"
                   data-featured="{{ product.featured|lower }}"
                   data-available="{{ product.available_for_purchase|lower }}"
-                  data-images='{{ product.images|safe|default:"[]" }}'
+                  data-images='{{ product.images|to_json }}'
                   data-weight-oz="{{ product.weight_oz|default:"" }}"
                 >
                   <i class="fa-solid fa-edit"></i>
@@ -1930,7 +1931,7 @@
         };
 
         imgDiv.innerHTML = `
-          <img src="${imgSrc}" style="width: 100%; height: 100%; object-fit: cover; pointer-events: none;" onerror="this.src='/static/images/white_bg_top.webp'">
+          <img src="${imgSrc}" style="width: 100%; height: 100%; object-fit: cover; pointer-events: none;" onerror="this.style.display='none'">
           <div style="position: absolute; top: 4px; left: 4px; background: rgba(0,0,0,0.6); color: white; border-radius: 4px; width: 20px; height: 20px; font-size: 0.6875rem; display: flex; align-items: center; justify-content: center; font-weight: 600;">${index + 1}</div>
           <button type="button" onclick="event.stopPropagation(); removeProductImage(${index})" style="position: absolute; top: 4px; right: 4px; background: rgba(239, 68, 68, 0.9); color: white; border: none; border-radius: 4px; width: 24px; height: 24px; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 0.75rem;">
             <i class="fa-solid fa-times"></i>
@@ -3490,7 +3491,7 @@
         };
 
         imgDiv.innerHTML = `
-          <img src="${imgSrc}" style="width: 100%; height: 100%; object-fit: cover; pointer-events: none;" onerror="this.src='/static/images/white_bg_top.webp'">
+          <img src="${imgSrc}" style="width: 100%; height: 100%; object-fit: cover; pointer-events: none;" onerror="this.style.display='none'">
           <div style="position: absolute; top: 4px; left: 4px; background: rgba(0,0,0,0.6); color: white; border-radius: 4px; width: 20px; height: 20px; font-size: 0.6875rem; display: flex; align-items: center; justify-content: center; font-weight: 600;">${index + 1}</div>
           <button type="button" onclick="event.stopPropagation(); removeVariantImage(${index})" style="position: absolute; top: 4px; right: 4px; background: rgba(239, 68, 68, 0.9); color: white; border: none; border-radius: 4px; width: 24px; height: 24px; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 0.75rem;">
             <i class="fa-solid fa-times"></i>
@@ -3529,7 +3530,7 @@
         const imgDiv = document.createElement('div');
         imgDiv.style.cssText = 'position: relative; width: 70px; height: 70px; border-radius: 6px; overflow: hidden; border: 2px solid #e2e8f0; opacity: 0.8;';
         imgDiv.innerHTML = `
-          <img src="${imgSrc}" style="width: 100%; height: 100%; object-fit: cover;" onerror="this.src='/static/images/white_bg_top.webp'">
+          <img src="${imgSrc}" style="width: 100%; height: 100%; object-fit: cover;" onerror="this.style.display='none'">
           <div style="position: absolute; top: 2px; left: 2px; background: rgba(0,0,0,0.5); color: white; border-radius: 3px; width: 16px; height: 16px; font-size: 0.5625rem; display: flex; align-items: center; justify-content: center; font-weight: 600;">${index + 1}</div>
         `;
         container.appendChild(imgDiv);

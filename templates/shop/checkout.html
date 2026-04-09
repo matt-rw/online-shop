@@ -281,10 +281,8 @@
                 <div class="w-16 h-20 bg-white border border-neutral-200 flex-shrink-0 overflow-hidden">
                   {% if item.image %}
                   <img src="{{ item.image }}" alt="{{ item.variant.product.name }}" class="w-full h-full object-cover" />
-                  {% elif 'pants' in item.variant.product.slug|lower or 'bottom' in item.variant.product.name|lower %}
-                  <img src="{% static 'images/white_bg_bottom.webp' %}" alt="{{ item.variant.product.name }}" class="w-full h-full object-cover" />
-                  {% else %}
-                  <img src="{% static 'images/white_bg_top.webp' %}" alt="{{ item.variant.product.name }}" class="w-full h-full object-cover" />
+                  {% elif default_product_image %}
+                  <img src="{{ default_product_image }}" alt="{{ item.variant.product.name }}" class="w-full h-full object-cover" />
                   {% endif %}
                 </div>
                 <div class="flex-grow">

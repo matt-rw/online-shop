@@ -60,10 +60,8 @@
           <div class="w-28 h-36 bg-neutral-100 flex-shrink-0 border border-black overflow-hidden">
             {% if cart_item.image %}
             <img src="{{ cart_item.image }}" alt="{{ cart_item.item.variant.product.name }}" class="w-full h-full object-cover" />
-            {% elif 'pants' in cart_item.item.variant.product.slug|lower or 'bottom' in cart_item.item.variant.product.name|lower %}
-            <img src="{% static 'images/white_bg_bottom.webp' %}" alt="{{ cart_item.item.variant.product.name }}" class="w-full h-full object-cover" />
-            {% else %}
-            <img src="{% static 'images/white_bg_top.webp' %}" alt="{{ cart_item.item.variant.product.name }}" class="w-full h-full object-cover" />
+            {% elif default_product_image %}
+            <img src="{{ default_product_image }}" alt="{{ cart_item.item.variant.product.name }}" class="w-full h-full object-cover" />
             {% endif %}
           </div>
 
@@ -117,8 +115,8 @@
           <div class="w-28 h-36 bg-neutral-100 flex-shrink-0 border border-black overflow-hidden relative">
             {% if bundle_item.image %}
             <img src="{{ bundle_item.image }}" alt="{{ bundle_item.item.bundle.name }}" class="w-full h-full object-cover" />
-            {% else %}
-            <img src="{% static 'images/white_bg_top.webp' %}" alt="{{ bundle_item.item.bundle.name }}" class="w-full h-full object-cover" />
+            {% elif default_product_image %}
+            <img src="{{ default_product_image }}" alt="{{ bundle_item.item.bundle.name }}" class="w-full h-full object-cover" />
             {% endif %}
             <span class="bundle-badge absolute top-1 left-1">Bundle</span>
           </div>

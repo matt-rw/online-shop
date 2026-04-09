@@ -181,6 +181,12 @@ class SiteSettings(models.Model):
         help_text="Default product weight in ounces (used when product has no weight set)"
     )
 
+    # Default product image (shown when a product has no images)
+    default_product_image = models.URLField(
+        blank=True,
+        help_text="URL of default image shown when a product has no images (leave empty to show nothing)"
+    )
+
     # Default tax rate for in-person/manual sales (percentage, e.g., 8.25 for 8.25%)
     default_tax_rate = models.DecimalField(
         max_digits=5, decimal_places=3, default=0,
