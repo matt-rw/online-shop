@@ -96,10 +96,21 @@ def products_dashboard(request):
                 )
                 optimized_size = len(optimized_content)
 
-                # Save to media folder
-                from django.core.files.storage import default_storage
-                path = default_storage.save(f"products/{filename}", ContentFile(optimized_content))
-                url = default_storage.url(path)
+                # Use Cloudinary if available, otherwise fall back to local storage
+                from django.conf import settings as django_settings
+                if getattr(django_settings, 'CLOUDINARY_ENABLED', False):
+                    import cloudinary.uploader
+                    result = cloudinary.uploader.upload(
+                        optimized_content,
+                        folder="products",
+                        public_id=f"product_{uuid.uuid4().hex[:8]}",
+                        resource_type="image"
+                    )
+                    url = result['secure_url']
+                else:
+                    from django.core.files.storage import default_storage
+                    path = default_storage.save(f"products/{filename}", ContentFile(optimized_content))
+                    url = default_storage.url(path)
 
                 # Log optimization
                 savings = round((1 - optimized_size / original_size) * 100, 1) if original_size > 0 else 0
@@ -1831,10 +1842,21 @@ def bundles_dashboard(request):
                 )
                 optimized_size = len(optimized_content)
 
-                # Save to media folder
-                from django.core.files.storage import default_storage
-                path = default_storage.save(f"bundles/{filename}", ContentFile(optimized_content))
-                url = default_storage.url(path)
+                # Use Cloudinary if available, otherwise fall back to local storage
+                from django.conf import settings as django_settings
+                if getattr(django_settings, 'CLOUDINARY_ENABLED', False):
+                    import cloudinary.uploader
+                    result = cloudinary.uploader.upload(
+                        optimized_content,
+                        folder="bundles",
+                        public_id=f"bundle_{uuid.uuid4().hex[:8]}",
+                        resource_type="image"
+                    )
+                    url = result['secure_url']
+                else:
+                    from django.core.files.storage import default_storage
+                    path = default_storage.save(f"bundles/{filename}", ContentFile(optimized_content))
+                    url = default_storage.url(path)
 
                 savings = round((1 - optimized_size / original_size) * 100, 1) if original_size > 0 else 0
                 logger.info(f"Bundle image optimized: {original_size} -> {optimized_size} bytes ({savings}% reduction)")
