@@ -705,11 +705,6 @@ def products_dashboard(request):
                 return JsonResponse({"success": False, "error": str(e)})
 
         elif action == "quick_create_shipment":
-            import uuid
-            from datetime import timedelta
-
-            from django.http import JsonResponse
-
             from shop.models import Shipment
 
             supplier = request.POST.get("supplier", "").strip()
