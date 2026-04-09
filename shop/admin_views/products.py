@@ -2,8 +2,11 @@
 Product, category, promotion, attribute, and bundle management admin views.
 """
 
+import base64
+import io
 import json
 import logging
+import uuid
 from datetime import datetime, timedelta
 from decimal import Decimal
 
@@ -68,10 +71,7 @@ def products_dashboard(request):
 
         elif action == "upload_product_image":
             # Upload and optimize product image
-            import base64
-            from django.core.files.base import ContentFile
             from shop.utils.image_optimizer import optimize_image
-            import io
 
             try:
                 image_data = request.POST.get("image_data")
@@ -1812,10 +1812,7 @@ def bundles_dashboard(request):
 
         if action == "upload_bundle_image":
             # Upload and optimize bundle image
-            import base64
-            from django.core.files.base import ContentFile
             from shop.utils.image_optimizer import optimize_image
-            import io
 
             try:
                 image_data = request.POST.get("image_data")
