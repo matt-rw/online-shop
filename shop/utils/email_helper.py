@@ -568,6 +568,7 @@ def send_order_admin_notification(order):
     Returns:
         tuple: (success: bool, log_object: EmailLog or None)
     """
+    from django.contrib.sites.models import Site
     from shop.models import EmailTemplate, SiteSettings
 
     try:
@@ -617,6 +618,14 @@ def send_order_admin_notification(order):
         customer_email = order.email or (order.user.email if order.user else "")
         customer_name = order.customer_name or (order.user.first_name if order.user else "Guest")
 
+        # Build admin URL
+        try:
+            current_site = Site.objects.get_current()
+            domain = current_site.domain
+        except Exception:
+            domain = "blueprintbrand.com"
+        admin_url = f"https://{domain}/bp-manage/orders/?search={order.order_number}"
+
         # Build context for template
         context = {
             "order_number": order.order_number,
@@ -632,6 +641,7 @@ def send_order_admin_notification(order):
             "shipping_address": shipping_str,
             "order_date": order.created_at.strftime("%B %d, %Y") if order.created_at else "",
             "order_time": order.created_at.strftime("%I:%M %p") if order.created_at else "",
+            "admin_url": admin_url,
         }
 
         # Send the email

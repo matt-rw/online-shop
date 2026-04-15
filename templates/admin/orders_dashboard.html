@@ -5177,6 +5177,15 @@
     // Auto-refresh tracking statuses on page load
     async function autoRefreshAllTracking() {
       try {
+        // Get CSRF token from form (more reliable than cookie)
+        const csrfInput = document.querySelector('input[name="csrfmiddlewaretoken"]');
+        const csrfToken = csrfInput ? csrfInput.value : getCookie('csrftoken');
+
+        if (!csrfToken) {
+          console.log('No CSRF token available, skipping auto-refresh');
+          return;
+        }
+
         // Show loading toast
         showTrackingToast('<i class="fa-solid fa-spinner fa-spin"></i> Checking tracking statuses...', 'info');
 
@@ -5188,7 +5197,7 @@
           body: formData,
           headers: {
             'X-Requested-With': 'XMLHttpRequest',
-            'X-CSRFToken': getCookie('csrftoken')
+            'X-CSRFToken': csrfToken
           }
         });
 
