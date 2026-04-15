@@ -249,17 +249,13 @@ def products_dashboard(request):
                 product.base_price = new_base_price
                 product.base_cost = request.POST.get("base_cost") or 0
                 weight_oz = request.POST.get("weight_oz", "").strip()
-                logger.info(f"Saving product {product.id}: weight_oz received = '{weight_oz}', all POST keys: {list(request.POST.keys())}")
                 if weight_oz:
                     try:
                         product.weight_oz = Decimal(weight_oz)
-                        logger.info(f"Set weight_oz to {product.weight_oz}")
-                    except (InvalidOperation, ValueError) as e:
-                        logger.error(f"Invalid weight_oz value: {e}")
+                    except (InvalidOperation, ValueError):
                         product.weight_oz = None
                 else:
                     product.weight_oz = None
-                    logger.info("weight_oz was empty, set to None")
                 product.featured = request.POST.get("featured") == "true"
                 product.available_for_purchase = request.POST.get("available_for_purchase") == "true"
 
@@ -272,10 +268,6 @@ def products_dashboard(request):
                         pass
 
                 product.save()
-
-                # Verify save by re-reading from database
-                product.refresh_from_db()
-                logger.info(f"After save - product {product.id} weight_oz in DB: {product.weight_oz}")
 
                 # Update all variants that were using the old base price to the new base price
                 if old_base_price != new_base_price:
@@ -972,6 +964,7 @@ def products_dashboard(request):
                 "total_sold": product.total_sold or 0,
                 "active_variants": product.variants_active or 0,
                 "images": product.images or [],
+                "weight_oz": product.weight_oz,
             }
         )
 

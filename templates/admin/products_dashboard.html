@@ -1816,7 +1816,6 @@
         images = [];
       }
       const weightOz = btn.dataset.weightOz;
-      console.log('DEBUG: Reading weight_oz from button data attribute:', weightOz, 'raw:', btn.getAttribute('data-weight-oz'));
 
       openEditModal(id, name, slug, category, description, price, cost, featured, available, images, weightOz);
     }
@@ -1829,7 +1828,6 @@
       document.getElementById('edit_description').value = description;
       document.getElementById('edit_base_price').value = price;
       document.getElementById('edit_base_cost').value = cost || 0;
-      console.log('DEBUG: Setting edit_weight_oz input to:', weightOz);
       document.getElementById('edit_weight_oz').value = weightOz || '';
       document.getElementById('edit_featured').checked = featured;
       document.getElementById('edit_available').checked = available !== false;
@@ -1986,9 +1984,7 @@
       formData.append('description', document.getElementById('edit_description').value);
       formData.append('base_price', document.getElementById('edit_base_price').value);
       formData.append('base_cost', document.getElementById('edit_base_cost').value || '0');
-      const weightOzValue = document.getElementById('edit_weight_oz').value;
-      console.log('DEBUG: Sending weight_oz value:', weightOzValue, 'from input element:', document.getElementById('edit_weight_oz'));
-      formData.append('weight_oz', weightOzValue || '');
+      formData.append('weight_oz', document.getElementById('edit_weight_oz').value || '');
       formData.append('featured', document.getElementById('edit_featured').checked ? 'true' : 'false');
       formData.append('available_for_purchase', document.getElementById('edit_available').checked ? 'true' : 'false');
       formData.append('images', JSON.stringify(productImages));
