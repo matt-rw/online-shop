@@ -400,11 +400,11 @@ def orders_dashboard(request):
         # Email preview and send actions
         elif action == "preview_confirmation_email":
             try:
-                from shop.utils.email_helper import render_order_confirmation_preview
+                from shop.utils.email_helper import preview_order_confirmation
 
                 order_id = request.POST.get("order_id")
                 order = Order.objects.get(id=order_id)
-                result = render_order_confirmation_preview(order)
+                result = preview_order_confirmation(order)
                 return JsonResponse(result)
             except Order.DoesNotExist:
                 return JsonResponse({"success": False, "error": "Order not found"})
@@ -438,11 +438,11 @@ def orders_dashboard(request):
 
         elif action == "preview_shipping_email":
             try:
-                from shop.utils.email_helper import render_shipping_notification_preview
+                from shop.utils.email_helper import preview_shipping_notification
 
                 order_id = request.POST.get("order_id")
                 order = Order.objects.get(id=order_id)
-                result = render_shipping_notification_preview(order)
+                result = preview_shipping_notification(order)
                 return JsonResponse(result)
             except Order.DoesNotExist:
                 return JsonResponse({"success": False, "error": "Order not found"})
