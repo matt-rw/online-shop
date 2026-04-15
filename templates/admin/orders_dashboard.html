@@ -2511,10 +2511,13 @@
         formData.append('action', action);
         formData.append('order_id', orderId);
 
+        const csrfInput = document.querySelector('input[name="csrfmiddlewaretoken"]');
+        const csrfToken = csrfInput ? csrfInput.value : getCookie('csrftoken');
+
         const response = await fetch('{% url "admin_orders" %}', {
           method: 'POST',
           headers: {
-            'X-CSRFToken': getCookie('csrftoken')
+            'X-CSRFToken': csrfToken
           },
           body: formData
         });
@@ -2579,10 +2582,13 @@
         formData.append('action', action);
         formData.append('order_id', orderId);
 
+        const csrfInput = document.querySelector('input[name="csrfmiddlewaretoken"]');
+        const csrfToken = csrfInput ? csrfInput.value : getCookie('csrftoken');
+
         const response = await fetch('{% url "admin_orders" %}', {
           method: 'POST',
           headers: {
-            'X-CSRFToken': getCookie('csrftoken')
+            'X-CSRFToken': csrfToken
           },
           body: formData
         });
