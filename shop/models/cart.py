@@ -183,6 +183,10 @@ class Order(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
+    # Email tracking
+    confirmation_email_sent_at = models.DateTimeField(null=True, blank=True)
+    shipping_email_sent_at = models.DateTimeField(null=True, blank=True)
+
 
 class OrderItem(models.Model):
     order = models.ForeignKey(Order, related_name="items", on_delete=models.CASCADE)

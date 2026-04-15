@@ -298,6 +298,245 @@
       background: #fecaca;
     }
 
+    /* View Toggle */
+    .view-toggle {
+      display: inline-flex;
+      background: #f1f5f9;
+      border-radius: 8px;
+      padding: 0.25rem;
+      gap: 0.25rem;
+    }
+
+    .view-toggle-btn {
+      padding: 0.5rem 1rem;
+      border: none;
+      background: transparent;
+      color: #64748b;
+      font-size: 0.8125rem;
+      font-weight: 600;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: all 0.15s;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .view-toggle-btn:hover {
+      color: #475569;
+    }
+
+    .view-toggle-btn.active {
+      background: white;
+      color: #667eea;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    }
+
+    /* Grouped View */
+    .trigger-groups {
+      display: flex;
+      flex-direction: column;
+      gap: 1.5rem;
+    }
+
+    .trigger-group {
+      background: #f8fafc;
+      border-radius: 12px;
+      border: 2px solid #e2e8f0;
+      overflow: hidden;
+    }
+
+    .trigger-group-header {
+      padding: 1rem 1.5rem;
+      background: linear-gradient(135deg, #f8fafc 0%, #ffffff 100%);
+      border-bottom: 2px solid #e2e8f0;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+    }
+
+    .trigger-group-title {
+      font-size: 1rem;
+      font-weight: 700;
+      color: #0f172a;
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+
+    .trigger-group-title i {
+      color: #667eea;
+    }
+
+    .trigger-group-badge {
+      background: #e0e7ff;
+      color: #4338ca;
+      padding: 0.25rem 0.75rem;
+      border-radius: 20px;
+      font-size: 0.75rem;
+      font-weight: 600;
+    }
+
+    .trigger-group-info {
+      font-size: 0.8125rem;
+      color: #64748b;
+    }
+
+    .trigger-group-body {
+      padding: 1rem;
+    }
+
+    .template-card {
+      background: white;
+      border-radius: 10px;
+      border: 2px solid #e2e8f0;
+      padding: 1rem 1.25rem;
+      margin-bottom: 0.75rem;
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      transition: all 0.2s;
+    }
+
+    .template-card:last-child {
+      margin-bottom: 0;
+    }
+
+    .template-card:hover {
+      border-color: #cbd5e1;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+    }
+
+    .template-card.is-active {
+      border-color: #10b981;
+      background: linear-gradient(135deg, #f0fdf4 0%, #ffffff 100%);
+    }
+
+    .template-card-status {
+      flex-shrink: 0;
+    }
+
+    .active-indicator {
+      display: flex;
+      align-items: center;
+      gap: 0.375rem;
+      background: #d1fae5;
+      color: #065f46;
+      padding: 0.375rem 0.75rem;
+      border-radius: 20px;
+      font-size: 0.75rem;
+      font-weight: 700;
+    }
+
+    .inactive-indicator {
+      display: flex;
+      align-items: center;
+      gap: 0.375rem;
+      background: #f1f5f9;
+      color: #64748b;
+      padding: 0.375rem 0.75rem;
+      border-radius: 20px;
+      font-size: 0.75rem;
+      font-weight: 600;
+    }
+
+    .template-card-content {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .template-card-name {
+      font-weight: 600;
+      color: #0f172a;
+      font-size: 0.9375rem;
+      margin-bottom: 0.25rem;
+    }
+
+    .template-card-subject {
+      font-size: 0.8125rem;
+      color: #64748b;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .template-card-meta {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      font-size: 0.75rem;
+      color: #94a3b8;
+      margin-top: 0.375rem;
+    }
+
+    .template-card-actions {
+      display: flex;
+      gap: 0.5rem;
+      flex-shrink: 0;
+    }
+
+    .btn-set-active {
+      background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+      color: white;
+      padding: 0.5rem 1rem;
+      border-radius: 8px;
+      font-size: 0.8125rem;
+      font-weight: 600;
+      border: none;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.375rem;
+      transition: all 0.2s;
+    }
+
+    .btn-set-active:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+    }
+
+    .btn-duplicate {
+      background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);
+      color: white;
+      padding: 0.5rem 1rem;
+      border-radius: 8px;
+      font-size: 0.8125rem;
+      font-weight: 600;
+      border: none;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.375rem;
+      transition: all 0.2s;
+    }
+
+    .btn-duplicate:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(139, 92, 246, 0.3);
+    }
+
+    .no-active-warning {
+      background: #fef3c7;
+      border: 2px dashed #f59e0b;
+      border-radius: 8px;
+      padding: 0.75rem 1rem;
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      margin-bottom: 1rem;
+    }
+
+    .no-active-warning i {
+      color: #d97706;
+      font-size: 1.25rem;
+    }
+
+    .no-active-warning-text {
+      font-size: 0.875rem;
+      color: #92400e;
+    }
+
     .btn {
       padding: 0.5rem 1rem;
       border-radius: 8px;
@@ -979,124 +1218,189 @@
       font-weight: 600;
     }
 
-    /* Folder Sidebar */
-    .content-wrapper {
-      display: grid;
-      grid-template-columns: 280px 1fr;
-      gap: 2rem;
-      margin-top: 2rem;
-      transition: grid-template-columns 0.3s ease;
-    }
-
-    .content-wrapper.collapsed {
-      grid-template-columns: 60px 1fr;
-    }
-
-    .folder-sidebar {
+    /* Explorer Layout (like messages dashboard) */
+    .explorer {
       background: white;
       border-radius: 16px;
-      padding: 0;
-      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-      height: fit-content;
-      position: sticky;
-      top: 2rem;
-      transition: all 0.3s ease;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.08);
       overflow: hidden;
+      margin-top: 2rem;
     }
 
-    .folder-sidebar.collapsed {
-      /* Sidebar inherits width from grid column */
+    /* Trigger Categories Grid */
+    .categories-view {
+      padding: 2rem;
+      min-height: 300px;
     }
 
-    .folder-sidebar.collapsed .folder-sidebar-header {
-      padding: 1rem 0.5rem;
-      justify-content: center;
+    .categories-section {
+      max-width: 1000px;
+      margin: 0 auto;
     }
 
-    .folder-sidebar.collapsed .folder-sidebar-title {
-      display: none;
-    }
-
-    .folder-sidebar.collapsed .folder-sidebar-header button:first-of-type {
-      display: none;
-    }
-
-    .folder-sidebar.collapsed .folder-sidebar-content {
-      opacity: 0;
-      pointer-events: none;
-    }
-
-    .folder-sidebar.collapsed .folder-item-label,
-    .folder-sidebar.collapsed .folder-item-count {
-      display: none;
-    }
-
-    .folder-sidebar-header {
-      padding: 1.5rem;
-      border-bottom: 2px solid #f1f5f9;
+    .categories-header {
       display: flex;
       align-items: center;
       justify-content: space-between;
-      gap: 0.5rem;
-      background: linear-gradient(135deg, #f8fafc 0%, #ffffff 100%);
+      margin-bottom: 1.5rem;
     }
 
-    .folder-sidebar-title {
+    .categories-title {
       font-size: 1rem;
+      font-weight: 600;
+      color: #475569;
+    }
+
+    .categories-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+      gap: 1.5rem;
+    }
+
+    .category-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 1.75rem 1rem;
+      border-radius: 12px;
+      cursor: pointer;
+      transition: all 0.15s;
+      position: relative;
+      border: 2px solid transparent;
+      background: #f8fafc;
+    }
+
+    .category-item:hover {
+      background: #e2e8f0;
+      transform: translateY(-2px);
+    }
+
+    .category-item.has-active {
+      border-color: #10b981;
+      background: linear-gradient(135deg, #f0fdf4 0%, #f8fafc 100%);
+    }
+
+    .category-item.no-active {
+      border-color: #f59e0b;
+      background: linear-gradient(135deg, #fffbeb 0%, #f8fafc 100%);
+    }
+
+    .category-icon-wrap {
+      position: relative;
+      margin-bottom: 0.75rem;
+    }
+
+    .category-icon {
+      font-size: 2.5rem;
+      filter: drop-shadow(0 4px 6px rgba(0,0,0,0.1));
+    }
+
+    .category-badge {
+      position: absolute;
+      top: -6px;
+      right: -10px;
+      background: #667eea;
+      color: white;
+      font-size: 0.75rem;
       font-weight: 700;
-      color: #0f172a;
+      padding: 0.25rem 0.5rem;
+      border-radius: 10px;
+      min-width: 24px;
+      text-align: center;
+    }
+
+    .category-badge.warning {
+      background: #f59e0b;
+    }
+
+    .category-name {
+      font-size: 0.875rem;
+      color: #334155;
+      font-weight: 600;
+      text-align: center;
+      max-width: 150px;
+      word-wrap: break-word;
+      line-height: 1.3;
+    }
+
+    .category-status {
+      font-size: 0.7rem;
+      margin-top: 0.5rem;
+      padding: 0.25rem 0.5rem;
+      border-radius: 4px;
+      font-weight: 600;
+    }
+
+    .category-status.active {
+      background: #d1fae5;
+      color: #065f46;
+    }
+
+    .category-status.inactive {
+      background: #fef3c7;
+      color: #92400e;
+    }
+
+    /* Category Contents View */
+    .category-contents-view {
+      display: none;
+    }
+
+    .category-contents-header {
+      padding: 1rem 1.5rem;
+      border-bottom: 1px solid #e2e8f0;
+      display: flex;
+      align-items: center;
+      gap: 1.5rem;
+      background: #fafbfc;
+    }
+
+    .back-btn {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.5rem 1rem;
+      border-radius: 8px;
+      font-size: 0.875rem;
+      font-weight: 600;
+      cursor: pointer;
+      border: 1px solid #e2e8f0;
+      background: white;
+      color: #475569;
+      transition: all 0.15s;
+    }
+
+    .back-btn:hover {
+      background: #f1f5f9;
+      color: #1e293b;
+    }
+
+    .current-category-title {
+      font-size: 1.125rem;
+      font-weight: 600;
+      color: #1e293b;
       display: flex;
       align-items: center;
       gap: 0.5rem;
       flex: 1;
     }
 
-    .folder-collapse-btn {
-      background: transparent;
-      border: none;
-      color: #64748b;
-      cursor: pointer;
-      padding: 0.5rem;
-      border-radius: 6px;
-      transition: all 0.2s;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-
-    .folder-collapse-btn:hover {
-      background: #f1f5f9;
-      color: #0f172a;
-    }
-
-    .folder-sidebar-content {
+    .category-contents-body {
       padding: 1.5rem;
-      transition: opacity 0.3s ease;
     }
 
-    .folder-list {
-      display: flex;
-      flex-direction: column;
-      gap: 0.375rem;
+    /* Legacy folder sidebar - hidden */
+    .content-wrapper {
+      display: block;
+      margin-top: 0;
     }
 
-    .folder-item {
-      padding: 0.75rem 1rem;
-      border-radius: 10px;
-      cursor: pointer;
-      transition: all 0.2s;
-      display: grid;
-      grid-template-columns: 1fr auto auto;
-      align-items: center;
-      gap: 0.5rem;
-      font-size: 0.875rem;
-      color: #475569;
-      border: 2px solid transparent;
+    .folder-sidebar {
+      display: none;
     }
 
-    .folder-item:hover {
-      background: #f8fafc;
-      color: #0f172a;
+    .templates-content {
+      width: 100%;
     }
 
     .folder-item.active {
@@ -1358,72 +1662,80 @@
       </div>
     </div>
 
-    <!-- Folder Sidebar and Templates -->
-    <div class="content-wrapper">
-      <!-- Folder Sidebar -->
-      <div class="folder-sidebar" id="folderSidebar">
-        <div class="folder-sidebar-header">
-          <div class="folder-sidebar-title">
-            <i class="fa-solid fa-folder"></i>
-            <span>Folders</span>
+    <!-- Templates Explorer -->
+    <div class="explorer">
+      <!-- Categories View (initial view) -->
+      <div class="categories-view" id="categoriesView">
+        <div class="categories-section">
+          <div class="categories-header">
+            <span class="categories-title">Template Categories</span>
           </div>
-          <button type="button" onclick="showAddFolderPrompt()"
-                  class="folder-collapse-btn"
-                  title="Add new folder">
-            <i class="fa-solid fa-plus-circle"></i>
-          </button>
-          <button type="button" onclick="toggleFolderSidebar()"
-                  class="folder-collapse-btn"
-                  title="Collapse sidebar">
-            <i class="fa-solid fa-angles-left" id="collapseIcon"></i>
-          </button>
-        </div>
-        <div class="folder-sidebar-content">
-          <div style="display: flex; justify-content: space-between; align-items: center; padding: 0.75rem 1rem; border-bottom: 1px solid #e2e8f0;">
-            <div style="font-size: 0.75rem; font-weight: 600; color: #64748b; text-transform: uppercase; letter-spacing: 0.05em;">Folders</div>
-            <button type="button" onclick="toggleEditMode()" style="background: none; border: 1px solid #e2e8f0; color: #64748b; padding: 0.25rem 0.75rem; border-radius: 6px; font-size: 0.75rem; cursor: pointer; font-weight: 500; transition: all 0.2s;">
-              <i class="fa-solid fa-pen-to-square"></i> Edit
-            </button>
-          </div>
-          <div class="folder-list">
-          <div class="folder-item active" data-folder="all" onclick="filterByFolder('all')">
-            <div class="folder-item-label">
-              <i class="fa-solid fa-inbox"></i>
-              All Templates
-            </div>
-            <span class="folder-item-count">{{ total_count }}</span>
-          </div>
-          {% for folder_key, folder_data in folder_counts.items %}
-            <div class="folder-item" data-folder="{{ folder_key }}" onclick="filterByFolder('{{ folder_key }}')">
-              <div class="folder-item-label">
-                <i class="fa-solid fa-folder"></i>
-                {{ folder_data.label }}
+          <div class="categories-grid">
+            <!-- All Templates -->
+            <div class="category-item" onclick="openCategory('all')">
+              <div class="category-icon-wrap">
+                <i class="category-icon fa-solid fa-inbox" style="color: #667eea;"></i>
+                <span class="category-badge">{{ total_count }}</span>
               </div>
-              <span class="folder-item-count">{{ folder_data.count }}</span>
-              {% if folder_data.is_custom %}
-                <button type="button" class="folder-delete-btn" onclick="event.stopPropagation(); deleteFolder('{{ folder_key }}')" title="Delete folder" style="display: none;">
-                  <i class="fa-solid fa-xmark"></i>
-                </button>
+              <span class="category-name">All Templates</span>
+            </div>
+
+            <!-- Trigger-based categories -->
+            {% for trigger_key, trigger_data in templates_by_trigger.items %}
+            <div class="category-item {% if trigger_data.active_template %}has-active{% elif trigger_key != 'manual' %}no-active{% endif %}" onclick="openCategory('{{ trigger_key }}')">
+              <div class="category-icon-wrap">
+                <i class="category-icon fa-solid {% if trigger_key == 'on_order' %}fa-receipt{% elif trigger_key == 'on_shipping' %}fa-truck{% elif trigger_key == 'on_subscribe' %}fa-user-plus{% elif trigger_key == 'on_order_admin' %}fa-bell{% elif trigger_key == 'manual' %}fa-hand{% else %}fa-bolt{% endif %}" style="color: {% if trigger_data.active_template %}#10b981{% elif trigger_key != 'manual' %}#f59e0b{% else %}#667eea{% endif %};"></i>
+                <span class="category-badge {% if not trigger_data.active_template and trigger_key != 'manual' %}warning{% endif %}">{{ trigger_data.count }}</span>
+              </div>
+              <span class="category-name">
+                {% if trigger_key == 'on_order' %}Order Confirmation
+                {% elif trigger_key == 'on_shipping' %}Shipping Update
+                {% elif trigger_key == 'on_order_admin' %}New Order Alert
+                {% elif trigger_key == 'on_subscribe' %}Welcome Email
+                {% else %}{{ trigger_data.label }}{% endif %}
+              </span>
+              <span style="font-size: 0.65rem; color: #64748b; margin-top: 0.25rem;">
+                {% if trigger_key == 'on_order' %}Sent to customer
+                {% elif trigger_key == 'on_shipping' %}Sent to customer
+                {% elif trigger_key == 'on_order_admin' %}Sent to you
+                {% elif trigger_key == 'on_subscribe' %}Sent to subscriber
+                {% elif trigger_key == 'manual' %}You send manually
+                {% endif %}
+              </span>
+              {% if trigger_key != 'manual' %}
+              <span class="category-status {% if trigger_data.active_template %}active{% else %}inactive{% endif %}">
+                {% if trigger_data.active_template %}Active{% else %}No Active{% endif %}
+              </span>
               {% endif %}
             </div>
-          {% endfor %}
+            {% endfor %}
           </div>
         </div>
       </div>
 
-      <!-- Templates Content -->
-      <div class="templates-content">
-        <!-- Templates Table -->
-        <div class="section">
-      <div class="section-header">
-        <div class="section-title">
-          <i class="fa-solid fa-table"></i>
-          All Templates
+      <!-- Category Contents View -->
+      <div class="category-contents-view" id="categoryContentsView">
+        <div class="category-contents-header">
+          <button class="back-btn" onclick="backToCategories()">
+            <i class="fa-solid fa-arrow-left"></i> Back
+          </button>
+          <div class="current-category-title" id="currentCategoryTitle">
+            <i class="fa-solid fa-folder"></i>
+            <span id="currentCategoryName">Category</span>
+          </div>
         </div>
-      </div>
+        <div class="category-contents-body">
+          <!-- Section for templates -->
+          <div class="section" style="box-shadow: none; border: none; padding: 0;">
+            <div class="section-header" style="padding: 0 0 1rem 0;">
+              <div class="section-title" id="sectionTitle">
+                <i class="fa-solid fa-layer-group"></i>
+                Templates
+              </div>
+            </div>
 
-      <!-- Filters -->
-      <div class="filters-row">
+      <!-- Filters (shown when viewing all templates) -->
+      <div class="filters-row" id="filtersRow" style="display: none;">
         <div class="filter-group">
           <label class="filter-label">Search</label>
           <input type="text" id="searchInput" class="filter-input" placeholder="Search by name or subject...">
@@ -1502,6 +1814,8 @@
         </div>
       </div>
 
+      <!-- Table View (shown when "All Templates" category is selected) -->
+      <div id="tableView" style="display: none;">
       {% if templates %}
         <table id="templatesTable">
           <thead>
@@ -1567,11 +1881,11 @@
                 <td style="color: #64748b;">{{ template.updated_at|date:"M d, Y" }}</td>
                 <td>
                   <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+                    <button class="btn btn-secondary btn-sm" onclick="openTestEmailModal({{ template.id }}, '{{ template.name|escapejs }}')" title="Send Test Email" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none;">
+                      <i class="fa-solid fa-paper-plane"></i>
+                    </button>
                     <button class="btn btn-secondary btn-sm" onclick="openPreview('{{ template.subject|escapejs }}', '{{ template.html_body|escapejs }}')" title="Preview">
                       <i class="fa-solid fa-eye"></i>
-                    </button>
-                    <button class="btn btn-secondary btn-sm" onclick="copyToClipboard('{{ template.subject|escapejs }}')" title="Copy subject">
-                      <i class="fa-solid fa-clipboard"></i>
                     </button>
                     <button class="btn btn-secondary btn-sm" onclick="openEditModal({{ template.id }})" title="Edit">
                       <i class="fa-solid fa-edit"></i>
@@ -1600,11 +1914,109 @@
           <p>Create your first email template to get started.</p>
         </div>
       {% endif %}
-    </div>
       </div>
-      <!-- End templates-content -->
+      <!-- End Table View -->
+
+      <!-- Grouped by Trigger View -->
+      <div id="groupedView">
+        {% if templates_by_trigger %}
+          <div class="trigger-groups">
+            {% for trigger_key, trigger_data in templates_by_trigger.items %}
+              <div class="trigger-group" data-trigger="{{ trigger_key }}">
+                <div class="trigger-group-header">
+                  <div class="trigger-group-title">
+                    <i class="fa-solid fa-bolt"></i>
+                    {{ trigger_data.label }}
+                    <span class="trigger-group-badge">{{ trigger_data.count }} template{{ trigger_data.count|pluralize }}</span>
+                  </div>
+                  <div class="trigger-group-info">
+                    {% if trigger_data.active_template %}
+                      <i class="fa-solid fa-circle-check" style="color: #10b981;"></i>
+                      Active: <strong>{{ trigger_data.active_template.name }}</strong>
+                    {% else %}
+                      <i class="fa-solid fa-triangle-exclamation" style="color: #f59e0b;"></i>
+                      No active template
+                    {% endif %}
+                  </div>
+                </div>
+                <div class="trigger-group-body">
+                  {% if not trigger_data.active_template and trigger_key != 'manual' %}
+                    <div class="no-active-warning">
+                      <i class="fa-solid fa-exclamation-triangle"></i>
+                      <div class="no-active-warning-text">
+                        <strong>No active template!</strong> Emails for this trigger won't be sent. Click "Set as Active" on a template below.
+                      </div>
+                    </div>
+                  {% endif %}
+                  {% for template in trigger_data.templates %}
+                    <div class="template-card {% if template.is_active %}is-active{% endif %}">
+                      <div class="template-card-status">
+                        {% if template.is_active %}
+                          <div class="active-indicator">
+                            <i class="fa-solid fa-circle-check"></i>
+                            Active
+                          </div>
+                        {% else %}
+                          <div class="inactive-indicator">
+                            <i class="fa-regular fa-circle"></i>
+                            Inactive
+                          </div>
+                        {% endif %}
+                      </div>
+                      <div class="template-card-content">
+                        <div class="template-card-name">{{ template.name }}</div>
+                        <div class="template-card-subject">Subject: {{ template.subject|truncatewords:10 }}</div>
+                        <div class="template-card-meta">
+                          <span><i class="fa-solid fa-paper-plane"></i> {{ template.times_used }} sends</span>
+                          <span><i class="fa-solid fa-clock"></i> Updated {{ template.updated_at|date:"M d, Y" }}</span>
+                        </div>
+                      </div>
+                      <div class="template-card-actions">
+                        <button class="btn btn-sm" onclick="openTestEmailModal({{ template.id }}, '{{ template.name|escapejs }}')" title="Send Test Email" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none;">
+                          <i class="fa-solid fa-paper-plane"></i>
+                          Test
+                        </button>
+                        {% if not template.is_active and trigger_key != 'manual' %}
+                          <button class="btn-set-active" onclick="setAsActive({{ template.id }})" title="Set this as the active template for {{ trigger_data.label }}">
+                            <i class="fa-solid fa-check"></i>
+                            Set as Active
+                          </button>
+                        {% endif %}
+                        <button class="btn-duplicate" onclick="duplicateTemplate({{ template.id }})" title="Create a copy of this template">
+                          <i class="fa-solid fa-copy"></i>
+                          Duplicate
+                        </button>
+                        <button class="btn btn-secondary btn-sm" onclick="openEditModal({{ template.id }})" title="Edit">
+                          <i class="fa-solid fa-edit"></i>
+                        </button>
+                        <button class="btn btn-secondary btn-sm" onclick="openPreview('{{ template.subject|escapejs }}', '{{ template.html_body|escapejs }}')" title="Preview">
+                          <i class="fa-solid fa-eye"></i>
+                        </button>
+                      </div>
+                    </div>
+                  {% endfor %}
+                </div>
+              </div>
+            {% endfor %}
+          </div>
+        {% else %}
+          <div class="empty-state">
+            <i class="fa-solid fa-layer-group"></i>
+            <h3>No Templates Yet</h3>
+            <p>Create your first email template to get started.</p>
+          </div>
+        {% endif %}
+      </div>
+      <!-- End Grouped View -->
+
+          </div>
+          <!-- End section -->
+        </div>
+        <!-- End category-contents-body -->
+      </div>
+      <!-- End category-contents-view -->
     </div>
-    <!-- End content-wrapper -->
+    <!-- End explorer -->
   </div>
   <!-- End main-content -->
 
@@ -1995,6 +2407,55 @@
     </div>
   </div>
 
+  <!-- Send Test Email Modal -->
+  <div class="modal" id="testEmailModal" style="z-index: 10002;">
+    <div class="modal-content" style="max-width: 500px; max-height: auto; height: auto;">
+      <div class="modal-header">
+        <h2 class="modal-title">
+          <i class="fa-solid fa-paper-plane" style="color: #667eea;"></i>
+          Send Test Email
+        </h2>
+        <button class="modal-close" onclick="closeTestEmailModal()">&times;</button>
+      </div>
+      <form method="POST" id="testEmailForm">
+        {% csrf_token %}
+        <input type="hidden" name="action" value="send_test">
+        <input type="hidden" name="template_id" id="testTemplateId">
+        <div class="modal-body" style="padding: 2rem 1.5rem;">
+          <div style="background: #f0f9ff; border: 2px solid #0ea5e9; border-radius: 10px; padding: 1rem; margin-bottom: 1.5rem;">
+            <div style="font-weight: 600; color: #0369a1; margin-bottom: 0.5rem;">
+              <i class="fa-solid fa-circle-info"></i> Template: <span id="testTemplateName"></span>
+            </div>
+            <div style="font-size: 0.875rem; color: #0c4a6e;">
+              Merge tags will be replaced with sample data (e.g., {first_name} → "Test")
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="testEmail">Send To Email Address *</label>
+            <input type="email"
+                   class="form-input"
+                   name="test_email"
+                   id="testEmail"
+                   placeholder="your@email.com"
+                   value="{{ default_test_email }}"
+                   required
+                   style="font-size: 1rem;">
+            <div class="form-help" style="margin-top: 0.5rem;">
+              Enter your email address to receive a test of this template.
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" onclick="closeTestEmailModal()">Cancel</button>
+          <button type="submit" class="btn" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white;">
+            <i class="fa-solid fa-paper-plane"></i>
+            Send Test
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
   <script>
     // Debug: Check if script is loading
     console.log('Script loading started');
@@ -2206,6 +2667,126 @@
         form.submit();
       }
     }
+
+    // Category navigation (like messages dashboard)
+    let currentCategory = null;
+
+    function openCategory(category) {
+      currentCategory = category;
+
+      const categoriesView = document.getElementById('categoriesView');
+      const contentsView = document.getElementById('categoryContentsView');
+      const tableView = document.getElementById('tableView');
+      const groupedView = document.getElementById('groupedView');
+      const categoryName = document.getElementById('currentCategoryName');
+      const sectionTitle = document.getElementById('sectionTitle');
+
+      // Hide categories, show contents
+      categoriesView.style.display = 'none';
+      contentsView.style.display = 'block';
+
+      const filtersRow = document.getElementById('filtersRow');
+
+      if (category === 'all') {
+        // Show table view for "all"
+        tableView.style.display = 'block';
+        groupedView.style.display = 'none';
+        if (filtersRow) filtersRow.style.display = 'grid';
+        categoryName.textContent = 'All Templates';
+        sectionTitle.innerHTML = '<i class="fa-solid fa-table"></i> All Templates';
+      } else {
+        if (filtersRow) filtersRow.style.display = 'none';
+        // Show grouped view filtered to this trigger
+        tableView.style.display = 'none';
+        groupedView.style.display = 'block';
+
+        // Hide all trigger groups except the selected one
+        document.querySelectorAll('.trigger-group').forEach(group => {
+          const triggerKey = group.dataset.trigger;
+          if (triggerKey === category) {
+            group.style.display = 'block';
+          } else {
+            group.style.display = 'none';
+          }
+        });
+
+        // Update title based on trigger label
+        const triggerLabels = {
+          'on_order': 'Order Confirmation (to Customer)',
+          'on_shipping': 'Shipping Notification (to Customer)',
+          'on_subscribe': 'Welcome Email (to New Subscriber)',
+          'on_confirmation': 'Email Verification (to Customer)',
+          'on_order_admin': 'New Order Alert (to You)',
+          'manual': 'Manual Send',
+          'scheduled': 'Scheduled'
+        };
+        categoryName.textContent = triggerLabels[category] || category;
+        sectionTitle.innerHTML = '<i class="fa-solid fa-layer-group"></i> ' + (triggerLabels[category] || category);
+      }
+    }
+
+    function backToCategories() {
+      const categoriesView = document.getElementById('categoriesView');
+      const contentsView = document.getElementById('categoryContentsView');
+
+      // Show categories, hide contents
+      categoriesView.style.display = 'block';
+      contentsView.style.display = 'none';
+
+      // Reset: show all trigger groups
+      document.querySelectorAll('.trigger-group').forEach(group => {
+        group.style.display = 'block';
+      });
+
+      currentCategory = null;
+    }
+
+    window.openCategory = openCategory;
+    window.backToCategories = backToCategories;
+
+    // View switching (legacy - kept for grouped view internal use)
+    let currentView = 'grouped';
+
+    // Set template as active (deactivates others with same trigger)
+    function setAsActive(templateId) {
+      if (confirm('Set this template as active? This will deactivate other templates with the same trigger.')) {
+        const form = document.createElement('form');
+        form.method = 'POST';
+        form.innerHTML = `
+          {% csrf_token %}
+          <input type="hidden" name="action" value="set_active">
+          <input type="hidden" name="template_id" value="${templateId}">
+        `;
+        document.body.appendChild(form);
+        form.submit();
+      }
+    }
+
+    window.setAsActive = setAsActive;
+
+    // Send Test Email Modal
+    let currentTestTemplateId = null;
+
+    function openTestEmailModal(templateId, templateName) {
+      currentTestTemplateId = templateId;
+      document.getElementById('testTemplateId').value = templateId;
+      document.getElementById('testTemplateName').textContent = templateName;
+      document.getElementById('testEmailModal').classList.add('active');
+      document.getElementById('testEmail').focus();
+    }
+
+    function closeTestEmailModal() {
+      document.getElementById('testEmailModal').classList.remove('active');
+      currentTestTemplateId = null;
+    }
+
+    window.openTestEmailModal = openTestEmailModal;
+    window.closeTestEmailModal = closeTestEmailModal;
+
+    // Close test email modal on outside click
+    document.getElementById('testEmailModal').addEventListener('click', function(e) {
+      if (e.target === this) closeTestEmailModal();
+    });
 
     // Toggle status
     function toggleStatus(templateId, newStatus) {

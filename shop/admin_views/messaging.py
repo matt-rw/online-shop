@@ -695,6 +695,97 @@ def email_templates(request):
                 messages.error(request, f"Error deleting templates: {str(e)}")
             return redirect("admin_email_templates")
 
+        elif action == "set_active":
+            # Set this template as active and deactivate others with the same trigger
+            template_id = request.POST.get("template_id")
+            try:
+                template = EmailTemplate.objects.get(id=template_id)
+                trigger = template.auto_trigger
+
+                # For non-manual triggers, deactivate other templates with the same trigger
+                if trigger and trigger != "manual":
+                    deactivated = EmailTemplate.objects.filter(
+                        auto_trigger=trigger,
+                        is_active=True
+                    ).exclude(id=template_id).update(is_active=False)
+
+                    template.is_active = True
+                    template.save()
+
+                    trigger_label = dict(EmailTemplate.TRIGGER_TYPES).get(trigger, trigger)
+                    if deactivated > 0:
+                        messages.success(
+                            request,
+                            f'"{template.name}" is now the active template for {trigger_label}. '
+                            f'{deactivated} other template(s) deactivated.'
+                        )
+                    else:
+                        messages.success(
+                            request,
+                            f'"{template.name}" is now the active template for {trigger_label}.'
+                        )
+                else:
+                    # For manual triggers, just toggle active status
+                    template.is_active = True
+                    template.save()
+                    messages.success(request, f'"{template.name}" activated.')
+
+            except EmailTemplate.DoesNotExist:
+                messages.error(request, "Template not found")
+            except Exception as e:
+                messages.error(request, f"Error setting active template: {str(e)}")
+            return redirect("admin_email_templates")
+
+        elif action == "send_test":
+            # Send a test email using this template
+            template_id = request.POST.get("template_id")
+            test_email = request.POST.get("test_email", "").strip()
+
+            if not test_email:
+                messages.error(request, "Please enter a test email address")
+                return redirect("admin_email_templates")
+
+            try:
+                template = EmailTemplate.objects.get(id=template_id)
+
+                # Build sample context with placeholder values
+                test_context = {
+                    "first_name": "Test",
+                    "last_name": "User",
+                    "email": test_email,
+                    "code": "TESTCODE20",
+                    "link": "https://example.com",
+                    "order_number": "BP-10001",
+                    "order_total": "$99.99",
+                    "tracking_number": "1Z999AA10123456784",
+                    "carrier": "USPS",
+                }
+
+                from shop.utils.email_helper import send_from_template
+                success, log = send_from_template(
+                    email_address=test_email,
+                    template=template,
+                    context=test_context,
+                )
+
+                if success:
+                    messages.success(
+                        request,
+                        f'Test email sent to {test_email} using template "{template.name}"'
+                    )
+                else:
+                    messages.error(
+                        request,
+                        f'Failed to send test email: {log.error_message if log else "Unknown error"}'
+                    )
+
+            except EmailTemplate.DoesNotExist:
+                messages.error(request, "Template not found")
+            except Exception as e:
+                messages.error(request, f"Error sending test email: {str(e)}")
+
+            return redirect("admin_email_templates")
+
         elif action == "add_folder":
             folder_name = request.POST.get("folder_name", "").strip()
             if folder_name:
@@ -821,9 +912,30 @@ def email_templates(request):
     for custom_folder in custom_folders:
         all_folder_choices.append((custom_folder.name, custom_folder.display_name))
 
+    # Group templates by trigger type for the "By Trigger" view
+    # Only include triggers that have templates (exclude manual unless it has templates)
+    templates_by_trigger = {}
+    trigger_labels = dict(EmailTemplate.TRIGGER_TYPES)
+    for trigger_value, trigger_label in EmailTemplate.TRIGGER_TYPES:
+        trigger_templates = list(templates.filter(auto_trigger=trigger_value).order_by('-is_active', 'name'))
+        if trigger_templates:
+            active_template = next((t for t in trigger_templates if t.is_active), None)
+            templates_by_trigger[trigger_value] = {
+                'label': trigger_label,
+                'templates': trigger_templates,
+                'active_template': active_template,
+                'count': len(trigger_templates),
+            }
+
+    # Get default test email from settings
+    from shop.models.settings import SiteSettings
+    site_settings = SiteSettings.load()
+    default_test_email = site_settings.default_test_email or ""
+
     context = {
         "templates": templates,
         "templates_json": templates_json,
+        "templates_by_trigger": templates_by_trigger,
         "edit_template": edit_template,
         "template_types": EmailTemplate.TEMPLATE_TYPES,
         "trigger_types": EmailTemplate.TRIGGER_TYPES,
@@ -837,6 +949,7 @@ def email_templates(request):
         "total_usage": total_usage,
         "all_tags": sorted(all_tags),
         "current_sort": sort_by,
+        "default_test_email": default_test_email,
     }
 
     return render(request, "admin/email_templates.html", context)

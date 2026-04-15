@@ -397,6 +397,195 @@ def orders_dashboard(request):
             except Exception as e:
                 return JsonResponse({"success": False, "error": str(e)})
 
+        # Email preview and send actions
+        elif action == "preview_confirmation_email":
+            try:
+                from shop.utils.email_helper import render_order_confirmation_preview
+
+                order_id = request.POST.get("order_id")
+                order = Order.objects.get(id=order_id)
+                result = render_order_confirmation_preview(order)
+                return JsonResponse(result)
+            except Order.DoesNotExist:
+                return JsonResponse({"success": False, "error": "Order not found"})
+            except Exception as e:
+                logger.exception(f"Error in preview_confirmation_email: {e}")
+                return JsonResponse({"success": False, "error": str(e)})
+
+        elif action == "send_confirmation_email":
+            try:
+                from shop.utils.email_helper import send_order_confirmation
+
+                order_id = request.POST.get("order_id")
+                order = Order.objects.get(id=order_id)
+                success, log = send_order_confirmation(order)
+
+                if success:
+                    return JsonResponse({
+                        "success": True,
+                        "message": f"Confirmation email sent to {order.email}",
+                        "sent_at": order.confirmation_email_sent_at.isoformat() if order.confirmation_email_sent_at else None,
+                    })
+                else:
+                    return JsonResponse({
+                        "success": False,
+                        "error": "Failed to send email. Check email configuration."
+                    })
+            except Order.DoesNotExist:
+                return JsonResponse({"success": False, "error": "Order not found"})
+            except Exception as e:
+                return JsonResponse({"success": False, "error": str(e)})
+
+        elif action == "preview_shipping_email":
+            try:
+                from shop.utils.email_helper import render_shipping_notification_preview
+
+                order_id = request.POST.get("order_id")
+                order = Order.objects.get(id=order_id)
+                result = render_shipping_notification_preview(order)
+                return JsonResponse(result)
+            except Order.DoesNotExist:
+                return JsonResponse({"success": False, "error": "Order not found"})
+            except Exception as e:
+                return JsonResponse({"success": False, "error": str(e)})
+
+        elif action == "send_shipping_email":
+            try:
+                from shop.utils.email_helper import send_shipping_notification
+
+                order_id = request.POST.get("order_id")
+                order = Order.objects.get(id=order_id)
+
+                if not order.tracking_number:
+                    return JsonResponse({
+                        "success": False,
+                        "error": "Cannot send shipping email: No tracking number set"
+                    })
+
+                success, log = send_shipping_notification(order)
+
+                if success:
+                    return JsonResponse({
+                        "success": True,
+                        "message": f"Shipping notification sent to {order.email}",
+                        "sent_at": order.shipping_email_sent_at.isoformat() if order.shipping_email_sent_at else None,
+                    })
+                else:
+                    return JsonResponse({
+                        "success": False,
+                        "error": "Failed to send email. Check email configuration."
+                    })
+            except Order.DoesNotExist:
+                return JsonResponse({"success": False, "error": "Order not found"})
+            except Exception as e:
+                return JsonResponse({"success": False, "error": str(e)})
+
+        elif action == "check_tracking":
+            try:
+                from shop.utils.shipping_helper import get_tracking_status
+
+                order_id = request.POST.get("order_id")
+                auto_update = request.POST.get("auto_update", "true").lower() == "true"
+                order = Order.objects.get(id=order_id)
+
+                if not order.tracking_number:
+                    return JsonResponse({
+                        "success": False,
+                        "error": "No tracking number set for this order"
+                    })
+
+                result = get_tracking_status(order)
+
+                if not result.get("success"):
+                    return JsonResponse(result)
+
+                # Auto-update order status based on tracking status
+                if auto_update:
+                    tracking_status = result.get("status", "")
+
+                    # PAID + in_transit → SHIPPED (carrier has the package)
+                    if order.status == OrderStatus.PAID and tracking_status in ["in_transit", "out_for_delivery", "delivered"]:
+                        order.status = OrderStatus.SHIPPED
+                        order.save(update_fields=["status"])
+                        result["status_updated"] = True
+                        result["new_status"] = "SHIPPED"
+
+                    # SHIPPED + delivered → FULFILLED
+                    if order.status == OrderStatus.SHIPPED and result.get("delivered"):
+                        order.status = OrderStatus.FULFILLED
+                        order.save(update_fields=["status"])
+                        result["status_updated"] = True
+                        result["new_status"] = "FULFILLED"
+
+                return JsonResponse(result)
+
+            except Order.DoesNotExist:
+                return JsonResponse({"success": False, "error": "Order not found"})
+            except Exception as e:
+                return JsonResponse({"success": False, "error": str(e)})
+
+        elif action == "refresh_all_tracking":
+            # Bulk refresh tracking for all orders with tracking numbers that aren't fulfilled
+            try:
+                from shop.utils.shipping_helper import get_tracking_status
+
+                # Find orders with tracking that need status updates
+                orders_to_check = Order.objects.filter(
+                    tracking_number__isnull=False,
+                    status__in=[OrderStatus.PAID, OrderStatus.SHIPPED]
+                ).exclude(tracking_number="")
+
+                updated_to_shipped = []
+                updated_to_fulfilled = []
+                errors = []
+                checked_count = 0
+
+                for order in orders_to_check:
+                    try:
+                        result = get_tracking_status(order)
+                        checked_count += 1
+
+                        if not result.get("success"):
+                            continue
+
+                        tracking_status = result.get("status", "")
+
+                        # PAID + in_transit → SHIPPED
+                        if order.status == OrderStatus.PAID and tracking_status in ["in_transit", "out_for_delivery", "delivered"]:
+                            order.status = OrderStatus.SHIPPED
+                            order.save(update_fields=["status"])
+                            updated_to_shipped.append({
+                                "id": order.id,
+                                "order_number": order.order_number,
+                            })
+
+                        # SHIPPED + delivered → FULFILLED
+                        if order.status == OrderStatus.SHIPPED and result.get("delivered"):
+                            order.status = OrderStatus.FULFILLED
+                            order.save(update_fields=["status"])
+                            updated_to_fulfilled.append({
+                                "id": order.id,
+                                "order_number": order.order_number,
+                            })
+
+                    except Exception as e:
+                        errors.append(f"Order {order.id}: {str(e)}")
+
+                return JsonResponse({
+                    "success": True,
+                    "checked": checked_count,
+                    "updated_to_shipped": updated_to_shipped,
+                    "updated_to_fulfilled": updated_to_fulfilled,
+                    "errors": errors[:5],  # Limit error messages
+                })
+
+            except Exception as e:
+                return JsonResponse({"success": False, "error": str(e)})
+
+        # Catch-all for unknown POST actions
+        else:
+            return JsonResponse({"success": False, "error": f"Unknown action: {action}"})
+
     # Handle GET request for order details (for editing)
     if request.method == "GET" and request.GET.get("get_order"):
         try:
@@ -479,6 +668,9 @@ def orders_dashboard(request):
                     "shipping_address": shipping_data,
                     "tracking_number": order.tracking_number,
                     "carrier": order.carrier,
+                    # Email tracking timestamps
+                    "confirmation_email_sent_at": order.confirmation_email_sent_at.isoformat() if order.confirmation_email_sent_at else None,
+                    "shipping_email_sent_at": order.shipping_email_sent_at.isoformat() if order.shipping_email_sent_at else None,
                 }
             })
         except Order.DoesNotExist:
@@ -798,6 +990,9 @@ def orders_dashboard(request):
                 "shipping_lat": order.shipping_address.latitude if order.shipping_address else None,
                 "shipping_lng": order.shipping_address.longitude if order.shipping_address else None,
                 "tags": [{"id": t.id, "name": t.name, "color": t.color, "icon": t.icon} for t in order.tags.all()],
+                # Email tracking timestamps
+                "confirmation_email_sent_at": order.confirmation_email_sent_at.isoformat() if order.confirmation_email_sent_at else None,
+                "shipping_email_sent_at": order.shipping_email_sent_at.isoformat() if order.shipping_email_sent_at else None,
             }
         )
 

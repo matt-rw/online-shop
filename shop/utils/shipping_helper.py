@@ -328,6 +328,85 @@ def create_shipping_label(order, rate_id: str, provider: str, carrier: str = "",
     return result
 
 
+def get_tracking_status(order) -> Dict:
+    """
+    Get tracking status for an order from EasyPost.
+
+    Args:
+        order: Order object with tracking_number and carrier set
+
+    Returns:
+        Dict with tracking status info including:
+        - status: Current status (e.g., 'in_transit', 'delivered', 'pre_transit')
+        - status_detail: Detailed status description
+        - est_delivery_date: Estimated delivery date
+        - tracking_details: List of tracking events
+        - carrier: Carrier name
+        - tracking_url: URL to track package
+        - delivered: Boolean if package was delivered
+    """
+    if not order.tracking_number:
+        return {"success": False, "error": "No tracking number set"}
+
+    try:
+        import easypost
+
+        api_key = getattr(settings, "EASYPOST_API_KEY", None)
+        if not api_key:
+            return {"success": False, "error": "EasyPost not configured"}
+
+        client = easypost.EasyPostClient(api_key)
+
+        # Create or retrieve tracker
+        tracker = client.tracker.create(
+            tracking_code=order.tracking_number,
+            carrier=order.carrier or None,
+        )
+
+        # Build tracking URL based on carrier
+        tracking_url = ""
+        carrier_upper = (tracker.carrier or order.carrier or "").upper()
+        if "USPS" in carrier_upper:
+            tracking_url = f"https://tools.usps.com/go/TrackConfirmAction?tLabels={order.tracking_number}"
+        elif "UPS" in carrier_upper:
+            tracking_url = f"https://www.ups.com/track?tracknum={order.tracking_number}"
+        elif "FEDEX" in carrier_upper:
+            tracking_url = f"https://www.fedex.com/fedextrack/?trknbr={order.tracking_number}"
+        elif "DHL" in carrier_upper:
+            tracking_url = f"https://www.dhl.com/en/express/tracking.html?AWB={order.tracking_number}"
+
+        # Parse tracking events
+        tracking_details = []
+        if tracker.tracking_details:
+            for event in tracker.tracking_details:
+                tracking_details.append({
+                    "datetime": event.datetime,
+                    "message": event.message,
+                    "status": event.status,
+                    "city": event.tracking_location.city if event.tracking_location else None,
+                    "state": event.tracking_location.state if event.tracking_location else None,
+                })
+
+        # Check if delivered
+        delivered = tracker.status == "delivered"
+
+        return {
+            "success": True,
+            "status": tracker.status,
+            "status_detail": tracker.status_detail or "",
+            "est_delivery_date": tracker.est_delivery_date,
+            "carrier": tracker.carrier,
+            "tracking_url": tracking_url,
+            "tracking_details": tracking_details,
+            "delivered": delivered,
+            "signed_by": tracker.signed_by if hasattr(tracker, 'signed_by') else None,
+        }
+
+    except Exception as e:
+        logger.error(f"Error getting tracking status for order {order.id}: {e}")
+        return {"success": False, "error": str(e)}
+
+
 def manual_tracking_entry(order, tracking_number: str, carrier: str) -> Dict:
     """
     Manually enter tracking info (for services without API like Pirate Ship).

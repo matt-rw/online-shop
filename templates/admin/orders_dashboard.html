@@ -1025,6 +1025,15 @@
       background: #fef3c7;
     }
 
+    .orders-table .btn-icon.email {
+      color: #8b5cf6;
+      border-color: #8b5cf6;
+    }
+
+    .orders-table .btn-icon.email:hover {
+      background: #f5f3ff;
+    }
+
     .exclude-badge {
       display: inline-flex;
       align-items: center;
@@ -1665,6 +1674,9 @@
                   <a href="#" onclick="showTrackingDetails('{{ order.tracking_number }}', '{{ order.carrier }}', '{{ order.label_url|default:"" }}')" style="color: #52796f; text-decoration: none; font-size: 0.75rem;">
                     <i class="fa-solid fa-check-circle"></i> {{ order.carrier }}
                   </a>
+                  <button class="btn-icon" onclick="checkTrackingStatus({{ order.id }})" title="Check Tracking Status" style="font-size: 0.7rem; padding: 0.2rem 0.4rem;">
+                    <i class="fa-solid fa-location-dot"></i>
+                  </button>
                   <button class="btn-icon" onclick="generateLabel({{ order.id }})" title="Regenerate Label" style="font-size: 0.7rem; padding: 0.2rem 0.4rem;">
                     <i class="fa-solid fa-rotate"></i>
                   </button>
@@ -1688,6 +1700,15 @@
                   {% if order.stripe_payment_intent|slice:":7" == "MANUAL_" %}
                   <button class="btn-icon edit" onclick="editManualOrder({{ order.id }})" title="Edit All">
                     <i class="fa-solid fa-edit"></i>
+                  </button>
+                  {% endif %}
+                  <!-- Email Actions -->
+                  <button class="btn-icon email" onclick="showEmailPreview({{ order.id }}, 'confirmation')" title="Send Confirmation Email{% if order.confirmation_email_sent_at %} (Sent){% endif %}">
+                    <i class="fa-solid fa-envelope{% if order.confirmation_email_sent_at %}-circle-check{% endif %}"></i>
+                  </button>
+                  {% if order.tracking_number %}
+                  <button class="btn-icon email" onclick="showEmailPreview({{ order.id }}, 'shipping')" title="Send Shipping Email{% if order.shipping_email_sent_at %} (Sent){% endif %}">
+                    <i class="fa-solid fa-truck{% if order.shipping_email_sent_at %}-fast{% endif %}"></i>
                   </button>
                   {% endif %}
                   {% if order.status == 'PAID' or order.status == 'SHIPPED' or order.status == 'FULFILLED' %}
@@ -1861,6 +1882,112 @@
     </div>
   </div>
 
+  <!-- Email Preview Modal -->
+  <div class="modal-overlay" id="emailPreviewModal">
+    <div class="modal-content" style="max-width: 700px;">
+      <h2 style="font-size: 1.5rem; font-weight: 700; margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem;">
+        <i class="fa-solid fa-envelope" style="color: #8b5cf6;"></i> <span id="emailPreviewTitle">Preview Email</span>
+      </h2>
+
+      <div id="emailPreviewMessage"></div>
+      <div id="emailPreviewLoading" style="text-align: center; padding: 2rem; color: #64748b;">
+        <i class="fa-solid fa-spinner fa-spin" style="font-size: 1.5rem;"></i>
+        <p style="margin-top: 0.5rem;">Loading preview...</p>
+      </div>
+
+      <div id="emailPreviewContent" style="display: none;">
+        <div style="margin-bottom: 1rem;">
+          <label style="font-size: 0.75rem; text-transform: uppercase; color: #64748b; font-weight: 600;">To</label>
+          <div id="emailPreviewRecipient" style="font-size: 0.9375rem; color: #0f172a;"></div>
+        </div>
+        <div style="margin-bottom: 1rem;">
+          <label style="font-size: 0.75rem; text-transform: uppercase; color: #64748b; font-weight: 600;">Subject</label>
+          <div id="emailPreviewSubject" style="font-size: 0.9375rem; font-weight: 500; color: #0f172a;"></div>
+        </div>
+        <div id="emailPreviewWarning" style="display: none; background: #fef3c7; border: 1px solid #fcd34d; border-radius: 8px; padding: 0.75rem; margin-bottom: 1rem; color: #92400e; font-size: 0.875rem;">
+          <i class="fa-solid fa-exclamation-triangle"></i> <span id="emailWarningText"></span>
+        </div>
+        <div style="border: 1px solid #e2e8f0; border-radius: 8px; overflow: hidden;">
+          <iframe id="emailPreviewFrame" style="width: 100%; height: 400px; border: none; background: white;"></iframe>
+        </div>
+      </div>
+
+      <input type="hidden" id="emailPreviewOrderId">
+      <input type="hidden" id="emailPreviewType">
+
+      <div style="display: flex; gap: 1rem; margin-top: 1.5rem;">
+        <button type="button" id="sendEmailBtn" class="btn" onclick="sendPreviewedEmail()" style="flex: 1; background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%); color: white; box-shadow: 0 4px 12px rgba(139, 92, 246, 0.3);">
+          <i class="fa-solid fa-paper-plane"></i> Send Email
+        </button>
+        <button type="button" class="btn btn-secondary" onclick="closeEmailPreviewModal()">
+          Cancel
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Tracking Status Modal -->
+  <div class="modal-overlay" id="trackingStatusModal">
+    <div class="modal-content" style="max-width: 600px;">
+      <h2 style="font-size: 1.5rem; font-weight: 700; margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem;">
+        <i class="fa-solid fa-location-dot" style="color: #3b82f6;"></i> Tracking Status
+      </h2>
+
+      <div id="trackingStatusMessage"></div>
+      <div id="trackingStatusLoading" style="text-align: center; padding: 2rem; color: #64748b;">
+        <i class="fa-solid fa-spinner fa-spin" style="font-size: 1.5rem;"></i>
+        <p style="margin-top: 0.5rem;">Checking tracking status...</p>
+      </div>
+
+      <div id="trackingStatusContent" style="display: none;">
+        <!-- Status Summary -->
+        <div id="trackingStatusSummary" style="background: #f8fafc; border-radius: 8px; padding: 1rem; margin-bottom: 1rem;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem;">
+            <div>
+              <div style="font-size: 0.75rem; text-transform: uppercase; color: #64748b; font-weight: 600;">Status</div>
+              <div id="trackingCurrentStatus" style="font-size: 1.125rem; font-weight: 600; color: #0f172a;"></div>
+            </div>
+            <div id="trackingStatusBadge" style="padding: 0.375rem 0.75rem; border-radius: 6px; font-size: 0.75rem; font-weight: 600; text-transform: uppercase;"></div>
+          </div>
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; font-size: 0.875rem;">
+            <div>
+              <span style="color: #64748b;">Carrier:</span>
+              <span id="trackingCarrier" style="font-weight: 500;"></span>
+            </div>
+            <div>
+              <span style="color: #64748b;">Est. Delivery:</span>
+              <span id="trackingEstDelivery" style="font-weight: 500;"></span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Tracking Events -->
+        <div style="margin-bottom: 1rem;">
+          <div style="font-size: 0.75rem; text-transform: uppercase; color: #64748b; font-weight: 600; margin-bottom: 0.5rem;">Tracking History</div>
+          <div id="trackingEvents" style="max-height: 250px; overflow-y: auto; border: 1px solid #e2e8f0; border-radius: 8px;"></div>
+        </div>
+
+        <!-- Status Updated Notice -->
+        <div id="trackingStatusUpdated" style="display: none; background: #dcfce7; border: 1px solid #86efac; border-radius: 8px; padding: 0.75rem; color: #166534; font-size: 0.875rem; margin-bottom: 1rem;">
+          <i class="fa-solid fa-check-circle"></i> <span id="trackingStatusUpdatedText"></span>
+        </div>
+
+        <!-- External Tracking Link -->
+        <div style="text-align: center;">
+          <a id="trackingExternalLink" href="#" target="_blank" style="color: #3b82f6; font-size: 0.875rem;">
+            <i class="fa-solid fa-external-link-alt"></i> Track on carrier website
+          </a>
+        </div>
+      </div>
+
+      <div style="display: flex; gap: 1rem; margin-top: 1.5rem;">
+        <button type="button" class="btn btn-secondary" onclick="closeTrackingStatusModal()" style="flex: 1;">
+          Close
+        </button>
+      </div>
+    </div>
+  </div>
+
   <script>
     const loadedOrderDetails = {};
     let selectedRate = null;
@@ -2014,6 +2141,27 @@
           html += `<div style="font-size: 0.9375rem; font-weight: 600; color: #1e293b;">${weightDisplay}</div>`;
         } else {
           html += '<div style="font-size: 0.875rem; color: #94a3b8;">Not set</div>';
+        }
+        html += '</div>';
+
+        // Email status section
+        html += '<div style="margin-top: 0.75rem; background: #f5f3ff; border: 1px solid #c4b5fd; border-radius: 8px; padding: 0.625rem 0.875rem;">';
+        html += '<div style="font-size: 0.7rem; text-transform: uppercase; color: #7c3aed; font-weight: 600; margin-bottom: 0.375rem;"><i class="fa-solid fa-envelope"></i> Emails Sent</div>';
+        // Confirmation email
+        if (order.confirmation_email_sent_at) {
+          const confDate = new Date(order.confirmation_email_sent_at);
+          const confStr = confDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) + ' at ' + confDate.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
+          html += `<div style="font-size: 0.8125rem; color: #374151; display: flex; justify-content: space-between;"><span>Confirmation</span><span style="color: #16a34a;"><i class="fa-solid fa-check"></i> ${confStr}</span></div>`;
+        } else {
+          html += `<div style="font-size: 0.8125rem; color: #374151; display: flex; justify-content: space-between;"><span>Confirmation</span><span style="color: #94a3b8;">Not sent</span></div>`;
+        }
+        // Shipping email
+        if (order.shipping_email_sent_at) {
+          const shipDate = new Date(order.shipping_email_sent_at);
+          const shipStr = shipDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) + ' at ' + shipDate.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
+          html += `<div style="font-size: 0.8125rem; color: #374151; display: flex; justify-content: space-between; margin-top: 0.25rem;"><span>Shipping</span><span style="color: #16a34a;"><i class="fa-solid fa-check"></i> ${shipStr}</span></div>`;
+        } else if (order.tracking_number) {
+          html += `<div style="font-size: 0.8125rem; color: #374151; display: flex; justify-content: space-between; margin-top: 0.25rem;"><span>Shipping</span><span style="color: #94a3b8;">Not sent</span></div>`;
         }
         html += '</div>';
 
@@ -2253,6 +2401,263 @@
     document.getElementById('shippingRatesModal').addEventListener('click', function(e) {
       if (e.target === this) {
         closeShippingRatesModal();
+      }
+    });
+
+    // Email Preview Functions
+    async function showEmailPreview(orderId, emailType) {
+      document.getElementById('emailPreviewOrderId').value = orderId;
+      document.getElementById('emailPreviewType').value = emailType;
+      document.getElementById('emailPreviewLoading').style.display = 'block';
+      document.getElementById('emailPreviewContent').style.display = 'none';
+      document.getElementById('emailPreviewMessage').innerHTML = '';
+      document.getElementById('emailPreviewWarning').style.display = 'none';
+
+      // Set title based on email type
+      const title = emailType === 'confirmation' ? 'Order Confirmation Email' : 'Shipping Notification Email';
+      document.getElementById('emailPreviewTitle').textContent = title;
+
+      document.getElementById('emailPreviewModal').classList.add('active');
+
+      try {
+        const action = emailType === 'confirmation' ? 'preview_confirmation_email' : 'preview_shipping_email';
+        const formData = new FormData();
+        formData.append('action', action);
+        formData.append('order_id', orderId);
+
+        const response = await fetch('{% url "admin_orders" %}', {
+          method: 'POST',
+          headers: {
+            'X-CSRFToken': getCookie('csrftoken')
+          },
+          body: formData
+        });
+
+        // Check if response is JSON
+        const contentType = response.headers.get('content-type');
+        if (!contentType || !contentType.includes('application/json')) {
+          const text = await response.text();
+          console.error('Non-JSON response:', text.substring(0, 500));
+          throw new Error('Server returned an unexpected error. Check the console for details.');
+        }
+
+        const data = await response.json();
+        document.getElementById('emailPreviewLoading').style.display = 'none';
+
+        if (data.success) {
+          document.getElementById('emailPreviewRecipient').textContent = data.recipient || '';
+          document.getElementById('emailPreviewSubject').textContent = data.subject || '';
+
+          // Show warning if present
+          if (data.warning) {
+            document.getElementById('emailWarningText').textContent = data.warning;
+            document.getElementById('emailPreviewWarning').style.display = 'block';
+          }
+
+          // Load HTML into iframe
+          const iframe = document.getElementById('emailPreviewFrame');
+          const iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
+          iframeDoc.open();
+          iframeDoc.write(data.html || '');
+          iframeDoc.close();
+
+          document.getElementById('emailPreviewContent').style.display = 'block';
+        } else {
+          document.getElementById('emailPreviewMessage').innerHTML = `
+            <div style="background: #fef2f2; border: 1px solid #fecaca; border-radius: 8px; padding: 1rem; color: #991b1b;">
+              <i class="fa-solid fa-exclamation-circle"></i> ${data.error || 'Failed to load email preview'}
+            </div>`;
+        }
+      } catch (error) {
+        console.error('Error:', error);
+        document.getElementById('emailPreviewLoading').style.display = 'none';
+        document.getElementById('emailPreviewMessage').innerHTML = `
+          <div style="background: #fef2f2; border: 1px solid #fecaca; border-radius: 8px; padding: 1rem; color: #991b1b;">
+            <i class="fa-solid fa-exclamation-circle"></i> Error loading preview: ${error.message || 'Unknown error'}
+          </div>`;
+      }
+    }
+
+    async function sendPreviewedEmail() {
+      const orderId = document.getElementById('emailPreviewOrderId').value;
+      const emailType = document.getElementById('emailPreviewType').value;
+      const btn = document.getElementById('sendEmailBtn');
+      const originalText = btn.innerHTML;
+
+      btn.disabled = true;
+      btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Sending...';
+
+      try {
+        const action = emailType === 'confirmation' ? 'send_confirmation_email' : 'send_shipping_email';
+        const formData = new FormData();
+        formData.append('action', action);
+        formData.append('order_id', orderId);
+
+        const response = await fetch('{% url "admin_orders" %}', {
+          method: 'POST',
+          headers: {
+            'X-CSRFToken': getCookie('csrftoken')
+          },
+          body: formData
+        });
+
+        const data = await response.json();
+
+        if (data.success) {
+          closeEmailPreviewModal();
+          alert(data.message || 'Email sent successfully!');
+          // Invalidate cached order details to refresh email timestamps
+          delete loadedOrderDetails[orderId];
+          location.reload();
+        } else {
+          document.getElementById('emailPreviewMessage').innerHTML = `
+            <div style="background: #fef2f2; border: 1px solid #fecaca; border-radius: 8px; padding: 1rem; color: #991b1b; margin-bottom: 1rem;">
+              <i class="fa-solid fa-exclamation-circle"></i> ${data.error || 'Failed to send email'}
+            </div>`;
+          btn.disabled = false;
+          btn.innerHTML = originalText;
+        }
+      } catch (error) {
+        console.error('Error:', error);
+        document.getElementById('emailPreviewMessage').innerHTML = `
+          <div style="background: #fef2f2; border: 1px solid #fecaca; border-radius: 8px; padding: 1rem; color: #991b1b; margin-bottom: 1rem;">
+            <i class="fa-solid fa-exclamation-circle"></i> Error: ${error.message || 'Unknown error'}
+          </div>`;
+        btn.disabled = false;
+        btn.innerHTML = originalText;
+      }
+    }
+
+    function closeEmailPreviewModal() {
+      document.getElementById('emailPreviewModal').classList.remove('active');
+    }
+
+    // Close email preview modal on overlay click
+    document.getElementById('emailPreviewModal').addEventListener('click', function(e) {
+      if (e.target === this) {
+        closeEmailPreviewModal();
+      }
+    });
+
+    // Tracking Status Functions
+    async function checkTrackingStatus(orderId) {
+      document.getElementById('trackingStatusLoading').style.display = 'block';
+      document.getElementById('trackingStatusContent').style.display = 'none';
+      document.getElementById('trackingStatusMessage').innerHTML = '';
+      document.getElementById('trackingStatusUpdated').style.display = 'none';
+      document.getElementById('trackingStatusModal').classList.add('active');
+
+      try {
+        const formData = new FormData();
+        formData.append('action', 'check_tracking');
+        formData.append('order_id', orderId);
+        formData.append('auto_update', 'true');
+
+        const response = await fetch('{% url "admin_orders" %}', {
+          method: 'POST',
+          headers: {
+            'X-CSRFToken': getCookie('csrftoken')
+          },
+          body: formData
+        });
+
+        const data = await response.json();
+        document.getElementById('trackingStatusLoading').style.display = 'none';
+
+        if (data.success) {
+          // Update status summary
+          const statusText = data.status_detail || data.status || 'Unknown';
+          document.getElementById('trackingCurrentStatus').textContent = statusText.charAt(0).toUpperCase() + statusText.slice(1).replace(/_/g, ' ');
+          document.getElementById('trackingCarrier').textContent = data.carrier || 'Unknown';
+          document.getElementById('trackingEstDelivery').textContent = data.est_delivery_date ? new Date(data.est_delivery_date).toLocaleDateString() : 'N/A';
+
+          // Set status badge
+          const badge = document.getElementById('trackingStatusBadge');
+          if (data.delivered) {
+            badge.textContent = 'Delivered';
+            badge.style.background = '#dcfce7';
+            badge.style.color = '#166534';
+          } else if (data.status === 'in_transit') {
+            badge.textContent = 'In Transit';
+            badge.style.background = '#dbeafe';
+            badge.style.color = '#1e40af';
+          } else if (data.status === 'pre_transit') {
+            badge.textContent = 'Pre-Transit';
+            badge.style.background = '#fef3c7';
+            badge.style.color = '#92400e';
+          } else {
+            badge.textContent = data.status || 'Unknown';
+            badge.style.background = '#f1f5f9';
+            badge.style.color = '#64748b';
+          }
+
+          // Build tracking events list
+          const eventsContainer = document.getElementById('trackingEvents');
+          if (data.tracking_details && data.tracking_details.length > 0) {
+            eventsContainer.innerHTML = data.tracking_details.map((event, index) => {
+              const date = new Date(event.datetime);
+              const dateStr = date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+              const timeStr = date.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
+              const location = event.city ? `${event.city}${event.state ? ', ' + event.state : ''}` : '';
+              const isLatest = index === data.tracking_details.length - 1;
+              return `
+                <div style="padding: 0.75rem; border-bottom: 1px solid #e2e8f0; ${isLatest ? 'background: #f0fdf4;' : ''}">
+                  <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                    <div style="flex: 1;">
+                      <div style="font-weight: 500; color: #0f172a; font-size: 0.875rem;">${event.message || event.status}</div>
+                      ${location ? `<div style="font-size: 0.75rem; color: #64748b; margin-top: 0.125rem;"><i class="fa-solid fa-location-dot"></i> ${location}</div>` : ''}
+                    </div>
+                    <div style="font-size: 0.75rem; color: #64748b; text-align: right; white-space: nowrap; margin-left: 1rem;">
+                      <div>${dateStr}</div>
+                      <div>${timeStr}</div>
+                    </div>
+                  </div>
+                </div>
+              `;
+            }).reverse().join('');
+          } else {
+            eventsContainer.innerHTML = '<div style="padding: 1rem; text-align: center; color: #64748b;">No tracking events available yet</div>';
+          }
+
+          // Set external tracking link
+          if (data.tracking_url) {
+            document.getElementById('trackingExternalLink').href = data.tracking_url;
+            document.getElementById('trackingExternalLink').style.display = '';
+          } else {
+            document.getElementById('trackingExternalLink').style.display = 'none';
+          }
+
+          // Show status updated notice if applicable
+          if (data.status_updated) {
+            document.getElementById('trackingStatusUpdatedText').textContent = `Order status automatically updated to ${data.new_status}`;
+            document.getElementById('trackingStatusUpdated').style.display = 'block';
+          }
+
+          document.getElementById('trackingStatusContent').style.display = 'block';
+        } else {
+          document.getElementById('trackingStatusMessage').innerHTML = `
+            <div style="background: #fef2f2; border: 1px solid #fecaca; border-radius: 8px; padding: 1rem; color: #991b1b;">
+              <i class="fa-solid fa-exclamation-circle"></i> ${data.error || 'Failed to check tracking status'}
+            </div>`;
+        }
+      } catch (error) {
+        console.error('Error:', error);
+        document.getElementById('trackingStatusLoading').style.display = 'none';
+        document.getElementById('trackingStatusMessage').innerHTML = `
+          <div style="background: #fef2f2; border: 1px solid #fecaca; border-radius: 8px; padding: 1rem; color: #991b1b;">
+            <i class="fa-solid fa-exclamation-circle"></i> Error checking tracking: ${error.message || 'Unknown error'}
+          </div>`;
+      }
+    }
+
+    function closeTrackingStatusModal() {
+      document.getElementById('trackingStatusModal').classList.remove('active');
+    }
+
+    // Close tracking status modal on overlay click
+    document.getElementById('trackingStatusModal').addEventListener('click', function(e) {
+      if (e.target === this) {
+        closeTrackingStatusModal();
       }
     });
 
@@ -4715,6 +5120,116 @@
         alert(message);
       }
     }
+
+    // ============================================
+    // AUTO-REFRESH TRACKING ON PAGE LOAD
+    // ============================================
+
+    // Show a small toast notification
+    function showTrackingToast(message, type = 'info') {
+      // Remove existing toast if any
+      const existingToast = document.getElementById('trackingToast');
+      if (existingToast) existingToast.remove();
+
+      const toast = document.createElement('div');
+      toast.id = 'trackingToast';
+      toast.style.cssText = `
+        position: fixed;
+        bottom: 1.5rem;
+        right: 1.5rem;
+        background: ${type === 'success' ? '#10b981' : type === 'error' ? '#ef4444' : '#52796f'};
+        color: white;
+        padding: 0.75rem 1.25rem;
+        border-radius: 8px;
+        font-size: 0.875rem;
+        font-weight: 500;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        z-index: 9999;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        animation: slideIn 0.3s ease;
+      `;
+      toast.innerHTML = message;
+      document.body.appendChild(toast);
+
+      // Auto-remove after 5 seconds
+      setTimeout(() => {
+        toast.style.animation = 'slideOut 0.3s ease';
+        setTimeout(() => toast.remove(), 300);
+      }, 5000);
+    }
+
+    // Add animation styles
+    const toastStyles = document.createElement('style');
+    toastStyles.textContent = `
+      @keyframes slideIn {
+        from { transform: translateX(100%); opacity: 0; }
+        to { transform: translateX(0); opacity: 1; }
+      }
+      @keyframes slideOut {
+        from { transform: translateX(0); opacity: 1; }
+        to { transform: translateX(100%); opacity: 0; }
+      }
+    `;
+    document.head.appendChild(toastStyles);
+
+    // Auto-refresh tracking statuses on page load
+    async function autoRefreshAllTracking() {
+      try {
+        // Show loading toast
+        showTrackingToast('<i class="fa-solid fa-spinner fa-spin"></i> Checking tracking statuses...', 'info');
+
+        const formData = new FormData();
+        formData.append('action', 'refresh_all_tracking');
+
+        const response = await fetch('', {
+          method: 'POST',
+          body: formData,
+          headers: {
+            'X-Requested-With': 'XMLHttpRequest',
+            'X-CSRFToken': getCookie('csrftoken')
+          }
+        });
+
+        const data = await response.json();
+
+        if (data.success) {
+          const shippedCount = data.updated_to_shipped ? data.updated_to_shipped.length : 0;
+          const fulfilledCount = data.updated_to_fulfilled ? data.updated_to_fulfilled.length : 0;
+          const totalUpdated = shippedCount + fulfilledCount;
+
+          if (totalUpdated > 0) {
+            // Build message
+            let parts = [];
+            if (shippedCount > 0) parts.push(`${shippedCount} → Shipped`);
+            if (fulfilledCount > 0) parts.push(`${fulfilledCount} → Fulfilled`);
+
+            showTrackingToast(`<i class="fa-solid fa-check"></i> Updated: ${parts.join(', ')}`, 'success');
+
+            // Reload page after brief delay to show updated statuses
+            setTimeout(() => location.reload(), 2000);
+          } else {
+            // Remove the loading toast if nothing changed
+            const toast = document.getElementById('trackingToast');
+            if (toast) toast.remove();
+          }
+        } else {
+          console.error('Tracking refresh error:', data.error);
+          const toast = document.getElementById('trackingToast');
+          if (toast) toast.remove();
+        }
+      } catch (error) {
+        console.error('Error refreshing tracking:', error);
+        const toast = document.getElementById('trackingToast');
+        if (toast) toast.remove();
+      }
+    }
+
+    // Run auto-refresh on page load (with slight delay to let page render first)
+    document.addEventListener('DOMContentLoaded', function() {
+      setTimeout(autoRefreshAllTracking, 1000);
+    });
   </script>
 </body>
 </html>
