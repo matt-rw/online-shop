@@ -344,6 +344,15 @@ def render_shipping_notification_preview(order):
             elif "FEDEX" in carrier:
                 tracking_url = f"https://www.fedex.com/fedextrack/?trknbr={order.tracking_number}"
 
+        # Build shipping address string
+        shipping_str = ""
+        if order.shipping_address:
+            addr = order.shipping_address
+            shipping_str = f"{addr.full_name}\n{addr.line1}"
+            if addr.line2:
+                shipping_str += f"\n{addr.line2}"
+            shipping_str += f"\n{addr.city}, {addr.region} {addr.postal_code}"
+
         # Build context for template
         context = {
             "order_number": order.order_number,
@@ -351,6 +360,8 @@ def render_shipping_notification_preview(order):
             "tracking_number": order.tracking_number or "",
             "carrier": order.carrier or "",
             "tracking_url": tracking_url,
+            "shipping_address": shipping_str,
+            "order_date": order.created_at.strftime("%B %d, %Y") if order.created_at else "",
         }
 
         # Render the template
@@ -431,10 +442,14 @@ def send_order_confirmation(order):
                 shipping_str += f"\n{addr.line2}"
             shipping_str += f"\n{addr.city}, {addr.region} {addr.postal_code}"
 
+        # Get first name only for greeting
+        full_name = order.customer_name or (order.user.first_name if order.user else "")
+        first_name = full_name.split()[0] if full_name else "Customer"
+
         # Build context for template
         context = {
             "order_number": order.order_number,
-            "customer_name": order.customer_name or (order.user.first_name if order.user else "Customer"),
+            "customer_name": first_name,
             "customer_email": customer_email,
             "items": items_list,
             "items_html": _render_items_html(items_list),
@@ -519,10 +534,14 @@ def preview_order_confirmation(order):
         if not customer_email and order.user:
             customer_email = order.user.email
 
+        # Get first name only for greeting
+        full_name = order.customer_name or (order.user.first_name if order.user else "")
+        first_name = full_name.split()[0] if full_name else "Customer"
+
         # Build context for template
         context = {
             "order_number": order.order_number,
-            "customer_name": order.customer_name or (order.user.first_name if order.user else "Customer"),
+            "customer_name": first_name,
             "customer_email": customer_email or "",
             "items": items_list,
             "items_html": _render_items_html(items_list),
@@ -615,13 +634,28 @@ def send_shipping_notification(order):
             elif "FEDEX" in carrier:
                 tracking_url = f"https://www.fedex.com/fedextrack/?trknbr={order.tracking_number}"
 
+        # Get first name only for greeting
+        full_name = order.customer_name or (order.user.first_name if order.user else "")
+        first_name = full_name.split()[0] if full_name else "Customer"
+
+        # Build shipping address string
+        shipping_str = ""
+        if order.shipping_address:
+            addr = order.shipping_address
+            shipping_str = f"{addr.full_name}\n{addr.line1}"
+            if addr.line2:
+                shipping_str += f"\n{addr.line2}"
+            shipping_str += f"\n{addr.city}, {addr.region} {addr.postal_code}"
+
         # Build context for template
         context = {
             "order_number": order.order_number,
-            "customer_name": order.customer_name or (order.user.first_name if order.user else "Customer"),
+            "customer_name": first_name,
             "tracking_number": order.tracking_number or "",
             "carrier": order.carrier or "",
             "tracking_url": tracking_url,
+            "shipping_address": shipping_str,
+            "order_date": order.created_at.strftime("%B %d, %Y") if order.created_at else "",
         }
 
         # Send the email
@@ -678,13 +712,28 @@ def preview_shipping_notification(order):
             elif "FEDEX" in carrier:
                 tracking_url = f"https://www.fedex.com/fedextrack/?trknbr={order.tracking_number}"
 
+        # Get first name only for greeting
+        full_name = order.customer_name or (order.user.first_name if order.user else "")
+        first_name = full_name.split()[0] if full_name else "Customer"
+
+        # Build shipping address string
+        shipping_str = ""
+        if order.shipping_address:
+            addr = order.shipping_address
+            shipping_str = f"{addr.full_name}\n{addr.line1}"
+            if addr.line2:
+                shipping_str += f"\n{addr.line2}"
+            shipping_str += f"\n{addr.city}, {addr.region} {addr.postal_code}"
+
         # Build context for template
         context = {
             "order_number": order.order_number,
-            "customer_name": order.customer_name or (order.user.first_name if order.user else "Customer"),
+            "customer_name": first_name,
             "tracking_number": order.tracking_number or "",
             "carrier": order.carrier or "",
             "tracking_url": tracking_url,
+            "shipping_address": shipping_str,
+            "order_date": order.created_at.strftime("%B %d, %Y") if order.created_at else "",
         }
 
         # Render the template without sending
