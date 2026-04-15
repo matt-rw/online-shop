@@ -615,6 +615,7 @@
             <th>Category</th>
             <th>Base Price</th>
             <th>Base Cost</th>
+            <th>Weight</th>
             <th>Total Stock</th>
             <th>Sold</th>
             <th>SKUs</th>
@@ -644,6 +645,13 @@
             </td>
             <td>
               <span style="color: #64748b;">${{ product.base_cost|default:0 }}</span>
+            </td>
+            <td>
+              {% if product.weight_oz %}
+                <span style="color: #64748b;">{{ product.weight_oz }} oz</span>
+              {% else %}
+                <span style="color: #dc2626; font-size: 0.75rem;"><i class="fa-solid fa-exclamation-triangle"></i> Not set</span>
+              {% endif %}
             </td>
             <td>
               {% if product.total_stock == 0 %}
@@ -720,7 +728,7 @@
               data-base-cost="{{ product.base_cost|default:0 }}"
               data-weight-oz="{{ product.weight_oz|default:"" }}"
               style="display: none;">
-            <td colspan="9" style="padding: 0; background: #f8fafc;">
+            <td colspan="10" style="padding: 0; background: #f8fafc;">
               <div class="variants-container" style="padding: 1rem 1rem 1rem 2.5rem;">
                 <div class="variants-loading" style="text-align: center; padding: 1rem; color: #64748b;">
                   <i class="fa-solid fa-spinner fa-spin"></i> Loading variants...
@@ -1999,20 +2007,9 @@
         console.log('Response data:', data);
         if (data.success) {
           showToast('Product saved successfully', 'success');
-          // Update data attributes on the edit button so reopening shows new values
-          const btn = document.querySelector(`button[data-product-id="${productId}"]`);
-          if (btn) {
-            btn.dataset.name = document.getElementById('edit_name').value;
-            btn.dataset.slug = document.getElementById('edit_slug').value;
-            btn.dataset.category = document.getElementById('edit_category').value;
-            btn.dataset.description = document.getElementById('edit_description').value;
-            btn.dataset.basePrice = document.getElementById('edit_base_price').value;
-            btn.dataset.baseCost = document.getElementById('edit_base_cost').value || '0';
-            btn.dataset.weightOz = document.getElementById('edit_weight_oz').value || '';
-            btn.dataset.featured = document.getElementById('edit_featured').checked ? 'true' : 'false';
-            btn.dataset.available = document.getElementById('edit_available').checked ? 'true' : 'false';
-            btn.dataset.images = JSON.stringify(productImages);
-          }
+          closeEditModal();
+          // Reload page to show updated values in table
+          setTimeout(() => location.reload(), 500);
         } else {
           showToast('Error: ' + (data.error || 'Failed to save product'), 'error');
         }

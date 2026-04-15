@@ -8,7 +8,7 @@ import json
 import logging
 import uuid
 from datetime import datetime, timedelta
-from decimal import Decimal
+from decimal import Decimal, InvalidOperation
 
 from django.conf import settings
 from django.contrib import messages
@@ -248,8 +248,14 @@ def products_dashboard(request):
                 product.description = request.POST.get("description")
                 product.base_price = new_base_price
                 product.base_cost = request.POST.get("base_cost") or 0
-                weight_oz = request.POST.get("weight_oz")
-                product.weight_oz = Decimal(weight_oz) if weight_oz else None
+                weight_oz = request.POST.get("weight_oz", "").strip()
+                if weight_oz:
+                    try:
+                        product.weight_oz = Decimal(weight_oz)
+                    except (InvalidOperation, ValueError):
+                        product.weight_oz = None
+                else:
+                    product.weight_oz = None
                 product.featured = request.POST.get("featured") == "true"
                 product.available_for_purchase = request.POST.get("available_for_purchase") == "true"
 

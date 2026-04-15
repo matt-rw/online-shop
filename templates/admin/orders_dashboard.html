@@ -1062,6 +1062,15 @@
       text-transform: uppercase;
       letter-spacing: 0.02em;
       white-space: nowrap;
+      transition: opacity 0.15s;
+    }
+
+    .status-badge-sm:hover {
+      opacity: 0.85;
+    }
+
+    .status-option:hover {
+      background: #f1f5f9;
     }
 
     .status-badge-sm i {
@@ -1572,8 +1581,8 @@
           <tbody>
             {% for order in orders %}
             <tr class="order-row{% if order.exclude_from_stats %} excluded-order{% endif %}" data-order-id="{{ order.id }}" data-exclude-stats="{{ order.exclude_from_stats|yesno:'true,false' }}" data-is-manual="{% if order.stripe_payment_intent|slice:':7' == 'MANUAL_' %}true{% else %}false{% endif %}" onclick="toggleOrderExpand(this, event)" style="cursor: pointer;">
-              <td>
-                <span class="status-badge-sm {{ order.status|lower }}">
+              <td style="position: relative;">
+                <span class="status-badge-sm {{ order.status|lower }}" onclick="event.stopPropagation(); toggleStatusDropdown({{ order.id }})" style="cursor: pointer;" title="Click to change status">
                   {% if order.status == 'CREATED' %}<i class="fa-solid fa-clock"></i> Pending
                   {% elif order.status == 'AWAITING_PAYMENT' %}<i class="fa-solid fa-credit-card"></i> Awaiting Payment
                   {% elif order.status == 'PAID' %}<i class="fa-solid fa-box"></i> Ready to Ship
@@ -1585,7 +1594,17 @@
                   {% elif order.status == 'FAILED' %}<i class="fa-solid fa-triangle-exclamation"></i> Error
                   {% else %}{{ order.status|title }}
                   {% endif %}
+                  <i class="fa-solid fa-caret-down" style="margin-left: 4px; font-size: 0.6rem; opacity: 0.6;"></i>
                 </span>
+                <div class="status-dropdown" id="statusDropdown-{{ order.id }}" style="display: none; position: absolute; top: 100%; left: 0; background: white; border: 1px solid #e2e8f0; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); z-index: 100; min-width: 160px; margin-top: 4px;">
+                  <div style="padding: 0.5rem 0;">
+                    <div class="status-option" onclick="changeOrderStatus({{ order.id }}, 'PAID')" style="padding: 0.5rem 1rem; cursor: pointer; font-size: 0.8rem; display: flex; align-items: center; gap: 0.5rem;"><i class="fa-solid fa-box" style="color: #f59e0b;"></i> Ready to Ship</div>
+                    <div class="status-option" onclick="changeOrderStatus({{ order.id }}, 'SHIPPED')" style="padding: 0.5rem 1rem; cursor: pointer; font-size: 0.8rem; display: flex; align-items: center; gap: 0.5rem;"><i class="fa-solid fa-truck" style="color: #3b82f6;"></i> In Transit</div>
+                    <div class="status-option" onclick="changeOrderStatus({{ order.id }}, 'FULFILLED')" style="padding: 0.5rem 1rem; cursor: pointer; font-size: 0.8rem; display: flex; align-items: center; gap: 0.5rem;"><i class="fa-solid fa-circle-check" style="color: #22c55e;"></i> Delivered</div>
+                    <div style="border-top: 1px solid #e2e8f0; margin: 0.25rem 0;"></div>
+                    <div class="status-option" onclick="changeOrderStatus({{ order.id }}, 'CANCELED')" style="padding: 0.5rem 1rem; cursor: pointer; font-size: 0.8rem; display: flex; align-items: center; gap: 0.5rem;"><i class="fa-solid fa-ban" style="color: #94a3b8;"></i> Canceled</div>
+                  </div>
+                </div>
               </td>
               <td class="amount-cell">${{ order.total|floatformat:2 }}</td>
               <td>
@@ -2197,6 +2216,73 @@
         }
       }
       return cookieValue;
+    }
+
+    // Status dropdown functions
+    let activeStatusDropdown = null;
+
+    function toggleStatusDropdown(orderId) {
+      const dropdown = document.getElementById(`statusDropdown-${orderId}`);
+
+      // Close any other open dropdown
+      if (activeStatusDropdown && activeStatusDropdown !== dropdown) {
+        activeStatusDropdown.style.display = 'none';
+      }
+
+      if (dropdown.style.display === 'none') {
+        dropdown.style.display = 'block';
+        activeStatusDropdown = dropdown;
+      } else {
+        dropdown.style.display = 'none';
+        activeStatusDropdown = null;
+      }
+    }
+
+    // Close dropdown when clicking outside
+    document.addEventListener('click', function(e) {
+      if (activeStatusDropdown && !e.target.closest('.status-badge-sm') && !e.target.closest('.status-dropdown')) {
+        activeStatusDropdown.style.display = 'none';
+        activeStatusDropdown = null;
+      }
+    });
+
+    async function changeOrderStatus(orderId, newStatus) {
+      // Close the dropdown
+      if (activeStatusDropdown) {
+        activeStatusDropdown.style.display = 'none';
+        activeStatusDropdown = null;
+      }
+
+      try {
+        const csrfInput = document.querySelector('input[name="csrfmiddlewaretoken"]');
+        const csrfToken = csrfInput ? csrfInput.value : getCookie('csrftoken');
+
+        const formData = new FormData();
+        formData.append('action', 'update_order_status');
+        formData.append('order_id', orderId);
+        formData.append('status', newStatus);
+
+        const response = await fetch('', {
+          method: 'POST',
+          body: formData,
+          headers: {
+            'X-Requested-With': 'XMLHttpRequest',
+            'X-CSRFToken': csrfToken
+          }
+        });
+
+        const data = await response.json();
+
+        if (data.success) {
+          // Reload to show updated status
+          location.reload();
+        } else {
+          alert('Error updating status: ' + (data.error || 'Unknown error'));
+        }
+      } catch (error) {
+        console.error('Error:', error);
+        alert('Error updating status');
+      }
     }
 
     async function generateLabel(orderId) {
