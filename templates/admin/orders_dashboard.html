@@ -2548,6 +2548,10 @@
       document.getElementById('trackingStatusModal').classList.add('active');
 
       try {
+        // Get CSRF token from form (more reliable than cookie)
+        const csrfInput = document.querySelector('input[name="csrfmiddlewaretoken"]');
+        const csrfToken = csrfInput ? csrfInput.value : getCookie('csrftoken');
+
         const formData = new FormData();
         formData.append('action', 'check_tracking');
         formData.append('order_id', orderId);
@@ -2556,7 +2560,7 @@
         const response = await fetch('{% url "admin_orders" %}', {
           method: 'POST',
           headers: {
-            'X-CSRFToken': getCookie('csrftoken')
+            'X-CSRFToken': csrfToken
           },
           body: formData
         });
