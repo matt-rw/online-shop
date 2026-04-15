@@ -15,14 +15,21 @@ from django.utils import timezone
 
 import pytz
 
+from django.contrib.auth import get_user_model
+
 from shop.models import (
     ConnectionLog,
+    EmailSubscription,
     SiteSettings,
 )
 from shop.models.settings import QuickLink
 
 logger = logging.getLogger(__name__)
 
+User = get_user_model()
+
+
+@staff_member_required
 def security_dashboard(request):
     """
     Display security and system stats dashboard.
