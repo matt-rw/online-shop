@@ -15,18 +15,13 @@ from django.utils import timezone
 
 import pytz
 
-from django.contrib.auth import get_user_model
-
 from shop.models import (
     ConnectionLog,
-    EmailSubscription,
     SiteSettings,
 )
 from shop.models.settings import QuickLink
 
 logger = logging.getLogger(__name__)
-
-User = get_user_model()
 
 
 @staff_member_required
@@ -286,24 +281,7 @@ def security_dashboard(request):
     except:
         system_info["local_ip"] = "N/A"
 
-    # Additional metrics for user activity
-    total_users = User.objects.count()
-    active_users = User.objects.filter(is_active=True).count()
-    staff_users = User.objects.filter(is_staff=True).count()
-
     last_24h = now - timedelta(hours=24)
-    last_7d = now - timedelta(days=7)
-
-    recent_users_24h = User.objects.filter(date_joined__gte=last_24h).count()
-    recent_users_7d = User.objects.filter(date_joined__gte=last_7d).count()
-
-    user_metrics = {
-        "total": total_users,
-        "active": active_users,
-        "staff": staff_users,
-        "recent_24h": recent_users_24h,
-        "recent_7d": recent_users_7d,
-    }
 
     # Get recent connections from database
     recent_connections = ConnectionLog.objects.select_related("user").all()[:50]
@@ -316,8 +294,24 @@ def security_dashboard(request):
         .count()
     )
 
-    # Get recent user logins (last login data)
-    recent_logins = User.objects.exclude(last_login__isnull=True).order_by("-last_login")[:20]
+    # Calculate security score (count of passing security checks)
+    security_checks = [
+        not django_settings["debug_mode"],  # Debug off
+        django_settings["secret_key_set"],  # Secret key set
+        https_status["ssl_redirect"],  # SSL redirect on
+        https_status["session_cookie_secure"],  # Session cookies secure
+        https_status["hsts_enabled"],  # HSTS enabled
+    ]
+    security_score = sum(security_checks)
+    security_total = len(security_checks)
+
+    # Calculate server health (average of CPU and Memory)
+    if machine_status["cpu_percent"] != "N/A":
+        server_health = round(
+            (machine_status["cpu_percent"] + machine_status["memory_percent"]) / 2, 1
+        )
+    else:
+        server_health = None
 
     # Try to get request logs (if available)
     recent_logs = []
@@ -350,18 +344,6 @@ def security_dashboard(request):
     except Exception as e:
         recent_logs = [f"Unable to read logs: {str(e)}"]
 
-    # Email subscription metrics
-    total_subs = EmailSubscription.objects.count()
-    confirmed_subs = EmailSubscription.objects.filter(is_confirmed=True).count()
-    recent_subs_24h = EmailSubscription.objects.filter(subscribed_at__gte=last_24h).count()
-
-    email_metrics = {
-        "total": total_subs,
-        "confirmed": confirmed_subs,
-        "recent_24h": recent_subs_24h,
-        "confirmation_rate": round((confirmed_subs / total_subs * 100), 1) if total_subs > 0 else 0,
-    }
-
     context = {
         "system_info": system_info,
         "machine_status": machine_status,
@@ -370,12 +352,12 @@ def security_dashboard(request):
         "https_status": https_status,
         "services_status": services_status,
         "warnings": warnings,
-        "user_metrics": user_metrics,
-        "email_metrics": email_metrics,
-        "recent_logins": recent_logins,
         "recent_logs": recent_logs,
         "recent_connections": recent_connections,
         "unique_ips_24h": unique_ips_24h,
+        "security_score": security_score,
+        "security_total": security_total,
+        "server_health": server_health,
     }
 
     return render(request, "admin/security_dashboard.html", context)

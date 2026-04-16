@@ -380,9 +380,13 @@ def cart_view(request):
         # Get component product names
         components = [bi.product.name for bi in item.bundle.items.all()]
         bundle_items_with_images.append({
-            "item": item,
+            "item": item,  # Keep for cart template compatibility
+            "bundle": item.bundle,
+            "size": item.size,
+            "quantity": item.quantity,
             "image": image,
-            "components": components,
+            "components": components,  # Keep as list for cart template
+            "component_names": ", ".join(components),  # Pre-joined for checkout
         })
 
     # Calculate totals
@@ -626,7 +630,13 @@ def checkout_view(request):
         "variant__product", "variant__color", "variant__size"
     ).all()
 
-    if not cart_items.exists():
+    # Also get bundle items
+    bundle_items = cart.bundle_items.select_related("bundle", "size").prefetch_related(
+        "bundle__items__product"
+    ).all()
+
+    # Check if cart is empty (no regular items AND no bundles)
+    if not cart_items.exists() and not bundle_items.exists():
         messages.warning(request, "Your cart is empty.")
         return redirect("shop:cart")
 
@@ -657,6 +667,44 @@ def checkout_view(request):
             "image": image,
         })
 
+    # Build bundle cart items with images
+    bundle_items_with_images = []
+    for item in bundle_items:
+        image = None
+        # Try bundle images first
+        if item.bundle.images:
+            for img in item.bundle.images:
+                if img:
+                    if not img.startswith(("/", "http", "data:")):
+                        image = f"/static/{img}"
+                    else:
+                        image = img
+                    break
+        # Fallback to first component product image
+        if not image:
+            for bi in item.bundle.items.all():
+                if bi.product.images:
+                    for img in bi.product.images:
+                        if img:
+                            if not img.startswith(("/", "http", "data:")):
+                                image = f"/static/{img}"
+                            else:
+                                image = img
+                            break
+                    if image:
+                        break
+        # Get component product names
+        components = [bi.product.name for bi in item.bundle.items.all()]
+        bundle_items_with_images.append({
+            "item": item,  # Keep for cart template compatibility
+            "bundle": item.bundle,
+            "size": item.size,
+            "quantity": item.quantity,
+            "image": image,
+            "components": components,  # Keep as list for cart template
+            "component_names": ", ".join(components),  # Pre-joined for checkout
+        })
+
     # Calculate totals
     subtotal = get_cart_total(cart)
     # Check for auto free shipping threshold
@@ -684,6 +732,7 @@ def checkout_view(request):
     context = {
         "cart": cart,
         "cart_items": cart_items_with_images,
+        "bundle_items": bundle_items_with_images,
         "subtotal": subtotal,
         "free_shipping": free_shipping,
         "saved_addresses": saved_addresses,

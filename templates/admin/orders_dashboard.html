@@ -246,6 +246,11 @@
       color: #1e3a8a;
     }
 
+    .status-badge.hand_delivered {
+      background: #ede9fe;
+      color: #5b21b6;
+    }
+
     .status-badge.fulfilled {
       background: #d8e2dc;
       color: #354f52;
@@ -1097,6 +1102,11 @@
       color: #1e40af;
     }
 
+    .status-badge-sm.hand_delivered {
+      background: #ede9fe;
+      color: #5b21b6;
+    }
+
     .status-badge-sm.fulfilled {
       background: #d1fae5;
       color: #065f46;
@@ -1587,6 +1597,7 @@
                   {% elif order.status == 'AWAITING_PAYMENT' %}<i class="fa-solid fa-credit-card"></i> Awaiting Payment
                   {% elif order.status == 'PAID' %}<i class="fa-solid fa-box"></i> Ready to Ship
                   {% elif order.status == 'SHIPPED' %}<i class="fa-solid fa-truck"></i> In Transit
+                  {% elif order.status == 'HAND_DELIVERED' %}<i class="fa-solid fa-hand-holding-box"></i> Hand Delivered
                   {% elif order.status == 'FULFILLED' %}<i class="fa-solid fa-circle-check"></i> Delivered
                   {% elif order.status == 'CANCELED' %}<i class="fa-solid fa-ban"></i> Canceled
                   {% elif order.status == 'RETURN_REQUESTED' %}<i class="fa-solid fa-box-open"></i> Return Requested
@@ -1600,13 +1611,26 @@
                   <div style="padding: 0.5rem 0;">
                     <div class="status-option" onclick="changeOrderStatus({{ order.id }}, 'PAID')" style="padding: 0.5rem 1rem; cursor: pointer; font-size: 0.8rem; display: flex; align-items: center; gap: 0.5rem;"><i class="fa-solid fa-box" style="color: #f59e0b;"></i> Ready to Ship</div>
                     <div class="status-option" onclick="changeOrderStatus({{ order.id }}, 'SHIPPED')" style="padding: 0.5rem 1rem; cursor: pointer; font-size: 0.8rem; display: flex; align-items: center; gap: 0.5rem;"><i class="fa-solid fa-truck" style="color: #3b82f6;"></i> In Transit</div>
+                    <div class="status-option" onclick="changeOrderStatus({{ order.id }}, 'HAND_DELIVERED')" style="padding: 0.5rem 1rem; cursor: pointer; font-size: 0.8rem; display: flex; align-items: center; gap: 0.5rem;"><i class="fa-solid fa-hand-holding-box" style="color: #8b5cf6;"></i> Hand Delivered</div>
                     <div class="status-option" onclick="changeOrderStatus({{ order.id }}, 'FULFILLED')" style="padding: 0.5rem 1rem; cursor: pointer; font-size: 0.8rem; display: flex; align-items: center; gap: 0.5rem;"><i class="fa-solid fa-circle-check" style="color: #22c55e;"></i> Delivered</div>
                     <div style="border-top: 1px solid #e2e8f0; margin: 0.25rem 0;"></div>
                     <div class="status-option" onclick="changeOrderStatus({{ order.id }}, 'CANCELED')" style="padding: 0.5rem 1rem; cursor: pointer; font-size: 0.8rem; display: flex; align-items: center; gap: 0.5rem;"><i class="fa-solid fa-ban" style="color: #94a3b8;"></i> Canceled</div>
                   </div>
                 </div>
               </td>
-              <td class="amount-cell">${{ order.total|floatformat:2 }}</td>
+              <td class="amount-cell">
+                <div>${{ order.total|floatformat:2 }}</div>
+                {% if order.discount_code or order.free_shipping_code %}
+                <div style="display: flex; flex-wrap: wrap; gap: 0.25rem; margin-top: 0.25rem;">
+                  {% if order.discount_code %}
+                  <span style="background: #dcfce7; color: #166534; padding: 0.125rem 0.375rem; border-radius: 4px; font-size: 0.6rem; font-weight: 600;">{{ order.discount_code }}</span>
+                  {% endif %}
+                  {% if order.free_shipping_code %}
+                  <span style="background: #dbeafe; color: #1e40af; padding: 0.125rem 0.375rem; border-radius: 4px; font-size: 0.6rem; font-weight: 600;"><i class="fa-solid fa-truck" style="font-size: 0.5rem;"></i> {{ order.free_shipping_code }}</span>
+                  {% endif %}
+                </div>
+                {% endif %}
+              </td>
               <td>
                 <div style="display: flex; align-items: center; gap: 0.5rem;">
                   <i class="fa-solid fa-chevron-right expand-icon" style="color: #94a3b8; font-size: 0.7rem; transition: transform 0.2s;"></i>
@@ -2130,7 +2154,11 @@
         html += `<div style="display: flex; justify-content: space-between; margin-bottom: 0.375rem;"><span style="color: #64748b;">Tax</span><span>$${parseFloat(order.tax || 0).toFixed(2)}</span></div>`;
         const shippingAmt = parseFloat(order.shipping || 0);
         if (shippingAmt === 0) {
-          html += `<div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;"><span style="color: #64748b;">Shipping</span><span style="color: #52796f; font-weight: 500;">FREE</span></div>`;
+          let shippingLabel = 'Shipping';
+          if (order.free_shipping_code) {
+            shippingLabel += ` <span style="background: #dbeafe; color: #1e40af; padding: 0.125rem 0.375rem; border-radius: 3px; font-size: 0.7rem; font-weight: 600;"><i class="fa-solid fa-truck" style="font-size: 0.55rem;"></i> ${order.free_shipping_code}</span>`;
+          }
+          html += `<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;"><span style="color: #64748b; display: flex; align-items: center; gap: 0.5rem;">${shippingLabel}</span><span style="color: #52796f; font-weight: 500;">FREE</span></div>`;
         } else {
           html += `<div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;"><span style="color: #64748b;">Shipping</span><span>$${shippingAmt.toFixed(2)}</span></div>`;
         }

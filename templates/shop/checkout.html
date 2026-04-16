@@ -297,6 +297,27 @@
                 <p class="text-sm font-medium">${{ item.variant.price }}</p>
               </div>
               {% endfor %}
+
+              {% for item in bundle_items %}
+              <div class="flex gap-4">
+                <div class="w-16 h-20 bg-white border border-neutral-200 flex-shrink-0 overflow-hidden">
+                  {% if item.image %}
+                  <img src="{{ item.image }}" alt="{{ item.bundle.name }}" class="w-full h-full object-cover" />
+                  {% elif default_product_image %}
+                  <img src="{{ default_product_image }}" alt="{{ item.bundle.name }}" class="w-full h-full object-cover" />
+                  {% endif %}
+                </div>
+                <div class="flex-grow">
+                  <p class="text-sm font-medium">{{ item.bundle.name }}</p>
+                  <p class="text-xs text-neutral-500">
+                    {% if item.size %}Size: {{ item.size }}{% endif %}
+                  </p>
+                  <p class="text-xs text-neutral-400">{{ item.component_names }}</p>
+                  <p class="text-xs text-neutral-500">Qty: {{ item.quantity }}</p>
+                </div>
+                <p class="text-sm font-medium">${{ item.bundle.price }}</p>
+              </div>
+              {% endfor %}
             </div>
 
             <!-- Promo Code -->

@@ -8,7 +8,6 @@
   <link rel="icon" type="image/svg+xml" href="{% static 'admin-favicon.svg' %}">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
   <style>
     {% include "admin/partials/sidebar_styles.html" %}
     :root { --sidebar-gradient-start: #667eea; --sidebar-gradient-end: #764ba2; --sidebar-shadow-color: rgba(102, 126, 234, 0.15); }
@@ -257,35 +256,7 @@
         padding: 1.5rem 0 3rem 0;
       }
     }
-    .warning-box {
-      padding: 1rem 1.5rem;
-      border-radius: 8px;
-      margin-bottom: 1rem;
-      font-weight: 500;
-      display: flex;
-      align-items: center;
-      gap: 0.75rem;
-    }
-    .warning-box.warning {
-      background: #fef5e7;
-      color: #975a16;
-      border-left: 4px solid #dd6b20;
-    }
-    .warning-box.danger {
-      background: #fff5f5;
-      color: #c53030;
-      border-left: 4px solid #e53e3e;
-    }
-    .warning-box.info {
-      background: #bee3f8;
-      color: #2c5282;
-      border-left: 4px solid #3182ce;
-    }
-    .warning-box.success {
-      background: #c6f6d5;
-      color: #22543d;
-      border-left: 4px solid #38a169;
-    }
+
     table {
       width: 100%;
       border-collapse: collapse;
@@ -376,14 +347,15 @@
       background: #a0aec0;
     }
 
-    .content-card {
-      background: white;
-      border: 1px solid #e2e8f0;
+    .two-column {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1.5rem;
+      margin-bottom: 1.5rem;
     }
 
-    .content-card h2,
-    .content-card h3 {
-      color: #0f172a;
+    .two-column .section {
+      margin-bottom: 0;
     }
 
     @media (max-width: 1024px) {
@@ -396,9 +368,31 @@
       .header h1 {
         font-size: 1.75rem;
       }
-      div[style*="grid-template-columns: 1fr 1fr"] {
-        grid-template-columns: 1fr !important;
+      .two-column {
+        grid-template-columns: 1fr;
       }
+    }
+
+    /* Collapsible logs section */
+    .logs-toggle {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      cursor: pointer;
+      user-select: none;
+    }
+    .logs-toggle i.fa-chevron-down {
+      transition: transform 0.3s;
+    }
+    .logs-toggle.collapsed i.fa-chevron-down {
+      transform: rotate(-90deg);
+    }
+    .logs-content {
+      overflow: hidden;
+      transition: max-height 0.3s ease-out;
+    }
+    .logs-content.collapsed {
+      max-height: 0 !important;
     }
   </style>
   {% include "admin/partials/dark_mode_apply.html" %}
@@ -415,35 +409,35 @@
   </div>
 
   <div class="main-content">
-    <!-- Floating Stats Cards -->
+    <!-- Top Stats Row (4 floating cards) -->
     <div class="stats-grid-top">
-      <div class="stat-card">
-        <div class="icon"><i class="fas fa-users"></i></div>
-        <h3>Total Users</h3>
-        <div class="number">{{ user_metrics.total }}</div>
-        <div class="subtext">{{ user_metrics.active }} active</div>
+      <div class="stat-card {% if security_score == security_total %}success{% elif security_score >= 3 %}warning{% else %}danger{% endif %}">
+        <div class="icon"><i class="fas fa-shield-alt"></i></div>
+        <h3>Security Score</h3>
+        <div class="number">{{ security_score }}/{{ security_total }}</div>
+        <div class="subtext">{% if security_score == security_total %}all checks passing{% elif security_score >= 3 %}needs attention{% else %}critical issues{% endif %}</div>
       </div>
-      <div class="stat-card success">
-        <div class="icon"><i class="fas fa-envelope"></i></div>
-        <h3>Subscribers</h3>
-        <div class="number">{{ email_metrics.total }}</div>
-        <div class="subtext">{{ email_metrics.confirmation_rate }}% confirmed</div>
+      <div class="stat-card {% if server_health is None %}{% elif server_health > 85 %}danger{% elif server_health > 70 %}warning{% else %}success{% endif %}">
+        <div class="icon"><i class="fas fa-heartbeat"></i></div>
+        <h3>Server Health</h3>
+        <div class="number">{% if server_health is not None %}{{ server_health }}%{% else %}N/A{% endif %}</div>
+        <div class="subtext">CPU + Memory avg</div>
       </div>
       <div class="stat-card">
         <div class="icon"><i class="fas fa-globe"></i></div>
-        <h3>Unique IPs (24h)</h3>
+        <h3>Visitors (24h)</h3>
         <div class="number">{{ unique_ips_24h }}</div>
-        <div class="subtext">visitors today</div>
+        <div class="subtext">unique IPs</div>
       </div>
-      <div class="stat-card {% if warnings|length > 0 %}warning{% else %}success{% endif %}">
-        <div class="icon"><i class="fas fa-{% if warnings|length > 0 %}exclamation-triangle{% else %}check-circle{% endif %}"></i></div>
-        <h3>Security Alerts</h3>
-        <div class="number">{{ warnings|length }}</div>
-        <div class="subtext">{% if warnings|length > 0 %}needs attention{% else %}all clear{% endif %}</div>
+      <div class="stat-card">
+        <div class="icon"><i class="fas fa-clock"></i></div>
+        <h3>Uptime</h3>
+        <div class="number">{{ system_info.uptime|default:"N/A" }}</div>
+        <div class="subtext">since last reboot</div>
       </div>
     </div>
 
-    <!-- Security Alerts -->
+    <!-- Section 1: Security Alerts (only show if warnings exist) -->
     {% if warnings %}
     <div class="section" style="border-left: 4px solid #f59e0b;">
       <h2><i class="fas fa-exclamation-triangle" style="color: #f59e0b;"></i> Security Alerts</h2>
@@ -458,335 +452,173 @@
     </div>
     {% endif %}
 
-    <!-- System Logs -->
-    <div class="section">
-      <h2><i class="fas fa-terminal"></i> System Logs & Activity</h2>
-      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1rem;">
-        <div>
-          <h3 style="color: #4a5568; font-size: 0.875rem; margin-bottom: 0.5rem; font-weight: 600;">Recent Logs</h3>
-          <div style="background: #1a202c; border-radius: 8px; padding: 0.875rem; font-family: 'Monaco', 'Courier New', monospace; font-size: 0.7rem; color: #48bb78; overflow-x: auto; max-height: 300px; overflow-y: auto; line-height: 1.4;">
-            {% if recent_logs %}
-              {% for log in recent_logs %}
-                <div style="margin-bottom: 0.125rem;">{{ log|escape }}</div>
-              {% endfor %}
-            {% else %}
-              <div style="color: #f6ad55; text-align: center; padding: 2rem;">No log files found in standard locations</div>
-              <div style="color: #718096; text-align: center; font-size: 0.65rem;">Checked: /var/log/django/, /var/log/gunicorn/, /var/log/nginx/, logs/, *.log</div>
-            {% endif %}
+    <!-- Section 2: Security Configuration (two-column) -->
+    <div class="two-column">
+      <!-- Django Settings -->
+      <div class="section">
+        <h2><i class="fab fa-python"></i> Django Settings</h2>
+        <div class="info-grid" style="grid-template-columns: 1fr;">
+          <div class="info-item">
+            <span class="info-label">Debug Mode</span>
+            <span class="info-value">
+              {% if django_settings.debug_mode %}
+                <span class="badge badge-danger">ON (Unsafe!)</span>
+              {% else %}
+                <span class="badge badge-success">OFF</span>
+              {% endif %}
+            </span>
+          </div>
+          <div class="info-item">
+            <span class="info-label">Secret Key</span>
+            <span class="info-value">
+              {% if django_settings.secret_key_set %}
+                <span class="badge badge-success">Configured</span>
+              {% else %}
+                <span class="badge badge-danger">Missing</span>
+              {% endif %}
+            </span>
+          </div>
+          <div class="info-item">
+            <span class="info-label">Allowed Hosts</span>
+            <span class="info-value">
+              {% if django_settings.allowed_hosts|length > 0 %}
+                <span class="badge badge-info">{{ django_settings.allowed_hosts|length }} host(s)</span>
+              {% else %}
+                <span class="badge badge-warning">None</span>
+              {% endif %}
+            </span>
           </div>
         </div>
-        <div>
-          <h3 style="color: #4a5568; font-size: 0.875rem; margin-bottom: 0.5rem; font-weight: 600;">Live Connections</h3>
-          <div style="background: #1a202c; border-radius: 8px; padding: 0.875rem; font-family: 'Monaco', 'Courier New', monospace; font-size: 0.7rem; color: #68d391; max-height: 300px; overflow-y: auto; line-height: 1.4;">
-            {% for conn in recent_connections|slice:":20" %}
-              <div style="margin-bottom: 0.25rem; {% if conn.status_code >= 400 %}color: #fc8181;{% elif conn.status_code >= 300 %}color: #f6ad55;{% endif %}">
-                <span style="color: #718096;">{{ conn.timestamp|date:"H:i:s" }}</span>
-                <span style="color: #68d391;">{{ conn.ip_address }}</span>
-                <span style="color: #667eea;">{{ conn.method }}</span>
-                <span style="color: #e2e8f0;">{{ conn.path|truncatechars:30 }}</span>
-                {% if conn.user %}
-                  <span style="color: #f6ad55;">[{{ conn.user.username }}]</span>
+      </div>
+
+      <!-- HTTPS / TLS -->
+      <div class="section">
+        <h2><i class="fas fa-lock"></i> HTTPS / TLS</h2>
+        <div class="info-grid" style="grid-template-columns: 1fr;">
+          <div class="info-item">
+            <span class="info-label">SSL Redirect</span>
+            <span class="info-value">
+              {% if https_status.ssl_redirect %}
+                <span class="badge badge-success">Enabled</span>
+              {% else %}
+                <span class="badge badge-danger">Disabled</span>
+              {% endif %}
+            </span>
+          </div>
+          <div class="info-item">
+            <span class="info-label">Secure Session Cookies</span>
+            <span class="info-value">
+              {% if https_status.session_cookie_secure %}
+                <span class="badge badge-success">Enabled</span>
+              {% else %}
+                <span class="badge badge-danger">Disabled</span>
+              {% endif %}
+            </span>
+          </div>
+          <div class="info-item">
+            <span class="info-label">Secure CSRF Cookies</span>
+            <span class="info-value">
+              {% if https_status.csrf_cookie_secure %}
+                <span class="badge badge-success">Enabled</span>
+              {% else %}
+                <span class="badge badge-danger">Disabled</span>
+              {% endif %}
+            </span>
+          </div>
+          <div class="info-item">
+            <span class="info-label">HSTS</span>
+            <span class="info-value">
+              {% if https_status.hsts_enabled %}
+                <span class="badge badge-success">{{ https_status.hsts_seconds }}s</span>
+              {% else %}
+                <span class="badge badge-danger">Disabled</span>
+              {% endif %}
+            </span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Section 3: System Health (two-column) -->
+    <div class="two-column">
+      <!-- Server Resources -->
+      <div class="section">
+        <h2><i class="fas fa-server"></i> Server Resources</h2>
+        <div class="stats-grid">
+          <div class="stat-card {% if machine_status.cpu_percent != 'N/A' and machine_status.cpu_percent > 80 %}danger{% elif machine_status.cpu_percent != 'N/A' and machine_status.cpu_percent > 60 %}warning{% endif %}">
+            <h3>CPU Usage</h3>
+            <div class="number">{{ machine_status.cpu_percent }}%</div>
+            <div class="subtext">{{ machine_status.cpu_count }} cores</div>
+          </div>
+          <div class="stat-card {% if machine_status.memory_percent != 'N/A' and machine_status.memory_percent > 85 %}danger{% elif machine_status.memory_percent != 'N/A' and machine_status.memory_percent > 70 %}warning{% endif %}">
+            <h3>Memory Usage</h3>
+            <div class="number">{{ machine_status.memory_percent }}%</div>
+            <div class="subtext">{{ machine_status.memory_used_gb }} / {{ machine_status.memory_total_gb }} GB</div>
+          </div>
+          <div class="stat-card {% if machine_status.disk_percent != 'N/A' and machine_status.disk_percent > 90 %}danger{% elif machine_status.disk_percent != 'N/A' and machine_status.disk_percent > 75 %}warning{% endif %}">
+            <h3>Disk Usage</h3>
+            <div class="number">{{ machine_status.disk_percent }}%</div>
+            <div class="subtext">{{ machine_status.disk_used_gb }} / {{ machine_status.disk_total_gb }} GB</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Services & Environment -->
+      <div class="section">
+        <h2><i class="fas fa-cogs"></i> Services & Environment</h2>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+          <!-- Services -->
+          <div>
+            <h4 style="color: #4a5568; font-size: 0.75rem; font-weight: 600; margin-bottom: 0.5rem; text-transform: uppercase; letter-spacing: 0.05em;">Services</h4>
+            {% for service in services_status %}
+            <div class="info-item" style="margin-bottom: 0.5rem;">
+              <span class="info-label">{{ service.name }}</span>
+              <span class="info-value">
+                {% if 'running' in service.status %}
+                  <span class="status-dot running"></span><span class="badge badge-success">{{ service.status }}</span>
+                {% elif 'not detected' in service.status %}
+                  <span class="status-dot unknown"></span><span class="badge badge-info">{{ service.status }}</span>
+                {% else %}
+                  <span class="status-dot stopped"></span><span class="badge badge-warning">{{ service.status }}</span>
                 {% endif %}
-              </div>
-            {% empty %}
-              <div style="color: #f6ad55; text-align: center; padding: 2rem;">No connection logs yet</div>
-              <div style="color: #718096; text-align: center; font-size: 0.65rem;">Add middleware to settings.py to enable tracking</div>
+              </span>
+            </div>
             {% endfor %}
           </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Security Alerts (Compact) -->
-    {% if warnings %}
-    <div class="content-card" style="border-radius: 16px; padding: 2rem; margin-bottom: 2rem; box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);">
-      <h3 style="color: #0f172a; font-size: 1.5rem; margin-bottom: 1rem; font-weight: 700;">Security Alerts</h3>
-      <div style="display: grid; gap: 0.5rem;">
-        {% for warning in warnings %}
-        <div style="padding: 0.5rem 1rem; border-radius: 6px; font-size: 0.875rem; {% if warning.level == 'danger' %}background: #fff5f5; color: #c53030; border-left: 3px solid #e53e3e;{% elif warning.level == 'warning' %}background: #fef5e7; color: #975a16; border-left: 3px solid #dd6b20;{% else %}background: #bee3f8; color: #2c5282; border-left: 3px solid #3182ce;{% endif %}">
-          {{ warning.message }}
-        </div>
-        {% endfor %}
-      </div>
-    </div>
-    {% endif %}
-
-    <!-- Two Column Layout for System Stats -->
-    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1rem;">
-      <!-- Left Column -->
-      <div>
-        <!-- Machine Status -->
-        <div class="section">
-          <h2><i class="fas fa-server"></i> Machine Status</h2>
-          <div class="stats-grid">
-            <div class="stat-card {% if machine_status.cpu_percent != 'N/A' and machine_status.cpu_percent > 80 %}danger{% elif machine_status.cpu_percent != 'N/A' and machine_status.cpu_percent > 60 %}warning{% endif %}">
-              <h3>CPU Usage</h3>
-              <div class="number">{{ machine_status.cpu_percent }}%</div>
-              <div class="subtext">{{ machine_status.cpu_count }} cores</div>
+          <!-- Environment -->
+          <div>
+            <h4 style="color: #4a5568; font-size: 0.75rem; font-weight: 600; margin-bottom: 0.5rem; text-transform: uppercase; letter-spacing: 0.05em;">Environment</h4>
+            <div class="info-item" style="margin-bottom: 0.5rem;">
+              <span class="info-label">Python</span>
+              <span class="info-value">{{ system_info.python_version }}</span>
             </div>
-            <div class="stat-card {% if machine_status.memory_percent != 'N/A' and machine_status.memory_percent > 85 %}danger{% elif machine_status.memory_percent != 'N/A' and machine_status.memory_percent > 70 %}warning{% endif %}">
-              <h3>Memory Usage</h3>
-              <div class="number">{{ machine_status.memory_percent }}%</div>
-              <div class="subtext">{{ machine_status.memory_used_gb }} / {{ machine_status.memory_total_gb }} GB</div>
+            <div class="info-item" style="margin-bottom: 0.5rem;">
+              <span class="info-label">Django</span>
+              <span class="info-value">{{ system_info.django_version }}</span>
             </div>
-            <div class="stat-card {% if machine_status.disk_percent != 'N/A' and machine_status.disk_percent > 90 %}danger{% elif machine_status.disk_percent != 'N/A' and machine_status.disk_percent > 75 %}warning{% endif %}">
-              <h3>Disk Usage</h3>
-              <div class="number">{{ machine_status.disk_percent }}%</div>
-              <div class="subtext">{{ machine_status.disk_used_gb }} / {{ machine_status.disk_total_gb }} GB</div>
-            </div>
-          </div>
-        </div>
-
-        <!-- Django Settings -->
-        <div class="section">
-          <h2><i class="fab fa-python"></i> Django Settings</h2>
-          <div class="info-grid" style="grid-template-columns: 1fr;">
-            <div class="info-item">
-              <span class="info-label">Debug Mode</span>
-              <span class="info-value">
-                {% if django_settings.debug_mode %}
-                  <span class="badge badge-danger">ON (Unsafe!)</span>
-                {% else %}
-                  <span class="badge badge-success">OFF</span>
-                {% endif %}
-              </span>
-            </div>
-            <div class="info-item">
-              <span class="info-label">Secret Key</span>
-              <span class="info-value">
-                {% if django_settings.secret_key_set %}
-                  <span class="badge badge-success">Configured</span>
-                {% else %}
-                  <span class="badge badge-danger">Missing</span>
-                {% endif %}
-              </span>
-            </div>
-            <div class="info-item">
-              <span class="info-label">Allowed Hosts</span>
-              <span class="info-value">
-                {% if django_settings.allowed_hosts|length > 0 %}
-                  <span class="badge badge-info">{{ django_settings.allowed_hosts|length }} host(s)</span>
-                {% else %}
-                  <span class="badge badge-warning">None</span>
-                {% endif %}
-              </span>
-            </div>
-          </div>
-        </div>
-
-        <!-- Database Information -->
-        <div class="section">
-          <h2><i class="fas fa-database"></i> Database</h2>
-          <div class="info-grid" style="grid-template-columns: 1fr;">
-            <div class="info-item">
-              <span class="info-label">Engine</span>
+            <div class="info-item" style="margin-bottom: 0.5rem;">
+              <span class="info-label">Database</span>
               <span class="info-value">{{ db_info.engine }}</span>
             </div>
             <div class="info-item">
-              <span class="info-label">Database Name</span>
-              <span class="info-value">{{ db_info.name }}</span>
-            </div>
-            <div class="info-item">
-              <span class="info-label">Host</span>
-              <span class="info-value">{{ db_info.host }}</span>
-            </div>
-            <div class="info-item">
-              <span class="info-label">Database Size</span>
+              <span class="info-label">DB Size</span>
               <span class="info-value">{{ db_info.size }}</span>
             </div>
           </div>
         </div>
       </div>
-
-      <!-- Right Column -->
-      <div>
-        <!-- HTTPS/TLS Security -->
-        <div class="section">
-          <h2><i class="fas fa-lock"></i> HTTPS / TLS Security</h2>
-          <div class="info-grid" style="grid-template-columns: 1fr;">
-            <div class="info-item">
-              <span class="info-label">SSL Redirect</span>
-              <span class="info-value">
-                {% if https_status.ssl_redirect %}
-                  <span class="badge badge-success">Enabled</span>
-                {% else %}
-                  <span class="badge badge-danger">Disabled</span>
-                {% endif %}
-              </span>
-            </div>
-            <div class="info-item">
-              <span class="info-label">Secure Session Cookies</span>
-              <span class="info-value">
-                {% if https_status.session_cookie_secure %}
-                  <span class="badge badge-success">Enabled</span>
-                {% else %}
-                  <span class="badge badge-danger">Disabled</span>
-                {% endif %}
-              </span>
-            </div>
-            <div class="info-item">
-              <span class="info-label">Secure CSRF Cookies</span>
-              <span class="info-value">
-                {% if https_status.csrf_cookie_secure %}
-                  <span class="badge badge-success">Enabled</span>
-                {% else %}
-                  <span class="badge badge-danger">Disabled</span>
-                {% endif %}
-              </span>
-            </div>
-            <div class="info-item">
-              <span class="info-label">HSTS</span>
-              <span class="info-value">
-                {% if https_status.hsts_enabled %}
-                  <span class="badge badge-success">{{ https_status.hsts_seconds }}s</span>
-                {% else %}
-                  <span class="badge badge-danger">Disabled</span>
-                {% endif %}
-              </span>
-            </div>
-          </div>
-        </div>
-
-        <!-- Services Status -->
-        <div class="section">
-          <h2><i class="fas fa-cogs"></i> Services</h2>
-          <table>
-            <thead>
-              <tr>
-                <th>Service</th>
-                <th>Status</th>
-              </tr>
-            </thead>
-            <tbody>
-              {% for service in services_status %}
-              <tr>
-                <td>{{ service.name }}</td>
-                <td>
-                  {% if 'running' in service.status %}
-                    <span class="status-dot running"></span><span class="badge badge-success">{{ service.status }}</span>
-                  {% elif 'not detected' in service.status %}
-                    <span class="status-dot unknown"></span><span class="badge badge-info">{{ service.status }}</span>
-                  {% else %}
-                    <span class="status-dot stopped"></span><span class="badge badge-warning">{{ service.status }}</span>
-                  {% endif %}
-                </td>
-              </tr>
-              {% endfor %}
-            </tbody>
-          </table>
-        </div>
-
-        <!-- System Information -->
-        <div class="section">
-          <h2><i class="fas fa-microchip"></i> System Info</h2>
-          <div class="info-grid" style="grid-template-columns: 1fr;">
-            <div class="info-item">
-              <span class="info-label">Python</span>
-              <span class="info-value">{{ system_info.python_version }}</span>
-            </div>
-            <div class="info-item">
-              <span class="info-label">Django</span>
-              <span class="info-value">{{ system_info.django_version }}</span>
-            </div>
-            <div class="info-item">
-              <span class="info-label">OS</span>
-              <span class="info-value">{{ system_info.platform_system }} {{ system_info.platform_release }}</span>
-            </div>
-            <div class="info-item">
-              <span class="info-label">Hostname</span>
-              <span class="info-value">{{ system_info.hostname }}</span>
-            </div>
-            <div class="info-item">
-              <span class="info-label">Local IP</span>
-              <span class="info-value">{{ system_info.local_ip }}</span>
-            </div>
-            <div class="info-item">
-              <span class="info-label">Uptime</span>
-              <span class="info-value">{{ system_info.uptime }}</span>
-            </div>
-            <div class="info-item">
-              <span class="info-label">Processes</span>
-              <span class="info-value">{{ system_info.process_count }}</span>
-            </div>
-          </div>
-        </div>
-      </div>
     </div>
 
-    <!-- Two Column Layout for Charts and Metrics -->
-    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1rem;">
-      <!-- Resource Usage Charts -->
-      <div class="section">
-        <h2><i class="fas fa-chart-pie"></i> Resource Usage</h2>
-        <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.75rem; margin-top: 0.75rem;">
-          <div>
-            <h3 style="color: #4a5568; font-size: 0.75rem; margin-bottom: 0.375rem; text-align: center; font-weight: 600;">CPU</h3>
-            <div style="position: relative; height: 120px;">
-              <canvas id="cpuChart"></canvas>
-            </div>
-          </div>
-          <div>
-            <h3 style="color: #4a5568; font-size: 0.75rem; margin-bottom: 0.375rem; text-align: center; font-weight: 600;">Memory</h3>
-            <div style="position: relative; height: 120px;">
-              <canvas id="memoryChart"></canvas>
-            </div>
-          </div>
-          <div>
-            <h3 style="color: #4a5568; font-size: 0.75rem; margin-bottom: 0.375rem; text-align: center; font-weight: 600;">Disk</h3>
-            <div style="position: relative; height: 120px;">
-              <canvas id="diskChart"></canvas>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- User & Subscription Metrics -->
-      <div class="section">
-        <h2><i class="fas fa-user-check"></i> User & Subscription Metrics</h2>
-        <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 0.625rem; margin-top: 0.75rem;">
-          <div class="stat-card" style="padding: 0.75rem;">
-            <h3 style="font-size: 0.7rem;">Total Users</h3>
-            <div class="number" style="font-size: 1.5rem;">{{ user_metrics.total }}</div>
-            <div class="subtext" style="font-size: 0.7rem;">{{ user_metrics.active }} active</div>
-          </div>
-          <div class="stat-card" style="padding: 0.75rem;">
-            <h3 style="font-size: 0.7rem;">New Users (24h)</h3>
-            <div class="number" style="font-size: 1.5rem;">{{ user_metrics.recent_24h }}</div>
-          </div>
-          <div class="stat-card" style="padding: 0.75rem;">
-            <h3 style="font-size: 0.7rem;">Staff Members</h3>
-            <div class="number" style="font-size: 1.5rem;">{{ user_metrics.staff }}</div>
-          </div>
-          <div class="stat-card success" style="padding: 0.75rem;">
-            <h3 style="font-size: 0.7rem;">Total Subscribers</h3>
-            <div class="number" style="font-size: 1.5rem;">{{ email_metrics.total }}</div>
-            <div class="subtext" style="font-size: 0.7rem;">{{ email_metrics.confirmed }} confirmed</div>
-          </div>
-          <div class="stat-card" style="padding: 0.75rem;">
-            <h3 style="font-size: 0.7rem;">New Subs (24h)</h3>
-            <div class="number" style="font-size: 1.5rem;">{{ email_metrics.recent_24h }}</div>
-          </div>
-          <div class="stat-card {% if email_metrics.confirmation_rate > 70 %}success{% elif email_metrics.confirmation_rate > 40 %}warning{% else %}danger{% endif %}" style="padding: 0.75rem;">
-            <h3 style="font-size: 0.7rem;">Confirmation Rate</h3>
-            <div class="number" style="font-size: 1.5rem;">{{ email_metrics.confirmation_rate }}%</div>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Connection Details Table -->
+    <!-- Section 4: Activity Monitoring -->
+    <!-- Connection Logs Table -->
     <div class="section">
       <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem; gap: 1rem;">
         <div style="flex: 1;">
-          <h2 style="margin-bottom: 0.375rem; border-bottom: none; padding-bottom: 0;"><i class="fas fa-network-wired"></i> Connection Details (Last 50)</h2>
+          <h2 style="margin-bottom: 0.375rem; border-bottom: none; padding-bottom: 0;"><i class="fas fa-network-wired"></i> Connection Logs (Last 50)</h2>
           <p style="color: #718096; font-size: 0.8rem; margin: 0; line-height: 1.4;">
             Tracks IP addresses, paths, methods, and response codes.
             <strong>Setup:</strong> Add 'shop.middleware.ConnectionLogMiddleware' to MIDDLEWARE
           </p>
-        </div>
-        <div class="stat-card" style="margin: 0; min-width: 140px; padding: 0.75rem;">
-          <h3 style="font-size: 0.7rem;">Unique IPs (24h)</h3>
-          <div class="number" style="font-size: 1.5rem;">{{ unique_ips_24h }}</div>
         </div>
       </div>
       <div style="overflow-x: auto;">
@@ -837,198 +669,31 @@
       </div>
     </div>
 
-    <!-- Security Recommendations -->
+    <!-- System Logs (collapsible, only show if logs available) -->
+    {% if recent_logs and recent_logs.0 != "No log files found in standard locations" %}
     <div class="section">
-      <h2><i class="fas fa-clipboard-check"></i> Security Best Practices</h2>
-      <div style="display: grid; gap: 1rem;">
-        <div class="info-item" style="flex-direction: column; align-items: flex-start; padding: 1rem;">
-          <div style="display: flex; justify-content: space-between; width: 100%; margin-bottom: 0.5rem;">
-            <span class="info-label">HTTPS Enforcement</span>
-            {% if https_status.ssl_redirect %}
-              <span class="badge badge-success">✓ Enabled</span>
-            {% else %}
-              <span class="badge badge-danger">✗ Not Enabled</span>
-            {% endif %}
-          </div>
-          <p style="color: #718096; font-size: 0.875rem; margin-top: 0.5rem;">
-            Ensures all HTTP requests are redirected to HTTPS. Critical for protecting user data in transit.
-          </p>
-        </div>
-
-        <div class="info-item" style="flex-direction: column; align-items: flex-start; padding: 1rem;">
-          <div style="display: flex; justify-content: space-between; width: 100%; margin-bottom: 0.5rem;">
-            <span class="info-label">HSTS (HTTP Strict Transport Security)</span>
-            {% if https_status.hsts_enabled %}
-              <span class="badge badge-success">✓ Enabled ({{ https_status.hsts_seconds }}s)</span>
-            {% else %}
-              <span class="badge badge-danger">✗ Not Enabled</span>
-            {% endif %}
-          </div>
-          <p style="color: #718096; font-size: 0.875rem; margin-top: 0.5rem;">
-            Forces browsers to only connect via HTTPS. Recommended value: 31536000 (1 year) for production.
-          </p>
-        </div>
-
-        <div class="info-item" style="flex-direction: column; align-items: flex-start; padding: 1rem;">
-          <div style="display: flex; justify-content: space-between; width: 100%; margin-bottom: 0.5rem;">
-            <span class="info-label">Secure Cookies</span>
-            {% if https_status.session_cookie_secure and https_status.csrf_cookie_secure %}
-              <span class="badge badge-success">✓ Both Enabled</span>
-            {% elif https_status.session_cookie_secure or https_status.csrf_cookie_secure %}
-              <span class="badge badge-warning">⚠ Partially Enabled</span>
-            {% else %}
-              <span class="badge badge-danger">✗ Not Enabled</span>
-            {% endif %}
-          </div>
-          <p style="color: #718096; font-size: 0.875rem; margin-top: 0.5rem;">
-            Prevents cookies from being sent over insecure HTTP connections. Essential for protecting session data.
-          </p>
-        </div>
-
-        <div class="info-item" style="flex-direction: column; align-items: flex-start; padding: 1rem;">
-          <div style="display: flex; justify-content: space-between; width: 100%; margin-bottom: 0.5rem;">
-            <span class="info-label">Debug Mode</span>
-            {% if not django_settings.debug_mode %}
-              <span class="badge badge-success">✓ Disabled</span>
-            {% else %}
-              <span class="badge badge-danger">✗ Enabled (UNSAFE!)</span>
-            {% endif %}
-          </div>
-          <p style="color: #718096; font-size: 0.875rem; margin-top: 0.5rem;">
-            Debug mode must be disabled in production to prevent exposing sensitive system information and code.
-          </p>
+      <div class="logs-toggle" onclick="toggleLogs()">
+        <h2 style="margin-bottom: 0; border-bottom: none; padding-bottom: 0;"><i class="fas fa-terminal"></i> System Logs</h2>
+        <i class="fas fa-chevron-down" style="color: #667eea; font-size: 1rem;"></i>
+      </div>
+      <div class="logs-content" id="logsContent" style="margin-top: 1rem;">
+        <div style="background: #1a202c; border-radius: 8px; padding: 1rem; font-family: 'Monaco', 'Courier New', monospace; font-size: 0.7rem; color: #48bb78; overflow-x: auto; max-height: 300px; overflow-y: auto; line-height: 1.4;">
+          {% for log in recent_logs %}
+            <div style="margin-bottom: 0.125rem;">{{ log|escape }}</div>
+          {% endfor %}
         </div>
       </div>
     </div>
+    {% endif %}
   </div>
 
   <script>
-    // CPU Usage Chart
-    const cpuValue = {{ machine_status.cpu_percent|default:"0" }};
-    const cpuCtx = document.getElementById('cpuChart');
-    new Chart(cpuCtx, {
-      type: 'doughnut',
-      data: {
-        labels: ['Used', 'Available'],
-        datasets: [{
-          data: [cpuValue, 100 - cpuValue],
-          backgroundColor: [
-            cpuValue > 80 ? '#fc8181' : cpuValue > 60 ? '#f6ad55' : '#667eea',
-            '#e2e8f0'
-          ],
-          borderWidth: 0
-        }]
-      },
-      options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        plugins: {
-          legend: { display: false },
-          tooltip: {
-            callbacks: {
-              label: function(context) {
-                return context.label + ': ' + context.parsed + '%';
-              }
-            }
-          }
-        },
-        cutout: '70%'
-      }
-    });
-
-    // Memory Usage Chart
-    const memValue = {{ machine_status.memory_percent|default:"0" }};
-    const memCtx = document.getElementById('memoryChart');
-    new Chart(memCtx, {
-      type: 'doughnut',
-      data: {
-        labels: ['Used', 'Available'],
-        datasets: [{
-          data: [memValue, 100 - memValue],
-          backgroundColor: [
-            memValue > 85 ? '#fc8181' : memValue > 70 ? '#f6ad55' : '#667eea',
-            '#e2e8f0'
-          ],
-          borderWidth: 0
-        }]
-      },
-      options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        plugins: {
-          legend: { display: false },
-          tooltip: {
-            callbacks: {
-              label: function(context) {
-                return context.label + ': ' + context.parsed + '%';
-              }
-            }
-          }
-        },
-        cutout: '70%'
-      }
-    });
-
-    // Disk Usage Chart
-    const diskValue = {{ machine_status.disk_percent|default:"0" }};
-    const diskCtx = document.getElementById('diskChart');
-    new Chart(diskCtx, {
-      type: 'doughnut',
-      data: {
-        labels: ['Used', 'Available'],
-        datasets: [{
-          data: [diskValue, 100 - diskValue],
-          backgroundColor: [
-            diskValue > 90 ? '#fc8181' : diskValue > 75 ? '#f6ad55' : '#667eea',
-            '#e2e8f0'
-          ],
-          borderWidth: 0
-        }]
-      },
-      options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        plugins: {
-          legend: { display: false },
-          tooltip: {
-            callbacks: {
-              label: function(context) {
-                return context.label + ': ' + context.parsed + '%';
-              }
-            }
-          }
-        },
-        cutout: '70%'
-      }
-    });
-
-    // Add center text to doughnut charts
-    const addCenterText = (chart, text) => {
-      const ctx = chart.ctx;
-      const centerX = (chart.chartArea.left + chart.chartArea.right) / 2;
-      const centerY = (chart.chartArea.top + chart.chartArea.bottom) / 2;
-
-      ctx.save();
-      ctx.font = 'bold 24px Inter';
-      ctx.fillStyle = '#1a202c';
-      ctx.textAlign = 'center';
-      ctx.textBaseline = 'middle';
-      ctx.fillText(text + '%', centerX, centerY);
-      ctx.restore();
-    };
-
-    Chart.register({
-      id: 'centerText',
-      afterDraw: (chart) => {
-        if (chart.canvas.id === 'cpuChart') {
-          addCenterText(chart, cpuValue);
-        } else if (chart.canvas.id === 'memoryChart') {
-          addCenterText(chart, memValue);
-        } else if (chart.canvas.id === 'diskChart') {
-          addCenterText(chart, diskValue);
-        }
-      }
-    });
+    function toggleLogs() {
+      const toggle = document.querySelector('.logs-toggle');
+      const content = document.getElementById('logsContent');
+      toggle.classList.toggle('collapsed');
+      content.classList.toggle('collapsed');
+    }
   </script>
 </body>
 </html>

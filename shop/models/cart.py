@@ -103,6 +103,7 @@ class OrderStatus(models.TextChoices):
     FAILED = "FAILED", "Failed"
     CANCELED = "CANCELED", "Canceled"
     SHIPPED = "SHIPPED", "Shipped"
+    HAND_DELIVERED = "HAND_DELIVERED", "Hand delivered"
     FULFILLED = "FULFILLED", "Fulfilled"
     RETURN_REQUESTED = "RETURN_REQUESTED", "Return requested"
     REFUNDED = "REFUNDED", "Refunded"
