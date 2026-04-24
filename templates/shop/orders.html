@@ -63,12 +63,12 @@
                     <p class="text-sm text-neutral-500 mt-0.5">{{ order.created_at|date:"F j, Y" }}</p>
                   </div>
                   <span class="text-xs tracking-wider uppercase px-2.5 py-1 flex-shrink-0
-                    {% if order.status == 'FULFILLED' or order.status == 'DELIVERED' %}bg-green-50 text-green-700
+                    {% if order.status == 'FULFILLED' or order.status == 'HAND_DELIVERED' %}bg-green-50 text-green-700
                     {% elif order.status == 'SHIPPED' %}bg-blue-50 text-blue-700
                     {% elif order.status == 'PAID' %}bg-yellow-50 text-yellow-700
                     {% elif order.status == 'REFUNDED' %}bg-neutral-100 text-neutral-600
                     {% else %}bg-neutral-100 text-black{% endif %}">
-                    {{ order.get_status_display }}
+                    {% if order.status == 'HAND_DELIVERED' %}Delivered{% else %}{{ order.get_status_display }}{% endif %}
                   </span>
                 </div>
 

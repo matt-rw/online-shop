@@ -1037,6 +1037,25 @@ def create_checkout_session(request):
         messages.error(request, "Your cart is empty.")
         return redirect("shop:cart")
 
+    # Validate required shipping address fields
+    required_shipping_fields = {
+        "shipping_name": "Full Name",
+        "shipping_line1": "Address Line 1",
+        "shipping_city": "City",
+        "shipping_region": "State/Region",
+        "shipping_postal": "Postal Code",
+        "shipping_country": "Country",
+    }
+    missing_fields = []
+    for field, label in required_shipping_fields.items():
+        value = request.POST.get(field, "").strip()
+        if not value:
+            missing_fields.append(label)
+
+    if missing_fields:
+        messages.error(request, f"Please fill in the required shipping address fields: {', '.join(missing_fields)}")
+        return redirect("shop:checkout")
+
     try:
         # Build line items for Stripe
         line_items = []
@@ -1118,6 +1137,11 @@ def create_checkout_session(request):
         customer_email = request.POST.get("email", "").strip()
         if not customer_email and request.user.is_authenticated:
             customer_email = request.user.email
+
+        # Validate email is provided
+        if not customer_email:
+            messages.error(request, "Please provide an email address.")
+            return redirect("shop:checkout")
 
         # Get shipping method details for the line item name
         shipping_rate_id = request.POST.get("shipping_rate_id", "standard")

@@ -196,6 +196,12 @@ def handle_checkout_session_completed(event):
             except Exception as e:
                 logger.warning(f"Failed to geocode address: {e}")
 
+        # Ensure we have a shipping address (should never happen with proper validation)
+        if not shipping_address:
+            logger.error(f"No shipping address for session {checkout_session_id} - metadata: {metadata}")
+            # Still create the order but log the error for investigation
+            # This shouldn't happen with proper frontend/backend validation
+
         # Create the order
         order = Order.objects.create(
             user=user,
