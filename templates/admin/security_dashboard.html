@@ -539,6 +539,90 @@
       </div>
     </div>
 
+    <!-- Section: Stripe Webhooks -->
+    <div class="section">
+      <h2><i class="fab fa-stripe" style="color: #635bff;"></i> Stripe Webhooks</h2>
+      <div style="display: grid; grid-template-columns: 1fr 2fr; gap: 2rem;">
+        <!-- Configuration Status -->
+        <div>
+          <h4 style="color: #4a5568; font-size: 0.75rem; font-weight: 600; margin-bottom: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em;">Configuration</h4>
+          <div class="info-item" style="margin-bottom: 0.75rem;">
+            <span class="info-label">Webhook Secret</span>
+            <span class="info-value">
+              {% if webhook_status.secret_configured %}
+                <span class="badge badge-success">Configured</span>
+              {% else %}
+                <span class="badge badge-danger">Not Set</span>
+              {% endif %}
+            </span>
+          </div>
+          <div class="info-item" style="margin-bottom: 0.75rem;">
+            <span class="info-label">Status</span>
+            <span class="info-value">
+              {% if webhook_status.health == 'healthy' %}
+                <span class="status-dot running"></span><span class="badge badge-success">Active</span>
+              {% elif webhook_status.health == 'stale' %}
+                <span class="status-dot stopped"></span><span class="badge badge-warning">Stale</span>
+              {% else %}
+                <span class="status-dot unknown"></span><span class="badge badge-info">No Data</span>
+              {% endif %}
+            </span>
+          </div>
+          <div style="margin-top: 1rem; padding: 0.75rem; background: #f7fafc; border-radius: 6px; font-size: 0.75rem; color: #4a5568;">
+            <strong>Events Listening:</strong><br>
+            <code style="font-size: 0.7rem;">checkout.session.completed</code><br>
+            <code style="font-size: 0.7rem;">payment_intent.succeeded</code><br>
+            <code style="font-size: 0.7rem;">payment_intent.payment_failed</code>
+          </div>
+        </div>
+
+        <!-- Recent Webhook Activity -->
+        <div>
+          <h4 style="color: #4a5568; font-size: 0.75rem; font-weight: 600; margin-bottom: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em;">Recent Webhook Orders</h4>
+          {% if webhook_status.recent_orders %}
+          <table style="margin-top: 0;">
+            <thead>
+              <tr>
+                <th>Order</th>
+                <th>Created</th>
+                <th>Status</th>
+                <th>Total</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for order in webhook_status.recent_orders %}
+              <tr>
+                <td style="font-family: monospace; font-size: 0.8rem;">
+                  <a href="/bp-manage/orders/{{ order.id }}/" style="color: #667eea; text-decoration: none;">{{ order.order_number }}</a>
+                </td>
+                <td style="white-space: nowrap; font-size: 0.8rem;">{{ order.created_at|date:"M d, H:i" }}</td>
+                <td>
+                  <span class="badge {% if order.status == 'PAID' %}badge-success{% elif order.status == 'SHIPPED' or order.status == 'FULFILLED' or order.status == 'HAND_DELIVERED' %}badge-info{% elif order.status == 'FAILED' %}badge-danger{% else %}badge-warning{% endif %}" style="font-size: 0.65rem;">
+                    {{ order.get_status_display }}
+                  </span>
+                </td>
+                <td style="font-weight: 600; font-size: 0.8rem;">${{ order.total }}</td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+          {% else %}
+          <div style="padding: 2rem; text-align: center; color: #a0aec0; background: #f7fafc; border-radius: 8px;">
+            <i class="fas fa-inbox" style="font-size: 1.5rem; margin-bottom: 0.5rem;"></i>
+            <p style="margin: 0; font-size: 0.875rem;">No webhook orders yet</p>
+            <p style="margin: 0.25rem 0 0; font-size: 0.75rem;">Orders will appear here once webhooks are working</p>
+          </div>
+          {% endif %}
+
+          {% if not webhook_status.secret_configured %}
+          <div style="margin-top: 1rem; padding: 0.75rem; background: #fef2f2; border-left: 3px solid #ef4444; border-radius: 4px; font-size: 0.8rem; color: #991b1b;">
+            <strong>Setup Required:</strong> Add <code>STRIPE_WEBHOOK_SECRET</code> to your environment variables. Get the signing secret from Stripe Dashboard → Developers → Webhooks → Your endpoint.
+          </div>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+
     <!-- Section 3: System Health (two-column) -->
     <div class="two-column">
       <!-- Server Resources -->

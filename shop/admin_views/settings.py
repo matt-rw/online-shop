@@ -17,6 +17,7 @@ import pytz
 
 from shop.models import (
     ConnectionLog,
+    Order,
     SiteSettings,
 )
 from shop.models.settings import QuickLink
@@ -255,6 +256,15 @@ def security_dashboard(request):
             }
         )
 
+    # Check Stripe webhook configuration
+    if not getattr(settings, "STRIPE_WEBHOOK_SECRET", None):
+        warnings.append(
+            {
+                "level": "warning",
+                "message": "STRIPE_WEBHOOK_SECRET not configured - order confirmation emails won't send automatically.",
+            }
+        )
+
     # Get process info (reuse process_count from above)
     try:
         boot_time = datetime.fromtimestamp(psutil.boot_time())
@@ -313,6 +323,33 @@ def security_dashboard(request):
     else:
         server_health = None
 
+    # Stripe Webhook Status
+    webhook_secret_configured = bool(getattr(settings, "STRIPE_WEBHOOK_SECRET", None))
+
+    # Get recent orders created via webhook (have stripe_checkout_id)
+    recent_webhook_orders = (
+        Order.objects.filter(stripe_checkout_id__isnull=False)
+        .exclude(stripe_checkout_id="")
+        .order_by("-created_at")[:5]
+    )
+
+    # Calculate webhook health
+    last_webhook_order = recent_webhook_orders.first() if recent_webhook_orders.exists() else None
+    if last_webhook_order:
+        time_since_last = now - last_webhook_order.created_at
+        hours_since_last = time_since_last.total_seconds() / 3600
+        # Consider healthy if webhook order in last 7 days
+        webhook_health = "healthy" if hours_since_last < 168 else "stale"
+    else:
+        webhook_health = "unknown"
+
+    webhook_status = {
+        "secret_configured": webhook_secret_configured,
+        "recent_orders": recent_webhook_orders,
+        "last_order": last_webhook_order,
+        "health": webhook_health,
+    }
+
     # Try to get request logs (if available)
     recent_logs = []
     try:
@@ -358,6 +395,7 @@ def security_dashboard(request):
         "security_score": security_score,
         "security_total": security_total,
         "server_health": server_health,
+        "webhook_status": webhook_status,
     }
 
     return render(request, "admin/security_dashboard.html", context)

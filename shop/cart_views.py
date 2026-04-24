@@ -1466,6 +1466,28 @@ def checkout_success_view(request):
 
                     logger.info(f"Order {order.id} created in success view (webhook fallback)")
 
+                    # Send order confirmation email to customer
+                    try:
+                        from shop.utils.email_helper import send_order_confirmation
+                        success, log = send_order_confirmation(order)
+                        if success:
+                            logger.info(f"Order confirmation email sent for {order.order_number}")
+                        else:
+                            logger.info(f"Order confirmation email not sent for {order.order_number}")
+                    except Exception as e:
+                        logger.error(f"Error sending order confirmation email: {e}")
+
+                    # Send order notification email to admin
+                    try:
+                        from shop.utils.email_helper import send_order_admin_notification
+                        success, log = send_order_admin_notification(order)
+                        if success:
+                            logger.info(f"Admin order notification sent for {order.order_number}")
+                        else:
+                            logger.info(f"Admin order notification not sent for {order.order_number}")
+                    except Exception as e:
+                        logger.error(f"Error sending admin order notification: {e}")
+
             except Cart.DoesNotExist:
                 pass
 
