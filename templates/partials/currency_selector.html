@@ -1,0 +1,126 @@
+{% if available_currencies|length > 1 %}
+<div id="currency-selector" class="relative" style="z-index: 100;">
+  <button id="currency-toggle" type="button"
+          class="flex items-center gap-1 px-2 py-1 text-xs tracking-wider uppercase hover:opacity-70 transition-opacity"
+          aria-label="Select currency">
+    <span id="current-currency-code">{{ current_currency.code }}</span>
+    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+    </svg>
+  </button>
+
+  <div id="currency-menu" class="hidden absolute right-0 top-full mt-1 bg-black border border-white/10 min-w-[120px]" style="z-index: 9999;">
+    {% for currency in available_currencies %}
+    <button type="button"
+            class="currency-option w-full text-left px-4 py-2 text-sm text-white hover:bg-white/10 transition-colors {% if currency.code == current_currency.code %}bg-white/5{% endif %}"
+            data-code="{{ currency.code }}">
+      <span class="font-medium">{{ currency.code }}</span>
+      <span class="text-white/50 ml-1">({{ currency.symbol }})</span>
+    </button>
+    {% endfor %}
+  </div>
+</div>
+
+<script>
+(function() {
+  const currencyToggle = document.getElementById('currency-toggle');
+  const currencyMenu = document.getElementById('currency-menu');
+  const currencySelector = document.getElementById('currency-selector');
+
+  if (!currencyToggle || !currencyMenu || !currencySelector) return;
+
+  let currencyTimeout;
+
+  // Helper to get CSRF cookie
+  function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+      const cookies = document.cookie.split(';');
+      for (let i = 0; i < cookies.length; i++) {
+        const cookie = cookies[i].trim();
+        if (cookie.substring(0, name.length + 1) === (name + '=')) {
+          cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+          break;
+        }
+      }
+    }
+    return cookieValue;
+  }
+
+  // Open on hover
+  currencySelector.addEventListener('mouseenter', function() {
+    clearTimeout(currencyTimeout);
+    currencyMenu.classList.remove('hidden');
+  });
+
+  currencyMenu.addEventListener('mouseenter', function() {
+    clearTimeout(currencyTimeout);
+  });
+
+  // Close on mouse leave with delay
+  currencySelector.addEventListener('mouseleave', function() {
+    currencyTimeout = setTimeout(function() {
+      currencyMenu.classList.add('hidden');
+    }, 150);
+  });
+
+  currencyMenu.addEventListener('mouseleave', function() {
+    currencyTimeout = setTimeout(function() {
+      currencyMenu.classList.add('hidden');
+    }, 150);
+  });
+
+  // Also toggle on click for mobile/accessibility
+  currencyToggle.addEventListener('click', function(e) {
+    e.preventDefault();
+    e.stopPropagation();
+    currencyMenu.classList.toggle('hidden');
+  });
+
+  // Handle currency option clicks via event delegation
+  currencyMenu.addEventListener('click', function(e) {
+    const btn = e.target.closest('.currency-option');
+    if (!btn) return;
+
+    e.preventDefault();
+    e.stopPropagation();
+
+    const code = btn.dataset.code;
+    if (!code) return;
+
+    // Visual feedback
+    btn.style.opacity = '0.5';
+
+    // Set currency via API
+    fetch('{% url "shop:set_currency" %}', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-CSRFToken': getCookie('csrftoken'),
+      },
+      body: JSON.stringify({ currency_code: code }),
+    })
+    .then(response => response.json())
+    .then(data => {
+      if (data.success) {
+        window.location.reload();
+      } else {
+        console.error('Failed to set currency:', data.error);
+        btn.style.opacity = '1';
+      }
+    })
+    .catch(error => {
+      console.error('Error setting currency:', error);
+      btn.style.opacity = '1';
+    });
+  });
+
+  // Close menu when clicking outside
+  document.addEventListener('click', function(e) {
+    if (!currencySelector.contains(e.target)) {
+      currencyMenu.classList.add('hidden');
+    }
+  });
+})();
+</script>
+{% endif %}

@@ -1,5 +1,6 @@
 {% extends 'base.html' %}
 {% load static %}
+{% load currency_tags %}
 
 {% block title %}Checkout - Blueprint Apparel{% endblock %}
 
@@ -156,8 +157,71 @@
                     <option value="CA">Canada</option>
                     <option value="GB">United Kingdom</option>
                     <option value="AU">Australia</option>
-                    <option value="DE">Germany</option>
-                    <option value="FR">France</option>
+                    <optgroup label="Europe">
+                      <option value="AT">Austria</option>
+                      <option value="BE">Belgium</option>
+                      <option value="BG">Bulgaria</option>
+                      <option value="HR">Croatia</option>
+                      <option value="CY">Cyprus</option>
+                      <option value="CZ">Czech Republic</option>
+                      <option value="DK">Denmark</option>
+                      <option value="EE">Estonia</option>
+                      <option value="FI">Finland</option>
+                      <option value="FR">France</option>
+                      <option value="DE">Germany</option>
+                      <option value="GR">Greece</option>
+                      <option value="HU">Hungary</option>
+                      <option value="IE">Ireland</option>
+                      <option value="IT">Italy</option>
+                      <option value="LV">Latvia</option>
+                      <option value="LT">Lithuania</option>
+                      <option value="LU">Luxembourg</option>
+                      <option value="MT">Malta</option>
+                      <option value="NL">Netherlands</option>
+                      <option value="NO">Norway</option>
+                      <option value="PL">Poland</option>
+                      <option value="PT">Portugal</option>
+                      <option value="RO">Romania</option>
+                      <option value="SK">Slovakia</option>
+                      <option value="SI">Slovenia</option>
+                      <option value="ES">Spain</option>
+                      <option value="SE">Sweden</option>
+                      <option value="CH">Switzerland</option>
+                    </optgroup>
+                    <optgroup label="Asia & Pacific">
+                      <option value="CN">China</option>
+                      <option value="HK">Hong Kong</option>
+                      <option value="IN">India</option>
+                      <option value="ID">Indonesia</option>
+                      <option value="JP">Japan</option>
+                      <option value="MY">Malaysia</option>
+                      <option value="NZ">New Zealand</option>
+                      <option value="PH">Philippines</option>
+                      <option value="SG">Singapore</option>
+                      <option value="KR">South Korea</option>
+                      <option value="TW">Taiwan</option>
+                      <option value="TH">Thailand</option>
+                      <option value="VN">Vietnam</option>
+                    </optgroup>
+                    <optgroup label="Americas">
+                      <option value="AR">Argentina</option>
+                      <option value="BR">Brazil</option>
+                      <option value="CL">Chile</option>
+                      <option value="CO">Colombia</option>
+                      <option value="MX">Mexico</option>
+                      <option value="PE">Peru</option>
+                    </optgroup>
+                    <optgroup label="Middle East & Africa">
+                      <option value="IL">Israel</option>
+                      <option value="SA">Saudi Arabia</option>
+                      <option value="ZA">South Africa</option>
+                      <option value="AE">United Arab Emirates</option>
+                    </optgroup>
+                    <optgroup label="Other">
+                      <option value="RU">Russia</option>
+                      <option value="TR">Turkey</option>
+                      <option value="UA">Ukraine</option>
+                    </optgroup>
                   </select>
                 </div>
               </div>
@@ -188,7 +252,7 @@
               </div>
 
               <div id="shipping-error" class="hidden text-sm text-red-600 py-4">
-                Unable to calculate shipping. Please check your address.
+                <span id="shipping-error-message">Unable to calculate shipping. Please check your address.</span>
               </div>
             </div>
           </div>
@@ -259,8 +323,71 @@
                     <option value="CA">Canada</option>
                     <option value="GB">United Kingdom</option>
                     <option value="AU">Australia</option>
-                    <option value="DE">Germany</option>
-                    <option value="FR">France</option>
+                    <optgroup label="Europe">
+                      <option value="AT">Austria</option>
+                      <option value="BE">Belgium</option>
+                      <option value="BG">Bulgaria</option>
+                      <option value="HR">Croatia</option>
+                      <option value="CY">Cyprus</option>
+                      <option value="CZ">Czech Republic</option>
+                      <option value="DK">Denmark</option>
+                      <option value="EE">Estonia</option>
+                      <option value="FI">Finland</option>
+                      <option value="FR">France</option>
+                      <option value="DE">Germany</option>
+                      <option value="GR">Greece</option>
+                      <option value="HU">Hungary</option>
+                      <option value="IE">Ireland</option>
+                      <option value="IT">Italy</option>
+                      <option value="LV">Latvia</option>
+                      <option value="LT">Lithuania</option>
+                      <option value="LU">Luxembourg</option>
+                      <option value="MT">Malta</option>
+                      <option value="NL">Netherlands</option>
+                      <option value="NO">Norway</option>
+                      <option value="PL">Poland</option>
+                      <option value="PT">Portugal</option>
+                      <option value="RO">Romania</option>
+                      <option value="SK">Slovakia</option>
+                      <option value="SI">Slovenia</option>
+                      <option value="ES">Spain</option>
+                      <option value="SE">Sweden</option>
+                      <option value="CH">Switzerland</option>
+                    </optgroup>
+                    <optgroup label="Asia & Pacific">
+                      <option value="CN">China</option>
+                      <option value="HK">Hong Kong</option>
+                      <option value="IN">India</option>
+                      <option value="ID">Indonesia</option>
+                      <option value="JP">Japan</option>
+                      <option value="MY">Malaysia</option>
+                      <option value="NZ">New Zealand</option>
+                      <option value="PH">Philippines</option>
+                      <option value="SG">Singapore</option>
+                      <option value="KR">South Korea</option>
+                      <option value="TW">Taiwan</option>
+                      <option value="TH">Thailand</option>
+                      <option value="VN">Vietnam</option>
+                    </optgroup>
+                    <optgroup label="Americas">
+                      <option value="AR">Argentina</option>
+                      <option value="BR">Brazil</option>
+                      <option value="CL">Chile</option>
+                      <option value="CO">Colombia</option>
+                      <option value="MX">Mexico</option>
+                      <option value="PE">Peru</option>
+                    </optgroup>
+                    <optgroup label="Middle East & Africa">
+                      <option value="IL">Israel</option>
+                      <option value="SA">Saudi Arabia</option>
+                      <option value="ZA">South Africa</option>
+                      <option value="AE">United Arab Emirates</option>
+                    </optgroup>
+                    <optgroup label="Other">
+                      <option value="RU">Russia</option>
+                      <option value="TR">Turkey</option>
+                      <option value="UA">Ukraine</option>
+                    </optgroup>
                   </select>
                 </div>
               </div>
@@ -294,7 +421,7 @@
                   </p>
                   <p class="text-xs text-neutral-500">Qty: {{ item.quantity }}</p>
                 </div>
-                <p class="text-sm font-medium">${{ item.variant.price }}</p>
+                <p class="text-sm font-medium">{% price item.variant.price %}</p>
               </div>
               {% endfor %}
 
@@ -315,7 +442,7 @@
                   <p class="text-xs text-neutral-400">{{ item.component_names }}</p>
                   <p class="text-xs text-neutral-500">Qty: {{ item.quantity }}</p>
                 </div>
-                <p class="text-sm font-medium">${{ item.bundle.price }}</p>
+                <p class="text-sm font-medium">{% price item.bundle.price %}</p>
               </div>
               {% endfor %}
             </div>
@@ -379,7 +506,7 @@
             <div class="border-t border-neutral-200 pt-4 space-y-3">
               <div class="flex justify-between text-sm">
                 <span class="text-neutral-600">Subtotal</span>
-                <span id="checkout-subtotal" class="font-medium">${{ subtotal }}</span>
+                <span id="checkout-subtotal" class="font-medium">{% price subtotal %}</span>
               </div>
               <div id="discount-row" class="flex justify-between text-sm hidden">
                 <span class="text-neutral-600">Discount</span>
@@ -395,11 +522,13 @@
               </div>
               <div class="border-t border-black pt-4 flex justify-between">
                 <span class="text-xs tracking-widest uppercase font-medium">Total</span>
-                <span id="checkout-total" class="text-xl font-bold">${{ subtotal }}</span>
+                <span id="checkout-total" class="text-xl font-bold">{% price subtotal %}</span>
               </div>
             </div>
             <input type="hidden" id="selected-shipping-rate" name="shipping_rate_id" value="">
             <input type="hidden" id="selected-shipping-cost" name="shipping_cost" value="0">
+            <input type="hidden" id="selected-shipping-carrier" name="shipping_carrier" value="">
+            <input type="hidden" id="selected-shipping-service" name="shipping_service" value="">
 
             <!-- Checkout Button -->
             <button type="submit"
@@ -474,6 +603,8 @@ const checkoutShipping = document.getElementById('checkout-shipping');
 const checkoutTotal = document.getElementById('checkout-total');
 const selectedShippingRate = document.getElementById('selected-shipping-rate');
 const selectedShippingCost = document.getElementById('selected-shipping-cost');
+const selectedShippingCarrier = document.getElementById('selected-shipping-carrier');
+const selectedShippingService = document.getElementById('selected-shipping-service');
 const checkoutForm = document.getElementById('checkout-form');
 
 // Toggle billing address fields
@@ -569,10 +700,17 @@ async function fetchShippingRates() {
     const data = await response.json();
     shippingLoading.classList.add('hidden');
 
-    if (data.success && data.rates.length > 0) {
+    if (data.success && data.rates && data.rates.length > 0) {
       renderShippingOptions(data.rates, data.free_shipping);
       shippingOptions.classList.remove('hidden');
     } else {
+      // Show specific error message if provided
+      const errorMsg = document.getElementById('shipping-error-message');
+      if (data.error) {
+        errorMsg.textContent = data.error;
+      } else {
+        errorMsg.textContent = 'Unable to calculate shipping. Please check your address.';
+      }
       shippingError.classList.remove('hidden');
     }
   } catch (error) {
@@ -607,6 +745,8 @@ function renderShippingOptions(rates, freeShipping) {
     const firstRate = rates[0];
     selectedShippingRate.value = firstRate.id;
     selectedShippingCost.value = firstRate.rate;
+    selectedShippingCarrier.value = firstRate.carrier;
+    selectedShippingService.value = firstRate.service;
     updateTotals(firstRate.rate);
   }
 }
@@ -621,6 +761,8 @@ function selectShippingRate(radio) {
   // Update hidden fields
   selectedShippingRate.value = radio.value;
   selectedShippingCost.value = radio.dataset.rate;
+  selectedShippingCarrier.value = radio.dataset.carrier;
+  selectedShippingService.value = radio.dataset.service;
 
   // Update totals
   updateTotals(parseFloat(radio.dataset.rate));

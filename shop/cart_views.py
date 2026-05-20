@@ -120,7 +120,7 @@ def create_express_checkout_intent(request):
             shipping = Decimal("7.99")  # Default shipping for express checkout
         total = subtotal + shipping
 
-        # Create PaymentIntent
+        # Create PaymentIntent in USD - Stripe handles currency conversion
         intent = stripe.PaymentIntent.create(
             amount=int(total * 100),  # Convert to cents
             currency="usd",
@@ -879,13 +879,27 @@ def get_shipping_rates_view(request):
 
             if rates:
                 return JsonResponse({"success": True, "rates": rates, "free_shipping": False})
+            else:
+                # EasyPost returned no rates for this destination
+                if country != "US":
+                    logger.warning(f"No EasyPost rates available for international destination: {country}")
+                    return JsonResponse({
+                        "success": False,
+                        "error": f"We're unable to ship to this location at this time. Please contact us for international shipping options."
+                    })
 
     except ImportError:
         logger.warning("EasyPost not installed")
     except Exception as e:
-        logger.error(f"EasyPost error: {e}")
+        logger.error(f"EasyPost error for {country}: {e}")
+        # For international addresses, don't fall back to domestic rates
+        if country != "US":
+            return JsonResponse({
+                "success": False,
+                "error": "Unable to calculate international shipping rates. Please contact us for assistance."
+            })
 
-    # Fallback: flat rate options
+    # Fallback: flat rate options (US domestic only)
     return JsonResponse({
         "success": True,
         "rates": [
@@ -1057,7 +1071,8 @@ def create_checkout_session(request):
         return redirect("shop:checkout")
 
     try:
-        # Build line items for Stripe
+        # Build line items for Stripe in USD
+        # Stripe Adaptive Pricing will handle currency conversion automatically
         line_items = []
         for item in cart_items:
             line_items.append(
@@ -1256,11 +1271,13 @@ def create_checkout_session(request):
                 "cart_id": str(cart.id),
                 "user_id": str(request.user.id) if request.user.is_authenticated else "",
                 "customer_email": customer_email or "",
-                "subtotal": str(subtotal),
-                "shipping_cost": str(shipping_cost),
+                "subtotal": str(subtotal),  # USD amount
+                "shipping_cost": str(shipping_cost),  # USD amount
+                "shipping_carrier": request.POST.get("shipping_carrier", ""),
+                "shipping_service": request.POST.get("shipping_service", ""),
                 "is_test_order": "true" if is_test_order else "false",
                 "discount_code": discount_code,
-                "discount_amount": str(discount_amount),
+                "discount_amount": str(discount_amount),  # USD amount
                 "free_shipping_code": free_shipping_code,
                 # Shipping address
                 "shipping_name": request.POST.get("shipping_name", ""),
@@ -1410,6 +1427,10 @@ def checkout_success_view(request):
                     discount_amount = Decimal(metadata.get("discount_amount", "0"))
                     free_shipping_code = metadata.get("free_shipping_code", "")
 
+                    # Get shipping selection from metadata
+                    shipping_carrier = metadata.get("shipping_carrier", "")
+                    shipping_service = metadata.get("shipping_service", "")
+
                     # Create order
                     order = Order.objects.create(
                         user=user,
@@ -1420,6 +1441,8 @@ def checkout_success_view(request):
                         discount_code=discount_code,
                         free_shipping_code=free_shipping_code,
                         shipping=shipping_cost,
+                        shipping_carrier=shipping_carrier,
+                        shipping_service=shipping_service,
                         tax=tax_amount,
                         total=total,
                         stripe_checkout_id=session_id,

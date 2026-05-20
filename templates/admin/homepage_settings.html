@@ -1032,6 +1032,48 @@
         </button>
       </div>
     </div>
+
+    <!-- Social Links -->
+    <div class="section-card">
+      <h2 class="section-title"><i class="fab fa-instagram"></i> Social Links</h2>
+      <p style="color: #64748b; font-size: 0.875rem; margin-bottom: 1.5rem;">
+        Update your social media links displayed in the footer and throughout the site.
+      </p>
+
+      <div class="form-group">
+        <label for="social-instagram">Instagram URL</label>
+        <input type="url" id="social-instagram" placeholder="https://www.instagram.com/yourusername"
+               style="width: 100%; max-width: 500px; padding: 0.75rem 1rem; border: 2px solid #e2e8f0; border-radius: 8px; font-size: 1rem;"
+               onchange="markUnsaved()">
+      </div>
+
+      <div class="form-group">
+        <label for="social-discord">Discord URL</label>
+        <input type="url" id="social-discord" placeholder="https://discord.gg/yourserver"
+               style="width: 100%; max-width: 500px; padding: 0.75rem 1rem; border: 2px solid #e2e8f0; border-radius: 8px; font-size: 1rem;"
+               onchange="markUnsaved()">
+      </div>
+
+      <div class="form-group">
+        <label for="social-facebook">Facebook URL</label>
+        <input type="url" id="social-facebook" placeholder="https://www.facebook.com/yourpage"
+               style="width: 100%; max-width: 500px; padding: 0.75rem 1rem; border: 2px solid #e2e8f0; border-radius: 8px; font-size: 1rem;"
+               onchange="markUnsaved()">
+      </div>
+
+      <div class="form-group">
+        <label for="social-twitter">Twitter/X URL</label>
+        <input type="url" id="social-twitter" placeholder="https://twitter.com/yourusername"
+               style="width: 100%; max-width: 500px; padding: 0.75rem 1rem; border: 2px solid #e2e8f0; border-radius: 8px; font-size: 1rem;"
+               onchange="markUnsaved()">
+      </div>
+
+      <div class="button-group">
+        <button type="button" class="btn btn-primary" onclick="saveSocialLinks()" id="save-social-btn">
+          <i class="fas fa-save"></i> Save Social Links
+        </button>
+      </div>
+    </div>
   </div>
 
   <!-- Position Modal -->
@@ -2251,6 +2293,63 @@
         btn.innerHTML = '<i class="fas fa-save"></i> Save Site Lock';
       }
     }
+
+    // Social Links
+    let socialLinks = {{ social_links|safe }};
+
+    function loadSocialLinks() {
+      document.getElementById('social-instagram').value = socialLinks.instagram_url || '';
+      document.getElementById('social-discord').value = socialLinks.discord_url || '';
+      document.getElementById('social-facebook').value = socialLinks.facebook_url || '';
+      document.getElementById('social-twitter').value = socialLinks.twitter_url || '';
+    }
+
+    async function saveSocialLinks() {
+      const btn = document.getElementById('save-social-btn');
+      btn.disabled = true;
+      btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
+
+      const socialData = {
+        instagram_url: document.getElementById('social-instagram').value.trim(),
+        discord_url: document.getElementById('social-discord').value.trim(),
+        facebook_url: document.getElementById('social-facebook').value.trim(),
+        twitter_url: document.getElementById('social-twitter').value.trim()
+      };
+
+      try {
+        const response = await fetch('{% url "admin_homepage" %}', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-Requested-With': 'XMLHttpRequest',
+            'X-CSRFToken': csrfToken
+          },
+          body: JSON.stringify({
+            action: 'save_social_links',
+            social_links: socialData
+          })
+        });
+
+        const data = await response.json();
+        if (data.success) {
+          socialLinks = socialData;
+          markSaved();
+          showToast('Social links saved!', 'success');
+        } else {
+          showToast('Error: ' + data.error, 'error');
+        }
+      } catch (error) {
+        showToast('Error: ' + error.message, 'error');
+      } finally {
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fas fa-save"></i> Save Social Links';
+      }
+    }
+
+    // Initialize social links on page load
+    document.addEventListener('DOMContentLoaded', function() {
+      loadSocialLinks();
+    });
   </script>
 </body>
 </html>

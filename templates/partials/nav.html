@@ -1,4 +1,5 @@
 {% load static %}
+{% load currency_tags %}
 
 <nav class="bg-black border-b border-white/10">
   <div class="max-w-7xl mx-auto px-6">
@@ -22,8 +23,12 @@
         </a>
       </div>
 
-      <!-- Right - Account & Cart Icons -->
+      <!-- Right - Currency, Account & Cart Icons -->
       <div class="flex items-center gap-2">
+        <!-- Currency Selector -->
+        <div class="text-white">
+          {% currency_selector %}
+        </div>
         <div id="account-trigger" class="relative">
           <button id="account-toggle" type="button" class="p-2 hover:opacity-70 transition-opacity" aria-label="Account">
             <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">

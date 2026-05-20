@@ -113,3 +113,68 @@ def invalidate_cart_cache(request):
     cart_session_key = request.session.session_key
     if cart_session_key:
         cache.delete(f"cart_count_{cart_session_key}")
+
+
+# Cache timeout for currency data (5 minutes)
+CURRENCY_CACHE_TIMEOUT = 300
+
+
+def currency_context(request):
+    """
+    Add currency information to all template contexts.
+    Gets the user's preferred currency from session or cookie.
+    Auto-refreshes exchange rates if stale (older than 1 hour).
+    """
+    from .models import Currency
+
+    # Auto-refresh stale exchange rates (runs in background, cached)
+    try:
+        Currency.refresh_rates_if_stale(max_age_hours=1)
+    except Exception:
+        pass  # Don't break page load if refresh fails
+
+    cache_key = "available_currencies"
+
+    # Try to get cached available currencies
+    available_currencies = cache.get(cache_key)
+    if available_currencies is None:
+        available_currencies = list(
+            Currency.objects.filter(is_active=True).order_by('display_order', 'code')
+        )
+        cache.set(cache_key, available_currencies, CURRENCY_CACHE_TIMEOUT)
+
+    # Get user's preferred currency from session or cookie
+    currency_code = request.session.get('currency_code')
+    if not currency_code:
+        currency_code = request.COOKIES.get('currency_code', 'USD')
+
+    # Find the selected currency
+    current_currency = None
+    for currency in available_currencies:
+        if currency.code == currency_code:
+            current_currency = currency
+            break
+
+    # Fallback to USD if selected currency not found or not active
+    if not current_currency:
+        for currency in available_currencies:
+            if currency.code == 'USD':
+                current_currency = currency
+                break
+
+    # If still no currency found (no currencies in DB), create a minimal USD object
+    if not current_currency:
+        from .models import Currency
+        current_currency = Currency(
+            code='USD',
+            name='US Dollar',
+            symbol='$',
+            symbol_position='before',
+            exchange_rate=1,
+            decimal_places=2,
+        )
+
+    return {
+        'current_currency': current_currency,
+        'available_currencies': available_currencies,
+    }

@@ -21,6 +21,68 @@ stripe.api_key = settings.STRIPE_SECRET_KEY
 User = get_user_model()
 
 
+def auto_purchase_shipping_label(order):
+    """
+    Automatically purchase a shipping label for an order using the
+    carrier/service selected at checkout.
+
+    This ensures the rate the customer paid matches the label purchased.
+    Errors are logged but don't fail the order.
+    """
+    from django.utils import timezone
+
+    # Check if we have the required shipping info
+    if not order.shipping_carrier or not order.shipping_service:
+        logger.info(f"Order {order.order_number}: No shipping carrier/service selected, skipping auto-label")
+        return
+
+    if not order.shipping_address:
+        logger.warning(f"Order {order.order_number}: No shipping address, cannot purchase label")
+        order.label_error = "Missing shipping address"
+        order.save(update_fields=["label_error"])
+        return
+
+    # Skip if label already purchased
+    if order.tracking_number:
+        logger.info(f"Order {order.order_number}: Label already purchased")
+        return
+
+    try:
+        from shop.utils.shipping_helper import create_shipping_label
+
+        logger.info(
+            f"Order {order.order_number}: Auto-purchasing label for "
+            f"{order.shipping_carrier} {order.shipping_service}"
+        )
+
+        # Purchase the label - use carrier/service for matching since rate_id
+        # changes between shipment creation calls
+        result = create_shipping_label(
+            order=order,
+            rate_id="",  # Will match by carrier/service instead
+            provider="easypost",
+            carrier=order.shipping_carrier,
+            service=order.shipping_service,
+        )
+
+        # Update timestamp
+        order.label_purchased_at = timezone.now()
+        order.label_error = ""  # Clear any previous error
+        order.save(update_fields=["label_purchased_at", "label_error"])
+
+        logger.info(
+            f"Order {order.order_number}: Label purchased successfully - "
+            f"Tracking: {result['tracking_number']}, Cost: ${result['cost']}"
+        )
+
+    except Exception as e:
+        # Log error but don't fail the order - admin can manually purchase later
+        error_msg = str(e)
+        logger.error(f"Order {order.order_number}: Failed to auto-purchase label - {error_msg}")
+        order.label_error = error_msg[:500]  # Truncate to fit field
+        order.save(update_fields=["label_error"])
+
+
 @csrf_exempt
 @require_POST
 def stripe_webhook(request):
@@ -118,7 +180,11 @@ def handle_checkout_session_completed(event):
             return
 
         cart_items = cart.items.select_related("variant__product").all()
-        if not cart_items.exists():
+        bundle_items = cart.bundle_items.select_related("bundle", "size").prefetch_related(
+            "bundle__items__product"
+        ).all()
+
+        if not cart_items.exists() and not bundle_items.exists():
             logger.error(f"Cart {cart_id} is empty for session: {checkout_session_id}")
             return
 
@@ -143,6 +209,10 @@ def handle_checkout_session_completed(event):
         # Get discount info from metadata
         discount_code = metadata.get("discount_code", "")
         discount_amount = Decimal(metadata.get("discount_amount", "0"))
+
+        # Get shipping selection from metadata
+        shipping_carrier = metadata.get("shipping_carrier", "")
+        shipping_service = metadata.get("shipping_service", "")
 
         # Get tax from Stripe (amount is in cents)
         tax_amount = Decimal("0.00")
@@ -212,6 +282,8 @@ def handle_checkout_session_completed(event):
             discount=discount_amount,
             discount_code=discount_code,
             shipping=shipping_cost,
+            shipping_carrier=shipping_carrier,
+            shipping_service=shipping_service,
             tax=tax_amount,
             total=total,
             stripe_checkout_id=checkout_session_id,
@@ -238,8 +310,47 @@ def handle_checkout_session_completed(event):
             # Allocate from shipment batches (FIFO)
             order_item.allocate_from_shipments()
 
-        # Clear the cart
+        # Create order items from bundle items
+        # Each bundle component becomes a separate OrderItem
+        for bundle_item in bundle_items:
+            bundle = bundle_item.bundle
+            size = bundle_item.size
+            bundle_qty = bundle_item.quantity
+
+            # Get the variants for each component product in the selected size
+            variants_for_size = bundle.get_variants_for_size(size)
+            if variants_for_size:
+                # Calculate price per component (distribute bundle price proportionally)
+                bundle_price = bundle.effective_price
+                component_total = bundle.component_total
+
+                for bundle_component, variant in variants_for_size:
+                    # Calculate this component's share of the bundle price
+                    if component_total > 0:
+                        component_share = (variant.price / component_total) * bundle_price
+                    else:
+                        component_share = bundle_price / len(variants_for_size)
+
+                    item_qty = bundle_component.quantity * bundle_qty
+                    line_total = component_share * bundle_qty
+
+                    order_item = OrderItem.objects.create(
+                        order=order,
+                        variant=variant,
+                        sku=f"BUNDLE-{bundle.id}-{variant.id}",
+                        quantity=item_qty,
+                        line_total=line_total,
+                    )
+                    # Allocate from shipment batches (FIFO)
+                    order_item.allocate_from_shipments()
+
+                logger.info(f"Created {len(variants_for_size)} order items from bundle '{bundle.name}' (size {size})")
+            else:
+                logger.error(f"Could not get variants for bundle {bundle.id} in size {size}")
+
+        # Clear the cart (both regular and bundle items)
         cart.items.all().delete()
+        cart.bundle_items.all().delete()
         cart.is_active = False
         cart.save()
 
@@ -266,6 +377,9 @@ def handle_checkout_session_completed(event):
                 logger.info(f"Admin order notification not sent (no template or error) for {order.order_number}")
         except Exception as e:
             logger.error(f"Error sending admin order notification: {e}")
+
+        # Auto-purchase shipping label if carrier/service were selected
+        auto_purchase_shipping_label(order)
 
     except Exception as e:
         import traceback

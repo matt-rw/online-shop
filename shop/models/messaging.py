@@ -3,6 +3,73 @@ from django.db import models
 from django.utils import timezone
 
 
+class ContactMessage(models.Model):
+    """
+    Messages submitted by customers through the contact form.
+    Stored until manually deleted by admin.
+    """
+
+    STATUS_CHOICES = [
+        ("new", "New"),
+        ("read", "Read"),
+        ("replied", "Replied"),
+        ("archived", "Archived"),
+    ]
+
+    # Sender info
+    name = models.CharField(max_length=100)
+    email = models.EmailField()
+    phone = models.CharField(max_length=20, blank=True)
+
+    # Message content
+    subject = models.CharField(max_length=200)
+    message = models.TextField()
+
+    # Optional: link to user if they're logged in
+    user = models.ForeignKey(
+        User, on_delete=models.SET_NULL, null=True, blank=True, related_name="contact_messages"
+    )
+
+    # Optional: link to order if inquiry is about an order
+    order_number = models.CharField(max_length=50, blank=True, help_text="Order number if inquiry is about an order")
+
+    # Status tracking
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default="new")
+    admin_notes = models.TextField(blank=True, help_text="Internal notes (not visible to customer)")
+
+    # Metadata
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    read_at = models.DateTimeField(null=True, blank=True)
+    read_by = models.ForeignKey(
+        User, on_delete=models.SET_NULL, null=True, blank=True, related_name="read_contact_messages"
+    )
+
+    # Track IP for spam prevention
+    ip_address = models.GenericIPAddressField(null=True, blank=True)
+
+    class Meta:
+        verbose_name = "Contact Message"
+        verbose_name_plural = "Contact Messages"
+        ordering = ["-created_at"]
+        indexes = [
+            models.Index(fields=["-created_at"], name="contact_created_idx"),
+            models.Index(fields=["status"], name="contact_status_idx"),
+            models.Index(fields=["email"], name="contact_email_idx"),
+        ]
+
+    def __str__(self):
+        return f"{self.name} - {self.subject[:50]}"
+
+    def mark_as_read(self, user=None):
+        """Mark message as read."""
+        if self.status == "new":
+            self.status = "read"
+            self.read_at = timezone.now()
+            self.read_by = user
+            self.save(update_fields=["status", "read_at", "read_by", "updated_at"])
+
+
 class MessageFolder(models.Model):
     """
     Custom folders for organizing quick messages.

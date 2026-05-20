@@ -22,6 +22,8 @@ urlpatterns = [
     path("privacy/", views.privacy, name="privacy"),
     # Terms of Service
     path("terms/", views.terms, name="terms"),
+    # Contact
+    path("contact/", views.contact, name="contact"),
     # Product detail
     path("product/<slug:slug>/", views.product_detail, name="product_detail"),
     # Bundle detail
@@ -34,6 +36,8 @@ urlpatterns = [
     path("subscribe/", views.subscribe, name="subscribe"),
     # SMS subscription
     path("subscribe/sms/", views.subscribe_sms, name="subscribe_sms"),
+    # Currency selection
+    path("set-currency/", views.set_currency, name="set_currency"),
     # Express Checkout (Apple Pay / Google Pay)
     path("express-checkout/create-intent/", cart_views.create_express_checkout_intent, name="express_checkout_intent"),
     path("express-checkout/complete/", cart_views.complete_express_checkout, name="express_checkout_complete"),

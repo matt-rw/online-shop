@@ -1,5 +1,6 @@
 {% extends 'base.html' %}
 {% load static %}
+{% load currency_tags %}
 
 {% block title %}{{ bundle.name }} - Blueprint Apparel{% endblock %}
 
@@ -160,9 +161,9 @@
           <p class="text-xs text-neutral-500 uppercase tracking-wider mb-2">Bundle</p>
           <h1 class="text-2xl md:text-3xl font-bold tracking-tight mb-4">"{{ bundle.name|upper }}"</h1>
           <div class="flex items-center gap-4">
-            <span class="text-2xl font-bold">${{ bundle.effective_price }}</span>
+            <span class="text-2xl font-bold">{% price bundle.effective_price %}</span>
             {% if bundle.savings > 0 %}
-            <span class="text-sm text-neutral-500 line-through">${{ bundle.component_total }}</span>
+            <span class="text-sm text-neutral-500 line-through">{% price bundle.component_total %}</span>
             <span class="px-2 py-1 bg-green-100 text-green-800 text-xs font-medium">Save {{ bundle.savings_percent }}%</span>
             {% endif %}
           </div>
@@ -181,7 +182,7 @@
                 {% if comp.quantity > 1 %}
                 <p class="text-sm text-neutral-500">Qty: {{ comp.quantity }}</p>
                 {% endif %}
-                <p class="text-sm text-neutral-400">${{ comp.product.base_price }}</p>
+                <p class="text-sm text-neutral-400">{% price comp.product.base_price %}</p>
               </div>
             </div>
             {% endfor %}
@@ -269,7 +270,7 @@
               </svg>
             </summary>
             <ul class="space-y-2 text-sm text-neutral-600 leading-relaxed">
-              <li>{% if free_shipping_threshold > 0 %}Free shipping on orders over ${{ free_shipping_threshold|floatformat:0 }}{% else %}Free shipping with promo code{% endif %}</li>
+              <li>{% if free_shipping_threshold > 0 %}Free shipping on orders over {% price free_shipping_threshold %}{% else %}Free shipping with promo code{% endif %}</li>
               <li>Standard shipping: 5-7 business days</li>
               <li>Returns for store credit within 30 days</li>
             </ul>

@@ -172,14 +172,20 @@ class Order(models.Model):
     # Custom tags for categorizing orders
     tags = models.ManyToManyField(OrderTag, blank=True, related_name="orders")
 
+    # Shipping selection (what customer chose at checkout)
+    shipping_carrier = models.CharField(max_length=100, blank=True, help_text="Carrier selected at checkout (e.g., USPS)")
+    shipping_service = models.CharField(max_length=100, blank=True, help_text="Service selected at checkout (e.g., GroundAdvantage)")
+
     # Shipping label tracking
     tracking_number = models.CharField(max_length=255, blank=True)
-    carrier = models.CharField(max_length=100, blank=True)  # e.g., USPS, UPS, FedEx
+    carrier = models.CharField(max_length=100, blank=True)  # e.g., USPS, UPS, FedEx (actual label carrier)
     label_url = models.URLField(blank=True)  # URL to download shipping label
     label_cost = models.DecimalField(
         max_digits=10, decimal_places=2, null=True, blank=True,
         help_text="Actual cost paid for shipping label"
     )
+    label_purchased_at = models.DateTimeField(null=True, blank=True, help_text="When the shipping label was purchased")
+    label_error = models.TextField(blank=True, help_text="Error message if label purchase failed")
 
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)

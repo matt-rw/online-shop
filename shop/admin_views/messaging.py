@@ -960,8 +960,46 @@ def messages_dashboard(request):
     """
     Dashboard showing all quick messages sent from the admin.
     """
-    from shop.models.messaging import MessageFolder, QuickMessage
+    from shop.models.messaging import ContactMessage, MessageFolder, QuickMessage
     from shop.models.settings import SiteSettings
+
+    # Handle contact message actions
+    if request.method == "POST" and request.POST.get("action") in [
+        "mark_contact_read", "mark_contact_replied", "archive_contact", "delete_contact", "update_contact_notes"
+    ]:
+        action = request.POST.get("action")
+        message_id = request.POST.get("message_id")
+
+        try:
+            contact_msg = ContactMessage.objects.get(id=message_id)
+
+            if action == "mark_contact_read":
+                contact_msg.mark_as_read(request.user)
+                return JsonResponse({"success": True})
+
+            elif action == "mark_contact_replied":
+                contact_msg.status = "replied"
+                contact_msg.save(update_fields=["status", "updated_at"])
+                return JsonResponse({"success": True})
+
+            elif action == "archive_contact":
+                contact_msg.status = "archived"
+                contact_msg.save(update_fields=["status", "updated_at"])
+                return JsonResponse({"success": True})
+
+            elif action == "delete_contact":
+                contact_msg.delete()
+                return JsonResponse({"success": True})
+
+            elif action == "update_contact_notes":
+                contact_msg.admin_notes = request.POST.get("notes", "")
+                contact_msg.save(update_fields=["admin_notes", "updated_at"])
+                return JsonResponse({"success": True})
+
+        except ContactMessage.DoesNotExist:
+            return JsonResponse({"success": False, "error": "Message not found"})
+        except Exception as e:
+            return JsonResponse({"success": False, "error": str(e)})
 
     # Handle image upload for email messages
     if request.method == "POST" and request.POST.get("action") == "upload_message_image":
@@ -1445,6 +1483,11 @@ def messages_dashboard(request):
                 "recipients": recipients,
             })
 
+    # Get contact messages (incoming customer inquiries)
+    contact_messages = ContactMessage.objects.exclude(status="archived").order_by("-created_at")[:50]
+    contact_messages_archived = ContactMessage.objects.filter(status="archived").order_by("-created_at")[:20]
+    new_contact_count = ContactMessage.objects.filter(status="new").count()
+
     context = {
         "messages": messages[:100],  # Limit to 100 most recent
         "drafts": drafts,
@@ -1465,11 +1508,14 @@ def messages_dashboard(request):
             "scheduled_count": scheduled_count,
             "email_sub_count": email_sub_count,
             "sms_sub_count": sms_sub_count,
+            "new_contact_count": new_contact_count,
         },
         "default_test_email": site_settings.default_test_email,
         "default_test_phone": site_settings.default_test_phone,
         "cst_time": timezone.now().astimezone(pytz.timezone("America/Chicago")),
         "delivery_logs": delivery_logs,
+        "contact_messages": contact_messages,
+        "contact_messages_archived": contact_messages_archived,
     }
 
     return render(request, "admin/messages_dashboard.html", context)

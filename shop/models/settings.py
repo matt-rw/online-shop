@@ -2,6 +2,168 @@ from django.core.cache import cache
 from django.db import models
 
 
+class Currency(models.Model):
+    """
+    Supported currencies for international pricing.
+    Prices are stored in USD and converted for display using exchange rates.
+    """
+
+    SYMBOL_POSITION_CHOICES = [
+        ('before', 'Before amount (e.g., $10)'),
+        ('after', 'After amount (e.g., 10€)'),
+    ]
+
+    code = models.CharField(
+        max_length=3,
+        unique=True,
+        help_text="ISO 4217 currency code (e.g., USD, EUR, GBP)"
+    )
+    name = models.CharField(
+        max_length=100,
+        help_text="Full currency name (e.g., US Dollar, Euro)"
+    )
+    symbol = models.CharField(
+        max_length=10,
+        help_text="Currency symbol (e.g., $, €, £, CA$)"
+    )
+    symbol_position = models.CharField(
+        max_length=10,
+        choices=SYMBOL_POSITION_CHOICES,
+        default='before',
+        help_text="Position of symbol relative to amount"
+    )
+    exchange_rate = models.DecimalField(
+        max_digits=12,
+        decimal_places=6,
+        default=1,
+        help_text="Exchange rate from USD (e.g., 0.92 for EUR means 1 USD = 0.92 EUR)"
+    )
+    decimal_places = models.PositiveSmallIntegerField(
+        default=2,
+        help_text="Number of decimal places to display"
+    )
+    is_active = models.BooleanField(
+        default=True,
+        help_text="Whether this currency is available for selection"
+    )
+    display_order = models.PositiveIntegerField(
+        default=0,
+        help_text="Order in currency selector (lower = first)"
+    )
+    rate_updated_at = models.DateTimeField(
+        null=True,
+        blank=True,
+        help_text="When the exchange rate was last updated"
+    )
+
+    class Meta:
+        ordering = ['display_order', 'code']
+        verbose_name = "Currency"
+        verbose_name_plural = "Currencies"
+
+    def __str__(self):
+        return f"{self.code} - {self.name}"
+
+    def format_price(self, amount):
+        """Format an amount in this currency."""
+        from decimal import Decimal, ROUND_HALF_UP
+
+        # Convert from USD to this currency
+        converted = Decimal(str(amount)) * self.exchange_rate
+
+        # Round to the appropriate decimal places
+        quantize_str = '0.' + '0' * self.decimal_places if self.decimal_places > 0 else '1'
+        rounded = converted.quantize(Decimal(quantize_str), rounding=ROUND_HALF_UP)
+
+        # Format the number
+        if self.decimal_places > 0:
+            formatted_number = f"{rounded:,.{self.decimal_places}f}"
+        else:
+            formatted_number = f"{int(rounded):,}"
+
+        # Apply symbol position
+        if self.symbol_position == 'after':
+            return f"{formatted_number}{self.symbol}"
+        return f"{self.symbol}{formatted_number}"
+
+    def save(self, *args, **kwargs):
+        super().save(*args, **kwargs)
+        # Invalidate currency cache when settings change
+        cache.delete("available_currencies")
+        cache.delete("currency_context")
+
+    @classmethod
+    def refresh_rates_if_stale(cls, max_age_hours=1):
+        """
+        Fetch fresh exchange rates from API if rates are stale.
+        Caches the API response for 1 hour to avoid excessive requests.
+        Returns True if rates were updated, False otherwise.
+        """
+        import logging
+        import requests
+        from decimal import Decimal
+        from django.utils import timezone
+        from datetime import timedelta
+
+        logger = logging.getLogger(__name__)
+
+        # Check cache first - don't fetch if we recently did
+        cache_key = "exchange_rates_last_fetch"
+        last_fetch = cache.get(cache_key)
+        if last_fetch:
+            return False  # Already fetched recently
+
+        # Check if any currency needs updating
+        stale_threshold = timezone.now() - timedelta(hours=max_age_hours)
+        stale_currencies = cls.objects.filter(
+            is_active=True,
+            rate_updated_at__lt=stale_threshold
+        ).exclude(code='USD') | cls.objects.filter(
+            is_active=True,
+            rate_updated_at__isnull=True
+        ).exclude(code='USD')
+
+        if not stale_currencies.exists():
+            return False  # All rates are fresh
+
+        # Fetch from API
+        api_url = "https://api.exchangerate-api.com/v4/latest/USD"
+        try:
+            response = requests.get(api_url, timeout=5)
+            response.raise_for_status()
+            data = response.json()
+            rates = data.get('rates', {})
+
+            if not rates:
+                return False
+
+            # Update stale currencies
+            now = timezone.now()
+            updated = 0
+            for currency in stale_currencies:
+                if currency.code in rates:
+                    currency.exchange_rate = Decimal(str(rates[currency.code]))
+                    currency.rate_updated_at = now
+                    currency.save(update_fields=['exchange_rate', 'rate_updated_at'])
+                    updated += 1
+
+            # Cache that we fetched (prevent repeated calls for 1 hour)
+            cache.set(cache_key, True, 3600)
+
+            if updated > 0:
+                logger.info(f"Auto-refreshed {updated} exchange rates")
+                # Clear currency cache so new rates are used
+                cache.delete("available_currencies")
+
+            return updated > 0
+
+        except Exception as e:
+            logger.warning(f"Failed to auto-refresh exchange rates: {e}")
+            # Cache the failure too, so we don't spam the API
+            cache.set(cache_key, True, 300)  # Wait 5 min before retry
+            return False
+
+
 class QuickLink(models.Model):
     """Quick access links to external services (Stripe, Render, GitHub, etc.)"""
 

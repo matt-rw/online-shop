@@ -1,0 +1,672 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Giveaway - Blueprint Apparel{% endblock %}
+
+{% block extra_css %}
+<style>
+  /* Override base styles for giveaway page */
+  body {
+    background: #000 !important;
+  }
+
+  .giveaway-page {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 6rem 1.5rem 3rem;
+  }
+
+  .giveaway-container {
+    text-align: center;
+    max-width: 600px;
+    width: 100%;
+  }
+
+  .giveaway-title {
+    font-size: clamp(2rem, 8vw, 4rem);
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: #fff;
+    margin-bottom: 2rem;
+  }
+
+  /* Slot Machine */
+  .slot-machine {
+    background: #000;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    padding: 2rem;
+    margin: 0 auto 2rem;
+  }
+
+  .slot-window {
+    background: #000;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    height: 400px;
+    overflow: hidden;
+    position: relative;
+    margin-bottom: 2rem;
+  }
+
+  .slot-window.spinning {
+    overflow: hidden;
+  }
+
+  .slot-window.browsable {
+    overflow-y: scroll;
+    cursor: grab;
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+
+  .slot-window.browsable::-webkit-scrollbar {
+    display: none;
+  }
+
+  .slot-window.browsable:active {
+    cursor: grabbing;
+  }
+
+  /* Center line - only show during spin */
+  .center-line {
+    display: none;
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 50%;
+    transform: translateY(-50%);
+    height: 80px;
+    border-top: 1px solid rgba(255, 255, 255, 0.4);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.4);
+    background: rgba(255, 255, 255, 0.03);
+    z-index: 10;
+    pointer-events: none;
+  }
+
+  .slot-window.spinning .center-line {
+    display: block;
+  }
+
+  .slot-reel {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .slot-item {
+    height: 80px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: #fff;
+    padding: 0 1.5rem;
+    white-space: nowrap;
+    text-shadow: 0 0 20px rgba(255, 255, 255, 0.3);
+  }
+
+  .slot-item.winner {
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.4);
+    margin: 0 1rem;
+    color: #fff;
+  }
+
+  .spin-btn {
+    background: #fff;
+    border: none;
+    color: #000;
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.2em;
+    padding: 1rem 3rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+  }
+
+  .spin-btn:hover:not(:disabled) {
+    background: rgba(255, 255, 255, 0.9);
+  }
+
+  .spin-btn:disabled {
+    opacity: 0.3;
+    cursor: not-allowed;
+  }
+
+  .spin-btn.spinning {
+    animation: pulse 0.5s ease-in-out infinite;
+  }
+
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.7; }
+  }
+
+  /* Winner Display */
+  .winner-display {
+    display: none;
+    margin-top: 3rem;
+    padding: 2rem;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+  }
+
+  .winner-display.show {
+    display: block;
+    animation: winnerReveal 0.5s ease-out;
+  }
+
+  @keyframes winnerReveal {
+    0% { opacity: 0; transform: scale(0.95); }
+    100% { opacity: 1; transform: scale(1); }
+  }
+
+  .winner-label {
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.3em;
+    color: rgba(255, 255, 255, 0.5);
+    margin-bottom: 0.75rem;
+  }
+
+  .winner-name {
+    font-size: clamp(1.5rem, 5vw, 2.5rem);
+    font-weight: 800;
+    color: #fff;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+  }
+
+  .winner-prize {
+    font-size: 1rem;
+    color: rgba(255, 255, 255, 0.6);
+    margin-top: 1rem;
+    letter-spacing: 0.05em;
+  }
+
+  .winner-prize span {
+    color: #fff;
+    font-weight: 600;
+  }
+
+  .scroll-hint {
+    display: none;
+    font-size: 0.625rem;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: rgba(255, 255, 255, 0.3);
+    margin-top: 0.75rem;
+  }
+
+  .scroll-hint.show {
+    display: block;
+  }
+
+  /* Admin Controls */
+  .admin-controls {
+    position: fixed;
+    top: 5rem;
+    right: 1.5rem;
+    z-index: 40;
+  }
+
+  .admin-toggle {
+    background: rgba(0, 0, 0, 0.8);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    color: rgba(255, 255, 255, 0.5);
+    padding: 0.5rem 0.75rem;
+    font-size: 0.625rem;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .admin-toggle:hover {
+    border-color: rgba(255, 255, 255, 0.4);
+    color: rgba(255, 255, 255, 0.8);
+  }
+
+  .admin-panel {
+    display: none;
+    background: #000;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    padding: 1.25rem;
+    max-width: 280px;
+    margin-top: 0.5rem;
+  }
+
+  .admin-panel.open {
+    display: block;
+  }
+
+  .admin-panel h3 {
+    font-size: 0.625rem;
+    text-transform: uppercase;
+    letter-spacing: 0.2em;
+    color: rgba(255, 255, 255, 0.4);
+    margin-bottom: 1rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  }
+
+  .admin-panel input[type="file"] {
+    display: none;
+  }
+
+  .upload-btn {
+    display: block;
+    width: 100%;
+    padding: 0.75rem 1rem;
+    background: transparent;
+    border: 1px dashed rgba(255, 255, 255, 0.3);
+    color: #fff;
+    font-size: 0.75rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    cursor: pointer;
+    text-align: center;
+    margin-bottom: 1rem;
+    transition: all 0.2s;
+  }
+
+  .upload-btn:hover {
+    border-color: rgba(255, 255, 255, 0.5);
+    background: rgba(255, 255, 255, 0.05);
+  }
+
+  .participant-count {
+    font-size: 0.75rem;
+    color: rgba(255, 255, 255, 0.6);
+    margin-bottom: 0.25rem;
+  }
+
+  .entry-count {
+    font-size: 0.625rem;
+    color: rgba(255, 255, 255, 0.4);
+  }
+
+  .reset-btn {
+    display: block;
+    width: 100%;
+    padding: 0.5rem;
+    background: transparent;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: rgba(255, 255, 255, 0.4);
+    font-size: 0.625rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    cursor: pointer;
+    margin-top: 1rem;
+    transition: all 0.2s;
+  }
+
+  .reset-btn:hover {
+    border-color: rgba(255, 255, 255, 0.3);
+    color: rgba(255, 255, 255, 0.7);
+  }
+
+  /* Confetti */
+  .confetti {
+    position: fixed;
+    width: 10px;
+    height: 10px;
+    top: -10px;
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  /* Decorative elements */
+  .corner-accent {
+    position: fixed;
+    width: 60px;
+    height: 60px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    pointer-events: none;
+  }
+
+  .corner-accent.top-left {
+    top: 5rem;
+    left: 1.5rem;
+    border-right: none;
+    border-bottom: none;
+  }
+
+  .corner-accent.bottom-right {
+    bottom: 1.5rem;
+    right: 1.5rem;
+    border-left: none;
+    border-top: none;
+  }
+
+  /* Responsive */
+  @media (max-width: 768px) {
+    .admin-controls {
+      position: relative;
+      top: auto;
+      right: auto;
+      max-width: 100%;
+      margin: 0 auto 1rem;
+      text-align: center;
+    }
+
+    .admin-panel {
+      max-width: 100%;
+    }
+
+    .giveaway-page {
+      padding-top: 5rem;
+    }
+
+    .corner-accent {
+      display: none;
+    }
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Corner Accents -->
+<div class="corner-accent top-left"></div>
+<div class="corner-accent bottom-right"></div>
+
+<div class="admin-controls">
+  <button class="admin-toggle" id="adminToggle">Settings</button>
+  <div class="admin-panel open" id="adminPanel">
+    <h3>Controls</h3>
+    <label class="upload-btn" for="csvUpload">
+      <span id="uploadText">Upload CSV</span>
+    </label>
+    <input type="file" id="csvUpload" accept=".csv">
+    <div class="participant-count" id="participantCount">No participants loaded</div>
+    <div class="entry-count" id="entryCount"></div>
+    <button class="reset-btn" id="resetBtn">Reset</button>
+  </div>
+</div>
+
+<div class="giveaway-page">
+  <div class="giveaway-container">
+    <h1 class="giveaway-title">Giveaway</h1>
+
+    <div class="slot-machine">
+      <div class="slot-window browsable" id="slotWindow">
+        <div class="center-line"></div>
+        <div class="slot-reel" id="slotReel">
+          <div class="slot-item">—</div>
+        </div>
+      </div>
+      <button class="spin-btn" id="spinBtn" disabled>Load Entries</button>
+      <p class="scroll-hint" id="scrollHint">Scroll to view all entries</p>
+    </div>
+
+    <div class="winner-display" id="winnerDisplay">
+      <div class="winner-label">Congratulations</div>
+      <div class="winner-name" id="winnerName"></div>
+      <div class="winner-prize">on winning a <span>Foundation Tee</span></div>
+    </div>
+  </div>
+</div>
+
+<script>
+  const slotReel = document.getElementById('slotReel');
+  const spinBtn = document.getElementById('spinBtn');
+  const winnerDisplay = document.getElementById('winnerDisplay');
+  const winnerName = document.getElementById('winnerName');
+  const csvUpload = document.getElementById('csvUpload');
+  const participantCount = document.getElementById('participantCount');
+  const entryCount = document.getElementById('entryCount');
+  const uploadText = document.getElementById('uploadText');
+  const resetBtn = document.getElementById('resetBtn');
+  const adminToggle = document.getElementById('adminToggle');
+  const adminPanel = document.getElementById('adminPanel');
+
+  let participants = [];
+  let entries = [];
+  let isSpinning = false;
+
+  // Admin panel toggle
+  if (adminToggle && adminPanel) {
+    adminToggle.addEventListener('click', () => {
+      adminPanel.classList.toggle('open');
+      adminToggle.textContent = adminPanel.classList.contains('open') ? 'Close' : 'Settings';
+    });
+  }
+
+  // CSV Upload Handler
+  if (csvUpload) {
+    csvUpload.addEventListener('change', (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        const csv = event.target.result;
+        parseCSV(csv);
+      };
+      reader.readAsText(file);
+    });
+  }
+
+  function parseCSV(csv) {
+    const lines = csv.trim().split('\n');
+    participants = [];
+    entries = [];
+
+    lines.forEach((line, index) => {
+      // Skip header row if present
+      if (index === 0 && (line.toLowerCase().includes('name') || line.toLowerCase().includes('entries'))) {
+        return;
+      }
+
+      const parts = line.split(',');
+      if (parts.length >= 1) {
+        const name = parts[0].trim().replace(/"/g, '');
+        const entryNum = parseInt(parts[1]) || 1;
+
+        if (name) {
+          participants.push({ name, entries: entryNum });
+          for (let i = 0; i < entryNum; i++) {
+            entries.push(name);
+          }
+        }
+      }
+    });
+
+    if (participants.length > 0) {
+      updateUI();
+      buildReel();
+      spinBtn.disabled = false;
+      spinBtn.textContent = 'Spin';
+      uploadText.textContent = 'CSV Loaded';
+    }
+  }
+
+  function updateUI() {
+    participantCount.textContent = `${participants.length} participants`;
+    entryCount.textContent = `${entries.length} total entries`;
+  }
+
+  function buildReel() {
+    // Sort all entries alphabetically (keeps duplicates for multiple entries)
+    const sorted = [...entries].sort((a, b) => a.localeCompare(b));
+    const slotWindow = document.getElementById('slotWindow');
+
+    // Clear and rebuild (no winner highlights)
+    slotReel.innerHTML = '';
+    slotReel.style.transform = '';
+    slotReel.style.transition = '';
+
+    // Build reel with all entries including duplicates (repeated for animation length)
+    for (let i = 0; i < 6; i++) {
+      sorted.forEach(name => {
+        const div = document.createElement('div');
+        div.className = 'slot-item';  // No winner class
+        div.textContent = name;
+        slotReel.appendChild(div);
+      });
+    }
+
+    // Scroll to top
+    slotWindow.scrollTop = 0;
+    slotWindow.classList.add('browsable');
+    slotWindow.classList.remove('spinning');
+  }
+
+  function escapeHtml(text) {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+  }
+
+  // Spin Handler
+  spinBtn.addEventListener('click', () => {
+    if (isSpinning || entries.length === 0) return;
+
+    isSpinning = true;
+    spinBtn.disabled = true;
+    spinBtn.classList.add('spinning');
+    winnerDisplay.classList.remove('show');
+
+    const slotWindow = document.getElementById('slotWindow');
+
+    // Switch to spin mode
+    slotWindow.classList.remove('browsable');
+    slotWindow.classList.add('spinning');
+    slotWindow.scrollTop = 0;
+    document.getElementById('scrollHint').classList.remove('show');
+
+    // Rebuild reel for fresh spin
+    buildReel();
+    slotWindow.classList.remove('browsable');
+    slotWindow.classList.add('spinning');
+
+    const winnerIndex = Math.floor(Math.random() * entries.length);
+    const winner = entries[winnerIndex];
+    const itemHeight = 80;
+    const totalItems = slotReel.children.length;
+
+    const winnerPositions = [];
+    Array.from(slotReel.children).forEach((item, index) => {
+      if (item.textContent === winner) {
+        winnerPositions.push(index);
+      }
+    });
+
+    // Pick a winner position in the middle-to-end of the reel
+    const middlePositions = winnerPositions.filter(pos => pos > totalItems * 0.5 && pos < totalItems * 0.8);
+    const targetPosition = middlePositions.length > 0
+      ? middlePositions[Math.floor(Math.random() * middlePositions.length)]
+      : winnerPositions[Math.floor(winnerPositions.length / 2)];
+
+    // Offset to center the winner in the visible window (window center is at 160px)
+    const targetOffset = (targetPosition * itemHeight) - 160;
+
+    slotReel.style.transition = 'none';
+    slotReel.style.transform = 'translateY(0)';
+
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        // Fast start, long gradual deceleration (33 seconds total)
+        slotReel.style.transition = 'transform 33s cubic-bezier(0.2, 0.8, 0.15, 1)';
+        slotReel.style.transform = `translateY(-${targetOffset}px)`;
+      });
+    });
+
+    setTimeout(() => {
+      isSpinning = false;
+      spinBtn.disabled = false;
+      spinBtn.classList.remove('spinning');
+      spinBtn.textContent = 'Spin Again';
+
+      console.log('Winner:', winner);
+      winnerName.textContent = winner;
+      winnerDisplay.classList.add('show');
+      winnerDisplay.style.display = 'block'; // Force show
+
+      // Highlight winner entries AFTER spin completes
+      Array.from(slotReel.children).forEach(item => {
+        if (item.textContent === winner) {
+          item.classList.add('winner');
+        }
+      });
+
+      // Switch back to browsable mode
+      const slotWindow = document.getElementById('slotWindow');
+      slotWindow.classList.remove('spinning');
+      slotWindow.classList.add('browsable');
+
+      // Convert transform position to scroll position
+      const transformMatch = slotReel.style.transform.match(/translateY\(-?(\d+)/);
+      if (transformMatch) {
+        const offset = parseInt(transformMatch[1]);
+        slotReel.style.transform = '';
+        slotReel.style.transition = '';
+        slotWindow.scrollTop = offset;
+      }
+
+      // Show scroll hint
+      document.getElementById('scrollHint').classList.add('show');
+
+      createConfetti();
+    }, 33300);
+  });
+
+  // Reset Handler
+  if (resetBtn) {
+    resetBtn.addEventListener('click', () => {
+      participants = [];
+      entries = [];
+      slotReel.innerHTML = `<div class="slot-item">—</div>`;
+      slotReel.style.transform = '';
+      slotReel.style.transition = '';
+      const slotWindow = document.getElementById('slotWindow');
+      slotWindow.scrollTop = 0;
+      slotWindow.classList.add('browsable');
+      slotWindow.classList.remove('spinning');
+      spinBtn.disabled = true;
+      spinBtn.textContent = 'Load Entries';
+      winnerDisplay.classList.remove('show');
+      participantCount.textContent = 'No participants loaded';
+      entryCount.textContent = '';
+      uploadText.textContent = 'Upload CSV';
+      csvUpload.value = '';
+    });
+  }
+
+  // Confetti - white only to match brand
+  function createConfetti() {
+    const colors = ['#fff', '#e5e5e5', '#d4d4d4', '#a3a3a3'];
+
+    for (let i = 0; i < 80; i++) {
+      setTimeout(() => {
+        const confetti = document.createElement('div');
+        confetti.className = 'confetti';
+        confetti.style.left = Math.random() * 100 + 'vw';
+        confetti.style.background = colors[Math.floor(Math.random() * colors.length)];
+        confetti.style.width = (Math.random() * 8 + 4) + 'px';
+        confetti.style.height = (Math.random() * 8 + 4) + 'px';
+        confetti.style.opacity = '1';
+
+        document.body.appendChild(confetti);
+
+        const duration = Math.random() * 2 + 2;
+        const rotation = Math.random() * 720 - 360;
+
+        confetti.animate([
+          { transform: 'translateY(0) rotate(0deg)', opacity: 1 },
+          { transform: `translateY(100vh) rotate(${rotation}deg)`, opacity: 0 }
+        ], {
+          duration: duration * 1000,
+          easing: 'cubic-bezier(0.25, 0.46, 0.45, 0.94)'
+        }).onfinish = () => confetti.remove();
+      }, i * 25);
+    }
+  }
+</script>
+{% endblock %}

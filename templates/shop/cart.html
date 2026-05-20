@@ -1,5 +1,6 @@
 {% extends 'base.html' %}
 {% load static %}
+{% load currency_tags %}
 
 {% block title %}Cart - Blueprint Apparel{% endblock %}
 
@@ -76,7 +77,7 @@
                 {% if cart_item.item.variant.color %}Color: {{ cart_item.item.variant.color }}{% endif %}
               </p>
             </div>
-            <p class="text-lg font-bold">${{ cart_item.item.variant.price }}</p>
+            <p class="text-lg font-bold">{% price cart_item.item.variant.price %}</p>
           </div>
 
           <!-- Quantity & Remove -->
@@ -131,7 +132,7 @@
                 Includes: {{ bundle_item.components|join:", " }}
               </p>
             </div>
-            <p class="text-lg font-bold">${{ bundle_item.item.bundle.effective_price }}</p>
+            <p class="text-lg font-bold">{% price bundle_item.item.bundle.effective_price %}</p>
           </div>
 
           <!-- Quantity & Remove -->
@@ -172,7 +173,7 @@
           <div class="space-y-4 mb-8">
             <div class="flex justify-between text-sm">
               <span class="text-neutral-600">Subtotal</span>
-              <span id="subtotal" class="font-medium">${{ subtotal }}</span>
+              <span id="subtotal" class="font-medium">{% price subtotal %}</span>
             </div>
             <div class="flex justify-between text-sm">
               <span class="text-neutral-600">Shipping</span>
@@ -190,7 +191,7 @@
             </div>
             <div class="border-t border-black pt-4 flex justify-between">
               <span class="text-xs tracking-widest uppercase font-medium">Total</span>
-              <span id="total" class="text-xl font-bold">${{ subtotal }}</span>
+              <span id="total" class="text-xl font-bold">{% price subtotal %}</span>
             </div>
           </div>
 
@@ -233,7 +234,7 @@
 <!-- Section Divider -->
 <div class="border-t border-black">
   <div class="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center">
-    <span class="text-xs tracking-wider text-neutral-500">{% if free_shipping_threshold > 0 %}Free shipping on orders over ${{ free_shipping_threshold|floatformat:0 }}{% else %}Free shipping with promo code{% endif %}</span>
+    <span class="text-xs tracking-wider text-neutral-500">{% if free_shipping_threshold > 0 %}Free shipping on orders over {% price free_shipping_threshold %}{% else %}Free shipping with promo code{% endif %}</span>
     <span class="text-xs tracking-widest uppercase font-medium">Blueprint Apparel</span>
   </div>
 </div>

@@ -494,3 +494,12 @@ def test_checkout(request):
 
     # Redirect to checkout
     return redirect("shop:checkout")
+
+
+@staff_member_required
+def giveaway(request):
+    """
+    Giveaway page with slot machine style winner picker.
+    Admin-only tool for running giveaways.
+    """
+    return render(request, "shop/giveaway.html")

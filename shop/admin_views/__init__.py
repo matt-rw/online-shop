@@ -73,6 +73,7 @@ from .reporting import scheduled_reports_dashboard
 from .testing import (
     test_center,
     test_checkout,
+    giveaway,
 )
 
 __all__ = [
@@ -128,6 +129,7 @@ __all__ = [
     # testing
     'test_center',
     'test_checkout',
+    'giveaway',
     # reporting
     'scheduled_reports_dashboard',
 ]

@@ -1018,7 +1018,21 @@
     <div class="explorer">
       <!-- Folders View (initial view) -->
       <div class="folders-view" id="foldersView">
-        <div class="folders-section">
+        <!-- Outbound/Inbound Toggle -->
+        <div style="display: flex; justify-content: center; margin-bottom: 1.5rem;">
+          <div class="mode-toggle" style="display: inline-flex; background: #e2e8f0; border-radius: 8px; padding: 4px;">
+            <button type="button" class="mode-btn active" id="outboundBtn" onclick="setMessageMode('outbound')" style="padding: 0.5rem 1.25rem; border: none; background: white; border-radius: 6px; font-size: 0.875rem; font-weight: 600; cursor: pointer; transition: all 0.2s; color: #1e293b; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
+              <i class="fa-solid fa-paper-plane" style="margin-right: 0.5rem;"></i>Outbound
+            </button>
+            <button type="button" class="mode-btn" id="inboundBtn" onclick="setMessageMode('inbound')" style="padding: 0.5rem 1.25rem; border: none; background: transparent; border-radius: 6px; font-size: 0.875rem; font-weight: 600; cursor: pointer; transition: all 0.2s; color: #64748b; position: relative;">
+              <i class="fa-solid fa-inbox" style="margin-right: 0.5rem;"></i>Inbound
+              {% if stats.new_contact_count %}<span style="position: absolute; top: -4px; right: -4px; background: #ef4444; color: white; font-size: 0.625rem; padding: 2px 6px; border-radius: 10px; font-weight: 700;">{{ stats.new_contact_count }}</span>{% endif %}
+            </button>
+          </div>
+        </div>
+
+        <!-- Outbound Folders -->
+        <div class="folders-section" id="outboundFolders">
           <div class="folders-header">
             <span class="folders-title">Folders</span>
             <button class="add-folder-btn" onclick="openFolderModal()">
@@ -1060,6 +1074,79 @@
             Create folders to organize your messages
           </p>
           {% endif %}
+        </div>
+
+        <!-- Inbound Folders (Contact Messages) -->
+        <div class="folders-section" id="inboundFolders" style="display: none;">
+          <div class="folders-header">
+            <span class="folders-title">Contact Messages</span>
+          </div>
+          <div class="folders-grid">
+            <!-- All Inbound -->
+            <div class="folder-item" data-folder="contact-all" onclick="openFolder('contact-all')">
+              <div class="folder-icon-wrap">
+                <i class="folder-icon fa-solid fa-envelope-open-text" style="color: #667eea;"></i>
+                <span class="folder-badge" id="contact-all-badge" style="display: none;"></span>
+              </div>
+              <span class="folder-name">All Messages</span>
+            </div>
+            <!-- Order Inquiry -->
+            <div class="folder-item" data-folder="contact-order" onclick="openFolder('contact-order')">
+              <div class="folder-icon-wrap">
+                <i class="folder-icon fa-solid fa-box" style="color: #f59e0b;"></i>
+                <span class="folder-badge" id="contact-order-badge" style="display: none; background: #f59e0b;"></span>
+              </div>
+              <span class="folder-name">Order Inquiry</span>
+            </div>
+            <!-- Shipping Question -->
+            <div class="folder-item" data-folder="contact-shipping" onclick="openFolder('contact-shipping')">
+              <div class="folder-icon-wrap">
+                <i class="folder-icon fa-solid fa-truck" style="color: #3b82f6;"></i>
+                <span class="folder-badge" id="contact-shipping-badge" style="display: none; background: #3b82f6;"></span>
+              </div>
+              <span class="folder-name">Shipping</span>
+            </div>
+            <!-- Returns & Exchanges -->
+            <div class="folder-item" data-folder="contact-returns" onclick="openFolder('contact-returns')">
+              <div class="folder-icon-wrap">
+                <i class="folder-icon fa-solid fa-rotate-left" style="color: #ef4444;"></i>
+                <span class="folder-badge" id="contact-returns-badge" style="display: none; background: #ef4444;"></span>
+              </div>
+              <span class="folder-name">Returns</span>
+            </div>
+            <!-- Product Question -->
+            <div class="folder-item" data-folder="contact-product" onclick="openFolder('contact-product')">
+              <div class="folder-icon-wrap">
+                <i class="folder-icon fa-solid fa-tag" style="color: #8b5cf6;"></i>
+                <span class="folder-badge" id="contact-product-badge" style="display: none; background: #8b5cf6;"></span>
+              </div>
+              <span class="folder-name">Product</span>
+            </div>
+            <!-- Feedback -->
+            <div class="folder-item" data-folder="contact-feedback" onclick="openFolder('contact-feedback')">
+              <div class="folder-icon-wrap">
+                <i class="folder-icon fa-solid fa-comment" style="color: #22c55e;"></i>
+                <span class="folder-badge" id="contact-feedback-badge" style="display: none; background: #22c55e;"></span>
+              </div>
+              <span class="folder-name">Feedback</span>
+            </div>
+            <!-- Other -->
+            <div class="folder-item" data-folder="contact-other" onclick="openFolder('contact-other')">
+              <div class="folder-icon-wrap">
+                <i class="folder-icon fa-solid fa-circle-question" style="color: #64748b;"></i>
+                <span class="folder-badge" id="contact-other-badge" style="display: none; background: #64748b;"></span>
+              </div>
+              <span class="folder-name">Other</span>
+            </div>
+            <!-- Archived -->
+            <div class="folder-item" data-folder="contact-archived" onclick="openFolder('contact-archived')">
+              <div class="folder-icon-wrap">
+                <i class="folder-icon fa-solid fa-box-archive" style="color: #94a3b8;"></i>
+                <span class="folder-badge" id="contact-archived-badge" style="display: none; background: #94a3b8;"></span>
+              </div>
+              <span class="folder-name">Archived</span>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -1207,6 +1294,60 @@
           <h2 class="message-subject" id="messageSubject"></h2>
           <div class="message-body" id="messageBody"></div>
           <div class="message-stats" id="messageStats"></div>
+        </div>
+      </div>
+
+      <!-- Contact Messages View -->
+      <div class="contact-messages-view" id="contactMessagesView" style="display: none;">
+        <div class="folder-contents-header" style="margin-bottom: 1rem;">
+          <button class="back-btn" onclick="backToFolders()">
+            <i class="fa-solid fa-arrow-left"></i> Folders
+          </button>
+          <div class="current-folder-title">
+            <i class="fa-solid fa-envelope-open-text" style="color: #ef4444;"></i>
+            <span>Contact Inbox</span>
+          </div>
+          <div class="filter-chips" id="contactFilterChips">
+            <button class="filter-chip active" data-filter="new" onclick="toggleContactFilter('new')">New</button>
+            <button class="filter-chip active" data-filter="read" onclick="toggleContactFilter('read')">Read</button>
+            <button class="filter-chip active" data-filter="replied" onclick="toggleContactFilter('replied')">Replied</button>
+          </div>
+        </div>
+
+        <div class="contact-list" id="contactList">
+          <!-- Contact messages rendered by JavaScript -->
+        </div>
+
+        <!-- Contact Message Detail View -->
+        <div class="contact-detail" id="contactDetail" style="display: none;">
+          <div class="message-view-header">
+            <button class="back-btn" onclick="closeContactDetail()">
+              <i class="fa-solid fa-arrow-left"></i> Back
+            </button>
+            <div class="message-actions">
+              <button class="action-btn" id="replyEmailBtn" onclick="replyToContact()">
+                <i class="fa-solid fa-reply"></i> Reply via Email
+              </button>
+              <button class="action-btn" id="markRepliedBtn" onclick="markContactReplied()">
+                <i class="fa-solid fa-check"></i> Mark Replied
+              </button>
+              <button class="action-btn" onclick="archiveContact()">
+                <i class="fa-solid fa-box-archive"></i> Archive
+              </button>
+              <button class="action-btn danger" onclick="deleteContact()">
+                <i class="fa-solid fa-trash"></i> Delete
+              </button>
+            </div>
+          </div>
+          <div class="message-view-body">
+            <div class="message-meta" id="contactMeta"></div>
+            <h2 class="message-subject" id="contactSubject"></h2>
+            <div class="message-body" id="contactBody" style="white-space: pre-wrap;"></div>
+            <div style="margin-top: 1.5rem; padding-top: 1rem; border-top: 1px solid #e2e8f0;">
+              <label style="font-size: 0.75rem; font-weight: 600; color: #64748b; text-transform: uppercase; letter-spacing: 0.05em;">Internal Notes</label>
+              <textarea id="contactNotes" placeholder="Add notes about this inquiry..." style="width: 100%; margin-top: 0.5rem; padding: 0.75rem; border: 1px solid #e2e8f0; border-radius: 8px; resize: vertical; min-height: 80px; font-family: inherit; font-size: 0.875rem;" onchange="updateContactNotes()"></textarea>
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -1530,14 +1671,120 @@
     let activeFilters = { draft: true, scheduled: true, sent: true };
     const emailCount = {{ stats.email_sub_count }}, smsCount = {{ stats.sms_sub_count }};
 
+    // Contact messages data (includes both active and archived)
+    const contactMessages = [
+      {% for cm in contact_messages %}
+      {
+        id: {{ cm.id }},
+        name: '{{ cm.name|escapejs }}',
+        email: '{{ cm.email|escapejs }}',
+        phone: '{{ cm.phone|escapejs }}',
+        subject: '{{ cm.subject|escapejs }}',
+        message: `{{ cm.message|escapejs }}`,
+        orderNumber: '{{ cm.order_number|escapejs }}',
+        status: '{{ cm.status }}',
+        createdAt: '{% timezone "America/Chicago" %}{{ cm.created_at|date:"M j, Y g:i A" }}{% endtimezone %}',
+        adminNotes: `{{ cm.admin_notes|escapejs }}`
+      },
+      {% endfor %}
+      {% for cm in contact_messages_archived %}
+      {
+        id: {{ cm.id }},
+        name: '{{ cm.name|escapejs }}',
+        email: '{{ cm.email|escapejs }}',
+        phone: '{{ cm.phone|escapejs }}',
+        subject: '{{ cm.subject|escapejs }}',
+        message: `{{ cm.message|escapejs }}`,
+        orderNumber: '{{ cm.order_number|escapejs }}',
+        status: '{{ cm.status }}',
+        createdAt: '{% timezone "America/Chicago" %}{{ cm.created_at|date:"M j, Y g:i A" }}{% endtimezone %}',
+        adminNotes: `{{ cm.admin_notes|escapejs }}`
+      },
+      {% endfor %}
+    ];
+
+    // Current message mode (outbound or inbound)
+    let messageMode = 'outbound';
+
+    // Contact category mapping
+    const contactCategories = {
+      'contact-all': null, // All messages
+      'contact-order': 'Order Inquiry',
+      'contact-shipping': 'Shipping Question',
+      'contact-returns': 'Returns & Exchanges',
+      'contact-product': 'Product Question',
+      'contact-feedback': 'Feedback',
+      'contact-other': 'Other',
+      'contact-archived': '__archived__'
+    };
+
     // Folder info for custom folders
     const folderInfo = {
       all: { name: 'All Messages', icon: 'fa-inbox', color: '#667eea' },
       archive: { name: 'Archive', icon: 'fa-box-archive', color: '#94a3b8' },
+      'contact-all': { name: 'All Messages', icon: 'fa-envelope-open-text', color: '#667eea' },
+      'contact-order': { name: 'Order Inquiry', icon: 'fa-box', color: '#f59e0b' },
+      'contact-shipping': { name: 'Shipping', icon: 'fa-truck', color: '#3b82f6' },
+      'contact-returns': { name: 'Returns & Exchanges', icon: 'fa-rotate-left', color: '#ef4444' },
+      'contact-product': { name: 'Product Question', icon: 'fa-tag', color: '#8b5cf6' },
+      'contact-feedback': { name: 'Feedback', icon: 'fa-comment', color: '#22c55e' },
+      'contact-other': { name: 'Other', icon: 'fa-circle-question', color: '#64748b' },
+      'contact-archived': { name: 'Archived', icon: 'fa-box-archive', color: '#94a3b8' },
       {% for folder in folders %}
       'custom-{{ folder.id }}': { name: '{{ folder.name|escapejs }}', icon: 'fa-folder', color: '{{ folder.color }}', id: {{ folder.id }} },
       {% endfor %}
     };
+
+    function setMessageMode(mode) {
+      messageMode = mode;
+
+      // Update toggle buttons
+      document.getElementById('outboundBtn').classList.toggle('active', mode === 'outbound');
+      document.getElementById('outboundBtn').style.background = mode === 'outbound' ? 'white' : 'transparent';
+      document.getElementById('outboundBtn').style.color = mode === 'outbound' ? '#1e293b' : '#64748b';
+      document.getElementById('outboundBtn').style.boxShadow = mode === 'outbound' ? '0 1px 3px rgba(0,0,0,0.1)' : 'none';
+
+      document.getElementById('inboundBtn').classList.toggle('active', mode === 'inbound');
+      document.getElementById('inboundBtn').style.background = mode === 'inbound' ? 'white' : 'transparent';
+      document.getElementById('inboundBtn').style.color = mode === 'inbound' ? '#1e293b' : '#64748b';
+      document.getElementById('inboundBtn').style.boxShadow = mode === 'inbound' ? '0 1px 3px rgba(0,0,0,0.1)' : 'none';
+
+      // Show/hide folder sections
+      document.getElementById('outboundFolders').style.display = mode === 'outbound' ? 'block' : 'none';
+      document.getElementById('inboundFolders').style.display = mode === 'inbound' ? 'block' : 'none';
+
+      // Update contact badges when switching to inbound
+      if (mode === 'inbound') {
+        updateContactBadges();
+      }
+    }
+
+    function updateContactBadges() {
+      // Count messages per category
+      const counts = {};
+      contactMessages.forEach(m => {
+        if (m.status === 'archived') return;
+        const cat = Object.keys(contactCategories).find(k => contactCategories[k] === m.subject) || 'contact-other';
+        counts[cat] = (counts[cat] || 0) + 1;
+        counts['contact-all'] = (counts['contact-all'] || 0) + 1;
+      });
+
+      // Count archived
+      counts['contact-archived'] = contactMessages.filter(m => m.status === 'archived').length;
+
+      // Update badges
+      Object.keys(contactCategories).forEach(cat => {
+        const badge = document.getElementById(`${cat}-badge`);
+        if (badge) {
+          if (counts[cat] && counts[cat] > 0) {
+            badge.textContent = counts[cat];
+            badge.style.display = 'flex';
+          } else {
+            badge.style.display = 'none';
+          }
+        }
+      });
+    }
 
     function openFolder(folderId) {
       currentFolder = folderId;
@@ -1545,8 +1792,20 @@
       activeFilters = { draft: true, scheduled: true, sent: true };
       document.querySelectorAll('.filter-chip').forEach(c => c.classList.add('active'));
 
-      // Hide folders view, show contents view
+      // Hide folders view
       document.getElementById('foldersView').style.display = 'none';
+
+      // Handle contact category folders
+      if (folderId.startsWith('contact-')) {
+        document.getElementById('folderContentsView').style.display = 'none';
+        document.getElementById('contactMessagesView').style.display = 'block';
+        currentContactCategory = folderId;
+        renderContactMessages();
+        return;
+      }
+
+      // Show regular contents view
+      document.getElementById('contactMessagesView').style.display = 'none';
       document.getElementById('folderContentsView').style.display = 'block';
 
       // Update header
@@ -1563,8 +1822,10 @@
     function backToFolders() {
       currentFolder = null;
       document.getElementById('folderContentsView').style.display = 'none';
+      document.getElementById('contactMessagesView').style.display = 'none';
       document.getElementById('foldersView').style.display = 'block';
       closeMessageView();
+      closeContactDetail();
     }
 
     function handleBackClick(event) {
@@ -2031,6 +2292,9 @@
           }
         }
       });
+
+      // Initialize contact badges (for when user switches to inbound)
+      updateContactBadges();
     });
 
     // Folder management
@@ -2328,6 +2592,200 @@
       }
 
       alert(`Error Category: ${category}\n\nDetails:\n${errorMessage}`);
+    }
+
+    // === Contact Messages Functions ===
+    let currentContactId = null;
+    let currentContactCategory = 'contact-all';
+    let contactFilters = { new: true, read: true, replied: true };
+
+    function renderContactMessages() {
+      const container = document.getElementById('contactList');
+      const categoryFilter = contactCategories[currentContactCategory];
+
+      // Update header with category name
+      const info = folderInfo[currentContactCategory] || { name: 'Messages', icon: 'fa-envelope', color: '#667eea' };
+      const headerEl = document.querySelector('#contactMessagesView .current-folder-title');
+      if (headerEl) {
+        headerEl.innerHTML = `<i class="fa-solid ${info.icon}" style="color: ${info.color};"></i> <span>${info.name}</span>`;
+      }
+
+      // Show/hide status filters (not needed for archived view)
+      const filterChips = document.getElementById('contactFilterChips');
+      if (filterChips) {
+        filterChips.style.display = currentContactCategory === 'contact-archived' ? 'none' : 'flex';
+      }
+
+      // Filter messages
+      let filtered = contactMessages.filter(m => {
+        // Archived folder shows only archived
+        if (currentContactCategory === 'contact-archived') {
+          return m.status === 'archived';
+        }
+        // Other folders exclude archived and filter by category
+        if (m.status === 'archived') return false;
+        if (!contactFilters[m.status]) return false;
+        if (categoryFilter === null) return true; // All messages
+        return m.subject === categoryFilter;
+      });
+
+      if (filtered.length === 0) {
+        container.innerHTML = `
+          <div style="text-align: center; padding: 3rem; color: #64748b;">
+            <i class="fa-solid fa-inbox" style="font-size: 2rem; margin-bottom: 0.75rem; display: block; color: #cbd5e1;"></i>
+            <h3 style="font-size: 1rem; font-weight: 600; margin-bottom: 0.25rem;">No messages</h3>
+            <p style="font-size: 0.875rem;">No contact messages in this category</p>
+          </div>
+        `;
+        return;
+      }
+
+      container.innerHTML = filtered.map(m => `
+        <div class="message-row" onclick="viewContact(${m.id})" style="cursor: pointer; ${m.status === 'new' ? 'background: #fef2f2; border-left: 3px solid #ef4444;' : ''}">
+          <div class="msg-icon" style="background: ${m.status === 'new' ? '#fef2f2' : m.status === 'replied' ? '#dcfce7' : '#f1f5f9'};">
+            <i class="fa-solid ${m.status === 'new' ? 'fa-envelope' : m.status === 'replied' ? 'fa-check' : 'fa-envelope-open'}" style="color: ${m.status === 'new' ? '#ef4444' : m.status === 'replied' ? '#22c55e' : '#64748b'};"></i>
+          </div>
+          <div class="msg-content" style="flex: 1;">
+            <div class="msg-subject" style="font-weight: ${m.status === 'new' ? '600' : '500'};">${escapeHtml(m.name)}</div>
+            <div class="msg-preview" style="font-size: 0.8125rem; color: #64748b;">
+              ${escapeHtml(m.email)}
+              ${m.orderNumber ? `<span style="margin-left: 0.5rem; padding: 0.125rem 0.375rem; background: #f1f5f9; border-radius: 3px; font-size: 0.75rem;">Order: ${escapeHtml(m.orderNumber)}</span>` : ''}
+            </div>
+          </div>
+          <div class="msg-date" style="font-size: 0.75rem; color: #94a3b8;">${m.createdAt}</div>
+        </div>
+      `).join('');
+    }
+
+    function toggleContactFilter(status) {
+      contactFilters[status] = !contactFilters[status];
+      document.querySelector(`#contactFilterChips .filter-chip[data-filter="${status}"]`).classList.toggle('active', contactFilters[status]);
+      renderContactMessages();
+    }
+
+    function viewContact(id) {
+      const msg = contactMessages.find(m => m.id === id);
+      if (!msg) return;
+
+      currentContactId = id;
+
+      // Mark as read if new
+      if (msg.status === 'new') {
+        fetch('{% url "admin_messages" %}', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/x-www-form-urlencoded', 'X-CSRFToken': '{{ csrf_token }}' },
+          body: `action=mark_contact_read&message_id=${id}`
+        }).then(() => {
+          msg.status = 'read';
+          renderContactMessages();
+        });
+      }
+
+      // Show detail view
+      document.getElementById('contactList').style.display = 'none';
+      document.getElementById('contactDetail').style.display = 'block';
+
+      document.getElementById('contactMeta').innerHTML = `
+        <div style="display: flex; flex-wrap: wrap; gap: 1rem; margin-bottom: 1rem;">
+          <div><strong>From:</strong> ${escapeHtml(msg.name)}</div>
+          <div><strong>Email:</strong> <a href="mailto:${escapeHtml(msg.email)}">${escapeHtml(msg.email)}</a></div>
+          ${msg.phone ? `<div><strong>Phone:</strong> ${escapeHtml(msg.phone)}</div>` : ''}
+          ${msg.orderNumber ? `<div><strong>Order:</strong> ${escapeHtml(msg.orderNumber)}</div>` : ''}
+          <div><strong>Received:</strong> ${msg.createdAt}</div>
+          <div><span style="padding: 0.25rem 0.5rem; border-radius: 4px; font-size: 0.75rem; font-weight: 600; background: ${msg.status === 'new' ? '#fef2f2; color: #ef4444' : msg.status === 'replied' ? '#dcfce7; color: #22c55e' : '#f1f5f9; color: #64748b'};">${msg.status.charAt(0).toUpperCase() + msg.status.slice(1)}</span></div>
+        </div>
+      `;
+      document.getElementById('contactSubject').textContent = msg.subject;
+      document.getElementById('contactBody').textContent = msg.message;
+      document.getElementById('contactNotes').value = msg.adminNotes || '';
+    }
+
+    function closeContactDetail() {
+      currentContactId = null;
+      document.getElementById('contactDetail').style.display = 'none';
+      document.getElementById('contactList').style.display = 'block';
+    }
+
+    function replyToContact() {
+      const msg = contactMessages.find(m => m.id === currentContactId);
+      if (msg) {
+        window.location.href = `mailto:${msg.email}?subject=Re: ${encodeURIComponent(msg.subject)}`;
+      }
+    }
+
+    function markContactReplied() {
+      if (!currentContactId) return;
+      fetch('{% url "admin_messages" %}', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded', 'X-CSRFToken': '{{ csrf_token }}' },
+        body: `action=mark_contact_replied&message_id=${currentContactId}`
+      }).then(r => r.json()).then(data => {
+        if (data.success) {
+          const msg = contactMessages.find(m => m.id === currentContactId);
+          if (msg) msg.status = 'replied';
+          viewContact(currentContactId); // Refresh view
+          renderContactMessages();
+          updateContactBadges();
+        }
+      });
+    }
+
+    function archiveContact() {
+      if (!currentContactId) return;
+      if (!confirm('Archive this message?')) return;
+      fetch('{% url "admin_messages" %}', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded', 'X-CSRFToken': '{{ csrf_token }}' },
+        body: `action=archive_contact&message_id=${currentContactId}`
+      }).then(r => r.json()).then(data => {
+        if (data.success) {
+          // Mark as archived instead of removing
+          const msg = contactMessages.find(m => m.id === currentContactId);
+          if (msg) msg.status = 'archived';
+          closeContactDetail();
+          renderContactMessages();
+          updateContactBadges();
+        }
+      });
+    }
+
+    function deleteContact() {
+      if (!currentContactId) return;
+      if (!confirm('Delete this message permanently?')) return;
+      fetch('{% url "admin_messages" %}', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded', 'X-CSRFToken': '{{ csrf_token }}' },
+        body: `action=delete_contact&message_id=${currentContactId}`
+      }).then(r => r.json()).then(data => {
+        if (data.success) {
+          const idx = contactMessages.findIndex(m => m.id === currentContactId);
+          if (idx > -1) contactMessages.splice(idx, 1);
+          closeContactDetail();
+          renderContactMessages();
+          updateContactBadges();
+        }
+      });
+    }
+
+    function updateContactNotes() {
+      if (!currentContactId) return;
+      const notes = document.getElementById('contactNotes').value;
+      fetch('{% url "admin_messages" %}', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded', 'X-CSRFToken': '{{ csrf_token }}' },
+        body: `action=update_contact_notes&message_id=${currentContactId}&notes=${encodeURIComponent(notes)}`
+      }).then(r => r.json()).then(data => {
+        if (data.success) {
+          const msg = contactMessages.find(m => m.id === currentContactId);
+          if (msg) msg.adminNotes = notes;
+        }
+      });
+    }
+
+    function escapeHtml(text) {
+      const div = document.createElement('div');
+      div.textContent = text;
+      return div.innerHTML;
     }
   </script>
 </body>

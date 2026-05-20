@@ -289,6 +289,110 @@ def terms(request):
     return render(request, "home/terms.html")
 
 
+def contact(request):
+    """Contact page with form to send messages to admins."""
+    from django.contrib import messages
+    from django.core.mail import send_mail
+    from django.conf import settings as django_settings
+
+    from shop.models import ContactMessage
+    from shop.models.settings import SiteSettings
+
+    site_settings = SiteSettings.load()
+    success = False
+    errors = {}
+
+    if request.method == "POST":
+        # Get form data
+        name = request.POST.get("name", "").strip()
+        email = request.POST.get("email", "").strip()
+        phone = request.POST.get("phone", "").strip()
+        subject = request.POST.get("subject", "").strip()
+        message_text = request.POST.get("message", "").strip()
+        order_number = request.POST.get("order_number", "").strip()
+
+        # Validation
+        if not name:
+            errors["name"] = "Name is required"
+        if not email:
+            errors["email"] = "Email is required"
+        if not subject:
+            errors["subject"] = "Subject is required"
+        if not message_text:
+            errors["message"] = "Message is required"
+
+        if not errors:
+            # Get client IP
+            x_forwarded_for = request.META.get("HTTP_X_FORWARDED_FOR")
+            if x_forwarded_for:
+                ip_address = x_forwarded_for.split(",")[0].strip()
+            else:
+                ip_address = request.META.get("REMOTE_ADDR")
+
+            # Create the message
+            contact_msg = ContactMessage.objects.create(
+                name=name,
+                email=email,
+                phone=phone,
+                subject=subject,
+                message=message_text,
+                order_number=order_number,
+                user=request.user if request.user.is_authenticated else None,
+                ip_address=ip_address,
+            )
+
+            # Send email notification to admin
+            admin_email = site_settings.contact_email or getattr(django_settings, "DEFAULT_FROM_EMAIL", None)
+            if admin_email:
+                try:
+                    email_subject = f"[Blueprint] New Contact Message: {subject}"
+                    email_body = f"""New contact message received:
+
+From: {name}
+Email: {email}
+Phone: {phone or 'Not provided'}
+Order #: {order_number or 'N/A'}
+
+Subject: {subject}
+
+Message:
+{message_text}
+
+---
+View in admin: {request.build_absolute_uri('/bp-manage/messages/')}
+"""
+                    send_mail(
+                        email_subject,
+                        email_body,
+                        getattr(django_settings, "DEFAULT_FROM_EMAIL", "noreply@blueprintapparel.co"),
+                        [admin_email],
+                        fail_silently=True,
+                    )
+                except Exception as e:
+                    # Log but don't fail - message is already saved
+                    print(f"Failed to send contact notification email: {e}")
+
+            messages.success(request, "Your message has been sent! We'll get back to you soon.")
+            success = True
+
+    context = {
+        "success": success,
+        "errors": errors,
+        "form_data": {
+            "name": request.POST.get("name", ""),
+            "email": request.POST.get("email", request.user.email if request.user.is_authenticated else ""),
+            "phone": request.POST.get("phone", ""),
+            "subject": request.POST.get("subject", ""),
+            "message": request.POST.get("message", ""),
+            "order_number": request.POST.get("order_number", ""),
+        } if request.method == "POST" and not success else {
+            "email": request.user.email if request.user.is_authenticated else "",
+            "name": f"{request.user.first_name} {request.user.last_name}".strip() if request.user.is_authenticated else "",
+        },
+    }
+    return render(request, "home/contact.html", context)
+
+
 @login_required(login_url='account_login')
 def account(request):
     """User account page - requires customer login."""
@@ -1112,3 +1216,63 @@ def promo_redirect(request, promo_code):
         redirect_url = f"{redirect_url}{separator}promo={discount.code}"
 
     return redirect(redirect_url)
+
+
+def giveaway(request):
+    """
+    Giveaway page with slot machine style winner picker.
+    Admin users can upload CSV with participant entries.
+    """
+    return render(request, "shop/giveaway.html")
+
+
+@csrf_exempt
+@require_http_methods(["POST"])
+def set_currency(request):
+    """
+    Set the user's preferred currency.
+    Saves to both session and cookie for persistence.
+    CSRF exempt since this is a non-sensitive preference setting.
+    """
+    import json
+
+    try:
+        data = json.loads(request.body) if request.body else None
+        currency_code = data.get('currency_code') if data else request.POST.get('currency_code')
+    except (json.JSONDecodeError, AttributeError):
+        currency_code = request.POST.get('currency_code')
+
+    if not currency_code:
+        return JsonResponse({'success': False, 'error': 'Currency code required'}, status=400)
+
+    # Validate the currency exists and is active
+    from .models import Currency
+    try:
+        currency = Currency.objects.get(code=currency_code.upper(), is_active=True)
+    except Currency.DoesNotExist:
+        return JsonResponse({'success': False, 'error': 'Invalid currency'}, status=400)
+
+    # Save to session
+    request.session['currency_code'] = currency.code
+
+    # Prepare response
+    response = JsonResponse({
+        'success': True,
+        'currency': {
+            'code': currency.code,
+            'name': currency.name,
+            'symbol': currency.symbol,
+            'exchange_rate': str(currency.exchange_rate),
+        }
+    })
+
+    # Also save to cookie (expires in 1 year)
+    response.set_cookie(
+        'currency_code',
+        currency.code,
+        max_age=365 * 24 * 60 * 60,  # 1 year
+        httponly=False,  # Allow JavaScript access for immediate UI updates
+        samesite='Lax',
+    )
+
+    return response

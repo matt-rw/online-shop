@@ -1,5 +1,6 @@
 {% extends 'base.html' %}
 {% load static %}
+{% load currency_tags %}
 
 {% block title %}Shop - Blueprint Apparel{% endblock %}
 
@@ -119,9 +120,9 @@
               <h3 class="text-sm font-medium tracking-wide truncate">"{{ item.bundle.name|upper }}"</h3>
             </div>
             <div class="flex-shrink-0 text-right">
-              <span class="text-sm font-medium">${{ item.bundle.effective_price }}</span>
+              <span class="text-sm font-medium">{% price item.bundle.effective_price %}</span>
               {% if item.bundle.savings > 0 %}
-              <span class="text-xs text-neutral-400 line-through block">${{ item.bundle.component_total }}</span>
+              <span class="text-xs text-neutral-400 line-through block">{% price item.bundle.component_total %}</span>
               {% endif %}
             </div>
           </div>
@@ -154,7 +155,7 @@
               </p>
               <h3 class="text-sm font-medium tracking-wide truncate">"{{ item.product.name|upper }}"</h3>
             </div>
-            <span class="text-sm font-medium flex-shrink-0">${{ item.product.base_price }}</span>
+            <span class="text-sm font-medium flex-shrink-0">{% price item.product.base_price %}</span>
           </div>
         </div>
       </a>
@@ -190,7 +191,7 @@
 <!-- Section Footer -->
 <div class="border-t border-black bg-white">
   <div class="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center">
-    <span class="text-xs tracking-wider text-neutral-500">{% if free_shipping_threshold > 0 %}Free shipping on orders over ${{ free_shipping_threshold|floatformat:0 }}{% else %}Free shipping with promo code{% endif %}</span>
+    <span class="text-xs tracking-wider text-neutral-500">{% if free_shipping_threshold > 0 %}Free shipping on orders over {% price free_shipping_threshold %}{% else %}Free shipping with promo code{% endif %}</span>
     <span class="text-xs tracking-widest uppercase font-medium">Blueprint Apparel</span>
   </div>
 </div>

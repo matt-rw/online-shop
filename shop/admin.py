@@ -9,6 +9,8 @@ from .models import (
     Campaign,
     CampaignMessage,
     Color,
+    ContactMessage,
+    Currency,
     Discount,
     EmailCampaign,
     EmailLog,
@@ -30,6 +32,24 @@ from .models import (
     SMSTemplate,
     VisitorSession,
 )
+
+
+@admin.register(Currency)
+class CurrencyAdmin(admin.ModelAdmin):
+    """Admin interface for managing currencies."""
+
+    list_display = ("code", "name", "symbol", "exchange_rate", "is_active", "display_order", "rate_updated_at")
+    list_filter = ("is_active",)
+    list_editable = ("exchange_rate", "is_active", "display_order")
+    search_fields = ("code", "name")
+    ordering = ("display_order", "code")
+    readonly_fields = ("rate_updated_at",)
+
+    fieldsets = (
+        ("Currency Information", {"fields": ("code", "name", "symbol", "symbol_position")}),
+        ("Exchange Rate", {"fields": ("exchange_rate", "rate_updated_at"), "description": "Rate from USD (e.g., 0.92 for EUR means 1 USD = 0.92 EUR)"}),
+        ("Display Settings", {"fields": ("decimal_places", "display_order", "is_active")}),
+    )
 
 
 @admin.register(Product)
@@ -978,3 +998,39 @@ class RevenueAdmin(admin.ModelAdmin):
         if not change:
             obj.created_by = request.user
         super().save_model(request, obj, form, change)
+
+
+@admin.register(ContactMessage)
+class ContactMessageAdmin(admin.ModelAdmin):
+    """Admin interface for customer contact messages."""
+
+    list_display = ("name", "email", "subject", "status", "created_at")
+    list_filter = ("status", "created_at")
+    search_fields = ("name", "email", "subject", "message", "order_number")
+    readonly_fields = ("created_at", "updated_at", "read_at", "read_by", "ip_address")
+    date_hierarchy = "created_at"
+    ordering = ("-created_at",)
+
+    fieldsets = (
+        ("Sender Information", {"fields": ("name", "email", "phone", "user")}),
+        ("Message", {"fields": ("subject", "message", "order_number")}),
+        ("Status", {"fields": ("status", "admin_notes")}),
+        ("Metadata", {"fields": ("created_at", "updated_at", "read_at", "read_by", "ip_address"), "classes": ("collapse",)}),
+    )
+
+    actions = ["mark_as_read", "mark_as_replied", "archive_messages"]
+
+    def mark_as_read(self, request, queryset):
+        queryset.filter(status="new").update(status="read", read_at=timezone.now(), read_by=request.user)
+        self.message_user(request, f"{queryset.count()} message(s) marked as read.")
+    mark_as_read.short_description = "Mark selected as read"
+
+    def mark_as_replied(self, request, queryset):
+        queryset.update(status="replied")
+        self.message_user(request, f"{queryset.count()} message(s) marked as replied.")
+    mark_as_replied.short_description = "Mark selected as replied"
+
+    def archive_messages(self, request, queryset):
+        queryset.update(status="archived")
+        self.message_user(request, f"{queryset.count()} message(s) archived.")
+    archive_messages.short_description = "Archive selected messages"

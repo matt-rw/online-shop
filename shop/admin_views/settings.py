@@ -535,6 +535,19 @@ def homepage_settings(request):
             except Exception as e:
                 return JsonResponse({"success": False, "error": str(e)})
 
+        elif action == "save_social_links":
+            try:
+                data = json.loads(request.body)
+                social_data = data.get("social_links", {})
+                site_settings.instagram_url = social_data.get("instagram_url", "")
+                site_settings.facebook_url = social_data.get("facebook_url", "")
+                site_settings.twitter_url = social_data.get("twitter_url", "")
+                site_settings.discord_url = social_data.get("discord_url", "")
+                site_settings.save()
+                return JsonResponse({"success": True})
+            except Exception as e:
+                return JsonResponse({"success": False, "error": str(e)})
+
         elif action == "save_site_lock":
             try:
                 from datetime import datetime as dt
@@ -601,12 +614,21 @@ def homepage_settings(request):
         "launch_at": site_settings.early_access_launch_at.isoformat() if site_settings.early_access_launch_at else None,
     }
 
+    # Social links data for template
+    social_links = {
+        "instagram_url": site_settings.instagram_url or "",
+        "facebook_url": site_settings.facebook_url or "",
+        "twitter_url": site_settings.twitter_url or "",
+        "discord_url": site_settings.discord_url or "",
+    }
+
     context = {
         "site_settings": site_settings,
         "hero_slides": site_settings.hero_slides or [],
         "gallery_images": site_settings.gallery_images or [],
         "news_ticker": site_settings.news_ticker or {},
         "site_lock": site_lock,
+        "social_links": social_links,
         "cst_time": timezone.now().astimezone(pytz.timezone("America/Chicago")),
     }
 
