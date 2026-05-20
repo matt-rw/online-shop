@@ -78,17 +78,23 @@ def _send_via_telnyx(phone_number, message, log, template=None):
         # Create client with API key
         client = Telnyx(api_key=api_key)
 
-        # Send the message using the Telnyx SDK v4 API
-        response = client.messages.send(
-            from_=from_number,
-            to=phone_number,
-            text=message,
-            messaging_profile_id=messaging_profile_id if messaging_profile_id else None,
-        )
+        # Build message parameters
+        send_params = {
+            "to": phone_number,
+            "from_": from_number,
+            "text": message,
+        }
+
+        # Add messaging profile ID if configured
+        if messaging_profile_id:
+            send_params["messaging_profile_id"] = messaging_profile_id
+
+        # Send the message using the Telnyx SDK v4
+        response = client.messages.send(**send_params)
 
         # Update log with success
         log.status = "sent"
-        log.provider_message_id = response.data.id if response.data else ""
+        log.provider_message_id = response.id if hasattr(response, 'id') else ""
         log.save()
 
         logger.info(f"SMS sent via Telnyx to {phone_number}. ID: {log.provider_message_id}")
