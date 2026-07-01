@@ -90,8 +90,11 @@ def subscribe(request):
 @ratelimit(key="ip", rate="5/h", method="POST")
 def subscribe_sms(request):
     """Handle SMS subscription sign-ups"""
-    # Get redirect URL from form or default to home (validated to prevent open redirect)
-    redirect_url = _get_safe_redirect_url(request, request.POST.get("next"), "/#subscribe")
+    if request.method == "GET":
+        return render(request, "shop/subscribe_sms.html")
+
+    # Get redirect URL from form or default to the subscribe page
+    redirect_url = _get_safe_redirect_url(request, request.POST.get("next"), "/shop/subscribe/sms/")
 
     if request.method == "POST":
         phone_number = request.POST.get("phone_number", "").strip()

@@ -164,7 +164,7 @@ def _process_incoming_message(from_number, to_number, message_text):
 
     # Check for help keywords
     if message_text in HELP_KEYWORDS:
-        help_text = "Blueprint Apparel: Get updates on sales & new products. Reply STOP to unsubscribe. Msg & data rates may apply."
+        help_text = "Blueprint Apparel: For help, email blueprintapparel223@gmail.com. Msg frequency varies. Msg & data rates may apply. Reply STOP to unsubscribe."
         send_sms(from_number, help_text)
         return help_text
 

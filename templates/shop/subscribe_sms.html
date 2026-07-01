@@ -1,0 +1,85 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Subscribe to SMS Updates - Blueprint Apparel{% endblock %}
+
+{% block content %}
+<div class="min-h-screen flex items-center justify-center px-4 py-16">
+  <div class="max-w-md w-full">
+
+    <!-- Logo -->
+    <div class="text-center mb-10">
+      <img src="{% static 'images/blueprint_b_circular.png' %}" alt="Blueprint" class="w-16 h-16 mx-auto mb-6" />
+      <h1 class="text-3xl font-bold text-gray-900 mb-3 tracking-tight">Get Texts from Blueprint</h1>
+      <p class="text-gray-600 text-lg leading-relaxed">
+        Be the first to know about new drops, exclusive offers, and <strong class="text-gray-800">10% off</strong> your first order.
+      </p>
+    </div>
+
+    <!-- Benefits -->
+    <ul class="text-gray-600 text-sm space-y-3 mb-8">
+      <li class="flex items-start gap-3">
+        <svg class="w-4 h-4 text-black flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+        </svg>
+        <span>Early access to new drops</span>
+      </li>
+      <li class="flex items-start gap-3">
+        <svg class="w-4 h-4 text-black flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+        </svg>
+        <span>Exclusive offers &amp; discounts</span>
+      </li>
+      <li class="flex items-start gap-3">
+        <svg class="w-4 h-4 text-black flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+        </svg>
+        <span>Behind-the-scenes content</span>
+      </li>
+    </ul>
+
+    <!-- Messages -->
+    {% if messages %}
+    <div class="mb-6">
+      {% for message in messages %}
+      <div class="px-4 py-3 rounded-lg text-sm font-medium
+        {% if message.tags == 'success' %}bg-green-50 text-green-800 border border-green-200
+        {% elif message.tags == 'error' %}bg-red-50 text-red-800 border border-red-200
+        {% elif message.tags == 'info' %}bg-blue-50 text-blue-800 border border-blue-200
+        {% else %}bg-gray-50 text-gray-800 border border-gray-200{% endif %}">
+        {{ message }}
+      </div>
+      {% endfor %}
+    </div>
+    {% endif %}
+
+    <!-- Subscribe Form -->
+    <form method="POST" action="{% url 'shop:subscribe_sms' %}" class="space-y-4">
+      {% csrf_token %}
+      <input type="hidden" name="next" value="{% url 'shop:subscribe_sms' %}">
+      <div>
+        <label for="phone_number" class="block text-sm font-semibold text-gray-900 mb-2">Phone Number</label>
+        <input type="tel"
+               id="phone_number"
+               name="phone_number"
+               placeholder="(555) 123-4567"
+               required
+               class="w-full px-4 py-3.5 text-base rounded-xl border-2 border-gray-300 focus:ring-2 focus:ring-gray-900 focus:border-gray-900 transition-all text-gray-900 placeholder-gray-400 font-medium" />
+      </div>
+
+      <button type="submit"
+              class="w-full px-6 py-4 text-lg rounded-xl bg-gray-900 text-white font-bold hover:bg-gray-800 active:bg-black transition-all shadow-lg hover:shadow-xl">
+        Subscribe to Texts
+      </button>
+    </form>
+
+    <!-- SMS Compliance (always visible) -->
+    <div class="mt-6 px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-xs text-gray-500 leading-relaxed">
+      <span class="font-medium text-gray-600">SMS Terms:</span> By entering your phone number and clicking "Subscribe to Texts", you consent to receive recurring automated marketing text messages from Blueprint Apparel at the phone number provided. Msg frequency varies. Msg &amp; data rates may apply. Reply STOP to unsubscribe at any time. Reply HELP for help.
+      <a href="{% url 'shop:privacy' %}" class="underline hover:text-gray-700">Privacy Policy</a> &amp;
+      <a href="{% url 'shop:terms' %}" class="underline hover:text-gray-700">Terms of Service</a>.
+    </div>
+
+  </div>
+</div>
+{% endblock %}

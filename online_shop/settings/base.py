@@ -242,9 +242,9 @@ DEFAULT_FROM_EMAIL = "Blueprint Apparel <no-reply@blueprnt.store>"
 
 # SMS CONFIGURATION
 # Supported providers: "telnyx", "twilio"
-SMS_PROVIDER = get_env_variable("SMS_PROVIDER", "telnyx")
+SMS_PROVIDER = get_env_variable("SMS_PROVIDER", "twilio")
 
-# Telnyx SMS (Recommended - easier setup, competitive pricing)
+# Telnyx SMS (Disabled)
 TELNYX_API_KEY = get_env_variable("TELNYX_API_KEY", "")
 TELNYX_PHONE_NUMBER = get_env_variable("TELNYX_PHONE_NUMBER", "")  # Your Telnyx number in E.164 format
 TELNYX_MESSAGING_PROFILE_ID = get_env_variable("TELNYX_MESSAGING_PROFILE_ID", "")  # Optional
@@ -255,7 +255,7 @@ PLIVO_AUTH_ID = get_env_variable("PLIVO_AUTH_ID", "")
 PLIVO_AUTH_TOKEN = get_env_variable("PLIVO_AUTH_TOKEN", "")
 PLIVO_PHONE_NUMBER = get_env_variable("PLIVO_PHONE_NUMBER", "")
 
-# Twilio SMS (Legacy - keeping for backwards compatibility)
+# Twilio SMS (Active)
 TWILIO_ACCOUNT_SID = get_env_variable("TWILIO_ACCOUNT_SID", "")
 TWILIO_AUTH_TOKEN = get_env_variable("TWILIO_AUTH_TOKEN", "")
 TWILIO_PHONE_NUMBER = get_env_variable("TWILIO_PHONE_NUMBER", "")
