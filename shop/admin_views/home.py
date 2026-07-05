@@ -7,7 +7,7 @@ from decimal import Decimal
 
 from django.contrib.admin.views.decorators import staff_member_required
 from django.contrib.auth import get_user_model
-from django.db.models import Sum
+from django.db.models import Avg, Sum
 from django.http import JsonResponse
 from django.shortcuts import render
 from django.utils import timezone
@@ -381,6 +381,10 @@ def admin_home(request):
         "total_visitors": total_visitors,
         "active_sessions": active_sessions,
         "conversion_rate": round(conversion_rate, 2),
+        "homepage_avg_response_ms": round(
+            PageView.objects.filter(path="/", viewed_at__gte=last_24h)
+            .aggregate(avg=Avg("response_time_ms"))["avg"] or 0
+        ),
     }
 
     drafts = QuickMessage.objects.filter(status="draft").order_by("-updated_at")[:5]

@@ -127,11 +127,14 @@ def currency_context(request):
     """
     from .models import Currency
 
-    # Auto-refresh stale exchange rates (runs in background, cached)
-    try:
-        Currency.refresh_rates_if_stale(max_age_hours=1)
-    except Exception:
-        pass  # Don't break page load if refresh fails
+    # Only check for stale rates every 10 minutes (avoid DB query on every request)
+    refresh_cache_key = "currency_refresh_checked"
+    if not cache.get(refresh_cache_key):
+        try:
+            Currency.refresh_rates_if_stale(max_age_hours=1)
+        except Exception:
+            pass
+        cache.set(refresh_cache_key, True, 600)
 
     cache_key = "available_currencies"
 

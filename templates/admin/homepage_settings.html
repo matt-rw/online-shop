@@ -780,6 +780,35 @@
   </div>
 
   <div class="main-content">
+    <!-- Homepage Performance -->
+    <div style="display: flex; gap: 1rem; margin-bottom: 1.5rem;">
+      <div style="flex: 1; background: white; border-radius: 12px; padding: 1.25rem 1.5rem; box-shadow: 0 1px 3px rgba(0,0,0,0.08);">
+        <div style="font-size: 0.7rem; font-weight: 600; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 0.5rem;">Live Site Response</div>
+        {% if homepage_perf.live_response_ms != None %}
+        <div style="font-size: 1.75rem; font-weight: 700; color: {% if homepage_perf.live_response_ms <= 300 %}#059669{% elif homepage_perf.live_response_ms <= 800 %}#d97706{% else %}#dc2626{% endif %};">{{ homepage_perf.live_response_ms }}<span style="font-size: 0.875rem; font-weight: 500; color: #94a3b8;">ms</span></div>
+        <div style="font-size: 0.7rem; color: #94a3b8; margin-top: 0.25rem;">{{ homepage_perf.live_transfer_kb }} KB transferred</div>
+        {% else %}
+        <div style="font-size: 1rem; font-weight: 500; color: #94a3b8;">Unavailable</div>
+        {% endif %}
+      </div>
+      <div style="flex: 1; background: white; border-radius: 12px; padding: 1.25rem 1.5rem; box-shadow: 0 1px 3px rgba(0,0,0,0.08);">
+        <div style="font-size: 0.7rem; font-weight: 600; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 0.5rem;">Server Avg (24h)</div>
+        <div style="font-size: 1.75rem; font-weight: 700; color: {% if homepage_perf.avg_response_ms <= 200 %}#059669{% elif homepage_perf.avg_response_ms <= 500 %}#d97706{% else %}#dc2626{% endif %};">{{ homepage_perf.avg_response_ms }}<span style="font-size: 0.875rem; font-weight: 500; color: #94a3b8;">ms</span></div>
+        <div style="font-size: 0.7rem; color: #94a3b8; margin-top: 0.25rem;">{{ homepage_perf.total_views_24h }} views</div>
+      </div>
+      <div style="flex: 1; background: white; border-radius: 12px; padding: 1.25rem 1.5rem; box-shadow: 0 1px 3px rgba(0,0,0,0.08);">
+        <div style="font-size: 0.7rem; font-weight: 600; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 0.5rem;">Hero Images ({{ homepage_perf.slide_count }} slides)</div>
+        <div style="font-size: 1.75rem; font-weight: 700; color: {% if homepage_perf.total_image_mb <= 1 %}#059669{% elif homepage_perf.total_image_mb <= 3 %}#d97706{% else %}#dc2626{% endif %}; margin-bottom: 0.5rem;">{{ homepage_perf.total_image_mb }}<span style="font-size: 0.875rem; font-weight: 500; color: #94a3b8;"> MB</span></div>
+        <div style="position: relative; height: 4px; border-radius: 2px; background: linear-gradient(to right, #059669, #84cc16, #eab308, #f97316, #dc2626);">
+          <div style="position: absolute; right: 0; top: 0; bottom: 0; background: #e2e8f0; width: {{ homepage_perf.size_remaining_pct }}%;"></div>
+        </div>
+        <div style="display: flex; justify-content: space-between; margin-top: 0.25rem; font-size: 0.6rem; color: #cbd5e1;">
+          <span>0</span>
+          <span>5 MB</span>
+        </div>
+      </div>
+    </div>
+
     <!-- Hero Slideshow -->
     <div class="section-card">
       <h2 class="section-title">

@@ -1146,6 +1146,7 @@
       { id: 'total_visitors', label: 'Total Visitors', value: statsData.total_visitors, category: 'Marketing', icon: '👥' },
       { id: 'active_sessions', label: 'Active Sessions', value: statsData.active_sessions, category: 'Marketing', icon: '⚡' },
       { id: 'conversion_rate', label: 'Conversion Rate', value: statsData.conversion_rate + '%', category: 'Marketing', icon: '🎯' },
+      { id: 'homepage_avg_response_ms', label: 'Homepage Response (24h)', value: statsData.homepage_avg_response_ms + 'ms', category: 'Marketing', icon: '⏱️' },
 
       // Orders & Fulfillment
       { id: 'total_orders', label: 'Total Orders', value: statsData.total_orders, category: 'Orders & Fulfillment', icon: '📋' },
@@ -1159,8 +1160,8 @@
       { id: 'total_users', label: 'Total Users', value: statsData.total_users, category: 'Settings', icon: '👤' },
     ];
 
-    const MAX_WIDGETS = 5;
-    const DEFAULT_WIDGETS = ['total_users', 'total_email_subs', 'total_products', 'total_revenue', 'page_views_24h'];
+    const MAX_WIDGETS = 6;
+    const DEFAULT_WIDGETS = ['total_users', 'total_email_subs', 'total_products', 'total_revenue', 'page_views_24h', 'homepage_avg_response_ms'];
 
     function getSelectedWidgets() {
       const saved = localStorage.getItem('dashboardWidgets');

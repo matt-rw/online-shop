@@ -15,11 +15,14 @@ from django.utils import timezone
 
 import pytz
 
+from django.db.models import Avg
+
 from shop.models import (
     ConnectionLog,
     Order,
     SiteSettings,
 )
+from shop.models.analytics import PageView
 from shop.models.settings import QuickLink
 
 logger = logging.getLogger(__name__)
@@ -622,6 +625,59 @@ def homepage_settings(request):
         "discord_url": site_settings.discord_url or "",
     }
 
+    now = timezone.now()
+    last_24h = now - timedelta(hours=24)
+    homepage_views = PageView.objects.filter(path="/", viewed_at__gte=last_24h)
+
+    # Calculate total hero slide image sizes from local files
+    import os
+    from django.conf import settings as django_settings
+    hero_slides_data = site_settings.hero_slides or []
+    total_image_bytes = 0
+    for slide in hero_slides_data:
+        url = slide.get("image_url", "")
+        if url:
+            try:
+                if url.startswith("/static/"):
+                    rel_path = url.replace("/static/", "", 1)
+                    for static_dir in django_settings.STATICFILES_DIRS:
+                        full_path = os.path.join(static_dir, rel_path)
+                        if os.path.exists(full_path):
+                            total_image_bytes += os.path.getsize(full_path)
+                            break
+                elif url.startswith("/media/"):
+                    rel_path = url.replace("/media/", "", 1)
+                    full_path = os.path.join(django_settings.MEDIA_ROOT, rel_path)
+                    if os.path.exists(full_path):
+                        total_image_bytes += os.path.getsize(full_path)
+            except Exception:
+                pass
+    total_image_mb = round(total_image_bytes / (1024 * 1024), 2)
+
+    # Measure live site response
+    import requests as http_requests
+    import time as _time
+    live_response_ms = None
+    live_transfer_kb = None
+    try:
+        start = _time.time()
+        resp = http_requests.get("https://www.blueprnt.store/", timeout=10)
+        live_response_ms = round((_time.time() - start) * 1000)
+        live_transfer_kb = round(len(resp.content) / 1024, 1)
+    except Exception:
+        pass
+
+    homepage_perf = {
+        "avg_response_ms": round(homepage_views.aggregate(avg=Avg("response_time_ms"))["avg"] or 0),
+        "total_views_24h": homepage_views.count(),
+        "total_image_mb": total_image_mb,
+        "slide_count": len(hero_slides_data),
+        "size_pct": min(round(total_image_mb / 5 * 100), 100),
+        "size_remaining_pct": max(100 - min(round(total_image_mb / 5 * 100), 100), 0),
+        "live_response_ms": live_response_ms,
+        "live_transfer_kb": live_transfer_kb,
+    }
+
     context = {
         "site_settings": site_settings,
         "hero_slides": site_settings.hero_slides or [],
@@ -630,6 +686,7 @@ def homepage_settings(request):
         "site_lock": site_lock,
         "social_links": social_links,
         "cst_time": timezone.now().astimezone(pytz.timezone("America/Chicago")),
+        "homepage_perf": homepage_perf,
     }
 
     return render(request, "admin/homepage_settings.html", context)
