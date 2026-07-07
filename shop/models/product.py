@@ -468,8 +468,8 @@ class Discount(models.Model):
     name = models.CharField(max_length=200, help_text="Internal name for this discount")
     code = models.CharField(
         max_length=50,
-        unique=True,
         blank=True,
+        default="",
         help_text="Discount code (leave blank for auto-apply)",
     )
     discount_type = models.CharField(max_length=20, choices=DISCOUNT_TYPES, default="percentage")

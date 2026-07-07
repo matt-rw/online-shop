@@ -180,10 +180,10 @@
               <span class="text-neutral-600">Subtotal</span>
               <span id="subtotal" class="font-medium">{% price subtotal %}</span>
             </div>
-            {% if auto_discount %}
+            {% if auto_discount and discount_savings %}
             <div class="flex justify-between text-sm">
-              <span class="text-green-600">{{ auto_discount.name }} (-{{ auto_discount.value|floatformat:0 }}{% if auto_discount.discount_type == "percentage" %}%{% endif %})</span>
-              <span class="font-medium text-green-600">-{% if auto_discount.discount_type == "percentage" %}{% price discount_savings %}{% else %}{% price auto_discount.value %}{% endif %}</span>
+              <span class="text-green-600">{{ auto_discount.name }}{% if auto_discount.discount_type == "percentage" %} (-{{ auto_discount.value|floatformat:0 }}%){% endif %}</span>
+              <span class="font-medium text-green-600">-{% price discount_savings %}</span>
             </div>
             {% endif %}
             <div class="flex justify-between text-sm">

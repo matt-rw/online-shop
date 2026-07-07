@@ -407,7 +407,6 @@ def cart_view(request):
                 break
 
     # Add sale info to cart items and calculate discount savings
-    from decimal import Decimal
     discount_savings = Decimal("0.00")
     for ci in cart_items_with_images:
         sale_info = ci["item"].variant.product.get_sale_info(_active_sales=active_sales)
