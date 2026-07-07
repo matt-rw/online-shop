@@ -122,7 +122,7 @@
             <div class="flex-shrink-0 text-right">
               <span class="text-sm font-medium">{% price item.bundle.effective_price %}</span>
               {% if item.bundle.savings > 0 %}
-              <span class="text-xs text-neutral-400 line-through block">{% price item.bundle.component_total %}</span>
+              <span class="text-sm text-neutral-500 block" style="text-decoration: line-through;">{% price item.bundle.component_total %}</span>
               {% endif %}
             </div>
           </div>
@@ -158,7 +158,7 @@
             {% if item.sale_info %}
               <span class="flex-shrink-0 text-right">
                 <span class="text-sm font-medium text-red-600">{% price item.sale_info.sale_price %}</span>
-                <span class="text-xs text-neutral-400 line-through block">{% price item.product.base_price %}</span>
+                <span class="text-sm text-neutral-500 block" style="text-decoration: line-through;">{% price item.product.base_price %}</span>
               </span>
             {% else %}
               <span class="text-sm font-medium flex-shrink-0">{% price item.product.base_price %}</span>

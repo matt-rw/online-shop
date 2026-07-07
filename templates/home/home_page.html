@@ -757,7 +757,7 @@
             {% if product.sale_info %}
               <span class="text-right">
                 <span class="text-sm font-medium text-red-600">{% price product.sale_info.sale_price %}</span>
-                <span class="text-xs text-neutral-400 line-through block">{% price product.base_price %}</span>
+                <span class="text-sm text-neutral-500 block" style="text-decoration: line-through;">{% price product.base_price %}</span>
               </span>
             {% else %}
               <span class="text-sm font-medium">{% price product.base_price %}</span>
