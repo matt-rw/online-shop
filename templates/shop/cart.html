@@ -180,6 +180,12 @@
               <span class="text-neutral-600">Subtotal</span>
               <span id="subtotal" class="font-medium">{% price subtotal %}</span>
             </div>
+            {% if auto_discount %}
+            <div class="flex justify-between text-sm">
+              <span class="text-green-600">{{ auto_discount.name }} (-{{ auto_discount.value|floatformat:0 }}{% if auto_discount.discount_type == "percentage" %}%{% endif %})</span>
+              <span class="font-medium text-green-600">-{% if auto_discount.discount_type == "percentage" %}{% price discount_savings %}{% else %}{% price auto_discount.value %}{% endif %}</span>
+            </div>
+            {% endif %}
             <div class="flex justify-between text-sm">
               <span class="text-neutral-600">Shipping</span>
               <span id="shipping" class="font-medium {% if free_shipping %}text-green-600{% else %}text-neutral-400{% endif %}">
@@ -196,7 +202,7 @@
             </div>
             <div class="border-t border-black pt-4 flex justify-between">
               <span class="text-xs tracking-widest uppercase font-medium">Total</span>
-              <span id="total" class="text-xl font-bold">{% price subtotal %}</span>
+              <span id="total" class="text-xl font-bold">{% if auto_discount %}{% price discounted_total %}{% else %}{% price subtotal %}{% endif %}</span>
             </div>
           </div>
 

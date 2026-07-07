@@ -406,9 +406,16 @@ def cart_view(request):
                 auto_discount = sale
                 break
 
-    # Add sale info to cart items
+    # Add sale info to cart items and calculate discount savings
+    from decimal import Decimal
+    discount_savings = Decimal("0.00")
     for ci in cart_items_with_images:
-        ci["sale_info"] = ci["item"].variant.product.get_sale_info(_active_sales=active_sales)
+        sale_info = ci["item"].variant.product.get_sale_info(_active_sales=active_sales)
+        ci["sale_info"] = sale_info
+        if sale_info:
+            discount_savings += sale_info["savings"] * ci["item"].quantity
+
+    discounted_total = subtotal - discount_savings
 
     context = {
         "cart": cart,
@@ -418,6 +425,8 @@ def cart_view(request):
         "free_shipping": free_shipping,
         "stripe_publishable_key": settings.STRIPE_PUBLISHABLE_KEY,
         "auto_discount": auto_discount,
+        "discount_savings": discount_savings,
+        "discounted_total": discounted_total,
     }
 
     return render(request, "shop/cart.html", context)
