@@ -788,6 +788,10 @@ def product_detail(request, slug):
     # Build attribute order list for JavaScript variant lookup
     attribute_order = [attr['slug'] for attr in product_attributes]
 
+    # Check for active sale
+    from .models.product import get_active_sales
+    sale_info = product.get_sale_info(_active_sales=get_active_sales())
+
     context = {
         "product": product,
         "variants": variants,
@@ -807,6 +811,8 @@ def product_detail(request, slug):
         "attribute_order_json": json.dumps(attribute_order),
         # Stripe for Express Checkout
         "stripe_publishable_key": settings.STRIPE_PUBLISHABLE_KEY,
+        # Sale info
+        "sale_info": sale_info,
     }
 
     return render(request, "shop/product_detail.html", context)
@@ -855,6 +861,10 @@ def shop(request):
     site_settings = SiteSettings.load()
     default_image = site_settings.default_product_image or ""
 
+    # Fetch active sales once for all products
+    from .models.product import get_active_sales
+    active_sales = get_active_sales()
+
     # Build product data with images (no extra queries due to prefetch)
     product_list = []
     for product in products:
@@ -877,6 +887,7 @@ def shop(request):
             "image": image,
             "variant_count": len(product.active_variants),
             "is_bundle": False,
+            "sale_info": product.get_sale_info(_active_sales=active_sales),
         })
 
     # Get bundles (only if no category filter, since bundles don't have categories)

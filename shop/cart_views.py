@@ -395,6 +395,21 @@ def cart_view(request):
     threshold, _ = get_auto_free_shipping_threshold()
     free_shipping = threshold and subtotal >= threshold
 
+    # Find auto-apply sale discount for checkout
+    from .models.product import get_active_sales
+    active_sales = get_active_sales()
+    auto_discount = None
+    if active_sales:
+        # Use the first applies_to_all sale discount for auto-apply
+        for sale in active_sales:
+            if sale.applies_to_all:
+                auto_discount = sale
+                break
+
+    # Add sale info to cart items
+    for ci in cart_items_with_images:
+        ci["sale_info"] = ci["item"].variant.product.get_sale_info(_active_sales=active_sales)
+
     context = {
         "cart": cart,
         "cart_items": cart_items_with_images,
@@ -402,6 +417,7 @@ def cart_view(request):
         "subtotal": subtotal,
         "free_shipping": free_shipping,
         "stripe_publishable_key": settings.STRIPE_PUBLISHABLE_KEY,
+        "auto_discount": auto_discount,
     }
 
     return render(request, "shop/cart.html", context)
@@ -1187,6 +1203,14 @@ def create_checkout_session(request):
         free_shipping_code = ""
 
         from .models import Discount
+
+        # Auto-apply codeless sale discount if no discount code was entered
+        if not discount_id:
+            from .models.product import get_active_sales
+            for sale in get_active_sales():
+                if sale.applies_to_all and sale.discount_type in ("percentage", "fixed"):
+                    discount_id = str(sale.id)
+                    break
 
         # Process free shipping discount - only record if code is actually used (not covered by threshold)
         if free_shipping_discount_id and free_shipping_code_used:

@@ -9,10 +9,18 @@ def home_page(request):
     site_settings = SiteSettings.load()
 
     # Get featured products for the homepage
+    from shop.models.product import get_active_sales
+    active_sales = get_active_sales()
     featured_products = Product.objects.filter(
         is_active=True,
         featured=True
     ).select_related('category_obj').prefetch_related('variants')[:4]
+
+    # Attach sale info to each featured product
+    featured_products_with_sales = []
+    for product in featured_products:
+        product._sale_info = product.get_sale_info(_active_sales=active_sales)
+        featured_products_with_sales.append(product)
 
     # Get hero slides (use database slides if available, otherwise use defaults)
     # Filter to only show active slides (is_active defaults to True if not set)
@@ -69,7 +77,7 @@ def home_page(request):
 
     context = {
         "site_settings": site_settings,
-        "featured_products": featured_products,
+        "featured_products": featured_products_with_sales,
         "hero_slides": hero_slides,
         "gallery_images": gallery_images,
         "slideshow_settings": slideshow_settings,

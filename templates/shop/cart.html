@@ -77,7 +77,12 @@
                 {% if cart_item.item.variant.color %}Color: {{ cart_item.item.variant.color }}{% endif %}
               </p>
             </div>
-            <p class="text-lg font-bold">{% price cart_item.item.variant.price %}</p>
+            {% if cart_item.sale_info %}
+              <p class="text-lg font-bold text-red-600">{% price cart_item.sale_info.sale_price %}</p>
+              <p class="text-sm text-neutral-400 line-through">{% price cart_item.item.variant.price %}</p>
+            {% else %}
+              <p class="text-lg font-bold">{% price cart_item.item.variant.price %}</p>
+            {% endif %}
           </div>
 
           <!-- Quantity & Remove -->

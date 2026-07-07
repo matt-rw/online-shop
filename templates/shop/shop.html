@@ -155,7 +155,14 @@
               </p>
               <h3 class="text-sm font-medium tracking-wide truncate">"{{ item.product.name|upper }}"</h3>
             </div>
-            <span class="text-sm font-medium flex-shrink-0">{% price item.product.base_price %}</span>
+            {% if item.sale_info %}
+              <span class="flex-shrink-0 text-right">
+                <span class="text-sm font-medium text-red-600">{% price item.sale_info.sale_price %}</span>
+                <span class="text-xs text-neutral-400 line-through block">{% price item.product.base_price %}</span>
+              </span>
+            {% else %}
+              <span class="text-sm font-medium flex-shrink-0">{% price item.product.base_price %}</span>
+            {% endif %}
           </div>
         </div>
       </a>

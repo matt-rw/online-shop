@@ -152,6 +152,46 @@ class Product(models.Model):
         """Number of variants (size/color combinations)"""
         return self.variants.count()
 
+    def get_sale_info(self, _active_sales=None):
+        """
+        Find the best active codeless discount for this product.
+        Pass _active_sales (from get_active_sales()) to avoid repeated queries.
+        Returns dict with sale_price, original_price, discount, save_percent or None.
+        """
+        from decimal import Decimal
+
+        if _active_sales is None:
+            _active_sales = get_active_sales()
+
+        best = None
+        for discount in _active_sales:
+            # Check if discount applies to this product
+            if not discount.applies_to_all:
+                if not discount._product_ids:
+                    continue
+                if self.pk not in discount._product_ids:
+                    continue
+
+            # Calculate sale price
+            if discount.discount_type == "percentage":
+                sale_price = (self.base_price * (100 - discount.value) / 100).quantize(Decimal("0.01"))
+            elif discount.discount_type == "fixed":
+                sale_price = max(self.base_price - discount.value, Decimal("0"))
+            else:
+                continue
+
+            savings = self.base_price - sale_price
+            if best is None or savings > best["savings"]:
+                best = {
+                    "sale_price": sale_price,
+                    "original_price": self.base_price,
+                    "discount": discount,
+                    "savings": savings,
+                    "save_percent": round(savings / self.base_price * 100) if self.base_price else 0,
+                }
+
+        return best
+
 
 class Size(models.Model):
     code = models.CharField(max_length=32, unique=True)
@@ -603,3 +643,34 @@ class Discount(models.Model):
             return False
 
         return True
+
+
+def get_active_sales():
+    """
+    Fetch all active codeless discounts (sales) in a single query.
+    Attaches _product_ids to each discount for efficient product matching.
+    """
+    from django.utils import timezone
+
+    now = timezone.now()
+    sales = list(
+        Discount.objects.filter(
+            code="",
+            is_active=True,
+            discount_type__in=["percentage", "fixed"],
+            valid_from__lte=now,
+        ).filter(
+            models.Q(valid_until__isnull=True) | models.Q(valid_until__gte=now)
+        ).filter(
+            models.Q(max_uses__isnull=True) | models.Q(times_used__lt=models.F("max_uses"))
+        ).prefetch_related("products")
+    )
+
+    # Cache product IDs on each discount to avoid repeated queries
+    for sale in sales:
+        if not sale.applies_to_all:
+            sale._product_ids = set(sale.products.values_list("pk", flat=True))
+        else:
+            sale._product_ids = set()
+
+    return sales
