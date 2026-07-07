@@ -735,6 +735,22 @@ def checkout_view(request):
     threshold, _ = get_auto_free_shipping_threshold()
     free_shipping = threshold and subtotal >= threshold
 
+    # Auto-apply codeless sale discount
+    from .models.product import get_active_sales
+    active_sales = get_active_sales()
+    auto_discount = None
+    discount_savings = Decimal("0.00")
+    for sale in active_sales:
+        if sale.applies_to_all and sale.discount_type in ("percentage", "fixed"):
+            auto_discount = sale
+            break
+    if auto_discount:
+        if auto_discount.discount_type == "percentage":
+            discount_savings = (subtotal * auto_discount.value / 100).quantize(Decimal("0.01"))
+        elif auto_discount.discount_type == "fixed":
+            discount_savings = min(auto_discount.value, subtotal)
+    discounted_total = subtotal - discount_savings
+
     # Get saved addresses and user info for logged-in users
     saved_addresses = []
     user_full_name = ""
@@ -763,6 +779,9 @@ def checkout_view(request):
         "user_full_name": user_full_name,
         "user_email": user_email,
         "stripe_publishable_key": settings.STRIPE_PUBLISHABLE_KEY,
+        "auto_discount": auto_discount,
+        "discount_savings": discount_savings,
+        "discounted_total": discounted_total,
     }
 
     return render(request, "shop/checkout.html", context)

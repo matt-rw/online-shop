@@ -497,8 +497,8 @@
               <div id="promo-message" class="mt-2 text-xs hidden"></div>
 
               <!-- Hidden fields for discount IDs -->
-              <input type="hidden" id="applied-discount-id" name="discount_id" value="">
-              <input type="hidden" id="applied-discount-amount" name="discount_amount" value="0">
+              <input type="hidden" id="applied-discount-id" name="discount_id" value="{% if auto_discount %}{{ auto_discount.id }}{% endif %}">
+              <input type="hidden" id="applied-discount-amount" name="discount_amount" value="{% if discount_savings %}{{ discount_savings }}{% else %}0{% endif %}">
               <input type="hidden" id="applied-free-shipping-id" name="free_shipping_discount_id" value="">
             </div>
 
@@ -508,9 +508,9 @@
                 <span class="text-neutral-600">Subtotal</span>
                 <span id="checkout-subtotal" class="font-medium">{% price subtotal %}</span>
               </div>
-              <div id="discount-row" class="flex justify-between text-sm hidden">
-                <span class="text-neutral-600">Discount</span>
-                <span id="checkout-discount" class="font-medium text-green-600">-$0.00</span>
+              <div id="discount-row" class="flex justify-between text-sm {% if not auto_discount %}hidden{% endif %}">
+                <span class="text-neutral-600">{% if auto_discount %}{{ auto_discount.name }}{% else %}Discount{% endif %}</span>
+                <span id="checkout-discount" class="font-medium text-green-600">{% if discount_savings %}-{% price discount_savings %}{% else %}-$0.00{% endif %}</span>
               </div>
               <div class="flex justify-between text-sm">
                 <span class="text-neutral-600">Shipping</span>
@@ -522,7 +522,7 @@
               </div>
               <div class="border-t border-black pt-4 flex justify-between">
                 <span class="text-xs tracking-widest uppercase font-medium">Total</span>
-                <span id="checkout-total" class="text-xl font-bold">{% price subtotal %}</span>
+                <span id="checkout-total" class="text-xl font-bold">{% if auto_discount %}{% price discounted_total %}{% else %}{% price subtotal %}{% endif %}</span>
               </div>
             </div>
             <input type="hidden" id="selected-shipping-rate" name="shipping_rate_id" value="">
@@ -589,6 +589,7 @@
 <script>
 const csrfToken = '{{ csrf_token }}';
 const subtotal = {{ subtotal }};
+const autoDiscountAmount = {{ discount_savings|default:"0" }};
 const shippingRatesUrl = '{% url "shop:get_shipping_rates" %}';
 
 // Track if free shipping promo code is applied (used by form validation and totals)
@@ -805,9 +806,9 @@ const valueDiscountLabel = document.getElementById('value-discount-label');
 const freeShippingLabel = document.getElementById('free-shipping-label');
 const promoInputContainer = document.getElementById('promo-input-container');
 
-// Track applied discounts
-let currentValueDiscount = 0;
-let currentValueDiscountType = null;
+// Track applied discounts (initialize with auto-discount if present)
+let currentValueDiscount = autoDiscountAmount;
+let currentValueDiscountType = autoDiscountAmount > 0 ? 'auto' : null;
 let currentValueDiscountCode = '';
 let freeShippingDiscountCode = '';
 
