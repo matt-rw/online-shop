@@ -808,7 +808,7 @@ const promoInputContainer = document.getElementById('promo-input-container');
 
 // Track applied discounts (initialize with auto-discount if present)
 let currentValueDiscount = autoDiscountAmount;
-let currentValueDiscountType = autoDiscountAmount > 0 ? 'auto' : null;
+let currentValueDiscountType = autoDiscountAmount > 0 ? '{{ auto_discount.discount_type|default:"" }}' : null;
 let currentValueDiscountCode = '';
 let freeShippingDiscountCode = '';
 
