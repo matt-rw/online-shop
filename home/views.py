@@ -19,7 +19,7 @@ def home_page(request):
     # Attach sale info to each featured product
     featured_products_with_sales = []
     for product in featured_products:
-        product._sale_info = product.get_sale_info(_active_sales=active_sales)
+        product.sale_info = product.get_sale_info(_active_sales=active_sales)
         featured_products_with_sales.append(product)
 
     # Get hero slides (use database slides if available, otherwise use defaults)
