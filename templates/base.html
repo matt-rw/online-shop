@@ -252,21 +252,22 @@
       });
     </script>
 
-    <!-- Lenis Smooth Scroll -->
+    <!-- Lenis Smooth Scroll (disabled for performance - saves ~1MB) -->
+    <!--
     <script type="module">
         import Lenis from 'https://cdn.jsdelivr.net/npm/@studio-freight/lenis@1.0.39/dist/lenis.min.js'
         const lenis = new Lenis({
             smooth: true,
-            lerp: 0.08, // Lower = slower, smoother
+            lerp: 0.08,
             wheelMultiplier: 1.0
         })
-
         function raf(time) {
             lenis.raf(time)
             requestAnimationFrame(raf)
         }
         requestAnimationFrame(raf)
     </script>
+    -->
 
     <!-- Dark Mode Toggle -->
     <script>

@@ -4,8 +4,8 @@
 {% load currency_tags %}
 
 {% block extra_css %}
-  <!-- AOS (Animate On Scroll) Library -->
-  <link rel="stylesheet" href="https://unpkg.com/aos@2.3.4/dist/aos.css">
+  <!-- Preload hero logo so it appears with the hero image, not after -->
+  <link rel="preload" href="{% static 'images/font.webp' %}?v=2" as="image" type="image/webp">
   <!-- Preconnect to external domains for faster loading -->
   <link rel="preconnect" href="https://unpkg.com">
   <link rel="preconnect" href="https://www.instagram.com">
@@ -374,6 +374,15 @@
       animation: fingerprintStamp 6s ease-in-out infinite;
     }
     */
+
+    /* Prevent hero elements from flashing in before JS positions them */
+    .hero-overlay-content {
+      opacity: 0;
+      transition: opacity 0.2s ease-in;
+    }
+    .hero-overlay-content.ready {
+      opacity: 1;
+    }
   </style>
 
 {% endblock %}
@@ -453,7 +462,7 @@
 
 
     <!-- Slideshow navigation -->
-    <div class="absolute bottom-8 left-1/2 transform -translate-x-1/2 z-30 flex items-center gap-4" id="hero-dots">
+    <div class="absolute bottom-8 left-1/2 transform -translate-x-1/2 z-30 flex items-center gap-4 hero-overlay-content" id="hero-dots">
       {% if hero_slides %}
         {% for slide in hero_slides %}
           <button onclick="changeHeroSlide({{ forloop.counter }})" class="hero-dot hero-dot-{{ forloop.counter }} w-4 h-4 rounded-full {% if forloop.first %}bg-white{% else %}bg-white/50{% endif %} transition-all duration-300 hover:scale-125 cursor-pointer shadow-lg"></button>
@@ -467,7 +476,7 @@
     </div>
 
     <!-- Blueprint Technical Grid Pattern -->
-    <div class="absolute inset-0 opacity-20 z-0">
+    <div class="absolute inset-0 opacity-20 z-0 hero-overlay-content">
       <svg class="w-full h-full" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="none">
         <defs>
           <pattern id="blueprintGrid" width="100" height="100" patternUnits="userSpaceOnUse">
@@ -582,7 +591,7 @@
       </svg>
     </div>
 
-    <div class="relative z-10 flex flex-col items-center justify-center h-full text-white">
+    <div class="relative z-10 flex flex-col items-center justify-center h-full text-white hero-overlay-content">
       <a href="{{ slideshow_settings.logo_link|default:'/' }}" class="block group">
         <img src="{% static 'images/font.webp' %}?v=2"
              class="h-24 sm:h-48 md:h-48 lg:h-64 w-auto transition-all duration-300 group-hover:scale-105"
@@ -608,7 +617,7 @@
   <!-- NEWS TICKER BANNER -->
   <!-- ============================================ -->
   {% if news_ticker.enabled and news_ticker.ticker_content %}
-  <div class="w-full py-4 overflow-hidden relative ticker-wrapper" style="background-color: {{ news_ticker.background_color|default:'#000000' }};">
+  <div class="w-full py-4 overflow-hidden relative ticker-wrapper hero-overlay-content" style="background-color: {{ news_ticker.background_color|default:'#000000' }};">
     <div class="ticker-animate font-mono font-bold text-base" style="color: {{ news_ticker.text_color|default:'#facc15' }}; animation-duration: {{ news_ticker.speed|default:'25' }}s;">
       <span>{% for i in "123456" %}{{ news_ticker.ticker_content }}{{ news_ticker.spacer }}{% endfor %}</span>
       <span aria-hidden="true">{% for i in "123456" %}{{ news_ticker.ticker_content }}{{ news_ticker.spacer }}{% endfor %}</span>
@@ -745,7 +754,14 @@
               <p class="text-xs text-neutral-500 uppercase tracking-wider mb-1">{{ product.category_obj.name|default:"Products" }}</p>
               <h3 class="text-sm font-medium tracking-wide">"{{ product.name|upper }}"</h3>
             </div>
-            <span class="text-sm font-medium">{% price product.base_price %}</span>
+            {% if product._sale_info %}
+              <span class="text-right">
+                <span class="text-sm font-medium text-red-600">{% price product._sale_info.sale_price %}</span>
+                <span class="text-xs text-neutral-400 line-through block">{% price product.base_price %}</span>
+              </span>
+            {% else %}
+              <span class="text-sm font-medium">{% price product.base_price %}</span>
+            {% endif %}
           </div>
         </a>
         {% empty %}
@@ -971,8 +987,6 @@
 
 {% block extra_js %}
   {{ slideshow_settings|json_script:"slideshow-settings" }}
-  <!-- AOS (Animate On Scroll) Initialization -->
-  <script src="https://unpkg.com/aos@2.3.4/dist/aos.js"></script>
   <script>
       // Slideshow settings from database
       const slideshowSettings = JSON.parse(document.getElementById('slideshow-settings').textContent);
@@ -1006,6 +1020,11 @@
       applyHeroPositioning();
       window.addEventListener('resize', applyHeroPositioning);
 
+      // Reveal hero overlay elements all at once after positioning is applied
+      document.querySelectorAll('.hero-overlay-content').forEach(function(el) {
+          el.classList.add('ready');
+      });
+
       // Apply gallery image positioning
       function applyGalleryPositioning() {
           document.querySelectorAll('.gallery-img').forEach(function(el) {
@@ -1023,12 +1042,6 @@
           });
       }
       applyGalleryPositioning();
-
-      AOS.init({
-          duration: 600,
-          easing: 'ease-out',
-          once: true
-      });
 
       // Auto-hide messages after 4 seconds
       document.addEventListener('DOMContentLoaded', function() {
