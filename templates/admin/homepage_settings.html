@@ -1624,6 +1624,41 @@
       document.getElementById(type === 'split' ? 'split-image-input' : 'slide-image-input').click();
     }
 
+    function compressImage(file, maxSizeMB) {
+      return new Promise((resolve, reject) => {
+        const img = new Image();
+        const reader = new FileReader();
+        reader.onload = function(e) {
+          img.onload = function() {
+            const canvas = document.createElement('canvas');
+            let { width, height } = img;
+            const maxDim = 2048;
+            if (width > maxDim || height > maxDim) {
+              const ratio = maxDim / Math.max(width, height);
+              width = Math.round(width * ratio);
+              height = Math.round(height * ratio);
+            }
+            canvas.width = width;
+            canvas.height = height;
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(img, 0, 0, width, height);
+            let quality = 0.85;
+            let dataUrl = canvas.toDataURL('image/webp', quality);
+            while (dataUrl.length * 0.75 > maxSizeMB * 1024 * 1024 && quality > 0.3) {
+              quality -= 0.1;
+              dataUrl = canvas.toDataURL('image/webp', quality);
+            }
+            const finalSizeKB = Math.round(dataUrl.length * 0.75 / 1024);
+            resolve({ dataUrl, quality: Math.round(quality * 100), sizeKB: finalSizeKB });
+          };
+          img.onerror = reject;
+          img.src = e.target.result;
+        };
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
+      });
+    }
+
     document.getElementById('slide-image-input').addEventListener('change', function(e) {
       handleImageUpload(e, 'image_url');
     });
@@ -1632,12 +1667,34 @@
       handleImageUpload(e, 'split_image_url');
     });
 
-    function handleImageUpload(e, field) {
+    async function handleImageUpload(e, field) {
       const file = e.target.files[0];
       if (!file || currentUploadIndex === null) return;
 
-      if (file.size > 5 * 1024 * 1024) {
-        showToast('Image too large (max 5MB)', 'error');
+      const maxSizeMB = 5;
+
+      if (file.size > maxSizeMB * 1024 * 1024) {
+        const originalSizeMB = (file.size / 1024 / 1024).toFixed(1);
+        const compress = confirm(
+          `This image is ${originalSizeMB} MB (max ${maxSizeMB} MB).\n\nWould you like to compress it automatically?`
+        );
+
+        if (!compress) {
+          e.target.value = '';
+          return;
+        }
+
+        try {
+          showToast('Compressing image...', 'success');
+          const result = await compressImage(file, maxSizeMB);
+          slides[currentUploadIndex][field] = result.dataUrl;
+          renderSlides();
+          markUnsaved();
+          showToast(`Compressed to ${result.sizeKB} KB (${result.quality}% quality)`, 'success');
+        } catch (err) {
+          showToast('Failed to compress image', 'error');
+        }
+
         e.target.value = '';
         return;
       }
@@ -1839,12 +1896,34 @@
       document.getElementById('gallery-image-input').click();
     }
 
-    document.getElementById('gallery-image-input').addEventListener('change', function(e) {
+    document.getElementById('gallery-image-input').addEventListener('change', async function(e) {
       const file = e.target.files[0];
       if (!file || currentGalleryUploadIndex === null) return;
 
-      if (file.size > 5 * 1024 * 1024) {
-        showToast('Image too large (max 5MB)', 'error');
+      const maxSizeMB = 5;
+
+      if (file.size > maxSizeMB * 1024 * 1024) {
+        const originalSizeMB = (file.size / 1024 / 1024).toFixed(1);
+        const compress = confirm(
+          `This image is ${originalSizeMB} MB (max ${maxSizeMB} MB).\n\nWould you like to compress it automatically?`
+        );
+
+        if (!compress) {
+          e.target.value = '';
+          return;
+        }
+
+        try {
+          showToast('Compressing image...', 'success');
+          const result = await compressImage(file, maxSizeMB);
+          galleryImages[currentGalleryUploadIndex].image_url = result.dataUrl;
+          renderGallery();
+          markUnsaved();
+          showToast(`Compressed to ${result.sizeKB} KB (${result.quality}% quality)`, 'success');
+        } catch (err) {
+          showToast('Failed to compress image', 'error');
+        }
+
         e.target.value = '';
         return;
       }
