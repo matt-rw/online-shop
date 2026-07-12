@@ -592,6 +592,7 @@
     </div>
 
     <div class="relative z-10 flex flex-col items-center justify-center h-full text-white hero-overlay-content">
+      {% if site_settings.show_hero_logo %}
       <a href="{{ slideshow_settings.logo_link|default:'/' }}" class="block group">
         <img src="{% static 'images/font.webp' %}?v=2"
              class="h-24 sm:h-48 md:h-48 lg:h-64 w-auto transition-all duration-300 group-hover:scale-105"
@@ -600,6 +601,7 @@
              width="400"
              height="100" />
       </a>
+      {% endif %}
       {% if site_settings.hero_title or site_settings.hero_subtitle %}
         <div class="text-center mt-8 px-4">
           {% if site_settings.hero_title %}

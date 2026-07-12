@@ -601,9 +601,10 @@ def homepage_settings(request):
             )
             site_settings.hero_image.save(filename, ContentFile(optimized_content), save=False)
 
-        # Update text fields
+        # Update text fields and logo toggle
         site_settings.hero_title = request.POST.get("hero_title", site_settings.hero_title)
         site_settings.hero_subtitle = request.POST.get("hero_subtitle", site_settings.hero_subtitle)
+        site_settings.show_hero_logo = request.POST.get("show_hero_logo") == "on"
         site_settings.save()
 
         messages.success(request, "Homepage settings updated successfully!")

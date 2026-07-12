@@ -224,6 +224,7 @@ class SiteSettings(models.Model):
         max_length=200, default="", blank=True, help_text="Main headline on homepage"
     )
     hero_subtitle = models.TextField(blank=True, help_text="Subheadline or description on homepage")
+    show_hero_logo = models.BooleanField(default=True, help_text="Show the Blueprint logo on the hero section")
     hero_slides = models.JSONField(
         default=list, blank=True,
         help_text="Hero slideshow slides. Each slide has: image_url, alt_text, link_url (optional)"

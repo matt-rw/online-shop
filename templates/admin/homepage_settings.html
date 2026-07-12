@@ -876,11 +876,18 @@
       </div>
     </div>
 
-    <!-- Hero Text -->
+    <!-- Hero Text & Logo -->
     <div class="section-card">
-      <h2 class="section-title"><i class="fas fa-font"></i> Hero Text Overlay</h2>
+      <h2 class="section-title"><i class="fas fa-font"></i> Hero Text & Logo</h2>
       <form method="POST">
         {% csrf_token %}
+        <div class="form-group" style="display: flex; align-items: center; gap: 0.75rem;">
+          <label for="show_hero_logo" style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer; margin: 0;">
+            <input type="checkbox" name="show_hero_logo" id="show_hero_logo" {% if site_settings.show_hero_logo %}checked{% endif %} style="width: 1.1rem; height: 1.1rem; cursor: pointer;">
+            Show Hero Logo
+          </label>
+          <small style="margin: 0; color: #64748b;">Toggle the Blueprint logo on the hero section</small>
+        </div>
         <div class="form-group">
           <label for="hero_title">Title</label>
           <input type="text" name="hero_title" id="hero_title" value="{{ site_settings.hero_title }}" placeholder="Welcome to Blueprint Apparel">
