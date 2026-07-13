@@ -2,205 +2,346 @@
 {% load static %}
 {% load currency_tags %}
 
-{% block title %}Shop - Blueprint Apparel{% endblock %}
+{% block title %}{% if selected_category %}{{ selected_category.name }} — {% endif %}Shop — Blueprint Apparel{% endblock %}
+
+{% block extra_css %}
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  .shop-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 2px;
+  }
+  @media (min-width: 768px) {
+    .shop-grid { grid-template-columns: 1fr 1fr 1fr; }
+  }
+
+  .shop-card { position: relative; display: block; text-decoration: none; color: inherit; background: #f5f5f0; overflow: hidden; }
+  .shop-card img { width: 100%; height: 100%; object-fit: cover; display: block; transition: transform 0.6s ease; }
+  .shop-card:hover img { transform: scale(1.03); }
+
+  .shop-card-info {
+    position: absolute; bottom: 0; left: 0; right: 0;
+    padding: 1.5rem;
+    background: linear-gradient(transparent, rgba(0,0,0,0.6));
+    opacity: 0;
+    transition: opacity 0.3s ease;
+  }
+  .shop-card:hover .shop-card-info { opacity: 1; }
+
+  /* Always show info on mobile (no hover) */
+  @media (max-width: 768px) {
+    .shop-card-info { opacity: 1; background: linear-gradient(transparent, rgba(0,0,0,0.5)); padding: 1rem; }
+  }
+
+  .sort-select {
+    appearance: none; -webkit-appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%23999'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 0 center;
+    background-size: 0.9rem;
+  }
+</style>
+{% endblock %}
 
 {% block content %}
 
-<!-- Breadcrumb -->
-<div class="border-b border-black">
-  <div class="max-w-7xl mx-auto px-6 py-3">
-    <nav class="flex items-center text-xs tracking-wider">
-      <a href="{% url 'home' %}" class="text-neutral-500 hover:text-black transition-colors uppercase">Home</a>
-      <span class="mx-3 text-neutral-300">/</span>
-      <span class="text-black uppercase">Shop</span>
-    </nav>
-  </div>
-</div>
+<!-- Header -->
+<section style="background: #000; padding: 4rem 2rem 2.5rem;">
+  <div style="max-width: 80rem; margin: 0 auto; display: flex; justify-content: space-between; align-items: flex-end; flex-wrap: wrap; gap: 2rem;">
 
-<!-- Shop Header & Filters -->
-<section class="bg-white border-b border-black">
-  <div class="max-w-7xl mx-auto">
+    <!-- Left: stacking text -->
+    <div id="stack-container" style="max-width: 400px; flex: 1; display: flex; flex-direction: column; gap: 0.3rem; min-height: 16rem;"></div>
 
-    <!-- Header Row -->
-    <div class="px-6 pt-10 pb-8 md:pt-12 md:pb-10">
-      <div class="flex flex-col md:flex-row md:items-end md:justify-between gap-3">
-        <h1 class="text-3xl md:text-4xl font-bold tracking-tight">
-          {% if selected_category %}"{{ selected_category.name|upper }}"{% else %}ALL PRODUCTS{% endif %}
-        </h1>
-        <p class="text-sm text-neutral-400">
-          {{ product_count }} product{{ product_count|pluralize }}
-        </p>
-      </div>
-    </div>
-
-    <!-- Filter Bar -->
-    <div class="px-6 py-3 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-
-      <!-- Category Tabs -->
-      <div class="flex items-center gap-1 overflow-x-auto hide-scrollbar -mx-1 px-1">
-        <a href="{% url 'shop:shop' %}{% if sort_by != 'newest' %}?sort={{ sort_by }}{% endif %}"
-           class="relative px-4 py-2 text-sm transition-colors flex-shrink-0 {% if not selected_category %}text-black font-medium{% else %}text-neutral-400 hover:text-black{% endif %}">
-          All
-          {% if not selected_category %}<span class="absolute bottom-0 left-4 right-4 h-0.5 bg-black"></span>{% endif %}
-        </a>
-        {% for category in categories %}
-        <a href="{% url 'shop:shop' %}?category={{ category.slug }}{% if sort_by != 'newest' %}&sort={{ sort_by }}{% endif %}"
-           class="relative px-4 py-2 text-sm transition-colors flex-shrink-0 {% if selected_category.slug == category.slug %}text-black font-medium{% else %}text-neutral-400 hover:text-black{% endif %}">
-          {{ category.name }}
-          {% if selected_category.slug == category.slug %}<span class="absolute bottom-0 left-4 right-4 h-0.5 bg-black"></span>{% endif %}
-        </a>
-        {% endfor %}
-      </div>
-
-      <!-- Sort -->
-      <div class="flex items-center gap-2 flex-shrink-0">
-        <label for="sort-select" class="text-sm text-neutral-400">Sort by</label>
-        <select id="sort-select" onchange="window.location.href=this.value"
-                class="sort-dropdown text-sm pl-3 pr-6 py-2 bg-transparent border-b border-neutral-300 focus:outline-none focus:border-black cursor-pointer">
-          <option value="{% url 'shop:shop' %}?{% if selected_category %}category={{ selected_category.slug }}&{% endif %}sort=newest" {% if sort_by == 'newest' %}selected{% endif %}>Newest</option>
-          <option value="{% url 'shop:shop' %}?{% if selected_category %}category={{ selected_category.slug }}&{% endif %}sort=price_low" {% if sort_by == 'price_low' %}selected{% endif %}>Price: Low to High</option>
-          <option value="{% url 'shop:shop' %}?{% if selected_category %}category={{ selected_category.slug }}&{% endif %}sort=price_high" {% if sort_by == 'price_high' %}selected{% endif %}>Price: High to Low</option>
-          <option value="{% url 'shop:shop' %}?{% if selected_category %}category={{ selected_category.slug }}&{% endif %}sort=name" {% if sort_by == 'name' %}selected{% endif %}>Name: A-Z</option>
-        </select>
-      </div>
-
+    <!-- Right: disintegrating title -->
+    <div style="margin-right: -0.5rem;">
+      <canvas id="disintegrate-canvas" style="display: block;"></canvas>
+      <div style="height: 2px; margin-top: 0.5rem; background: linear-gradient(to right, #fde047, transparent);"></div>
     </div>
 
   </div>
 </section>
 
-<style>
-  .hide-scrollbar::-webkit-scrollbar { display: none; }
-  .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+<!-- Filter bar -->
+<div style="background: #000;">
+  <div style="max-width: 80rem; margin: 0 auto; padding: 0 2rem; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
 
-  /* Custom select dropdown */
-  .sort-dropdown {
-    appearance: none;
-    -webkit-appearance: none;
-    -moz-appearance: none;
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%239ca3af'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'/%3E%3C/svg%3E");
-    background-repeat: no-repeat;
-    background-position: right 0 center;
-    background-size: 1rem;
-  }
-  .sort-dropdown::-ms-expand {
-    display: none;
-  }
-</style>
-
-<!-- Products Grid -->
-<section class="bg-white">
-  <div class="max-w-7xl mx-auto">
-    {% if products or bundles %}
-    <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 border-l border-black">
-      <!-- Bundles first -->
-      {% for item in bundles %}
-      <a href="{% url 'shop:bundle_detail' slug=item.bundle.slug %}" class="group block border-r border-b border-black">
-        <!-- Bundle Image -->
-        <div class="relative overflow-hidden bg-neutral-50" style="aspect-ratio: 3/4;">
-          <img src="{{ item.image }}"
-               alt="{{ item.bundle.name }}"
-               class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
-               loading="lazy" />
-          <div class="absolute top-3 left-3 px-2 py-1 bg-black text-white text-xs uppercase tracking-wider">
-            Bundle
-          </div>
-          {% if item.bundle.savings_percent > 0 %}
-          <div class="absolute top-3 right-3 px-2 py-1 bg-green-600 text-white text-xs font-medium">
-            Save {{ item.bundle.savings_percent }}%
-          </div>
-          {% endif %}
-        </div>
-
-        <!-- Bundle Info -->
-        <div class="p-4 border-t border-black">
-          <div class="flex justify-between items-start gap-2">
-            <div class="min-w-0">
-              <p class="text-xs text-neutral-500 uppercase tracking-wider mb-1">Bundle</p>
-              <h3 class="text-sm font-medium tracking-wide truncate">"{{ item.bundle.name|upper }}"</h3>
-            </div>
-            <div class="flex-shrink-0 text-right">
-              <span class="text-sm font-medium">{% price item.bundle.effective_price %}</span>
-              {% if item.bundle.savings > 0 %}
-              <span class="text-sm text-neutral-500 block" style="text-decoration: line-through;">{% price item.bundle.component_total %}</span>
-              {% endif %}
-            </div>
-          </div>
-        </div>
-      </a>
-      {% endfor %}
-
-      <!-- Products -->
-      {% for item in products %}
-      <a href="{% url 'shop:product_detail' slug=item.product.slug %}" class="group block border-r border-b border-black">
-        <!-- Product Image -->
-        <div class="relative overflow-hidden bg-neutral-50" style="aspect-ratio: 3/4;">
-          <img src="{{ item.image }}"
-               alt="{{ item.product.name }}"
-               class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
-               loading="lazy" />
-          {% if not item.product.available_for_purchase %}
-          <div class="absolute top-3 left-3 px-2 py-1 bg-neutral-800 text-white text-xs uppercase tracking-wider">
-            Not Available
-          </div>
-          {% endif %}
-        </div>
-
-        <!-- Product Info -->
-        <div class="p-4 border-t border-black">
-          <div class="flex justify-between items-start gap-2">
-            <div class="min-w-0">
-              <p class="text-xs text-neutral-500 uppercase tracking-wider mb-1">
-                {% if item.product.category_obj %}{{ item.product.category_obj.name }}{% else %}Foundation{% endif %}
-              </p>
-              <h3 class="text-sm font-medium tracking-wide truncate">"{{ item.product.name|upper }}"</h3>
-            </div>
-            {% if item.sale_info %}
-              <span class="flex-shrink-0 text-right">
-                <span class="text-sm font-medium text-red-600">{% price item.sale_info.sale_price %}</span>
-                <span class="text-sm text-neutral-500 block" style="text-decoration: line-through;">{% price item.product.base_price %}</span>
-              </span>
-            {% else %}
-              <span class="text-sm font-medium flex-shrink-0">{% price item.product.base_price %}</span>
-            {% endif %}
-          </div>
-        </div>
-      </a>
+    <!-- Categories -->
+    <div style="display: flex; gap: 0; overflow-x: auto; -ms-overflow-style: none; scrollbar-width: none;">
+      <a href="{% url 'shop:shop' %}{% if sort_by != 'newest' %}?sort={{ sort_by }}{% endif %}"
+         style="font-family: 'Inter', sans-serif; font-size: 0.7rem; font-weight: {% if not selected_category %}600{% else %}500{% endif %}; letter-spacing: 0.12em; text-transform: uppercase; color: {% if not selected_category %}#fff{% else %}rgba(255,255,255,0.35){% endif %}; text-decoration: none; padding: 1rem 1.25rem; border-bottom: 2px solid {% if not selected_category %}#fff{% else %}transparent{% endif %}; transition: color 0.2s;"
+         onmouseenter="this.style.color='#fff'" onmouseleave="{% if not selected_category %}{% else %}this.style.color='rgba(255,255,255,0.35)'{% endif %}">All</a>
+      {% for category in categories %}
+      <a href="{% url 'shop:shop' %}?category={{ category.slug }}{% if sort_by != 'newest' %}&sort={{ sort_by }}{% endif %}"
+         style="font-family: 'Inter', sans-serif; font-size: 0.7rem; font-weight: {% if selected_category.slug == category.slug %}600{% else %}500{% endif %}; letter-spacing: 0.12em; text-transform: uppercase; color: {% if selected_category.slug == category.slug %}#fff{% else %}rgba(255,255,255,0.35){% endif %}; text-decoration: none; padding: 1rem 1.25rem; border-bottom: 2px solid {% if selected_category.slug == category.slug %}#fff{% else %}transparent{% endif %}; transition: color 0.2s;"
+         onmouseenter="this.style.color='#fff'" onmouseleave="{% if selected_category.slug == category.slug %}{% else %}this.style.color='rgba(255,255,255,0.35)'{% endif %}">{{ category.name }}</a>
       {% endfor %}
     </div>
 
-    <!-- Fix grid border issues -->
-    <div class="border-t border-black hidden"></div>
+    <!-- Sort -->
+    <select onchange="window.location.href=this.value" class="sort-select"
+            style="font-family: 'Inter', sans-serif; font-size: 0.7rem; letter-spacing: 0.08em; color: rgba(255,255,255,0.5); background: transparent; border: none; border-bottom: 1px solid rgba(255,255,255,0.15); padding: 0.75rem 1.5rem 0.75rem 0; outline: none; cursor: pointer;">
+      <option value="{% url 'shop:shop' %}?{% if selected_category %}category={{ selected_category.slug }}&{% endif %}sort=newest" {% if sort_by == 'newest' %}selected{% endif %} style="color: #000;">Newest</option>
+      <option value="{% url 'shop:shop' %}?{% if selected_category %}category={{ selected_category.slug }}&{% endif %}sort=price_low" {% if sort_by == 'price_low' %}selected{% endif %} style="color: #000;">Price: Low to High</option>
+      <option value="{% url 'shop:shop' %}?{% if selected_category %}category={{ selected_category.slug }}&{% endif %}sort=price_high" {% if sort_by == 'price_high' %}selected{% endif %} style="color: #000;">Price: High to Low</option>
+      <option value="{% url 'shop:shop' %}?{% if selected_category %}category={{ selected_category.slug }}&{% endif %}sort=name" {% if sort_by == 'name' %}selected{% endif %} style="color: #000;">Name: A-Z</option>
+    </select>
 
-    {% else %}
-    <!-- Empty State -->
-    <div class="py-24 text-center">
-      <div class="mb-8">
-        <svg class="w-16 h-16 mx-auto text-neutral-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"></path>
-        </svg>
+  </div>
+</div>
+
+<!-- Products -->
+<section style="background: #fff;">
+  {% if products or bundles %}
+  <div class="shop-grid">
+
+    <!-- Bundles -->
+    {% for item in bundles %}
+    <a href="{% url 'shop:bundle_detail' slug=item.bundle.slug %}" class="shop-card" style="aspect-ratio: 3/4;">
+      <img src="{{ item.image }}" alt="{{ item.bundle.name }}" loading="lazy" />
+      <!-- Badge -->
+      <div style="position: absolute; top: 1rem; left: 1rem; z-index: 2;">
+        <span style="font-family: 'Inter', sans-serif; font-size: 0.6rem; font-weight: 600; letter-spacing: 0.15em; text-transform: uppercase; background: #000; color: #fff; padding: 0.35rem 0.65rem;">Bundle</span>
+        {% if item.bundle.savings_percent > 0 %}
+        <span style="font-family: 'Inter', sans-serif; font-size: 0.6rem; font-weight: 600; letter-spacing: 0.1em; background: #16a34a; color: #fff; padding: 0.35rem 0.65rem; margin-left: 2px;">-{{ item.bundle.savings_percent }}%</span>
+        {% endif %}
       </div>
-      <p class="text-neutral-500 text-sm mb-2">No products found</p>
-      {% if selected_category %}
-      <p class="text-neutral-400 text-xs mb-8">Try removing the filter or check back later</p>
-      <a href="{% url 'shop:shop' %}"
-         class="inline-block px-8 py-4 bg-black text-white text-xs tracking-widest uppercase font-medium hover:bg-neutral-800 transition-colors">
-        View All Products
-      </a>
-      {% else %}
-      <p class="text-neutral-400 text-xs">Check back soon for new arrivals</p>
+      <!-- Info overlay -->
+      <div class="shop-card-info">
+        <h3 style="font-family: 'Inter', sans-serif; font-size: 0.85rem; font-weight: 600; color: #fff; letter-spacing: 0.05em; text-transform: uppercase; margin: 0 0 0.375rem;">{{ item.bundle.name }}</h3>
+        <div>
+          <span style="font-family: 'Inter', sans-serif; font-size: 0.8rem; font-weight: 500; color: #fff;">{% price item.bundle.effective_price %}</span>
+          {% if item.bundle.savings > 0 %}
+          <span style="font-size: 0.75rem; color: rgba(255,255,255,0.5); margin-left: 0.5rem; text-decoration: line-through;">{% price item.bundle.component_total %}</span>
+          {% endif %}
+        </div>
+      </div>
+    </a>
+    {% endfor %}
+
+    <!-- Products -->
+    {% for item in products %}
+    <a href="{% url 'shop:product_detail' slug=item.product.slug %}" class="shop-card" style="aspect-ratio: 3/4;">
+      <img src="{{ item.image }}" alt="{{ item.product.name }}" loading="lazy" />
+      {% if not item.product.available_for_purchase %}
+      <div style="position: absolute; top: 1rem; left: 1rem; z-index: 2;">
+        <span style="font-family: 'Inter', sans-serif; font-size: 0.6rem; font-weight: 600; letter-spacing: 0.15em; text-transform: uppercase; background: #000; color: #fff; padding: 0.35rem 0.65rem;">Sold Out</span>
+      </div>
       {% endif %}
-    </div>
+      {% if item.sale_info %}
+      <div style="position: absolute; top: 1rem; right: 1rem; z-index: 2;">
+        <span style="font-family: 'Inter', sans-serif; font-size: 0.6rem; font-weight: 600; letter-spacing: 0.1em; background: #b91c1c; color: #fff; padding: 0.35rem 0.65rem;">-{{ item.sale_info.save_percent }}%</span>
+      </div>
+      {% endif %}
+      <!-- Info overlay -->
+      <div class="shop-card-info">
+        <h3 style="font-family: 'Inter', sans-serif; font-size: 0.85rem; font-weight: 600; color: #fff; letter-spacing: 0.05em; text-transform: uppercase; margin: 0 0 0.375rem;">{{ item.product.name }}</h3>
+        <div>
+          {% if item.sale_info %}
+          <span style="font-family: 'Inter', sans-serif; font-size: 0.8rem; font-weight: 600; color: #fca5a5;">{% price item.sale_info.sale_price %}</span>
+          <span style="font-size: 0.75rem; color: rgba(255,255,255,0.5); margin-left: 0.5rem; text-decoration: line-through;">{% price item.product.base_price %}</span>
+          {% else %}
+          <span style="font-family: 'Inter', sans-serif; font-size: 0.8rem; font-weight: 500; color: #fff;">{% price item.product.base_price %}</span>
+          {% endif %}
+        </div>
+      </div>
+    </a>
+    {% endfor %}
+
+  </div>
+  {% else %}
+
+  <!-- Empty -->
+  <div style="padding: 6rem 2rem; text-align: center;">
+    <p style="font-family: 'Inter', sans-serif; font-size: 1rem; color: #999; margin: 0 0 0.5rem;">No products found</p>
+    {% if selected_category %}
+    <p style="font-size: 0.8rem; color: #ccc; margin: 0 0 2rem;">Try removing the filter</p>
+    <a href="{% url 'shop:shop' %}" style="font-family: 'Inter', sans-serif; font-size: 0.7rem; font-weight: 600; letter-spacing: 0.15em; text-transform: uppercase; color: #000; text-decoration: none; padding: 12px 32px; border: 1px solid #000; transition: all 0.2s;" onmouseenter="this.style.background='#000'; this.style.color='#fff'" onmouseleave="this.style.background='transparent'; this.style.color='#000'">View All</a>
+    {% else %}
+    <p style="font-size: 0.8rem; color: #ccc; margin: 0;">Check back soon</p>
     {% endif %}
   </div>
+
+  {% endif %}
 </section>
 
-<!-- Section Footer -->
-<div class="border-t border-black bg-white">
-  <div class="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center">
-    <span class="text-xs tracking-wider text-neutral-500">{% if free_shipping_threshold > 0 %}Free shipping on orders over {% price free_shipping_threshold %}{% else %}Free shipping with promo code{% endif %}</span>
-    <span class="text-xs tracking-widest uppercase font-medium">Blueprint Apparel</span>
-  </div>
-</div>
+{% endblock %}
 
+{% block extra_js %}
+<script>
+(function() {
+  var canvas = document.getElementById('disintegrate-canvas');
+  if (!canvas) return;
+  var ctx = canvas.getContext('2d');
+  var dpr = window.devicePixelRatio || 1;
+  var text = 'FOUNDATION';
+  var fontSize = Math.min(window.innerWidth * 0.05, 72);
+  if (fontSize < 40) fontSize = 40;
+
+  ctx.font = '800 ' + fontSize + 'px Inter, sans-serif';
+  ctx.textBaseline = 'top';
+  var metrics = ctx.measureText(text);
+  var w = Math.ceil(metrics.width) + fontSize * 2;
+  var h = Math.ceil(fontSize * 1.5);
+
+  canvas.width = w * dpr;
+  canvas.height = h * dpr;
+  canvas.style.width = w + 'px';
+  canvas.style.height = h + 'px';
+  ctx.scale(dpr, dpr);
+
+  // Draw text to sample pixels
+  ctx.font = '800 ' + fontSize + 'px Inter, sans-serif';
+  ctx.textBaseline = 'top';
+  ctx.fillStyle = '#ffffff';
+  ctx.fillText(text, 0, fontSize * 0.15);
+
+  var imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+  var pixels = imageData.data;
+
+  // Build particles with fixed seed (deterministic random)
+  function seededRandom(seed) {
+    var x = Math.sin(seed) * 10000;
+    return x - Math.floor(x);
+  }
+  var seed = 0;
+  function rand() { return seededRandom(seed++); }
+
+  var particles = [];
+  var step = Math.max(1, Math.round(1 * dpr));
+  for (var y = 0; y < canvas.height; y += step) {
+    for (var x = 0; x < canvas.width; x += step) {
+      var i = (y * canvas.width + x) * 4;
+      if (pixels[i + 3] > 128) {
+        var nx = x / canvas.width;
+        var scatter = (nx - 0.2) * fontSize * 2;
+        // Each pixel gets a deterministic random displacement target
+        var tx = x / dpr + (rand() - 0.2) * scatter;
+        var ty = y / dpr + (rand() - 0.5) * scatter * 0.7;
+        var size = (step / dpr) * (0.3 + rand() * 0.7);
+        var fadeAlpha = Math.max(0, 1 - nx * 1.5) * (0.3 + rand() * 0.7);
+
+        particles.push({
+          ox: x / dpr, oy: y / dpr,   // original position
+          tx: tx, ty: ty,               // target (scattered) position
+          os: step / dpr, ts: size,     // original / target size
+          scatter: nx * nx > rand(),    // should this particle scatter?
+          nx: nx,                        // normalized x for timing
+          // Current animated values
+          x: x / dpr, y: y / dpr,
+          s: step / dpr, a: 1,
+          ta: fadeAlpha
+        });
+      }
+    }
+  }
+
+  // Static render — deterministic, no animation
+  ctx.clearRect(0, 0, w, h);
+  ctx.fillStyle = '#ffffff';
+  for (var p = 0; p < particles.length; p++) {
+    var pt = particles[p];
+    if (pt.scatter) {
+      ctx.globalAlpha = pt.ta;
+      ctx.fillRect(pt.tx, pt.ty, pt.ts, pt.ts);
+    } else {
+      ctx.globalAlpha = 1;
+      ctx.fillRect(pt.ox, pt.oy, pt.os, pt.os);
+    }
+  }
+  ctx.globalAlpha = 1;
+
+  // Typewriter — types out character by character
+  var stackContainer = document.getElementById('stack-container');
+  if (stackContainer) {
+    var lines = [
+      { text: 'Collection 001', color: 'rgba(253, 224, 71, 0.3)', size: '0.65rem', weight: '600', spacing: '0.25em', transform: 'uppercase', pause: 1500 },
+      { text: '', pause: 400 }, // blank line = paragraph break
+      { text: 'Every building has bones.', pause: 800 },
+      { text: 'Every painting started as a sketch', pause: 600 },
+      { text: 'that got buried under layers.', pause: 1200 },
+      { text: '', pause: 600 },
+      { text: 'The foundation is the first thing', pause: 800 },
+      { text: 'carved in any blueprint \u2014', pause: 1400 },
+      { text: '', pause: 500 },
+      { text: 'the line everything else is measured against.', color: 'rgba(253, 224, 71, 0.75)', weight: '500', pause: 0 },
+    ];
+
+    var charSpeed = 35; // ms per character
+    var lineIdx = 0;
+    var cursor = null;
+
+    function createCursor() {
+      var c = document.createElement('span');
+      c.textContent = '\u2588'; // block cursor
+      c.style.cssText = 'color: rgba(253, 224, 71, 0.6); animation: blink 0.8s step-end infinite; font-weight: 300;';
+      return c;
+    }
+
+    // Add blink keyframes
+    var style = document.createElement('style');
+    style.textContent = '@keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }';
+    document.head.appendChild(style);
+
+    function typeLine() {
+      if (lineIdx >= lines.length) {
+        // Remove cursor at end
+        if (cursor && cursor.parentNode) cursor.parentNode.removeChild(cursor);
+        return;
+      }
+
+      var line = lines[lineIdx];
+      lineIdx++;
+
+      // Paragraph break
+      if (!line.text) {
+        var spacer = document.createElement('div');
+        spacer.style.height = '0.6rem';
+        stackContainer.appendChild(spacer);
+        setTimeout(typeLine, line.pause);
+        return;
+      }
+
+      var el = document.createElement('p');
+      el.style.cssText = "font-family: 'Space Mono', monospace; font-size: " + (line.size || '0.8rem') + "; font-weight: " + (line.weight || '300') + "; color: " + (line.color || 'rgba(253, 224, 71, 0.45)') + "; letter-spacing: " + (line.spacing || '0.01em') + "; margin: 0; line-height: 1.7; -webkit-font-smoothing: antialiased;";
+      if (line.transform) el.style.textTransform = line.transform;
+      stackContainer.appendChild(el);
+
+      var chars = line.text.split('');
+      var charIdx = 0;
+
+      // Move cursor to this line
+      if (cursor && cursor.parentNode) cursor.parentNode.removeChild(cursor);
+      cursor = createCursor();
+
+      function typeChar() {
+        if (charIdx < chars.length) {
+          el.textContent = line.text.substring(0, charIdx + 1);
+          el.appendChild(cursor);
+          charIdx++;
+          // Vary speed: slower after punctuation
+          var ch = chars[charIdx - 1];
+          var delay = charSpeed;
+          if (ch === '.' || ch === '\u2014') delay = charSpeed * 6;
+          else if (ch === ',') delay = charSpeed * 3;
+          else if (ch === ' ') delay = charSpeed * 1.2;
+          setTimeout(typeChar, delay);
+        } else {
+          // Line done — remove cursor, pause, then next line
+          if (cursor && cursor.parentNode) cursor.parentNode.removeChild(cursor);
+          el.appendChild(cursor);
+          setTimeout(function() {
+            if (cursor && cursor.parentNode) cursor.parentNode.removeChild(cursor);
+            typeLine();
+          }, line.pause);
+        }
+      }
+
+      typeChar();
+    }
+
+    setTimeout(typeLine, 800);
+  }
+})();
+</script>
 {% endblock %}
