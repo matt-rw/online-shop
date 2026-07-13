@@ -1,0 +1,9 @@
+{% if slideshow_settings.hero_overlay and slideshow_settings.hero_overlay != "none" %}
+<div class="hero-overlay-layer overlay-{{ slideshow_settings.hero_overlay }}">
+  {% if slideshow_settings.hero_overlay == "blueprint-grid" %}
+  <div class="grid-inner">
+    {% for i in "1234567890123456789012345678901234567890" %}{% if forloop.counter <= 40 %}<div class="grid-cell"></div>{% endif %}{% endfor %}
+  </div>
+  {% endif %}
+</div>
+{% endif %}

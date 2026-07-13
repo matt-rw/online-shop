@@ -1,0 +1,34 @@
+{% load static %}
+
+{% with logo_style=slideshow_settings.hero_logo_style|default:"center-image" %}
+
+{% if logo_style == "center-image" %}
+<!-- Center logo image -->
+<div style="position: absolute; inset: 0; z-index: 5; display: flex; flex-direction: column; align-items: center; justify-content: center; pointer-events: none;">
+  <a href="{{ slideshow_settings.logo_link|default:'/' }}" style="pointer-events: auto; text-decoration: none;">
+    <img src="{% static 'images/font.webp' %}?v=2"
+         style="height: clamp(3rem, 8vw, 10rem); width: auto; filter: drop-shadow(0 2px 30px rgba(0,0,0,0.5));"
+         alt="Blueprint Apparel" />
+  </a>
+  {% if site_settings.hero_title %}
+  <div style="margin-top: 1.5rem; pointer-events: none; text-align: center; padding: 0 1.5rem;">
+    <p style="font-family: 'Inter', sans-serif; font-size: clamp(0.875rem, 1.5vw, 1.125rem); color: rgba(255,255,255,0.7); margin: 0; letter-spacing: 0.02em; text-shadow: 0 1px 10px rgba(0,0,0,0.4);">{{ site_settings.hero_title }}</p>
+  </div>
+  {% endif %}
+</div>
+
+{% elif logo_style == "bottom-left-text" %}
+<!-- Bottom-left BLUEPRINT text in cyan -->
+<div style="position: absolute; bottom: 0.75rem; left: 2rem; z-index: 5; pointer-events: none;">
+  <a href="{{ slideshow_settings.logo_link|default:'/' }}" style="pointer-events: auto; text-decoration: none; display: block;">
+    <span style="font-family: 'Inter', sans-serif; font-size: clamp(1.5rem, 3vw, 2.5rem); font-weight: 700; letter-spacing: 0.15em; text-transform: uppercase; color: #04D9FF; -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; text-rendering: geometricPrecision;">BLUEPRINT</span>
+  </a>
+  {% if site_settings.hero_title %}
+  <p style="font-family: 'Inter', sans-serif; font-size: clamp(0.7rem, 1vw, 0.85rem); color: rgba(255,255,255,0.5); margin: 0.5rem 0 0; letter-spacing: 0.05em; max-width: 300px; -webkit-font-smoothing: antialiased;">{{ site_settings.hero_title }}</p>
+  {% endif %}
+</div>
+
+{% endif %}
+{# logo_style == "none" renders nothing #}
+
+{% endwith %}

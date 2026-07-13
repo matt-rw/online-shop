@@ -1,70 +1,52 @@
 {% load static %}
 {% load currency_tags %}
 
-<nav class="bg-black border-b border-white/10">
-  <div class="max-w-7xl mx-auto px-6">
-    <div class="flex items-center justify-between h-16 relative">
+<nav style="background: #000; border-bottom: 1px solid rgba(255,255,255,0.08);">
+  <div style="max-width: 80rem; margin: 0 auto; padding: 0 2rem;">
+    <div style="display: flex; align-items: center; justify-content: space-between; height: 56px; position: relative;">
 
-      <!-- Left - Hamburger Menu -->
-      <div id="menu-trigger" class="flex items-center">
-        <button id="menu-toggle" type="button" class="p-2 -ml-2 hover:opacity-70 transition-opacity" aria-label="Menu">
-          <svg class="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M4 6h16M4 12h16M4 18h16"></path>
+      <!-- Left - Menu -->
+      <div id="menu-trigger" style="display: flex; align-items: center;">
+        <button id="menu-toggle" type="button" style="padding: 0.5rem; margin-left: -0.5rem; border: none; background: none; cursor: pointer; transition: opacity 0.2s;" aria-label="Menu" onmouseenter="this.style.opacity='0.6'" onmouseleave="this.style.opacity='1'">
+          <svg style="width: 22px; height: 22px; color: #fff;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 7h16M4 17h16"></path>
           </svg>
         </button>
       </div>
 
-      <!-- Center - Logo -->
-      <div class="absolute left-1/2 transform -translate-x-1/2">
-        <a href="{% url 'home' %}" class="block hover:opacity-70 transition-opacity">
-          <img src="{% static 'images/blueprint_b_circular.png' %}"
-               class="h-10 w-10"
-               alt="Blueprint" />
+      <!-- Center - Brand -->
+      <div style="position: absolute; left: 50%; transform: translateX(-50%);">
+        <a href="{% url 'home' %}" style="text-decoration: none; transition: opacity 0.2s;" onmouseenter="this.style.opacity='0.6'" onmouseleave="this.style.opacity='1'">
+          <span style="font-family: 'Inter', sans-serif; font-size: 0.7rem; font-weight: 700; letter-spacing: 0.25em; text-transform: uppercase; color: #fff;">Blueprint</span>
         </a>
       </div>
 
-      <!-- Right - Currency, Account & Cart Icons -->
-      <div class="flex items-center gap-2">
-        <!-- Currency Selector -->
+      <!-- Right - Icons -->
+      <div style="display: flex; align-items: center; gap: 0.25rem;">
         <div class="text-white">
           {% currency_selector %}
         </div>
-        <div id="account-trigger" class="relative">
-          <button id="account-toggle" type="button" class="p-2 hover:opacity-70 transition-opacity" aria-label="Account">
-            <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2M12 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8z"></path>
+        <div id="account-trigger" style="position: relative;">
+          <button id="account-toggle" type="button" style="padding: 0.5rem; border: none; background: none; cursor: pointer; transition: opacity 0.2s;" aria-label="Account" onmouseenter="this.style.opacity='0.6'" onmouseleave="this.style.opacity='1'">
+            <svg style="width: 20px; height: 20px; color: #fff;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2M12 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8z"></path>
             </svg>
           </button>
-          <!-- Account Dropdown Menu -->
-          <div id="account-menu" class="hidden absolute right-0 top-full mt-2 w-56 bg-black border border-white/10">
+          <!-- Account Dropdown -->
+          <div id="account-menu" class="hidden" style="position: absolute; right: 0; top: 100%; margin-top: 0; min-width: 200px; background: #000; border: 1px solid rgba(255,255,255,0.08); border-top: none; z-index: 50;">
             {% if user.is_authenticated %}
-            <a href="{% url 'shop:account' %}" class="group flex items-center px-6 py-3 text-white hover:text-white/70 transition-colors border-b border-white/10">
-              <span class="w-4 h-px bg-white/30 mr-3 group-hover:w-6 transition-all"></span>
-              <span class="text-sm tracking-wider uppercase">My Account</span>
-            </a>
-            <a href="{% url 'shop:orders' %}" class="group flex items-center px-6 py-3 text-white hover:text-white/70 transition-colors border-b border-white/10">
-              <span class="w-4 h-px bg-white/30 mr-3 group-hover:w-6 transition-all"></span>
-              <span class="text-sm tracking-wider uppercase">Orders</span>
-            </a>
-            <a href="{% url 'account_logout' %}" class="group flex items-center px-6 py-3 text-white hover:text-white/70 transition-colors">
-              <span class="w-4 h-px bg-white/30 mr-3 group-hover:w-6 transition-all"></span>
-              <span class="text-sm tracking-wider uppercase">Logout</span>
-            </a>
+            <a href="{% url 'shop:account' %}" style="display: block; padding: 1rem 1.5rem; font-family: 'Inter', sans-serif; font-size: 0.7rem; font-weight: 500; letter-spacing: 0.15em; text-transform: uppercase; color: rgba(255,255,255,0.5); text-decoration: none; border-bottom: 1px solid rgba(255,255,255,0.06); transition: color 0.2s;" onmouseenter="this.style.color='#fff'" onmouseleave="this.style.color='rgba(255,255,255,0.5)'">Account</a>
+            <a href="{% url 'shop:orders' %}" style="display: block; padding: 1rem 1.5rem; font-family: 'Inter', sans-serif; font-size: 0.7rem; font-weight: 500; letter-spacing: 0.15em; text-transform: uppercase; color: rgba(255,255,255,0.5); text-decoration: none; border-bottom: 1px solid rgba(255,255,255,0.06); transition: color 0.2s;" onmouseenter="this.style.color='#fff'" onmouseleave="this.style.color='rgba(255,255,255,0.5)'">Orders</a>
+            <a href="{% url 'account_logout' %}" style="display: block; padding: 1rem 1.5rem; font-family: 'Inter', sans-serif; font-size: 0.7rem; font-weight: 500; letter-spacing: 0.15em; text-transform: uppercase; color: rgba(255,255,255,0.5); text-decoration: none; transition: color 0.2s;" onmouseenter="this.style.color='#fff'" onmouseleave="this.style.color='rgba(255,255,255,0.5)'">Logout</a>
             {% else %}
-            <button onclick="openLoginModal(); closeAccountMenu();" class="group flex items-center px-6 py-3 text-white hover:text-white/70 transition-colors border-b border-white/10 w-full text-left">
-              <span class="w-4 h-px bg-white/30 mr-3 group-hover:w-6 transition-all"></span>
-              <span class="text-sm tracking-wider uppercase">Sign In</span>
-            </button>
-            <a href="{% url 'account_signup' %}" class="group flex items-center px-6 py-3 text-white hover:text-white/70 transition-colors">
-              <span class="w-4 h-px bg-white/30 mr-3 group-hover:w-6 transition-all"></span>
-              <span class="text-sm tracking-wider uppercase">Create Account</span>
-            </a>
+            <button onclick="openLoginModal(); closeAccountMenu();" style="display: block; width: 100%; text-align: left; padding: 1rem 1.5rem; font-family: 'Inter', sans-serif; font-size: 0.7rem; font-weight: 500; letter-spacing: 0.15em; text-transform: uppercase; color: rgba(255,255,255,0.5); background: none; border: none; border-bottom: 1px solid rgba(255,255,255,0.06); cursor: pointer; transition: color 0.2s;" onmouseenter="this.style.color='#fff'" onmouseleave="this.style.color='rgba(255,255,255,0.5)'">Sign In</button>
+            <a href="{% url 'account_signup' %}" style="display: block; padding: 1rem 1.5rem; font-family: 'Inter', sans-serif; font-size: 0.7rem; font-weight: 500; letter-spacing: 0.15em; text-transform: uppercase; color: rgba(255,255,255,0.5); text-decoration: none; transition: color 0.2s;" onmouseenter="this.style.color='#fff'" onmouseleave="this.style.color='rgba(255,255,255,0.5)'">Create Account</a>
             {% endif %}
           </div>
         </div>
-        <a href="{% url 'shop:cart' %}" class="p-2 -mr-2 hover:opacity-70 transition-opacity" aria-label="Cart">
-          <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"></path>
+        <a href="{% url 'shop:cart' %}" style="padding: 0.5rem; margin-right: -0.5rem; text-decoration: none; transition: opacity 0.2s;" aria-label="Cart" onmouseenter="this.style.opacity='0.6'" onmouseleave="this.style.opacity='1'">
+          <svg style="width: 20px; height: 20px; color: #fff;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"></path>
           </svg>
         </a>
       </div>
@@ -72,35 +54,30 @@
     </div>
   </div>
 
-  <!-- Main Dropdown Menu -->
-  <div id="nav-menu" class="hidden bg-black border-t border-white/10">
-    <div class="max-w-7xl mx-auto px-6 py-4">
-      <div class="space-y-1">
-        <a href="{% url 'home' %}" class="group flex items-center py-3 text-white hover:text-white/70 transition-colors">
-          <span class="w-4 h-px bg-white/30 mr-3 group-hover:w-6 transition-all"></span>
-          <span class="text-sm tracking-wider uppercase">Home</span>
-        </a>
-        <a href="{% url 'shop:shop' %}" class="group flex items-center py-3 text-white hover:text-white/70 transition-colors">
-          <span class="w-4 h-px bg-white/30 mr-3 group-hover:w-6 transition-all"></span>
-          <span class="text-sm tracking-wider uppercase">Shop</span>
-        </a>
-        <a href="{% url 'shop:shop' %}?category=tops" class="group flex items-center py-3 text-white hover:text-white/70 transition-colors">
-          <span class="w-4 h-px bg-white/30 mr-3 group-hover:w-6 transition-all"></span>
-          <span class="text-sm tracking-wider uppercase">Tops</span>
-        </a>
-        <a href="{% url 'shop:shop' %}?category=bottoms" class="group flex items-center py-3 text-white hover:text-white/70 transition-colors">
-          <span class="w-4 h-px bg-white/30 mr-3 group-hover:w-6 transition-all"></span>
-          <span class="text-sm tracking-wider uppercase">Bottoms</span>
-        </a>
-        <a href="{% url 'shop:lookbook' %}" class="group flex items-center py-3 text-white hover:text-white/70 transition-colors">
-          <span class="w-4 h-px bg-white/30 mr-3 group-hover:w-6 transition-all"></span>
-          <span class="text-sm tracking-wider uppercase">Lookbook</span>
-        </a>
-        <a href="{% url 'shop:about' %}" class="group flex items-center py-3 text-white hover:text-white/70 transition-colors">
-          <span class="w-4 h-px bg-white/30 mr-3 group-hover:w-6 transition-all"></span>
-          <span class="text-sm tracking-wider uppercase">About</span>
-        </a>
+  <!-- Main Menu Dropdown -->
+  <div id="nav-menu" class="hidden" style="background: #000; border-top: 1px solid rgba(255,255,255,0.06);">
+    <div style="max-width: 80rem; margin: 0 auto; padding: 2.5rem 2rem; display: grid; grid-template-columns: 1fr 1fr; gap: 0;" class="md:grid-cols-2">
+
+      <!-- Left column — primary nav -->
+      <div style="padding-right: 3rem; border-right: 1px solid rgba(255,255,255,0.06);">
+        <p style="font-family: 'Inter', sans-serif; font-size: 0.6rem; font-weight: 500; letter-spacing: 0.25em; text-transform: uppercase; color: rgba(255,255,255,0.25); margin: 0 0 1.5rem;">Navigate</p>
+        <div style="display: flex; flex-direction: column; gap: 0;">
+          <a href="{% url 'shop:shop' %}" style="display: block; padding: 0.75rem 0; font-family: 'Inter', sans-serif; font-size: 1.5rem; font-weight: 700; letter-spacing: -0.02em; color: #fff; text-decoration: none; border-bottom: 1px solid rgba(255,255,255,0.04); transition: opacity 0.2s;" onmouseenter="this.style.opacity='0.5'" onmouseleave="this.style.opacity='1'">Shop</a>
+          <a href="{% url 'shop:shop' %}?category=tops" style="display: block; padding: 0.75rem 0; font-family: 'Inter', sans-serif; font-size: 1.5rem; font-weight: 700; letter-spacing: -0.02em; color: #fff; text-decoration: none; border-bottom: 1px solid rgba(255,255,255,0.04); transition: opacity 0.2s;" onmouseenter="this.style.opacity='0.5'" onmouseleave="this.style.opacity='1'">Tops</a>
+          <a href="{% url 'shop:shop' %}?category=bottoms" style="display: block; padding: 0.75rem 0; font-family: 'Inter', sans-serif; font-size: 1.5rem; font-weight: 700; letter-spacing: -0.02em; color: #fff; text-decoration: none; border-bottom: 1px solid rgba(255,255,255,0.04); transition: opacity 0.2s;" onmouseenter="this.style.opacity='0.5'" onmouseleave="this.style.opacity='1'">Bottoms</a>
+        </div>
       </div>
+
+      <!-- Right column — secondary -->
+      <div style="padding-left: 3rem;">
+        <p style="font-family: 'Inter', sans-serif; font-size: 0.6rem; font-weight: 500; letter-spacing: 0.25em; text-transform: uppercase; color: rgba(255,255,255,0.25); margin: 0 0 1.5rem;">More</p>
+        <div style="display: flex; flex-direction: column; gap: 0;">
+          <a href="{% url 'shop:lookbook' %}" style="display: block; padding: 0.625rem 0; font-family: 'Inter', sans-serif; font-size: 0.8rem; font-weight: 500; letter-spacing: 0.1em; text-transform: uppercase; color: rgba(255,255,255,0.4); text-decoration: none; transition: color 0.2s;" onmouseenter="this.style.color='#fff'" onmouseleave="this.style.color='rgba(255,255,255,0.4)'">Lookbook</a>
+          <a href="{% url 'shop:about' %}" style="display: block; padding: 0.625rem 0; font-family: 'Inter', sans-serif; font-size: 0.8rem; font-weight: 500; letter-spacing: 0.1em; text-transform: uppercase; color: rgba(255,255,255,0.4); text-decoration: none; transition: color 0.2s;" onmouseenter="this.style.color='#fff'" onmouseleave="this.style.color='rgba(255,255,255,0.4)'">About</a>
+          <a href="{% url 'shop:contact' %}" style="display: block; padding: 0.625rem 0; font-family: 'Inter', sans-serif; font-size: 0.8rem; font-weight: 500; letter-spacing: 0.1em; text-transform: uppercase; color: rgba(255,255,255,0.4); text-decoration: none; transition: color 0.2s;" onmouseenter="this.style.color='#fff'" onmouseleave="this.style.color='rgba(255,255,255,0.4)'">Contact</a>
+        </div>
+      </div>
+
     </div>
   </div>
 
@@ -108,86 +85,59 @@
 
 <script>
 (function() {
-  const menuTrigger = document.getElementById('menu-trigger');
-  const menuToggle = document.getElementById('menu-toggle');
-  const navMenu = document.getElementById('nav-menu');
-  const accountTrigger = document.getElementById('account-trigger');
-  const accountToggle = document.getElementById('account-toggle');
-  const accountMenu = document.getElementById('account-menu');
+  var menuTrigger = document.getElementById('menu-trigger');
+  var menuToggle = document.getElementById('menu-toggle');
+  var navMenu = document.getElementById('nav-menu');
+  var accountTrigger = document.getElementById('account-trigger');
+  var accountToggle = document.getElementById('account-toggle');
+  var accountMenu = document.getElementById('account-menu');
 
-  let menuTimeout;
-  let accountTimeout;
+  var menuTimeout, accountTimeout;
+  var navEl = document.querySelector('nav');
 
-  // Main menu - open on hover
-  menuTrigger.addEventListener('mouseenter', () => {
+  // Open menu on hamburger hover
+  menuTrigger.addEventListener('mouseenter', function() {
     clearTimeout(menuTimeout);
     navMenu.classList.remove('hidden');
     accountMenu.classList.add('hidden');
   });
 
-  navMenu.addEventListener('mouseenter', () => {
-    clearTimeout(menuTimeout);
+  // Keep menu open while anywhere inside nav or the dropdown
+  navEl.addEventListener('mouseenter', function() { clearTimeout(menuTimeout); });
+  navMenu.addEventListener('mouseenter', function() { clearTimeout(menuTimeout); });
+
+  // Only close when mouse leaves the entire nav (including dropdown)
+  navEl.addEventListener('mouseleave', function() {
+    menuTimeout = setTimeout(function() { navMenu.classList.add('hidden'); }, 80);
   });
 
-  menuTrigger.addEventListener('mouseleave', () => {
-    menuTimeout = setTimeout(() => {
-      navMenu.classList.add('hidden');
-    }, 150);
-  });
-
-  navMenu.addEventListener('mouseleave', () => {
-    menuTimeout = setTimeout(() => {
-      navMenu.classList.add('hidden');
-    }, 150);
-  });
-
-  // Account menu - open on hover
-  accountTrigger.addEventListener('mouseenter', () => {
+  accountTrigger.addEventListener('mouseenter', function() {
     clearTimeout(accountTimeout);
     accountMenu.classList.remove('hidden');
     navMenu.classList.add('hidden');
   });
-
-  accountMenu.addEventListener('mouseenter', () => {
-    clearTimeout(accountTimeout);
+  accountTrigger.addEventListener('mouseleave', function() {
+    accountTimeout = setTimeout(function() { accountMenu.classList.add('hidden'); }, 200);
+  });
+  accountMenu.addEventListener('mouseenter', function() { clearTimeout(accountTimeout); });
+  accountMenu.addEventListener('mouseleave', function() {
+    accountTimeout = setTimeout(function() { accountMenu.classList.add('hidden'); }, 200);
   });
 
-  accountTrigger.addEventListener('mouseleave', () => {
-    accountTimeout = setTimeout(() => {
-      accountMenu.classList.add('hidden');
-    }, 150);
-  });
-
-  accountMenu.addEventListener('mouseleave', () => {
-    accountTimeout = setTimeout(() => {
-      accountMenu.classList.add('hidden');
-    }, 150);
-  });
-
-  // Keep click functionality for mobile/accessibility
-  menuToggle.addEventListener('click', () => {
+  menuToggle.addEventListener('click', function() {
     navMenu.classList.toggle('hidden');
     accountMenu.classList.add('hidden');
   });
-
-  accountToggle.addEventListener('click', () => {
+  accountToggle.addEventListener('click', function() {
     accountMenu.classList.toggle('hidden');
     navMenu.classList.add('hidden');
   });
 
-  // Close menus when clicking outside
-  document.addEventListener('click', (e) => {
-    if (!menuTrigger.contains(e.target) && !navMenu.contains(e.target)) {
-      navMenu.classList.add('hidden');
-    }
-    if (!accountTrigger.contains(e.target) && !accountMenu.contains(e.target)) {
-      accountMenu.classList.add('hidden');
-    }
+  document.addEventListener('click', function(e) {
+    if (!menuTrigger.contains(e.target) && !navMenu.contains(e.target)) navMenu.classList.add('hidden');
+    if (!accountTrigger.contains(e.target) && !accountMenu.contains(e.target)) accountMenu.classList.add('hidden');
   });
 
-  // Global function to close account menu (for use with login modal)
-  window.closeAccountMenu = function() {
-    accountMenu.classList.add('hidden');
-  };
+  window.closeAccountMenu = function() { accountMenu.classList.add('hidden'); };
 })();
 </script>
