@@ -34,6 +34,11 @@
     .shop-card-info { opacity: 1; background: linear-gradient(transparent, rgba(0,0,0,0.5)); padding: 1rem; }
   }
 
+  @media (max-width: 768px) {
+    .shop-header-flex { flex-direction: column-reverse !important; align-items: flex-start !important; gap: 1.5rem !important; }
+    .shop-card-info { font-size: 0.75rem; }
+  }
+
   .sort-select {
     appearance: none; -webkit-appearance: none;
     background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%23999'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'/%3E%3C/svg%3E");
@@ -48,7 +53,7 @@
 
 <!-- Header -->
 <section style="background: #000; padding: 4rem 2rem 2.5rem;">
-  <div style="max-width: 80rem; margin: 0 auto; display: flex; justify-content: space-between; align-items: flex-end; flex-wrap: wrap; gap: 2rem;">
+  <div class="shop-header-flex" style="max-width: 80rem; margin: 0 auto; display: flex; justify-content: space-between; align-items: flex-end; flex-wrap: wrap; gap: 2rem;">
 
     <!-- Left: stacking text -->
     <div id="stack-container" style="max-width: 400px; flex: 1; display: flex; flex-direction: column; gap: 0.3rem; min-height: 16rem;"></div>
@@ -175,8 +180,9 @@
   var ctx = canvas.getContext('2d');
   var dpr = window.devicePixelRatio || 1;
   var text = 'FOUNDATION';
-  var fontSize = Math.min(window.innerWidth * 0.05, 72);
-  if (fontSize < 40) fontSize = 40;
+  var fontSize = Math.min(window.innerWidth * 0.06, 72);
+  if (window.innerWidth < 480) fontSize = 28;
+  else if (fontSize < 36) fontSize = 36;
 
   ctx.font = '800 ' + fontSize + 'px Inter, sans-serif';
   ctx.textBaseline = 'top';

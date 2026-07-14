@@ -56,10 +56,10 @@
 
   <!-- Main Menu Dropdown -->
   <div id="nav-menu" class="hidden" style="background: #000; border-top: 1px solid rgba(255,255,255,0.06);">
-    <div style="max-width: 80rem; margin: 0 auto; padding: 2.5rem 2rem; display: grid; grid-template-columns: 1fr 1fr; gap: 0;" class="md:grid-cols-2">
+    <div style="max-width: 80rem; margin: 0 auto; padding: 2.5rem 2rem; display: grid; grid-template-columns: 1fr; gap: 2rem;">
 
       <!-- Left column — primary nav -->
-      <div style="padding-right: 3rem; border-right: 1px solid rgba(255,255,255,0.06);">
+      <div>
         <p style="font-family: 'Inter', sans-serif; font-size: 0.6rem; font-weight: 500; letter-spacing: 0.25em; text-transform: uppercase; color: rgba(255,255,255,0.25); margin: 0 0 1.5rem;">Navigate</p>
         <div style="display: flex; flex-direction: column; gap: 0;">
           <a href="{% url 'shop:shop' %}" style="display: block; padding: 0.75rem 0; font-family: 'Inter', sans-serif; font-size: 1.5rem; font-weight: 700; letter-spacing: -0.02em; color: #fff; text-decoration: none; border-bottom: 1px solid rgba(255,255,255,0.04); transition: opacity 0.2s;" onmouseenter="this.style.opacity='0.5'" onmouseleave="this.style.opacity='1'">Shop</a>
@@ -69,7 +69,7 @@
       </div>
 
       <!-- Right column — secondary -->
-      <div style="padding-left: 3rem;">
+      <div>
         <p style="font-family: 'Inter', sans-serif; font-size: 0.6rem; font-weight: 500; letter-spacing: 0.25em; text-transform: uppercase; color: rgba(255,255,255,0.25); margin: 0 0 1.5rem;">More</p>
         <div style="display: flex; flex-direction: column; gap: 0;">
           <a href="{% url 'shop:lookbook' %}" style="display: block; padding: 0.625rem 0; font-family: 'Inter', sans-serif; font-size: 0.8rem; font-weight: 500; letter-spacing: 0.1em; text-transform: uppercase; color: rgba(255,255,255,0.4); text-decoration: none; transition: color 0.2s;" onmouseenter="this.style.color='#fff'" onmouseleave="this.style.color='rgba(255,255,255,0.4)'">Lookbook</a>

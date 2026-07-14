@@ -113,6 +113,16 @@
       }
     }
 
+    /* Mobile adjustments */
+    @media (max-width: 768px) {
+      .hero-mobile { height: 60vh !important; }
+      .mosaic-mobile { grid-template-columns: 1fr !important; grid-template-rows: auto !important; height: auto !important; }
+      .mosaic-mobile > div { grid-row: span 1 !important; aspect-ratio: 4/3; }
+      .featured-mobile { grid-template-columns: 1fr 1fr !important; }
+      .brand-story-grid { grid-template-columns: 1fr !important; }
+      .footer-grid { grid-template-columns: 1fr !important; }
+    }
+
     @media (prefers-reduced-motion: reduce) {
       .ticker-animate { animation: none !important; }
     }
@@ -131,7 +141,7 @@
   {% if slideshow_settings.hero_layout == "mosaic" and hero_slides|length >= 2 %}
   <!-- MOSAIC GRID HERO -->
   <section style="background: #000; position: relative;">
-    <div style="display: grid; grid-template-columns: {% if hero_slides|length >= 4 %}1fr 1.4fr{% elif hero_slides|length == 3 %}1fr 1fr{% else %}1fr 1fr{% endif %}; grid-template-rows: 1fr 1fr; gap: 2px; height: 85vh;">
+    <div class="mosaic-mobile" style="display: grid; grid-template-columns: {% if hero_slides|length >= 4 %}1fr 1.4fr{% elif hero_slides|length == 3 %}1fr 1fr{% else %}1fr 1fr{% endif %}; grid-template-rows: 1fr 1fr; gap: 2px; height: 85vh;">
       {% for slide in hero_slides %}
         {% if forloop.counter <= 4 %}
         <div style="overflow: hidden; position: relative; {% if forloop.counter == 2 and hero_slides|length >= 3 %}grid-row: span 2;{% endif %}" class="hero-slide" data-filter="{{ slide.filter|default:'none' }}">
@@ -147,7 +157,7 @@
   </section>
   {% else %}
   <!-- SLIDESHOW HERO -->
-  <section class="relative w-full overflow-hidden bg-black" style="height: 80vh;">
+  <section class="relative w-full overflow-hidden bg-black hero-mobile" style="height: 80vh;">
 
     {% if hero_slides %}
       {% for slide in hero_slides %}
@@ -240,7 +250,7 @@
   <div id="signup-modal" class="fixed inset-0 z-50 flex items-center justify-center hidden transition-all duration-500 opacity-0" style="background: rgba(0, 0, 0, 0.75); backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px);">
     <div class="w-full modal-content" style="max-width: 440px; margin: 0 1.5rem; transform: scale(0.97); translate: 0 12px; transition: all 0.5s cubic-bezier(0.16, 1, 0.3, 1);">
       <div style="background: #fff; overflow: hidden;">
-        <button type="button" onclick="closeSignupModal()" style="position: absolute; top: 1.25rem; right: 1.25rem; z-index: 10; width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; border: none; background: none; cursor: pointer; color: #999; transition: color 0.2s;" onmouseenter="this.style.color='#000'" onmouseleave="this.style.color='#999'">
+        <button type="button" onclick="closeSignupModal()" style="position: absolute; top: 0.75rem; right: 0.75rem; z-index: 10; width: 44px; height: 44px; display: flex; align-items: center; justify-content: center; border: none; background: none; cursor: pointer; color: #999; transition: color 0.2s;" onmouseenter="this.style.color='#000'" onmouseleave="this.style.color='#999'">
           <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="stroke-width: 2;">
             <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"></path>
           </svg>
@@ -291,18 +301,18 @@
   <section style="background: #fff;">
     <!-- Header -->
     <div style="border-bottom: 1px solid #000;">
-      <div style="max-width: 80rem; margin: 0 auto; padding: 1.25rem 2rem; display: flex; justify-content: space-between; align-items: center;">
+      <div style="max-width: 60rem; margin: 0 auto; padding: 1.25rem 2rem; display: flex; justify-content: space-between; align-items: center;">
         <span style="font-family: 'Inter', sans-serif; font-size: 0.65rem; font-weight: 600; letter-spacing: 0.2em; text-transform: uppercase;">Featured</span>
         <a href="{% url 'shop:shop' %}" style="font-family: 'Inter', sans-serif; font-size: 0.65rem; font-weight: 500; letter-spacing: 0.15em; text-transform: uppercase; color: #999; text-decoration: none; transition: color 0.2s;" onmouseenter="this.style.color='#000'" onmouseleave="this.style.color='#999'">View All</a>
       </div>
     </div>
 
     <!-- Product Grid -->
-    <div style="max-width: 80rem; margin: 0 auto;">
-      <div style="display: grid; grid-template-columns: repeat({% if featured_products|length == 1 %}2{% else %}{{ featured_products|length|default:2 }}{% endif %}, 1fr);">
+    <div style="max-width: 60rem; margin: 0 auto;">
+      <div class="featured-mobile" style="display: grid; grid-template-columns: repeat({{ featured_products|length|default:2 }}, 1fr); gap: 2px;">
         {% for product in featured_products %}
-        <a href="{% url 'shop:product_detail' slug=product.slug %}" class="group" style="display: block; {% if not forloop.last %}border-right: 1px solid #000;{% endif %} text-decoration: none; color: inherit;">
-          <div style="overflow: hidden; aspect-ratio: 3/4; max-height: 70vh;">
+        <a href="{% url 'shop:product_detail' slug=product.slug %}" class="group" style="display: block; text-decoration: none; color: inherit; background: #f5f5f0;">
+          <div style="overflow: hidden; aspect-ratio: 3/4;">
             {% if product.images %}
             <img src="{{ product.images.0 }}" alt="{{ product.name }}" style="width: 100%; height: 100%; object-fit: cover; transition: transform 0.8s ease;" class="group-hover:scale-105" loading="lazy" />
             {% else %}
@@ -310,22 +320,22 @@
             {% if first_variant and first_variant.images %}
             <img src="{{ first_variant.images.0 }}" alt="{{ product.name }}" style="width: 100%; height: 100%; object-fit: cover; transition: transform 0.8s ease;" class="group-hover:scale-105" loading="lazy" />
             {% else %}
-            <div style="width: 100%; height: 100%; background: #f5f5f0; display: flex; align-items: center; justify-content: center;">
+            <div style="width: 100%; height: 100%; display: flex; align-items: center; justify-content: center;">
               <span style="color: #ccc; font-size: 0.75rem; letter-spacing: 0.1em; text-transform: uppercase;">No image</span>
             </div>
             {% endif %}
             {% endwith %}
             {% endif %}
           </div>
-          <div style="border-top: 1px solid #000; padding: 1.25rem 1.5rem; display: flex; justify-content: space-between; align-items: baseline;">
-            <h3 style="font-family: 'Inter', sans-serif; font-size: 0.8rem; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; margin: 0;">{{ product.name }}</h3>
+          <div style="padding: 1.25rem 1rem; display: flex; justify-content: space-between; align-items: baseline;">
+            <h3 style="font-family: 'Inter', sans-serif; font-size: 0.75rem; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; margin: 0;">{{ product.name }}</h3>
             {% if product.sale_info %}
               <span style="text-align: right;">
-                <span style="font-size: 0.8rem; font-weight: 600; color: #b91c1c;">{% price product.sale_info.sale_price %}</span>
-                <span style="font-size: 0.75rem; color: #999; text-decoration: line-through; display: block;">{% price product.base_price %}</span>
+                <span style="font-size: 0.75rem; font-weight: 600; color: #b91c1c;">{% price product.sale_info.sale_price %}</span>
+                <span style="font-size: 0.7rem; color: #999; text-decoration: line-through; display: block;">{% price product.base_price %}</span>
               </span>
             {% else %}
-              <span style="font-family: 'Inter', sans-serif; font-size: 0.8rem; font-weight: 500;">{% price product.base_price %}</span>
+              <span style="font-family: 'Inter', sans-serif; font-size: 0.75rem; font-weight: 500;">{% price product.base_price %}</span>
             {% endif %}
           </div>
         </a>
@@ -361,7 +371,7 @@
   <!-- BRAND STORY -->
   <!-- ============================================ -->
   <section style="background: #fff; padding: 6rem 2rem;">
-    <div style="max-width: 60rem; margin: 0 auto; display: grid; grid-template-columns: 1fr; gap: 3rem;" class="md:grid-cols-2">
+    <div class="brand-story-grid" style="max-width: 60rem; margin: 0 auto; display: grid; grid-template-columns: 1fr 1fr; gap: 3rem;">
       <div>
         <p style="font-family: 'Inter', sans-serif; font-size: 0.6rem; font-weight: 500; letter-spacing: 0.25em; text-transform: uppercase; color: #999; margin: 0 0 2rem;">The Blueprint</p>
         <h2 style="font-family: 'Inter', sans-serif; font-size: clamp(1.75rem, 3vw, 2.5rem); font-weight: 800; color: #000; letter-spacing: -0.03em; line-height: 1.15; margin: 0 0 2rem;">Designed for<br>wherever life<br>takes you.</h2>
