@@ -2,474 +2,234 @@
 {% load static %}
 {% load currency_tags %}
 
-{% block title %}Cart - Blueprint Apparel{% endblock %}
-
-{% block extra_css %}
-<style>
-  .bundle-badge {
-    background-color: black;
-    color: white;
-    font-size: 9px;
-    letter-spacing: 0.1em;
-    padding: 2px 6px;
-    text-transform: uppercase;
-  }
-</style>
-{% endblock %}
+{% block title %}Cart — Blueprint Apparel{% endblock %}
 
 {% block content %}
 
-<!-- Breadcrumb -->
-<div class="border-b border-black">
-  <div class="max-w-7xl mx-auto px-6 py-3">
-    <nav class="flex items-center text-xs tracking-wider">
-      <a href="{% url 'home' %}" class="text-neutral-500 hover:text-black transition-colors uppercase">Home</a>
-      <span class="mx-3 text-neutral-300">/</span>
-      <span class="text-black uppercase">Cart</span>
-    </nav>
-  </div>
-</div>
-
-<!-- Cart Header -->
-<section class="bg-white border-b border-black">
-  <div class="max-w-7xl mx-auto px-6 py-8">
-    <div class="flex items-center justify-between">
-      <div>
-        <p class="text-xs text-neutral-500 uppercase tracking-wider mb-2">Shopping</p>
-        <h1 class="text-2xl md:text-3xl font-bold tracking-tight">YOUR CART</h1>
-      </div>
-      {% with total_items=cart_items|length|add:bundle_items|length %}
-      <span id="cart-count" class="text-xs tracking-widest text-neutral-500">{{ total_items }} ITEM{{ total_items|pluralize:"S" }}</span>
-      {% endwith %}
-    </div>
-  </div>
-</section>
-
 <!-- Cart Content -->
-<section class="bg-white">
-  <div class="max-w-7xl mx-auto">
+<section style="background: #fff; padding: 3rem 2rem 8rem;">
+  <div style="max-width: 60rem; margin: 0 auto;">
     {% if cart_items or bundle_items %}
-    <div class="grid grid-cols-1 lg:grid-cols-3">
-
-      <!-- Cart Items -->
-      <div class="lg:col-span-2 border-r border-black" id="cart-items"
-           data-update-url="{% url 'shop:update_cart_item' 0 %}"
-           data-remove-url="{% url 'shop:remove_from_cart' 0 %}">
-        {% for cart_item in cart_items %}
-        <div class="cart-item flex gap-6 p-6 border-b border-black" data-item-id="{{ cart_item.item.id }}" data-price="{{ cart_item.item.variant.price }}">
-          <!-- Product Image -->
-          <div class="w-28 h-36 bg-neutral-100 flex-shrink-0 border border-black overflow-hidden">
-            {% if cart_item.image %}
-            <img src="{{ cart_item.image }}" alt="{{ cart_item.item.variant.product.name }}" class="w-full h-full object-cover" />
-            {% elif default_product_image %}
-            <img src="{{ default_product_image }}" alt="{{ cart_item.item.variant.product.name }}" class="w-full h-full object-cover" />
-            {% endif %}
-          </div>
-
-          <!-- Product Info -->
-          <div class="flex-grow flex flex-col justify-between">
-            <div>
-              <p class="text-xs text-neutral-500 uppercase tracking-wider mb-1">Foundation</p>
-              <h3 class="font-bold tracking-tight">"{{ cart_item.item.variant.product.name|upper }}"</h3>
-              <p class="text-sm text-neutral-600 mt-1">
-                {% if cart_item.item.variant.size %}Size: {{ cart_item.item.variant.size }}{% endif %}
-                {% if cart_item.item.variant.size and cart_item.item.variant.color %} | {% endif %}
-                {% if cart_item.item.variant.color %}Color: {{ cart_item.item.variant.color }}{% endif %}
-              </p>
-            </div>
-            {% if cart_item.sale_info %}
-              <p class="text-lg font-bold text-red-600">{% price cart_item.sale_info.sale_price %}</p>
-              <p class="text-sm text-neutral-500" style="text-decoration: line-through;">{% price cart_item.item.variant.price %}</p>
-            {% else %}
-              <p class="text-lg font-bold">{% price cart_item.item.variant.price %}</p>
-            {% endif %}
-          </div>
-
-          <!-- Quantity & Remove -->
-          <div class="flex flex-col items-end justify-between">
-            <!-- Remove Button -->
-            <button type="button" onclick="removeItem({{ cart_item.item.id }})" class="text-neutral-400 hover:text-black transition-colors">
-              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M6 18L18 6M6 6l12 12" />
-              </svg>
-            </button>
-
-            <!-- Quantity Controls -->
-            <div class="flex items-center border border-black">
-              <button type="button" class="qty-btn minus px-3 py-2 hover:bg-black hover:text-white transition-colors" data-item-id="{{ cart_item.item.id }}">
-                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 12H4"></path>
-                </svg>
-              </button>
-
-              <span class="item-quantity px-4 py-2 border-x border-black text-sm font-medium">{{ cart_item.item.quantity }}</span>
-
-              <button type="button" class="qty-btn plus px-3 py-2 hover:bg-black hover:text-white transition-colors" data-item-id="{{ cart_item.item.id }}">
-                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
-                </svg>
-              </button>
-            </div>
-          </div>
-        </div>
-        {% endfor %}
-
-        <!-- Bundle Items -->
-        {% for bundle_item in bundle_items %}
-        <div class="bundle-cart-item flex gap-6 p-6 border-b border-black" data-item-id="{{ bundle_item.item.id }}" data-price="{{ bundle_item.item.bundle.effective_price }}">
-          <!-- Bundle Image -->
-          <div class="w-28 h-36 bg-neutral-100 flex-shrink-0 border border-black overflow-hidden relative">
-            {% if bundle_item.image %}
-            <img src="{{ bundle_item.image }}" alt="{{ bundle_item.item.bundle.name }}" class="w-full h-full object-cover" />
-            {% elif default_product_image %}
-            <img src="{{ default_product_image }}" alt="{{ bundle_item.item.bundle.name }}" class="w-full h-full object-cover" />
-            {% endif %}
-            <span class="bundle-badge absolute top-1 left-1">Bundle</span>
-          </div>
-
-          <!-- Bundle Info -->
-          <div class="flex-grow flex flex-col justify-between">
-            <div>
-              <p class="text-xs text-neutral-500 uppercase tracking-wider mb-1">Bundle</p>
-              <h3 class="font-bold tracking-tight">"{{ bundle_item.item.bundle.name|upper }}"</h3>
-              <p class="text-sm text-neutral-600 mt-1">Size: {{ bundle_item.item.size }}</p>
-              <p class="text-xs text-neutral-400 mt-1">
-                Includes: {{ bundle_item.components|join:", " }}
-              </p>
-            </div>
-            <p class="text-lg font-bold">{% price bundle_item.item.bundle.effective_price %}</p>
-          </div>
-
-          <!-- Quantity & Remove -->
-          <div class="flex flex-col items-end justify-between">
-            <!-- Remove Button -->
-            <button type="button" onclick="removeBundleItem({{ bundle_item.item.id }})" class="text-neutral-400 hover:text-black transition-colors">
-              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M6 18L18 6M6 6l12 12" />
-              </svg>
-            </button>
-
-            <!-- Quantity Controls -->
-            <div class="flex items-center border border-black">
-              <button type="button" class="bundle-qty-btn minus px-3 py-2 hover:bg-black hover:text-white transition-colors" data-item-id="{{ bundle_item.item.id }}">
-                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 12H4"></path>
-                </svg>
-              </button>
-
-              <span class="bundle-item-quantity px-4 py-2 border-x border-black text-sm font-medium">{{ bundle_item.item.quantity }}</span>
-
-              <button type="button" class="bundle-qty-btn plus px-3 py-2 hover:bg-black hover:text-white transition-colors" data-item-id="{{ bundle_item.item.id }}">
-                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
-                </svg>
-              </button>
-            </div>
-          </div>
-        </div>
-        {% endfor %}
-      </div>
-
-      <!-- Order Summary -->
-      <div class="lg:col-span-1 p-6 lg:p-8">
-        <div class="sticky top-8">
-          <span class="text-xs tracking-widest uppercase font-medium block mb-6">Order Summary</span>
-
-          <div class="space-y-4 mb-8">
-            <div class="flex justify-between text-sm">
-              <span class="text-neutral-600">Subtotal</span>
-              <span id="subtotal" class="font-medium">{% price subtotal %}</span>
-            </div>
-            {% if auto_discount and discount_savings %}
-            <div class="flex justify-between text-sm">
-              <span class="text-green-600">{{ auto_discount.name }}{% if auto_discount.discount_type == "percentage" %} (-{{ auto_discount.value|floatformat:0 }}%){% endif %}</span>
-              <span class="font-medium text-green-600">-{% price discount_savings %}</span>
-            </div>
-            {% endif %}
-            <div class="flex justify-between text-sm">
-              <span class="text-neutral-600">Shipping</span>
-              <span id="shipping" class="font-medium {% if free_shipping %}text-green-600{% else %}text-neutral-400{% endif %}">
-                {% if free_shipping %}
-                  FREE
-                {% else %}
-                  Calculated at checkout
-                {% endif %}
-              </span>
-            </div>
-            <div class="flex justify-between text-sm">
-              <span class="text-neutral-600">Tax</span>
-              <span id="tax" class="font-medium text-neutral-400">Calculated at checkout</span>
-            </div>
-            <div class="border-t border-black pt-4 flex justify-between">
-              <span class="text-xs tracking-widest uppercase font-medium">Total</span>
-              <span id="total" class="text-xl font-bold">{% if auto_discount %}{% price discounted_total %}{% else %}{% price subtotal %}{% endif %}</span>
-            </div>
-          </div>
-
-          <a href="{% url 'shop:checkout' %}"
-             class="block w-full py-4 bg-black text-white text-center text-xs tracking-widest uppercase font-medium hover:bg-neutral-800 transition-colors mb-4">
-            Proceed to Checkout
-          </a>
-
-          <!-- Stripe Badge -->
-          <div class="flex items-center justify-center gap-1 mb-4">
-            <span class="text-xs text-neutral-400">Powered by</span>
-            <img src="https://www.vectorlogo.zone/logos/stripe/stripe-ar21.svg" alt="Stripe" class="h-8 w-auto" />
-          </div>
-
-          <a href="{% url 'shop:shop' %}" class="block text-center text-xs tracking-wider uppercase text-neutral-500 hover:text-black transition-colors">
-            Continue Shopping
-          </a>
-        </div>
-      </div>
+    {% with total_items=cart_items|length|add:bundle_items|length %}
+    <div style="display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 2rem; padding-bottom: 1rem; border-bottom: 1px solid #eee;">
+      <span style="font-family: 'Inter', sans-serif; font-size: 0.65rem; font-weight: 600; letter-spacing: 0.2em; text-transform: uppercase; color: #999;">Cart</span>
+      <span id="cart-count" style="font-family: 'Inter', sans-serif; font-size: 0.7rem; color: #ccc;">{{ total_items }} item{{ total_items|pluralize:"s" }}</span>
     </div>
-    {% else %}
-    <!-- Empty Cart -->
-    <div class="py-24 text-center" id="empty-cart">
-      <div class="mb-8">
-        <svg class="w-16 h-16 mx-auto text-neutral-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"></path>
-        </svg>
+    {% endwith %}
+    <div id="cart-items"
+         data-update-url="{% url 'shop:update_cart_item' 0 %}"
+         data-remove-url="{% url 'shop:remove_from_cart' 0 %}">
+
+      <!-- Regular Items -->
+      {% for cart_item in cart_items %}
+      <div class="cart-item" data-item-id="{{ cart_item.item.id }}" data-price="{{ cart_item.item.variant.price }}"
+           style="display: flex; gap: 1.5rem; padding: 2rem 0; border-bottom: 1px solid #eee;">
+
+        <!-- Image -->
+        <div style="width: 100px; height: 120px; overflow: hidden; flex-shrink: 0; background: #f5f5f0;">
+          {% if cart_item.image %}
+          <img src="{{ cart_item.image }}" alt="{{ cart_item.item.variant.product.name }}" style="width: 100%; height: 100%; object-fit: cover; display: block;" />
+          {% endif %}
+        </div>
+
+        <!-- Info -->
+        <div style="flex: 1; display: flex; flex-direction: column; justify-content: space-between;">
+          <div>
+            <h3 style="font-family: 'Inter', sans-serif; font-size: 0.85rem; font-weight: 600; color: #000; margin: 0 0 0.375rem;">{{ cart_item.item.variant.product.name }}</h3>
+            <p style="font-family: 'Inter', sans-serif; font-size: 0.75rem; color: #999; margin: 0;">
+              {% if cart_item.item.variant.size %}{{ cart_item.item.variant.size }}{% endif %}
+              {% if cart_item.item.variant.size and cart_item.item.variant.color %} / {% endif %}
+              {% if cart_item.item.variant.color %}{{ cart_item.item.variant.color }}{% endif %}
+            </p>
+          </div>
+          <div>
+            {% if cart_item.sale_info %}
+            <span style="font-family: 'Inter', sans-serif; font-size: 0.9rem; font-weight: 600; color: #b91c1c;">{% price cart_item.sale_info.sale_price %}</span>
+            <span style="font-family: 'Inter', sans-serif; font-size: 0.8rem; color: #ccc; text-decoration: line-through; margin-left: 0.5rem;">{% price cart_item.item.variant.price %}</span>
+            {% else %}
+            <span style="font-family: 'Inter', sans-serif; font-size: 0.9rem; font-weight: 600; color: #000;">{% price cart_item.item.variant.price %}</span>
+            {% endif %}
+          </div>
+        </div>
+
+        <!-- Quantity + Remove -->
+        <div style="display: flex; flex-direction: column; justify-content: space-between; align-items: flex-end;">
+          <button type="button" onclick="removeItem({{ cart_item.item.id }})" style="border: none; background: none; cursor: pointer; color: #ccc; padding: 0; transition: color 0.15s;" onmouseenter="this.style.color='#000'" onmouseleave="this.style.color='#ccc'">
+            <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M6 18L18 6M6 6l12 12"/></svg>
+          </button>
+          <div style="display: flex; border: 1px solid #ddd;">
+            <button type="button" class="qty-btn minus" data-item-id="{{ cart_item.item.id }}" style="width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; border: none; background: none; cursor: pointer;">
+              <svg width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 12H4"/></svg>
+            </button>
+            <span class="item-quantity" style="width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; border-left: 1px solid #ddd; border-right: 1px solid #ddd; font-family: 'Inter', sans-serif; font-size: 0.8rem; font-weight: 500;">{{ cart_item.item.quantity }}</span>
+            <button type="button" class="qty-btn plus" data-item-id="{{ cart_item.item.id }}" style="width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; border: none; background: none; cursor: pointer;">
+              <svg width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+            </button>
+          </div>
+        </div>
       </div>
-      <p class="text-neutral-500 text-sm mb-8">Your cart is empty</p>
-      <a href="{% url 'shop:shop' %}"
-         class="inline-block px-8 py-4 bg-black text-white text-xs tracking-widest uppercase font-medium hover:bg-neutral-800 transition-colors">
-        Start Shopping
-      </a>
+      {% endfor %}
+
+      <!-- Bundle Items -->
+      {% for bundle_item in bundle_items %}
+      <div class="bundle-cart-item" data-item-id="{{ bundle_item.item.id }}" data-price="{{ bundle_item.item.bundle.effective_price }}"
+           style="display: flex; gap: 1.5rem; padding: 2rem 0; border-bottom: 1px solid #eee;">
+        <div style="width: 100px; height: 120px; overflow: hidden; flex-shrink: 0; background: #f5f5f0; position: relative;">
+          {% if bundle_item.image %}
+          <img src="{{ bundle_item.image }}" alt="{{ bundle_item.item.bundle.name }}" style="width: 100%; height: 100%; object-fit: cover; display: block;" />
+          {% endif %}
+          <span style="position: absolute; top: 0.375rem; left: 0.375rem; font-family: 'Inter', sans-serif; font-size: 0.5rem; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; background: #000; color: #fff; padding: 2px 5px;">Bundle</span>
+        </div>
+        <div style="flex: 1; display: flex; flex-direction: column; justify-content: space-between;">
+          <div>
+            <h3 style="font-family: 'Inter', sans-serif; font-size: 0.85rem; font-weight: 600; color: #000; margin: 0 0 0.375rem;">{{ bundle_item.item.bundle.name }}</h3>
+            <p style="font-family: 'Inter', sans-serif; font-size: 0.75rem; color: #999; margin: 0 0 0.25rem;">Size: {{ bundle_item.item.size }}</p>
+            <p style="font-family: 'Inter', sans-serif; font-size: 0.7rem; color: #bbb; margin: 0;">{{ bundle_item.components|join:", " }}</p>
+          </div>
+          <span style="font-family: 'Inter', sans-serif; font-size: 0.9rem; font-weight: 600; color: #000;">{% price bundle_item.item.bundle.effective_price %}</span>
+        </div>
+        <div style="display: flex; flex-direction: column; justify-content: space-between; align-items: flex-end;">
+          <button type="button" onclick="removeBundleItem({{ bundle_item.item.id }})" style="border: none; background: none; cursor: pointer; color: #ccc; padding: 0; transition: color 0.15s;" onmouseenter="this.style.color='#000'" onmouseleave="this.style.color='#ccc'">
+            <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M6 18L18 6M6 6l12 12"/></svg>
+          </button>
+          <div style="display: flex; border: 1px solid #ddd;">
+            <button type="button" class="bundle-qty-btn minus" data-item-id="{{ bundle_item.item.id }}" style="width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; border: none; background: none; cursor: pointer;">
+              <svg width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 12H4"/></svg>
+            </button>
+            <span class="bundle-item-quantity" style="width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; border-left: 1px solid #ddd; border-right: 1px solid #ddd; font-family: 'Inter', sans-serif; font-size: 0.8rem; font-weight: 500;">{{ bundle_item.item.quantity }}</span>
+            <button type="button" class="bundle-qty-btn plus" data-item-id="{{ bundle_item.item.id }}" style="width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; border: none; background: none; cursor: pointer;">
+              <svg width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+            </button>
+          </div>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+
+    <!-- Summary -->
+    <div style="max-width: 320px; margin-left: auto; padding-top: 3rem;">
+      <div style="display: flex; flex-direction: column; gap: 1rem; margin-bottom: 2rem;">
+        <div style="display: flex; justify-content: space-between;">
+          <span style="font-family: 'Inter', sans-serif; font-size: 0.8rem; color: #999;">Subtotal</span>
+          <span id="subtotal" style="font-family: 'Inter', sans-serif; font-size: 0.8rem; font-weight: 500;">{% price subtotal %}</span>
+        </div>
+        {% if auto_discount and discount_savings %}
+        <div style="display: flex; justify-content: space-between;">
+          <span style="font-family: 'Inter', sans-serif; font-size: 0.8rem; color: #16a34a;">{{ auto_discount.name }}{% if auto_discount.discount_type == "percentage" %} (-{{ auto_discount.value|floatformat:0 }}%){% endif %}</span>
+          <span style="font-family: 'Inter', sans-serif; font-size: 0.8rem; font-weight: 500; color: #16a34a;">-{% price discount_savings %}</span>
+        </div>
+        {% endif %}
+        <div style="display: flex; justify-content: space-between;">
+          <span style="font-family: 'Inter', sans-serif; font-size: 0.8rem; color: #999;">Shipping</span>
+          <span id="shipping" style="font-family: 'Inter', sans-serif; font-size: 0.8rem; color: {% if free_shipping %}#16a34a{% else %}#ccc{% endif %};">{% if free_shipping %}FREE{% else %}At checkout{% endif %}</span>
+        </div>
+        <div style="border-top: 1px solid #eee; padding-top: 1rem; display: flex; justify-content: space-between; align-items: baseline;">
+          <span style="font-family: 'Inter', sans-serif; font-size: 0.65rem; font-weight: 600; letter-spacing: 0.2em; text-transform: uppercase; color: #999;">Total</span>
+          <span id="total" style="font-family: 'Inter', sans-serif; font-size: 1.25rem; font-weight: 700; color: #000;">{% if auto_discount %}{% price discounted_total %}{% else %}{% price subtotal %}{% endif %}</span>
+        </div>
+      </div>
+
+      <a href="{% url 'shop:checkout' %}" style="display: block; width: 100%; padding: 14px; font-family: 'Inter', sans-serif; font-size: 0.7rem; font-weight: 600; letter-spacing: 0.15em; text-transform: uppercase; text-align: center; text-decoration: none; background: #000; color: #fff; box-sizing: border-box; transition: background 0.2s;" onmouseenter="this.style.background='#222'" onmouseleave="this.style.background='#000'">Checkout</a>
+
+      <a href="{% url 'shop:shop' %}" style="display: block; text-align: center; font-family: 'Inter', sans-serif; font-size: 0.7rem; color: #bbb; text-decoration: none; margin-top: 1.25rem; transition: color 0.2s;" onmouseenter="this.style.color='#000'" onmouseleave="this.style.color='#bbb'">Continue Shopping</a>
+    </div>
+
+    {% else %}
+    <!-- Empty -->
+    <div style="padding: 8rem 0; text-align: center;">
+      <p style="font-family: 'Inter', sans-serif; font-size: 1rem; color: #999; margin: 0 0 0.5rem;">Your cart is empty.</p>
+      <p style="font-family: 'Inter', sans-serif; font-size: 0.8rem; color: #ccc; margin: 0 0 2.5rem;">Nothing here yet.</p>
+      <a href="{% url 'shop:shop' %}" style="font-family: 'Inter', sans-serif; font-size: 0.7rem; font-weight: 600; letter-spacing: 0.15em; text-transform: uppercase; color: #000; text-decoration: none; padding: 13px 36px; border: 1px solid #000; display: inline-block; transition: all 0.2s;" onmouseenter="this.style.background='#000'; this.style.color='#fff'" onmouseleave="this.style.background='transparent'; this.style.color='#000'">Shop</a>
     </div>
     {% endif %}
   </div>
 </section>
 
-{% if cart_items or bundle_items %}
-<!-- Section Divider -->
-<div class="border-t border-black">
-  <div class="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center">
-    <span class="text-xs tracking-wider text-neutral-500">{% if free_shipping_threshold > 0 %}Free shipping on orders over {% price free_shipping_threshold %}{% else %}Free shipping with promo code{% endif %}</span>
-    <span class="text-xs tracking-widest uppercase font-medium">Blueprint Apparel</span>
-  </div>
-</div>
-{% endif %}
-
 {% endblock %}
 
 {% block extra_js %}
 <script>
-const csrfToken = '{{ csrf_token }}';
-const cartItemsEl = document.getElementById('cart-items');
-const updateUrlBase = cartItemsEl?.dataset.updateUrl?.replace('/0/', '/{id}/') || '';
-const removeUrlBase = cartItemsEl?.dataset.removeUrl?.replace('/0/', '/{id}/') || '';
-const bundleUpdateUrlBase = '{% url "shop:update_bundle_item" 0 %}'.replace('/0/', '/{id}/');
-const bundleRemoveUrlBase = '{% url "shop:remove_bundle_from_cart" 0 %}'.replace('/0/', '/{id}/');
+var csrfToken = '{{ csrf_token }}';
+var cartItemsEl = document.getElementById('cart-items');
+var updateUrlBase = cartItemsEl ? cartItemsEl.dataset.updateUrl.replace('/0/', '/{id}/') : '';
+var removeUrlBase = cartItemsEl ? cartItemsEl.dataset.removeUrl.replace('/0/', '/{id}/') : '';
+var bundleUpdateUrlBase = '{% url "shop:update_bundle_item" 0 %}'.replace('/0/', '/{id}/');
+var bundleRemoveUrlBase = '{% url "shop:remove_bundle_from_cart" 0 %}'.replace('/0/', '/{id}/');
 
-// Use event delegation for quantity buttons
-cartItemsEl?.addEventListener('click', function(e) {
-  const btn = e.target.closest('.qty-btn');
+if (cartItemsEl) cartItemsEl.addEventListener('click', function(e) {
+  var btn = e.target.closest('.qty-btn');
   if (!btn) return;
-
-  const itemId = btn.dataset.itemId;
-  const itemEl = document.querySelector(`.cart-item[data-item-id="${itemId}"]`);
-  const qtyEl = itemEl.querySelector('.item-quantity');
-  const currentQty = parseInt(qtyEl.textContent);
-
-  if (btn.classList.contains('minus')) {
-    updateQuantity(itemId, currentQty - 1);
-  } else if (btn.classList.contains('plus')) {
-    updateQuantity(itemId, currentQty + 1);
-  }
+  var id = btn.dataset.itemId;
+  var el = document.querySelector('.cart-item[data-item-id="' + id + '"]');
+  var qty = parseInt(el.querySelector('.item-quantity').textContent);
+  btn.classList.contains('minus') ? updateQuantity(id, qty - 1) : updateQuantity(id, qty + 1);
 });
 
-async function updateQuantity(itemId, newQuantity) {
-  if (newQuantity < 1) {
-    removeItem(itemId);
-    return;
-  }
-
-  const itemEl = document.querySelector(`.cart-item[data-item-id="${itemId}"]`);
-  const qtyEl = itemEl.querySelector('.item-quantity');
-  const oldQty = parseInt(qtyEl.textContent);
-
-  // Optimistic update
-  qtyEl.textContent = newQuantity;
-
+async function updateQuantity(id, qty) {
+  if (qty < 1) { removeItem(id); return; }
+  var el = document.querySelector('.cart-item[data-item-id="' + id + '"]');
+  var qtyEl = el.querySelector('.item-quantity');
+  var old = parseInt(qtyEl.textContent);
+  qtyEl.textContent = qty;
   try {
-    const response = await fetch(updateUrlBase.replace('{id}', itemId), {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/x-www-form-urlencoded',
-        'X-CSRFToken': csrfToken,
-        'X-Requested-With': 'XMLHttpRequest'
-      },
-      body: `quantity=${newQuantity}`
-    });
-
-    const data = await response.json();
-
-    if (data.success) {
-      updateTotals(data.cart_total);
-      updateCartCount(data.cart_count);
-    } else {
-      qtyEl.textContent = oldQty;
-    }
-  } catch (error) {
-    console.error('Error updating quantity:', error);
-    qtyEl.textContent = oldQty;
-  }
+    var r = await fetch(updateUrlBase.replace('{id}', id), { method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded', 'X-CSRFToken': csrfToken, 'X-Requested-With': 'XMLHttpRequest' }, body: 'quantity=' + qty });
+    var d = await r.json();
+    if (d.success) { updateTotals(d.cart_total); updateCartCount(d.cart_count); } else qtyEl.textContent = old;
+  } catch(e) { qtyEl.textContent = old; }
 }
 
-async function removeItem(itemId) {
-  const itemEl = document.querySelector(`.cart-item[data-item-id="${itemId}"]`);
-
-  // Optimistic removal with fade
-  itemEl.style.opacity = '0.5';
-
+async function removeItem(id) {
+  var el = document.querySelector('.cart-item[data-item-id="' + id + '"]');
+  el.style.opacity = '0.3';
   try {
-    const response = await fetch(removeUrlBase.replace('{id}', itemId), {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/x-www-form-urlencoded',
-        'X-CSRFToken': csrfToken,
-        'X-Requested-With': 'XMLHttpRequest'
-      }
-    });
-
-    const data = await response.json();
-
-    if (data.success) {
-      itemEl.remove();
-      updateTotals(data.cart_total);
-      updateCartCount(data.cart_count);
-
-      // Check if cart is now empty
-      if (data.cart_count === 0) {
-        location.reload();
-      }
-    } else {
-      itemEl.style.opacity = '1';
-    }
-  } catch (error) {
-    console.error('Error removing item:', error);
-    itemEl.style.opacity = '1';
-  }
+    var r = await fetch(removeUrlBase.replace('{id}', id), { method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded', 'X-CSRFToken': csrfToken, 'X-Requested-With': 'XMLHttpRequest' } });
+    var d = await r.json();
+    if (d.success) { el.remove(); updateTotals(d.cart_total); updateCartCount(d.cart_count); if (d.cart_count === 0) location.reload(); } else el.style.opacity = '1';
+  } catch(e) { el.style.opacity = '1'; }
 }
 
-const freeShippingThreshold = {{ free_shipping_threshold }};
-
-function updateTotals(cartTotal) {
-  const subtotal = parseFloat(cartTotal);
-  // Free shipping on orders meeting threshold
-  const freeShipping = freeShippingThreshold > 0 && subtotal >= freeShippingThreshold;
-  const shippingEl = document.getElementById('shipping');
-
-  document.getElementById('subtotal').textContent = '$' + subtotal.toFixed(2);
-
-  if (freeShipping) {
-    shippingEl.textContent = 'FREE';
-    shippingEl.classList.remove('text-neutral-400');
-    shippingEl.classList.add('text-green-600');
-    document.getElementById('total').textContent = '$' + subtotal.toFixed(2);
-  } else {
-    shippingEl.textContent = 'Calculated at checkout';
-    shippingEl.classList.remove('text-green-600');
-    shippingEl.classList.add('text-neutral-400');
-    document.getElementById('total').textContent = '$' + subtotal.toFixed(2);
-  }
+var freeShippingThreshold = {{ free_shipping_threshold }};
+function updateTotals(total) {
+  var s = parseFloat(total);
+  var free = freeShippingThreshold > 0 && s >= freeShippingThreshold;
+  document.getElementById('subtotal').textContent = '$' + s.toFixed(2);
+  var sh = document.getElementById('shipping');
+  sh.textContent = free ? 'FREE' : 'At checkout';
+  sh.style.color = free ? '#16a34a' : '#ccc';
+  document.getElementById('total').textContent = '$' + s.toFixed(2);
 }
+function updateCartCount(c) { document.getElementById('cart-count').textContent = c + ' item' + (c !== 1 ? 's' : ''); }
 
-function updateCartCount(count) {
-  const countEl = document.getElementById('cart-count');
-  countEl.textContent = count + ' ITEM' + (count !== 1 ? 'S' : '');
-}
-
-// Bundle item event delegation
 document.addEventListener('click', function(e) {
-  const btn = e.target.closest('.bundle-qty-btn');
+  var btn = e.target.closest('.bundle-qty-btn');
   if (!btn) return;
-
-  const itemId = btn.dataset.itemId;
-  const itemEl = document.querySelector(`.bundle-cart-item[data-item-id="${itemId}"]`);
-  const qtyEl = itemEl.querySelector('.bundle-item-quantity');
-  const currentQty = parseInt(qtyEl.textContent);
-
-  if (btn.classList.contains('minus')) {
-    updateBundleQuantity(itemId, currentQty - 1);
-  } else if (btn.classList.contains('plus')) {
-    updateBundleQuantity(itemId, currentQty + 1);
-  }
+  var id = btn.dataset.itemId;
+  var el = document.querySelector('.bundle-cart-item[data-item-id="' + id + '"]');
+  var qty = parseInt(el.querySelector('.bundle-item-quantity').textContent);
+  btn.classList.contains('minus') ? updateBundleQuantity(id, qty - 1) : updateBundleQuantity(id, qty + 1);
 });
 
-async function updateBundleQuantity(itemId, newQuantity) {
-  if (newQuantity < 1) {
-    removeBundleItem(itemId);
-    return;
-  }
-
-  const itemEl = document.querySelector(`.bundle-cart-item[data-item-id="${itemId}"]`);
-  const qtyEl = itemEl.querySelector('.bundle-item-quantity');
-  const oldQty = parseInt(qtyEl.textContent);
-
-  // Optimistic update
-  qtyEl.textContent = newQuantity;
-
+async function updateBundleQuantity(id, qty) {
+  if (qty < 1) { removeBundleItem(id); return; }
+  var el = document.querySelector('.bundle-cart-item[data-item-id="' + id + '"]');
+  var qtyEl = el.querySelector('.bundle-item-quantity');
+  var old = parseInt(qtyEl.textContent);
+  qtyEl.textContent = qty;
   try {
-    const response = await fetch(bundleUpdateUrlBase.replace('{id}', itemId), {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/x-www-form-urlencoded',
-        'X-CSRFToken': csrfToken,
-        'X-Requested-With': 'XMLHttpRequest'
-      },
-      body: `quantity=${newQuantity}`
-    });
-
-    const data = await response.json();
-
-    if (data.success) {
-      updateTotals(data.cart_total);
-      updateCartCount(data.cart_count);
-    } else {
-      qtyEl.textContent = oldQty;
-    }
-  } catch (error) {
-    console.error('Error updating bundle quantity:', error);
-    qtyEl.textContent = oldQty;
-  }
+    var r = await fetch(bundleUpdateUrlBase.replace('{id}', id), { method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded', 'X-CSRFToken': csrfToken, 'X-Requested-With': 'XMLHttpRequest' }, body: 'quantity=' + qty });
+    var d = await r.json();
+    if (d.success) { updateTotals(d.cart_total); updateCartCount(d.cart_count); } else qtyEl.textContent = old;
+  } catch(e) { qtyEl.textContent = old; }
 }
 
-async function removeBundleItem(itemId) {
-  const itemEl = document.querySelector(`.bundle-cart-item[data-item-id="${itemId}"]`);
-
-  // Optimistic removal with fade
-  itemEl.style.opacity = '0.5';
-
+async function removeBundleItem(id) {
+  var el = document.querySelector('.bundle-cart-item[data-item-id="' + id + '"]');
+  el.style.opacity = '0.3';
   try {
-    const response = await fetch(bundleRemoveUrlBase.replace('{id}', itemId), {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/x-www-form-urlencoded',
-        'X-CSRFToken': csrfToken,
-        'X-Requested-With': 'XMLHttpRequest'
-      }
-    });
-
-    const data = await response.json();
-
-    if (data.success) {
-      itemEl.remove();
-      updateTotals(data.cart_total);
-      updateCartCount(data.cart_count);
-
-      // Check if cart is now empty
-      if (data.cart_count === 0) {
-        location.reload();
-      }
-    } else {
-      itemEl.style.opacity = '1';
-    }
-  } catch (error) {
-    console.error('Error removing bundle item:', error);
-    itemEl.style.opacity = '1';
-  }
+    var r = await fetch(bundleRemoveUrlBase.replace('{id}', id), { method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded', 'X-CSRFToken': csrfToken, 'X-Requested-With': 'XMLHttpRequest' }, body: '' });
+    var d = await r.json();
+    if (d.success) { el.remove(); updateTotals(d.cart_total); updateCartCount(d.cart_count); if (d.cart_count === 0) location.reload(); } else el.style.opacity = '1';
+  } catch(e) { el.style.opacity = '1'; }
 }
 </script>
 {% endblock %}
