@@ -2,582 +2,350 @@
 {% load static %}
 {% load currency_tags %}
 
-{% block title %}{{ product.name }} - Blueprint Apparel{% endblock %}
+{% block title %}{{ product.name }} — Blueprint Apparel{% endblock %}
 
 {% block extra_css %}
 <style>
-  /* Image gallery thumbnail active state */
-  .thumbnail-active {
-    border-color: black !important;
+  .pd-layout {
+    display: grid;
+    grid-template-columns: 1.2fr 1fr;
   }
+  .pd-gallery { overflow: hidden; background: #f5f5f0; }
+  .pd-gallery img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .pd-info { display: flex; flex-direction: column; justify-content: center; }
 
-  /* Size button states */
-  .size-btn {
-    transition: all 0.15s ease;
-  }
-  .size-btn:hover:not(.size-unavailable) {
-    background-color: black;
-    color: white;
-  }
-  .size-btn.size-selected {
-    background-color: black;
-    color: white;
-  }
-  .size-btn.size-unavailable {
-    color: #d1d5db;
-    cursor: not-allowed;
-    text-decoration: line-through;
-  }
+  .pd-thumb { width: 48px; height: 56px; overflow: hidden; cursor: pointer; opacity: 0.4; transition: opacity 0.2s; border: none; background: none; padding: 0; }
+  .pd-thumb:hover, .pd-thumb.active { opacity: 1; }
+  .pd-thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
 
-  /* Gallery navigation arrows - desktop only */
-  .gallery-arrow {
-    position: absolute;
-    top: 50%;
-    transform: translateY(-50%);
-    width: 48px;
-    height: 48px;
-    background: rgba(255, 255, 255, 0.9);
-    border: 1px solid black;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    opacity: 0;
-    transition: opacity 0.2s ease;
-    z-index: 10;
+  .pd-arrow {
+    position: absolute; top: 50%; transform: translateY(-50%); width: 44px; height: 44px;
+    display: flex; align-items: center; justify-content: center; border: none; cursor: pointer;
+    background: rgba(255,255,255,0.9); color: #000; opacity: 0; transition: opacity 0.2s; z-index: 10;
   }
-  .gallery-container:hover .gallery-arrow {
-    opacity: 1;
-  }
-  .gallery-arrow:hover {
-    background: black;
-    color: white;
-  }
-  .gallery-arrow.prev { left: 16px; }
-  .gallery-arrow.next { right: 16px; }
+  .pd-gallery:hover .pd-arrow { opacity: 1; }
+  .pd-arrow:hover { background: #000; color: #fff; }
 
-  /* Hide arrows on mobile */
+  .pd-attr-btn {
+    min-width: 3rem; height: 2.5rem; border: 1px solid #ddd; background: none; cursor: pointer;
+    font-family: 'Inter', sans-serif; font-size: 0.75rem; font-weight: 500; letter-spacing: 0.08em; text-transform: uppercase;
+    transition: all 0.15s; color: #000;
+  }
+  .pd-attr-btn:hover:not(:disabled) { border-color: #000; }
+  .pd-attr-btn.selected { background: #000; color: #fff; border-color: #000; }
+  .pd-attr-btn:disabled { opacity: 0.25; cursor: not-allowed; text-decoration: line-through; }
+
+  .pd-color-btn {
+    width: 28px; height: 28px; border-radius: 50%; border: 2px solid transparent; cursor: pointer; transition: all 0.15s; padding: 0;
+  }
+  .pd-color-btn:hover { border-color: #999; }
+  .pd-color-btn.selected { border-color: #000; box-shadow: 0 0 0 2px #fff, 0 0 0 4px #000; }
+
   @media (max-width: 1023px) {
-    .gallery-arrow { display: none; }
-  }
-
-  /* Swipe hint for mobile */
-  .swipe-hint {
-    display: none;
-  }
-  @media (max-width: 1023px) {
-    .swipe-hint {
-      display: block;
-      position: absolute;
-      bottom: 16px;
-      right: 16px;
-      padding: 4px 12px;
-      background: rgba(255, 255, 255, 0.9);
-      border: 1px solid black;
-      font-size: 10px;
-      letter-spacing: 0.1em;
-      text-transform: uppercase;
-    }
+    .pd-layout { grid-template-columns: 1fr; }
+    .pd-gallery { position: relative; top: auto; height: 70vh; }
+    .pd-arrow { display: none; }
   }
 </style>
 {% endblock %}
 
 {% block content %}
 
-<!-- Breadcrumb -->
-<div class="border-b border-black">
-  <div class="max-w-7xl mx-auto px-6 py-3">
-    <nav class="flex items-center text-xs tracking-wider">
-      <a href="{% url 'home' %}" class="text-neutral-500 hover:text-black transition-colors uppercase">Home</a>
-      <span class="mx-3 text-neutral-300">/</span>
-      <a href="{% url 'shop:shop' %}" class="text-neutral-500 hover:text-black transition-colors uppercase">Shop</a>
-      <span class="mx-3 text-neutral-300">/</span>
-      <span class="text-black uppercase">{{ product.name }}</span>
-    </nav>
+<div class="pd-layout">
+
+  <!-- Gallery -->
+  <div id="gallery-container" class="pd-gallery" style="position: relative; aspect-ratio: 3/4;">
+    <img id="main-image" src="{{ main_image }}" alt="{{ product.name }}" draggable="false" />
+
+    {% if images|length > 1 %}
+    <button type="button" class="pd-arrow" style="left: 1rem;" onclick="prevImage()" aria-label="Previous">
+      <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
+    </button>
+    <button type="button" class="pd-arrow" style="right: 1rem;" onclick="nextImage()" aria-label="Next">
+      <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+    </button>
+    {% endif %}
+
+    <!-- Thumbnails -->
+    {% if images|length > 1 %}
+    <div style="position: absolute; bottom: 1.5rem; left: 1.5rem; display: flex; gap: 6px; z-index: 10;">
+      {% for image in images %}
+      <button onclick="changeImage('{{ image }}', {{ forloop.counter }})" class="pd-thumb {% if forloop.first %}active{% endif %}">
+        <img src="{{ image }}" alt="{{ product.name }}" />
+      </button>
+      {% endfor %}
+    </div>
+    {% endif %}
   </div>
-</div>
 
-<!-- Product Detail -->
-<section class="bg-white">
-  <div class="max-w-7xl mx-auto">
-    <div class="grid grid-cols-1 lg:grid-cols-2">
+  <!-- Product Info -->
+  <div class="pd-info" style="padding: 3rem 3rem 4rem; background: #fff;">
 
-      <!-- Left: Image Gallery -->
-      <div class="border-r border-black">
-        <!-- Main Image -->
-        <div id="gallery-container" class="gallery-container relative" style="aspect-ratio: 4/5;">
-          <img id="main-image"
-               src="{{ main_image }}"
-               alt="{{ product.name }}"
-               class="w-full h-full object-cover select-none"
-               draggable="false" />
-
-          {% if images|length > 1 %}
-          <!-- Desktop: Arrow Navigation -->
-          <button type="button" class="gallery-arrow prev" onclick="prevImage()" aria-label="Previous image">
-            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
-            </svg>
-          </button>
-          <button type="button" class="gallery-arrow next" onclick="nextImage()" aria-label="Next image">
-            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
-            </svg>
-          </button>
-
-          <!-- Mobile: Swipe hint (shows briefly) -->
-          <div id="swipe-hint" class="swipe-hint">Swipe</div>
-          {% endif %}
-
-          <!-- Image number indicator -->
-          <div class="absolute bottom-4 left-4 px-3 py-1 bg-white/90 backdrop-blur-sm border border-black">
-            <span id="image-counter" class="text-xs tracking-widest font-medium">001 / {{ images|length|default:1|stringformat:"03d" }}</span>
-          </div>
-        </div>
-
-        <!-- Thumbnail Gallery -->
-        <div class="border-t border-black p-4">
-          <div class="flex gap-3 overflow-x-auto">
-            {% for image in images %}
-            <button onclick="changeImage('{{ image }}', {{ forloop.counter }})"
-                    class="thumbnail-btn flex-shrink-0 w-20 h-24 border-2 border-transparent hover:border-black transition-all overflow-hidden {% if forloop.first %}thumbnail-active{% endif %}">
-              <img src="{{ image }}" alt="{{ product.name }}" class="w-full h-full object-cover" />
-            </button>
-            {% endfor %}
-          </div>
-        </div>
-      </div>
-
-      <!-- Right: Product Info -->
-      <div class="p-6 lg:p-12 flex flex-col">
-
-        <!-- Product Header -->
-        <div class="border-b border-black pb-6 mb-6">
-          <p class="text-xs text-neutral-500 uppercase tracking-wider mb-2">{{ product.category_legacy|default:"Foundation" }}</p>
-          <h1 class="text-2xl md:text-3xl font-bold tracking-tight mb-4">"{{ product.name|upper }}"</h1>
-          <div class="flex items-center gap-4">
-            {% if sale_info %}
-              <span class="text-2xl font-bold text-red-600">{% price sale_info.sale_price %}</span>
-              <span class="text-xl text-neutral-500" style="text-decoration: line-through;">{% price product.base_price %}</span>
-              <span class="text-xs font-semibold uppercase tracking-wider bg-red-600 text-white px-2 py-1 rounded">Sale {{ sale_info.save_percent }}% off</span>
-            {% else %}
-              <span class="text-2xl font-bold">{% price product.base_price %}</span>
-            {% endif %}
-          </div>
-        </div>
-
-        <!-- Dynamic Attribute Selection -->
-        {% for attr in product_attributes %}
-        <div class="mb-6">
-          <div class="flex justify-between items-center mb-3">
-            <span class="text-xs tracking-widest uppercase font-medium">{{ attr.name }}</span>
-            {% if attr.slug == 'size' %}
-            <a href="#" class="text-xs text-neutral-500 hover:text-black underline transition-colors">Size Guide</a>
-            {% endif %}
-          </div>
-
-          {% if attr.input_type == 'color' %}
-          <!-- Color Swatches -->
-          <div class="flex flex-wrap gap-3">
-            {% for val in attr.values %}
-            <button onclick="selectAttribute('{{ attr.slug }}', '{{ val.value }}')"
-                    class="attr-btn attr-{{ attr.slug }}-btn w-8 h-8 rounded-full border-2 border-transparent hover:border-black transition-all"
-                    style="background-color: {{ val.metadata.hex_code|default:'#000' }};"
-                    data-attr="{{ attr.slug }}"
-                    data-value="{{ val.value }}"
-                    title="{{ val.value }}">
-            </button>
-            {% endfor %}
-          </div>
-          {% else %}
-          <!-- Standard Buttons (Size, Material, etc.) -->
-          <div class="flex flex-wrap gap-2">
-            {% for val in attr.values %}
-            <button onclick="selectAttribute('{{ attr.slug }}', '{{ val.value }}')"
-                    class="attr-btn attr-{{ attr.slug }}-btn w-14 h-10 border border-black text-sm font-medium uppercase tracking-wide
-                           {% if not val.available %}opacity-50 cursor-not-allowed{% endif %}"
-                    {% if not val.available %}disabled{% endif %}
-                    data-attr="{{ attr.slug }}"
-                    data-value="{{ val.value }}">
-              {{ val.metadata.label|default:val.value }}
-            </button>
-            {% endfor %}
-          </div>
-          {% endif %}
-
-          <input type="hidden" id="selected-{{ attr.slug }}" name="{{ attr.slug }}" value="">
-        </div>
-        {% empty %}
-        <!-- Fallback to legacy Size/Color if no unified attributes -->
-        {% if sizes %}
-        <div class="mb-6">
-          <div class="flex justify-between items-center mb-3">
-            <span class="text-xs tracking-widest uppercase font-medium">Size</span>
-            <a href="#" class="text-xs text-neutral-500 hover:text-black underline transition-colors">Size Guide</a>
-          </div>
-          <div class="flex flex-wrap gap-2">
-            {% for size in sizes %}
-            <button onclick="selectAttribute('size', '{{ size.code }}')"
-                    class="attr-btn attr-size-btn w-14 h-10 border border-black text-sm font-medium uppercase tracking-wide
-                           {% if not size.available %}opacity-50 cursor-not-allowed{% endif %}"
-                    {% if not size.available %}disabled{% endif %}
-                    data-attr="size"
-                    data-value="{{ size.code }}">
-              {{ size.label|default:size.code }}
-            </button>
-            {% endfor %}
-          </div>
-          <input type="hidden" id="selected-size" name="size" value="">
-        </div>
+    <!-- Name + Price -->
+    <div style="margin-bottom: 2.5rem;">
+      <p style="font-family: 'Inter', sans-serif; font-size: 0.55rem; font-weight: 500; letter-spacing: 0.3em; text-transform: uppercase; color: #bbb; margin: 0 0 1rem;">{{ product.category_legacy|default:"Foundation" }}</p>
+      <h1 style="font-family: 'Inter', sans-serif; font-size: clamp(1.5rem, 2.5vw, 2rem); font-weight: 700; color: #000; letter-spacing: -0.02em; margin: 0 0 1rem; -webkit-font-smoothing: antialiased;">{{ product.name }}</h1>
+      <div style="display: flex; align-items: baseline; gap: 0.75rem;">
+        {% if sale_info %}
+          <span style="font-family: 'Inter', sans-serif; font-size: 1.25rem; font-weight: 600; color: #b91c1c;">{% price sale_info.sale_price %}</span>
+          <span style="font-family: 'Inter', sans-serif; font-size: 1rem; color: #bbb; text-decoration: line-through;">{% price product.base_price %}</span>
+          <span style="font-family: 'Inter', sans-serif; font-size: 0.65rem; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; color: #b91c1c;">-{{ sale_info.save_percent }}%</span>
+        {% else %}
+          <span style="font-family: 'Inter', sans-serif; font-size: 1.25rem; font-weight: 600; color: #000;">{% price product.base_price %}</span>
         {% endif %}
-        {% if colors %}
-        <div class="mb-6">
-          <span class="text-xs tracking-widest uppercase font-medium block mb-3">Color</span>
-          <div class="flex flex-wrap gap-3">
-            {% for color in colors %}
-            <button onclick="selectAttribute('color', '{{ color.name }}')"
-                    class="attr-btn attr-color-btn w-8 h-8 rounded-full border-2 border-transparent hover:border-black transition-all"
-                    style="background-color: {{ color.hex|default:'#000' }};"
-                    data-attr="color"
-                    data-value="{{ color.name }}"
-                    title="{{ color.name }}">
-            </button>
-            {% endfor %}
-          </div>
-          <input type="hidden" id="selected-color" name="color" value="">
-        </div>
-        {% endif %}
-        {% endfor %}
-
-        <!-- Quantity -->
-        <div class="mb-8" id="quantity-section" {% if total_stock == 0 or not product.available_for_purchase %}style="display: none;"{% endif %}>
-          <div class="flex items-center justify-between mb-3">
-            <span class="text-xs tracking-widest uppercase font-medium">Quantity</span>
-            <span id="stock-display" class="text-xs text-neutral-500">
-              {% if default_variant_stock > 0 %}
-                {{ default_variant_stock }} in stock
-              {% endif %}
-            </span>
-          </div>
-          <div class="flex items-center border border-black w-fit">
-            <button type="button" onclick="decrementQty()" class="px-4 py-2 hover:bg-black hover:text-white transition-colors">
-              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 12H4"></path>
-              </svg>
-            </button>
-            <input type="number" id="quantity" name="quantity" value="1" min="1" max="{{ default_variant_stock|default:1 }}"
-                   class="w-12 text-center border-x border-black py-2 font-medium" readonly />
-            <button type="button" onclick="incrementQty()" class="px-4 py-2 hover:bg-black hover:text-white transition-colors">
-              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
-              </svg>
-            </button>
-          </div>
-        </div>
-
-        <!-- Express Checkout (Apple Pay / Google Pay) -->
-        {% if product.available_for_purchase and total_stock > 0 %}
-        <div id="express-checkout-section" class="mb-4" style="display: none;">
-          <div id="payment-request-button" class="w-full">
-            <!-- Stripe Payment Request Button will be mounted here -->
-          </div>
-          <div class="flex items-center gap-3 my-4">
-            <span class="flex-1 h-px bg-neutral-200"></span>
-            <span class="text-xs text-neutral-400 uppercase tracking-wider">or</span>
-            <span class="flex-1 h-px bg-neutral-200"></span>
-          </div>
-        </div>
-        {% endif %}
-
-        <!-- Add to Cart Button -->
-        <form action="{% url 'shop:add_to_cart' %}" method="POST" class="mb-8" id="add-to-cart-form">
-          {% csrf_token %}
-          <input type="hidden" name="product_id" value="{{ product.id }}">
-          <input type="hidden" name="variant_id" id="variant-id" value="{{ default_variant_id|default:'' }}">
-          <input type="hidden" name="quantity" id="form-quantity" value="1">
-          {% if not product.available_for_purchase %}
-          <button type="button" disabled
-                  class="w-full py-4 bg-neutral-300 text-neutral-500 font-bold uppercase tracking-widest text-sm cursor-not-allowed">
-            Not Available
-          </button>
-          {% elif total_stock == 0 %}
-          <button type="button" disabled
-                  class="w-full py-4 bg-neutral-300 text-neutral-500 font-bold uppercase tracking-widest text-sm cursor-not-allowed">
-            Out of Stock
-          </button>
-          {% else %}
-          <button type="submit" id="add-to-cart-btn"
-                  class="w-full py-4 bg-black text-white font-bold uppercase tracking-widest text-sm hover:bg-neutral-800 transition-colors">
-            Add to Cart
-          </button>
-          {% endif %}
-        </form>
-
-        <!-- Product Description -->
-        <div class="border-t border-black pt-6 space-y-4 mt-auto">
-          <div>
-            <span class="text-xs tracking-widest uppercase font-medium block mb-2">Description</span>
-            <p class="text-neutral-600 text-sm leading-relaxed">
-              {{ product.description|default:"Premium quality garment from our Foundation collection. Designed with intention, built for wherever life takes you." }}
-            </p>
-          </div>
-
-          <!-- Details Accordion -->
-          <details class="mt-8 group">
-            <summary class="flex justify-between items-center cursor-pointer text-xs tracking-widest uppercase font-medium mb-2">
-              Details
-              <svg class="w-4 h-4 transition-transform group-open:rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
-              </svg>
-            </summary>
-            <ul class="space-y-2 text-sm text-neutral-600 leading-relaxed">
-              <li>100% Premium Cotton</li>
-              <li>Relaxed fit</li>
-              <li>Machine washable</li>
-              <li>Designed in Chicago</li>
-            </ul>
-          </details>
-
-          <!-- Shipping Info Accordion -->
-          <details class="mt-8 group">
-            <summary class="flex justify-between items-center cursor-pointer text-xs tracking-widest uppercase font-medium mb-2">
-              Shipping & Returns
-              <svg class="w-4 h-4 transition-transform group-open:rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
-              </svg>
-            </summary>
-            <ul class="space-y-2 text-sm text-neutral-600 leading-relaxed">
-              <li>{% if free_shipping_threshold > 0 %}Free shipping on orders over {% price free_shipping_threshold %}{% else %}Free shipping with promo code{% endif %}</li>
-              <li>Standard shipping: 5-7 business days</li>
-              <li>Returns for store credit within 30 days</li>
-            </ul>
-          </details>
-        </div>
-
       </div>
     </div>
-  </div>
-</section>
 
-<!-- Section Divider -->
-<div class="border-t border-black">
-  <div class="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center">
-    <span class="text-xs tracking-wider text-neutral-500">SKU: {{ product.slug|upper }}</span>
-    <span class="text-xs tracking-widest uppercase font-medium">Foundation Collection</span>
+    <!-- Attributes -->
+    {% for attr in product_attributes %}
+    <div style="margin-bottom: 1.75rem;">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem;">
+        <span style="font-family: 'Inter', sans-serif; font-size: 0.65rem; font-weight: 600; letter-spacing: 0.2em; text-transform: uppercase; color: #999;">{{ attr.name }}</span>
+        {% if attr.slug == 'size' %}
+        <a href="#" style="font-family: 'Inter', sans-serif; font-size: 0.65rem; color: #bbb; text-decoration: underline; transition: color 0.2s;" onmouseenter="this.style.color='#000'" onmouseleave="this.style.color='#bbb'">Size Guide</a>
+        {% endif %}
+      </div>
+
+      {% if attr.input_type == 'color' %}
+      <div style="display: flex; flex-wrap: wrap; gap: 0.625rem;">
+        {% for val in attr.values %}
+        <button onclick="selectAttribute('{{ attr.slug }}', '{{ val.value }}')"
+                class="pd-color-btn attr-btn attr-{{ attr.slug }}-btn"
+                style="background-color: {{ val.metadata.hex_code|default:'#000' }};"
+                data-attr="{{ attr.slug }}" data-value="{{ val.value }}" title="{{ val.value }}"></button>
+        {% endfor %}
+      </div>
+      {% else %}
+      <div style="display: flex; flex-wrap: wrap; gap: 0.5rem;">
+        {% for val in attr.values %}
+        <button onclick="selectAttribute('{{ attr.slug }}', '{{ val.value }}')"
+                class="pd-attr-btn attr-btn attr-{{ attr.slug }}-btn {% if not val.available %}{% endif %}"
+                {% if not val.available %}disabled{% endif %}
+                data-attr="{{ attr.slug }}" data-value="{{ val.value }}">
+          {{ val.metadata.label|default:val.value }}
+        </button>
+        {% endfor %}
+      </div>
+      {% endif %}
+
+      <input type="hidden" id="selected-{{ attr.slug }}" name="{{ attr.slug }}" value="">
+    </div>
+    {% empty %}
+    <!-- Legacy Size/Color -->
+    {% if sizes %}
+    <div style="margin-bottom: 1.75rem;">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem;">
+        <span style="font-family: 'Inter', sans-serif; font-size: 0.65rem; font-weight: 600; letter-spacing: 0.2em; text-transform: uppercase; color: #999;">Size</span>
+        <a href="#" style="font-family: 'Inter', sans-serif; font-size: 0.65rem; color: #bbb; text-decoration: underline;">Size Guide</a>
+      </div>
+      <div style="display: flex; flex-wrap: wrap; gap: 0.5rem;">
+        {% for size in sizes %}
+        <button onclick="selectAttribute('size', '{{ size.code }}')"
+                class="pd-attr-btn attr-btn attr-size-btn {% if not size.available %}{% endif %}"
+                {% if not size.available %}disabled{% endif %}
+                data-attr="size" data-value="{{ size.code }}">{{ size.label|default:size.code }}</button>
+        {% endfor %}
+      </div>
+      <input type="hidden" id="selected-size" name="size" value="">
+    </div>
+    {% endif %}
+    {% if colors %}
+    <div style="margin-bottom: 1.75rem;">
+      <span style="font-family: 'Inter', sans-serif; font-size: 0.65rem; font-weight: 600; letter-spacing: 0.2em; text-transform: uppercase; color: #999; display: block; margin-bottom: 0.75rem;">Color</span>
+      <div style="display: flex; flex-wrap: wrap; gap: 0.625rem;">
+        {% for color in colors %}
+        <button onclick="selectAttribute('color', '{{ color.name }}')"
+                class="pd-color-btn attr-btn attr-color-btn"
+                style="background-color: {{ color.hex|default:'#000' }};"
+                data-attr="color" data-value="{{ color.name }}" title="{{ color.name }}"></button>
+        {% endfor %}
+      </div>
+      <input type="hidden" id="selected-color" name="color" value="">
+    </div>
+    {% endif %}
+    {% endfor %}
+
+    <!-- Quantity -->
+    <div id="quantity-section" style="margin-bottom: 2rem; {% if total_stock == 0 or not product.available_for_purchase %}display: none;{% endif %}">
+      <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.75rem;">
+        <span style="font-family: 'Inter', sans-serif; font-size: 0.65rem; font-weight: 600; letter-spacing: 0.2em; text-transform: uppercase; color: #999;">Quantity</span>
+        <span id="stock-display" style="font-family: 'Inter', sans-serif; font-size: 0.65rem; color: #bbb;">
+          {% if default_variant_stock > 0 %}{{ default_variant_stock }} in stock{% endif %}
+        </span>
+      </div>
+      <div style="display: inline-flex; border: 1px solid #ddd;">
+        <button type="button" onclick="decrementQty()" style="width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; border: none; background: none; cursor: pointer; transition: background 0.15s;" onmouseenter="this.style.background='#f5f5f0'" onmouseleave="this.style.background='none'">
+          <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 12H4"/></svg>
+        </button>
+        <input type="number" id="quantity" name="quantity" value="1" min="1" max="{{ default_variant_stock|default:1 }}" readonly
+               style="width: 40px; text-align: center; border: none; border-left: 1px solid #ddd; border-right: 1px solid #ddd; font-family: 'Inter', sans-serif; font-size: 0.85rem; font-weight: 500; background: none;" />
+        <button type="button" onclick="incrementQty()" style="width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; border: none; background: none; cursor: pointer; transition: background 0.15s;" onmouseenter="this.style.background='#f5f5f0'" onmouseleave="this.style.background='none'">
+          <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+        </button>
+      </div>
+    </div>
+
+    <!-- Express Checkout -->
+    {% if product.available_for_purchase and total_stock > 0 %}
+    <div id="express-checkout-section" style="margin-bottom: 1rem; display: none;">
+      <div id="payment-request-button" style="width: 100%;"></div>
+      <div style="display: flex; align-items: center; gap: 1rem; margin: 1rem 0;">
+        <span style="flex: 1; height: 1px; background: #eee;"></span>
+        <span style="font-family: 'Inter', sans-serif; font-size: 0.6rem; letter-spacing: 0.15em; text-transform: uppercase; color: #bbb;">or</span>
+        <span style="flex: 1; height: 1px; background: #eee;"></span>
+      </div>
+    </div>
+    {% endif %}
+
+    <!-- Add to Cart -->
+    <form action="{% url 'shop:add_to_cart' %}" method="POST" id="add-to-cart-form" style="margin-bottom: 2.5rem;">
+      {% csrf_token %}
+      <input type="hidden" name="product_id" value="{{ product.id }}">
+      <input type="hidden" name="variant_id" id="variant-id" value="{{ default_variant_id|default:'' }}">
+      <input type="hidden" name="quantity" id="form-quantity" value="1">
+      {% if not product.available_for_purchase %}
+      <button type="button" disabled style="width: 100%; padding: 14px; font-family: 'Inter', sans-serif; font-size: 0.7rem; font-weight: 600; letter-spacing: 0.15em; text-transform: uppercase; border: none; background: #e5e5e5; color: #999; cursor: not-allowed;">Not Available</button>
+      {% elif total_stock == 0 %}
+      <button type="button" disabled style="width: 100%; padding: 14px; font-family: 'Inter', sans-serif; font-size: 0.7rem; font-weight: 600; letter-spacing: 0.15em; text-transform: uppercase; border: none; background: #e5e5e5; color: #999; cursor: not-allowed;">Out of Stock</button>
+      {% else %}
+      <button type="submit" id="add-to-cart-btn" style="width: 100%; padding: 14px; font-family: 'Inter', sans-serif; font-size: 0.7rem; font-weight: 600; letter-spacing: 0.15em; text-transform: uppercase; border: none; background: #000; color: #fff; cursor: pointer; transition: background 0.2s;" onmouseenter="this.style.background='#222'" onmouseleave="this.style.background='#000'">Add to Cart</button>
+      {% endif %}
+    </form>
+
+    <!-- Description + Details (pushed to bottom) -->
+    <div style="margin-top: auto; border-top: 1px solid #eee; padding-top: 2rem;">
+      <p style="font-family: 'Inter', sans-serif; font-size: 0.85rem; font-weight: 300; color: #777; line-height: 1.8; margin: 0 0 2rem;">
+        {{ product.description|default:"Premium quality garment from our Foundation collection. Designed with intention, built for wherever life takes you." }}
+      </p>
+
+      <details style="border-top: 1px solid #eee; padding-top: 1.25rem;">
+        <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer; font-family: 'Inter', sans-serif; font-size: 0.65rem; font-weight: 600; letter-spacing: 0.2em; text-transform: uppercase; color: #999; list-style: none;">
+          Details
+          <svg width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="transition: transform 0.2s;"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+        </summary>
+        <ul style="margin: 1rem 0 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 0.5rem;">
+          <li style="font-family: 'Inter', sans-serif; font-size: 0.8rem; color: #888;">100% Premium Cotton</li>
+          <li style="font-family: 'Inter', sans-serif; font-size: 0.8rem; color: #888;">Relaxed fit</li>
+          <li style="font-family: 'Inter', sans-serif; font-size: 0.8rem; color: #888;">Machine washable</li>
+          <li style="font-family: 'Inter', sans-serif; font-size: 0.8rem; color: #888;">Designed in Chicago</li>
+        </ul>
+      </details>
+
+      <details style="border-top: 1px solid #eee; padding-top: 1.25rem; margin-top: 1.25rem;">
+        <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer; font-family: 'Inter', sans-serif; font-size: 0.65rem; font-weight: 600; letter-spacing: 0.2em; text-transform: uppercase; color: #999; list-style: none;">
+          Shipping & Returns
+          <svg width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="transition: transform 0.2s;"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+        </summary>
+        <ul style="margin: 1rem 0 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 0.5rem;">
+          <li style="font-family: 'Inter', sans-serif; font-size: 0.8rem; color: #888;">{% if free_shipping_threshold > 0 %}Free shipping on orders over {% price free_shipping_threshold %}{% else %}Free shipping with promo code{% endif %}</li>
+          <li style="font-family: 'Inter', sans-serif; font-size: 0.8rem; color: #888;">Standard shipping: 5-7 business days</li>
+          <li style="font-family: 'Inter', sans-serif; font-size: 0.8rem; color: #888;">Returns for store credit within 30 days</li>
+        </ul>
+      </details>
+    </div>
+
   </div>
 </div>
 
 {% endblock %}
 
 {% block extra_js %}
-<!-- Stripe.js for Express Checkout -->
 <script src="https://js.stripe.com/v3/"></script>
 <script>
-  // Express Checkout (Apple Pay / Google Pay)
   const stripePublicKey = '{{ stripe_publishable_key }}';
   const productPrice = {% if sale_info %}{{ sale_info.sale_price }}{% else %}{{ product.base_price }}{% endif %};
   const productName = '{{ product.name|escapejs }}';
   const csrfToken = '{{ csrf_token }}';
   const freeShippingThreshold = {{ free_shipping_threshold|default:0 }};
 
-  // Initialize Stripe and Payment Request Button
+  // Express Checkout
   async function initExpressCheckout() {
     if (!stripePublicKey) return;
-
     const stripe = Stripe(stripePublicKey);
-
-    // Calculate initial total (with shipping)
     const quantity = parseInt(document.getElementById('quantity')?.value || 1);
     const subtotal = productPrice * quantity;
     const shipping = (freeShippingThreshold > 0 && subtotal >= freeShippingThreshold) ? 0 : 7.99;
     const total = subtotal + shipping;
-
-    // Create Payment Request
     const paymentRequest = stripe.paymentRequest({
-      country: 'US',
-      currency: 'usd',
-      total: {
-        label: productName,
-        amount: Math.round(total * 100), // cents
-      },
-      requestPayerName: true,
-      requestPayerEmail: true,
-      requestShipping: true,
-      shippingOptions: (freeShippingThreshold > 0 && subtotal >= freeShippingThreshold) ? [
-        { id: 'free', label: 'Free Shipping', detail: '5-7 business days', amount: 0 }
-      ] : [
-        { id: 'standard', label: 'Standard Shipping', detail: '5-7 business days', amount: 799 }
-      ],
+      country: 'US', currency: 'usd',
+      total: { label: productName, amount: Math.round(total * 100) },
+      requestPayerName: true, requestPayerEmail: true, requestShipping: true,
+      shippingOptions: (freeShippingThreshold > 0 && subtotal >= freeShippingThreshold) ?
+        [{ id: 'free', label: 'Free Shipping', detail: '5-7 business days', amount: 0 }] :
+        [{ id: 'standard', label: 'Standard Shipping', detail: '5-7 business days', amount: 799 }],
     });
-
-    // Check if Payment Request is available (Apple Pay, Google Pay, etc.)
     const canMakePayment = await paymentRequest.canMakePayment();
-
     if (canMakePayment) {
       const prButton = stripe.elements().create('paymentRequestButton', {
-        paymentRequest,
-        style: {
-          paymentRequestButton: {
-            type: 'buy',
-            theme: 'dark',
-            height: '48px',
-          },
-        },
+        paymentRequest, style: { paymentRequestButton: { type: 'buy', theme: 'dark', height: '48px' } },
       });
-
       prButton.mount('#payment-request-button');
       document.getElementById('express-checkout-section').style.display = 'block';
-
-      // Update payment request when quantity changes
       window.updateExpressCheckoutAmount = function() {
         const qty = parseInt(document.getElementById('quantity')?.value || 1);
-        const variantId = document.getElementById('variant-id')?.value;
         const sub = productPrice * qty;
         const ship = (freeShippingThreshold > 0 && sub >= freeShippingThreshold) ? 0 : 7.99;
-        const tot = sub + ship;
-
         paymentRequest.update({
-          total: {
-            label: `${productName} x ${qty}`,
-            amount: Math.round(tot * 100),
-          },
-          shippingOptions: (freeShippingThreshold > 0 && sub >= freeShippingThreshold) ? [
-            { id: 'free', label: 'Free Shipping', detail: '5-7 business days', amount: 0 }
-          ] : [
-            { id: 'standard', label: 'Standard Shipping', detail: '5-7 business days', amount: 799 }
-          ],
+          total: { label: `${productName} x ${qty}`, amount: Math.round((sub + ship) * 100) },
+          shippingOptions: (freeShippingThreshold > 0 && sub >= freeShippingThreshold) ?
+            [{ id: 'free', label: 'Free Shipping', detail: '5-7 business days', amount: 0 }] :
+            [{ id: 'standard', label: 'Standard Shipping', detail: '5-7 business days', amount: 799 }],
         });
       };
-
-      // Handle shipping address changes
       paymentRequest.on('shippingaddresschange', async (ev) => {
         const qty = parseInt(document.getElementById('quantity')?.value || 1);
         const sub = productPrice * qty;
-        const ship = (freeShippingThreshold > 0 && sub >= freeShippingThreshold) ? 0 : 7.99;
-
         ev.updateWith({
           status: 'success',
-          shippingOptions: (freeShippingThreshold > 0 && sub >= freeShippingThreshold) ? [
-            { id: 'free', label: 'Free Shipping', detail: '5-7 business days', amount: 0 }
-          ] : [
-            { id: 'standard', label: 'Standard Shipping', detail: '5-7 business days', amount: 799 }
-          ],
+          shippingOptions: (freeShippingThreshold > 0 && sub >= freeShippingThreshold) ?
+            [{ id: 'free', label: 'Free Shipping', detail: '5-7 business days', amount: 0 }] :
+            [{ id: 'standard', label: 'Standard Shipping', detail: '5-7 business days', amount: 799 }],
         });
       });
-
-      // Handle payment method submission
       paymentRequest.on('paymentmethod', async (ev) => {
         const variantId = document.getElementById('variant-id')?.value;
         const quantity = parseInt(document.getElementById('quantity')?.value || 1);
-
-        if (!variantId) {
-          ev.complete('fail');
-          alert('Please select a size');
-          return;
-        }
-
+        if (!variantId) { ev.complete('fail'); alert('Please select a size'); return; }
         try {
-          // Create PaymentIntent on server
           const intentResponse = await fetch('{% url "shop:express_checkout_intent" %}', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              'X-CSRFToken': csrfToken,
-            },
+            method: 'POST', headers: { 'Content-Type': 'application/json', 'X-CSRFToken': csrfToken },
             body: JSON.stringify({ variant_id: variantId, quantity }),
           });
-
           const intentData = await intentResponse.json();
-
-          if (intentData.error) {
-            ev.complete('fail');
-            alert(intentData.error);
-            return;
-          }
-
-          // Confirm the payment
-          const { error, paymentIntent } = await stripe.confirmCardPayment(
-            intentData.clientSecret,
-            { payment_method: ev.paymentMethod.id },
-            { handleActions: false }
-          );
-
-          if (error) {
-            ev.complete('fail');
-            alert(error.message);
-            return;
-          }
-
+          if (intentData.error) { ev.complete('fail'); alert(intentData.error); return; }
+          const { error, paymentIntent } = await stripe.confirmCardPayment(intentData.clientSecret, { payment_method: ev.paymentMethod.id }, { handleActions: false });
+          if (error) { ev.complete('fail'); alert(error.message); return; }
           ev.complete('success');
-
           if (paymentIntent.status === 'requires_action') {
-            // Handle 3D Secure
             const { error: actionError } = await stripe.confirmCardPayment(intentData.clientSecret);
-            if (actionError) {
-              alert(actionError.message);
-              return;
-            }
+            if (actionError) { alert(actionError.message); return; }
           }
-
-          // Complete the order
           const completeResponse = await fetch('{% url "shop:express_checkout_complete" %}', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              'X-CSRFToken': csrfToken,
-            },
+            method: 'POST', headers: { 'Content-Type': 'application/json', 'X-CSRFToken': csrfToken },
             body: JSON.stringify({
               paymentIntentId: intentData.paymentIntentId,
-              shippingAddress: {
-                name: ev.shippingAddress?.recipient,
-                line1: ev.shippingAddress?.addressLine?.[0],
-                line2: ev.shippingAddress?.addressLine?.[1] || '',
-                city: ev.shippingAddress?.city,
-                state: ev.shippingAddress?.region,
-                postal: ev.shippingAddress?.postalCode,
-                country: ev.shippingAddress?.country,
-                email: ev.payerEmail,
-              },
+              shippingAddress: { name: ev.shippingAddress?.recipient, line1: ev.shippingAddress?.addressLine?.[0], line2: ev.shippingAddress?.addressLine?.[1] || '', city: ev.shippingAddress?.city, state: ev.shippingAddress?.region, postal: ev.shippingAddress?.postalCode, country: ev.shippingAddress?.country, email: ev.payerEmail },
             }),
           });
-
           const completeData = await completeResponse.json();
-
-          if (completeData.success) {
-            window.location.href = completeData.redirectUrl || '/shop/checkout/success/';
-          } else {
-            alert(completeData.error || 'Order completion failed');
-          }
-
-        } catch (err) {
-          ev.complete('fail');
-          console.error('Express checkout error:', err);
-          alert('Checkout failed. Please try again.');
-        }
+          if (completeData.success) window.location.href = completeData.redirectUrl || '/shop/checkout/success/';
+          else alert(completeData.error || 'Order completion failed');
+        } catch (err) { ev.complete('fail'); console.error('Express checkout error:', err); alert('Checkout failed. Please try again.'); }
       });
     }
   }
-
-  // Initialize on page load
   document.addEventListener('DOMContentLoaded', initExpressCheckout);
-</script>
-<script>
-  // Variant data from server
+
+  // Variant data
   const variantData = {{ variant_data_json|safe }};
   const attributeOrder = {{ attribute_order_json|safe }};
   let currentStock = {{ default_variant_stock|default:0 }};
-
-  // Track selected values for each attribute
   const selectedAttributes = {};
-  {% for attr in product_attributes %}
-  selectedAttributes['{{ attr.slug }}'] = '';
-  {% endfor %}
-
-  // Legacy compatibility
+  {% for attr in product_attributes %}selectedAttributes['{{ attr.slug }}'] = '';{% endfor %}
   let selectedSize = '';
   let selectedColor = '{{ colors.0.name|default:"default" }}';
 
-  // Image gallery
+  // Gallery
   let currentImage = 1;
   const totalImages = {{ images|length|default:1 }};
   const imageUrls = [{% for image in images %}'{{ image }}'{% if not forloop.last %}, {% endif %}{% endfor %}];
@@ -585,203 +353,82 @@
   function changeImage(src, index) {
     document.getElementById('main-image').src = src;
     currentImage = index;
-    document.getElementById('image-counter').textContent =
-      String(index).padStart(3, '0') + ' / ' + String(totalImages).padStart(3, '0');
-
-    // Update thumbnail active state
-    document.querySelectorAll('.thumbnail-btn').forEach((btn, i) => {
-      if (i + 1 === index) {
-        btn.classList.add('thumbnail-active');
-      } else {
-        btn.classList.remove('thumbnail-active');
-      }
+    document.querySelectorAll('.pd-thumb').forEach(function(btn, i) {
+      btn.classList.toggle('active', i + 1 === index);
     });
   }
+  function nextImage() { if (totalImages <= 1) return; var n = currentImage + 1; if (n > totalImages) n = 1; changeImage(imageUrls[n-1], n); }
+  function prevImage() { if (totalImages <= 1) return; var p = currentImage - 1; if (p < 1) p = totalImages; changeImage(imageUrls[p-1], p); }
 
-  // Arrow navigation
-  function nextImage() {
-    if (totalImages <= 1) return;
-    let nextIndex = currentImage + 1;
-    if (nextIndex > totalImages) nextIndex = 1;
-    changeImage(imageUrls[nextIndex - 1], nextIndex);
-  }
-
-  function prevImage() {
-    if (totalImages <= 1) return;
-    let prevIndex = currentImage - 1;
-    if (prevIndex < 1) prevIndex = totalImages;
-    changeImage(imageUrls[prevIndex - 1], prevIndex);
-  }
-
-  // Touch swipe support for mobile
+  // Touch swipe
   (function() {
-    const gallery = document.getElementById('gallery-container');
+    var gallery = document.getElementById('gallery-container');
     if (!gallery || totalImages <= 1) return;
-
-    let touchStartX = 0;
-    let touchEndX = 0;
-    const minSwipeDistance = 50;
-
-    gallery.addEventListener('touchstart', function(e) {
-      touchStartX = e.changedTouches[0].screenX;
-    }, { passive: true });
-
+    var startX = 0;
+    gallery.addEventListener('touchstart', function(e) { startX = e.changedTouches[0].screenX; }, { passive: true });
     gallery.addEventListener('touchend', function(e) {
-      touchEndX = e.changedTouches[0].screenX;
-      handleSwipe();
+      var d = e.changedTouches[0].screenX - startX;
+      if (Math.abs(d) > 50) { d > 0 ? prevImage() : nextImage(); }
     }, { passive: true });
-
-    function handleSwipe() {
-      const distance = touchEndX - touchStartX;
-      if (Math.abs(distance) < minSwipeDistance) return;
-
-      if (distance > 0) {
-        // Swiped right - go to previous
-        prevImage();
-      } else {
-        // Swiped left - go to next
-        nextImage();
-      }
-    }
-
-    // Hide swipe hint after first interaction or after 3 seconds
-    const swipeHint = document.getElementById('swipe-hint');
-    if (swipeHint) {
-      setTimeout(() => { swipeHint.style.opacity = '0'; }, 3000);
-      gallery.addEventListener('touchstart', () => {
-        swipeHint.style.opacity = '0';
-      }, { once: true });
-    }
   })();
 
-  // Unified attribute selection
-  function selectAttribute(attrSlug, value) {
-    selectedAttributes[attrSlug] = value;
-
-    // Update hidden input
-    const hiddenInput = document.getElementById(`selected-${attrSlug}`);
-    if (hiddenInput) {
-      hiddenInput.value = value;
-    }
-
-    // Update button states for this attribute
-    document.querySelectorAll(`.attr-${attrSlug}-btn`).forEach(btn => {
+  // Attribute selection
+  function selectAttribute(slug, value) {
+    selectedAttributes[slug] = value;
+    var hidden = document.getElementById('selected-' + slug);
+    if (hidden) hidden.value = value;
+    document.querySelectorAll('.attr-' + slug + '-btn').forEach(function(btn) {
+      var isColor = btn.classList.contains('pd-color-btn');
       if (btn.dataset.value === value) {
-        // Selected state
-        if (btn.classList.contains('rounded-full')) {
-          // Color swatch - use border
-          btn.classList.add('border-black', 'ring-2', 'ring-offset-1', 'ring-black');
-        } else {
-          // Regular button - use background
-          btn.classList.add('bg-black', 'text-white');
-        }
+        if (isColor) { btn.classList.add('selected'); } else { btn.classList.add('selected'); }
       } else {
-        // Deselected state
-        if (btn.classList.contains('rounded-full')) {
-          btn.classList.remove('border-black', 'ring-2', 'ring-offset-1', 'ring-black');
-        } else {
-          btn.classList.remove('bg-black', 'text-white');
-        }
+        btn.classList.remove('selected');
       }
     });
-
-    // Legacy compatibility
-    if (attrSlug === 'size') selectedSize = value;
-    if (attrSlug === 'color') selectedColor = value;
-
+    if (slug === 'size') selectedSize = value;
+    if (slug === 'color') selectedColor = value;
     updateVariant();
   }
+  function selectSize(s) { selectAttribute('size', s); }
+  function selectColor(c) { selectAttribute('color', c); }
 
-  // Legacy functions for backwards compatibility
-  function selectSize(size) { selectAttribute('size', size); }
-  function selectColor(color) { selectAttribute('color', color); }
-
-  // Update variant ID and stock based on selections
   function updateVariant() {
-    // Build variant key from selected attributes in order
-    const keyParts = attributeOrder.map(slug => selectedAttributes[slug] || 'default');
-    const key = keyParts.join('_');
-
-    let variant = variantData[key];
-
-    // Fallback: try legacy key format if new format not found
-    if (!variant && selectedSize) {
-      const legacyKey = `${selectedSize}_${selectedColor || 'default'}`;
-      variant = variantData[legacyKey];
-    }
-
+    var keyParts = attributeOrder.map(function(slug) { return selectedAttributes[slug] || 'default'; });
+    var key = keyParts.join('_');
+    var variant = variantData[key];
+    if (!variant && selectedSize) { variant = variantData[selectedSize + '_' + (selectedColor || 'default')]; }
     if (variant) {
-      // Update variant ID
       document.getElementById('variant-id').value = variant.id;
-
-      // Update stock
       currentStock = variant.stock;
       updateStockDisplay();
     }
   }
 
-  // Update stock display and button state
   function updateStockDisplay() {
-    const stockDisplay = document.getElementById('stock-display');
-    const quantitySection = document.getElementById('quantity-section');
-    const addToCartBtn = document.getElementById('add-to-cart-btn');
-    const quantityInput = document.getElementById('quantity');
-
+    var stockEl = document.getElementById('stock-display');
+    var qtySection = document.getElementById('quantity-section');
+    var addBtn = document.getElementById('add-to-cart-btn');
+    var qtyInput = document.getElementById('quantity');
     if (currentStock > 0) {
-      // In stock
-      stockDisplay.textContent = `${currentStock} in stock`;
-      quantitySection.style.display = '';
-      quantityInput.max = currentStock;
-
-      // Reset quantity if it exceeds new stock
-      if (parseInt(quantityInput.value) > currentStock) {
-        quantityInput.value = currentStock;
-        document.getElementById('form-quantity').value = currentStock;
-      }
-
-      // Update button
-      if (addToCartBtn) {
-        addToCartBtn.disabled = false;
-        addToCartBtn.textContent = 'Add to Cart';
-        addToCartBtn.className = 'w-full py-4 bg-black text-white font-bold uppercase tracking-widest text-sm hover:bg-neutral-800 transition-colors';
-      }
+      stockEl.textContent = currentStock + ' in stock';
+      if (qtySection) qtySection.style.display = '';
+      if (addBtn) { addBtn.disabled = false; addBtn.textContent = 'Add to Cart'; addBtn.style.background = '#000'; addBtn.style.color = '#fff'; addBtn.style.cursor = 'pointer'; }
+      if (qtyInput) { qtyInput.max = currentStock; if (parseInt(qtyInput.value) > currentStock) qtyInput.value = currentStock; }
     } else {
-      // Out of stock
-      stockDisplay.textContent = 'Out of stock';
-      quantitySection.style.display = 'none';
-
-      // Update button to show out of stock
-      if (addToCartBtn) {
-        addToCartBtn.disabled = true;
-        addToCartBtn.textContent = 'Out of Stock';
-        addToCartBtn.className = 'w-full py-4 bg-neutral-300 text-neutral-500 font-bold uppercase tracking-widest text-sm cursor-not-allowed';
-      }
+      stockEl.textContent = 'Out of stock';
+      if (addBtn) { addBtn.disabled = true; addBtn.textContent = 'Out of Stock'; addBtn.style.background = '#e5e5e5'; addBtn.style.color = '#999'; addBtn.style.cursor = 'not-allowed'; }
     }
   }
 
-  // Quantity controls with stock limits
   function incrementQty() {
-    const input = document.getElementById('quantity');
-    const formInput = document.getElementById('form-quantity');
-    const currentVal = parseInt(input.value);
-
-    if (currentVal < currentStock) {
-      input.value = currentVal + 1;
-      formInput.value = input.value;
-      // Update Express Checkout amount
-      if (window.updateExpressCheckoutAmount) window.updateExpressCheckoutAmount();
-    }
+    var input = document.getElementById('quantity');
+    var val = parseInt(input.value);
+    if (val < currentStock) { input.value = val + 1; document.getElementById('form-quantity').value = val + 1; if (window.updateExpressCheckoutAmount) updateExpressCheckoutAmount(); }
   }
-
   function decrementQty() {
-    const input = document.getElementById('quantity');
-    const formInput = document.getElementById('form-quantity');
-    if (parseInt(input.value) > 1) {
-      input.value = parseInt(input.value) - 1;
-      formInput.value = input.value;
-      // Update Express Checkout amount
-      if (window.updateExpressCheckoutAmount) window.updateExpressCheckoutAmount();
-    }
+    var input = document.getElementById('quantity');
+    var val = parseInt(input.value);
+    if (val > 1) { input.value = val - 1; document.getElementById('form-quantity').value = val - 1; if (window.updateExpressCheckoutAmount) updateExpressCheckoutAmount(); }
   }
 </script>
 {% endblock %}
