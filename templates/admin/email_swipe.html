@@ -70,10 +70,11 @@
     .badge-partial { background: #d97706; }
 
     /* Sent card stats */
-    .sent-stats { display: flex; gap: 1.5rem; padding: 1rem 2rem; border-top: 1px solid #eee; }
-    .sent-stat { text-align: center; }
-    .sent-stat-num { font-size: 1.25rem; font-weight: 700; color: #000; }
-    .sent-stat-label { font-size: 0.55rem; font-weight: 500; letter-spacing: 0.15em; text-transform: uppercase; color: #bbb; margin-top: 0.25rem; }
+    .sent-stats { display: flex; gap: 0; padding: 0 2rem; border-top: 1px solid #eee; }
+    .sent-stat { flex: 1; padding: 0.875rem 0; text-align: center; border-right: 1px solid #eee; }
+    .sent-stat:last-child { border-right: none; }
+    .sent-stat-num { font-size: 0.95rem; font-weight: 700; }
+    .sent-stat-label { font-size: 0.5rem; font-weight: 500; letter-spacing: 0.15em; text-transform: uppercase; color: #bbb; margin-top: 0.2rem; }
 
     .nav-row { display: flex; align-items: center; justify-content: center; gap: 2rem; margin-top: 1.5rem; }
     .nav-btn {
@@ -201,15 +202,15 @@
         <div class="card-body" id="sent-body" contenteditable="false" style="cursor: default;"></div>
         <div class="sent-stats">
           <div class="sent-stat">
-            <div class="sent-stat-num" id="sent-stat-total">0</div>
-            <div class="sent-stat-label">Recipients</div>
+            <div class="sent-stat-num" style="color: #000;" id="sent-stat-total">0</div>
+            <div class="sent-stat-label">Sent</div>
           </div>
           <div class="sent-stat">
-            <div class="sent-stat-num" id="sent-stat-delivered" style="color: #16a34a;">0</div>
+            <div class="sent-stat-num" style="color: #16a34a;" id="sent-stat-delivered">0</div>
             <div class="sent-stat-label">Delivered</div>
           </div>
           <div class="sent-stat">
-            <div class="sent-stat-num" id="sent-stat-failed" style="color: #dc2626;">0</div>
+            <div class="sent-stat-num" style="color: #dc2626;" id="sent-stat-failed">0</div>
             <div class="sent-stat-label">Failed</div>
           </div>
         </div>
@@ -377,13 +378,18 @@ function doSend() {
   .then(function(d) {
     closeConfirm(); btn.textContent = 'Send'; btn.disabled = false;
     if (d.success) {
-      sentIds[t.id] = true; showCard();
+      sentIds[t.id] = true;
       showToast('Sent to ' + d.sent + ' subscriber' + (d.sent !== 1 ? 's' : ''), 'success');
+      // Move used template to end
+      var used = filtered.splice(idx, 1)[0];
+      filtered.push(used);
+      // Stay at same index (next template slides in) or go to 0 if at end
+      if (idx >= filtered.length) idx = 0;
+      setTimeout(function() { showCard(); }, 1000);
       // Update sent count
       var sentBtn = document.getElementById('mode-sent');
       var count = parseInt(sentBtn.textContent.match(/\d+/)?.[0] || 0) + 1;
       sentBtn.textContent = 'Sent (' + count + ')';
-      if (idx < filtered.length - 1) setTimeout(function() { navigate(1); }, 1500);
     } else showToast(d.error || 'Send failed', 'error');
   }).catch(function() { closeConfirm(); btn.textContent = 'Send'; btn.disabled = false; showToast('Network error', 'error'); });
 }

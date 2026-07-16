@@ -58,12 +58,13 @@ class EmailTemplate(models.Model):
     ]
 
     FOLDER_CHOICES = [
-        ("general", "General"),
-        ("marketing", "Marketing"),
+        ("minimal", "Minimal"),
+        ("direct", "Direct"),
+        ("storytelling", "Storytelling"),
+        ("urgent", "Urgent"),
+        ("casual", "Casual"),
         ("transactional", "Transactional"),
         ("seasonal", "Seasonal"),
-        ("onboarding", "Onboarding"),
-        ("notifications", "Notifications"),
     ]
 
     name = models.CharField(max_length=100, unique=True)
