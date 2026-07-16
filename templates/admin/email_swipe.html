@@ -35,7 +35,7 @@
     .filter-btn:hover { border-color: rgba(255,255,255,0.3); color: rgba(255,255,255,0.6); }
     .filter-btn.active { background: #fff; color: #000; border-color: #fff; }
 
-    .card-container { position: relative; width: 100%; max-width: 560px; touch-action: pan-y; }
+    .card-container { position: relative; width: 100%; max-width: 640px; touch-action: pan-y; }
     .card {
       background: #fff; color: #000; width: 100%; height: 420px;
       display: flex; flex-direction: column; box-shadow: 0 20px 60px rgba(0,0,0,0.5);
@@ -82,7 +82,7 @@
     .nav-btn:disabled { opacity: 0.15; cursor: not-allowed; }
     .counter { font-size: 0.7rem; color: rgba(255,255,255,0.3); letter-spacing: 0.1em; min-width: 60px; text-align: center; }
 
-    .action-row { display: flex; flex-direction: column; gap: 0.5rem; margin-top: 1.5rem; width: 100%; max-width: 560px; }
+    .action-row { display: flex; flex-direction: column; gap: 0.5rem; margin-top: 1.5rem; width: 100%; max-width: 640px; }
     .send-btn {
       width: 100%; padding: 14px; font-family: 'Inter', sans-serif; font-size: 0.7rem; font-weight: 600;
       letter-spacing: 0.15em; text-transform: uppercase; border: none; background: #fff; color: #000;
@@ -196,9 +196,9 @@
       <div class="card" id="sent-card">
         <div class="card-subject" style="cursor: default; background: none;" id="sent-subject"></div>
         <div class="card-body" id="sent-body" style="cursor: default;"></div>
-        <div class="card-footer">
-          <span class="card-meta" id="sent-date"></span>
-          <span class="card-meta"><span id="sent-stat-delivered">0</span> / <span id="sent-stat-total">0</span></span>
+        <div class="card-footer" style="padding: 1rem 2rem;">
+          <span style="font-family: 'Inter', sans-serif; font-size: 0.75rem; font-weight: 500; color: #555;" id="sent-date"></span>
+          <span style="font-family: 'Inter', sans-serif; font-size: 0.75rem; font-weight: 600; color: #000;"><span id="sent-stat-delivered">0</span><span style="color: #ccc;"> / </span><span id="sent-stat-total">0</span></span>
         </div>
       </div>
     </div>
