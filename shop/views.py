@@ -854,7 +854,7 @@ def shop(request):
         products = products.order_by("-created_at")
 
     # Get all categories for filter
-    categories = Category.objects.all()
+    categories = Category.objects.all().order_by('display_order', 'name')
 
     # Get default product image from site settings
     from .models import SiteSettings

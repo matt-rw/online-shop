@@ -11,6 +11,7 @@ class Category(models.Model):
     name = models.CharField(max_length=100, unique=True)
     slug = models.SlugField(unique=True)
     description = models.TextField(blank=True)
+    display_order = models.PositiveIntegerField(default=0, help_text="Order in which to display (lower = first)")
 
     # Define which attribute types this category uses
     uses_size = models.BooleanField(
