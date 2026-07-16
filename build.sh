@@ -104,6 +104,10 @@ else
     log_warning "Additional template seeding failed (non-fatal)"
 fi
 
+# Step 5: Set category order
+log_info "Setting category order..."
+python manage.py set_category_order || true
+
 # Build complete
 log_section "Build Complete"
 log_success "Production build finished successfully!"
