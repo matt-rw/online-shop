@@ -98,6 +98,11 @@ if python manage.py create_email_templates; then
 else
     log_warning "Email template seeding failed (non-fatal)"
 fi
+if python manage.py add_more_templates; then
+    log_success "Additional templates added"
+else
+    log_warning "Additional template seeding failed (non-fatal)"
+fi
 
 # Build complete
 log_section "Build Complete"
