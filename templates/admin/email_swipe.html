@@ -9,15 +9,25 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
-    body { font-family: 'Inter', sans-serif; background: #111; color: #fff; min-height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 2rem; }
+    body { font-family: 'Inter', sans-serif; background: #111; color: #fff; min-height: 100vh; display: flex; flex-direction: column; align-items: center; padding: 5rem 1.5rem 3rem; }
 
-    .swipe-header { position: fixed; top: 0; left: 0; right: 0; padding: 1.25rem 2rem; display: flex; justify-content: space-between; align-items: center; z-index: 10; }
+    .swipe-header { position: fixed; top: 0; left: 0; right: 0; padding: 1.25rem 2rem; display: flex; justify-content: space-between; align-items: center; z-index: 10; background: #111; }
     .swipe-header a { font-size: 0.7rem; font-weight: 600; letter-spacing: 0.15em; text-transform: uppercase; color: rgba(255,255,255,0.35); text-decoration: none; transition: color 0.2s; }
     .swipe-header a:hover { color: #fff; }
 
-    .card-container { position: relative; width: 100%; max-width: 560px; }
+    /* Category filters */
+    .filters { display: flex; gap: 0.25rem; margin-bottom: 2rem; flex-wrap: wrap; justify-content: center; }
+    .filter-btn {
+      padding: 0.5rem 1rem; font-family: 'Inter', sans-serif; font-size: 0.6rem; font-weight: 500;
+      letter-spacing: 0.12em; text-transform: uppercase; border: 1px solid rgba(255,255,255,0.1);
+      background: none; color: rgba(255,255,255,0.35); cursor: pointer; transition: all 0.15s;
+    }
+    .filter-btn:hover { border-color: rgba(255,255,255,0.3); color: rgba(255,255,255,0.6); }
+    .filter-btn.active { background: #fff; color: #000; border-color: #fff; }
+
+    .card-container { position: relative; width: 100%; max-width: 560px; touch-action: pan-y; }
     .card {
-      background: #fff; color: #000; width: 100%; min-height: 400px;
+      background: #fff; color: #000; width: 100%; min-height: 380px;
       display: flex; flex-direction: column; position: relative;
       box-shadow: 0 20px 60px rgba(0,0,0,0.5);
     }
@@ -26,48 +36,65 @@
       padding: 2rem 2.5rem 1rem; font-size: 1.1rem; font-weight: 700; color: #000;
       letter-spacing: -0.02em; border: none; outline: none; width: 100%;
       border-bottom: 1px solid #eee; background: none; font-family: 'Inter', sans-serif;
-      -webkit-font-smoothing: antialiased;
     }
     .card-subject:focus { border-bottom-color: #000; }
 
+    .card-image { padding: 0 2.5rem; }
+    .card-image img { width: 100%; height: auto; display: block; margin-top: 1rem; }
+    .card-image-upload {
+      display: flex; align-items: center; gap: 0.75rem; padding: 1rem 0 0;
+    }
+    .attach-btn {
+      font-family: 'Inter', sans-serif; font-size: 0.6rem; font-weight: 500; letter-spacing: 0.1em;
+      text-transform: uppercase; color: #999; border: 1px solid #ddd; background: none;
+      padding: 6px 12px; cursor: pointer; transition: all 0.15s;
+    }
+    .attach-btn:hover { border-color: #000; color: #000; }
+    .remove-img-btn { font-size: 0.6rem; color: #ccc; background: none; border: none; cursor: pointer; text-decoration: underline; }
+    .remove-img-btn:hover { color: #000; }
+
     .card-body {
-      padding: 1.5rem 2.5rem 2rem; flex: 1; font-size: 0.85rem; font-weight: 300;
-      color: #444; line-height: 1.8; outline: none; min-height: 250px;
-      overflow-y: auto; max-height: 50vh;
+      padding: 1rem 2.5rem 1.5rem; flex: 1; font-size: 0.85rem; font-weight: 300;
+      color: #444; line-height: 1.8; outline: none; min-height: 200px;
+      overflow-y: auto; max-height: 45vh;
     }
 
-    .card-footer { padding: 1rem 2.5rem; border-top: 1px solid #eee; display: flex; justify-content: space-between; align-items: center; }
+    .card-footer { padding: 0.75rem 2.5rem; border-top: 1px solid #eee; display: flex; justify-content: space-between; align-items: center; }
     .card-meta { font-size: 0.6rem; font-weight: 500; letter-spacing: 0.2em; text-transform: uppercase; color: #bbb; }
     .card-badge { font-size: 0.55rem; font-weight: 600; letter-spacing: 0.15em; text-transform: uppercase; padding: 3px 8px; background: #16a34a; color: #fff; display: none; }
     .card-badge.visible { display: inline-block; }
 
-    .nav-row { display: flex; align-items: center; justify-content: center; gap: 2rem; margin-top: 2rem; }
+    .nav-row { display: flex; align-items: center; justify-content: center; gap: 2rem; margin-top: 1.5rem; }
     .nav-btn {
       width: 48px; height: 48px; border: 1px solid rgba(255,255,255,0.15); background: none;
       color: rgba(255,255,255,0.5); display: flex; align-items: center; justify-content: center;
-      cursor: pointer; transition: all 0.15s; border-radius: 0;
+      cursor: pointer; transition: all 0.15s;
     }
     .nav-btn:hover { border-color: #fff; color: #fff; }
     .nav-btn:disabled { opacity: 0.15; cursor: not-allowed; }
-    .nav-btn:disabled:hover { border-color: rgba(255,255,255,0.15); color: rgba(255,255,255,0.5); }
     .counter { font-size: 0.7rem; color: rgba(255,255,255,0.3); letter-spacing: 0.1em; min-width: 60px; text-align: center; }
 
-    .action-row { display: flex; flex-direction: column; gap: 0.5rem; margin-top: 2rem; width: 100%; max-width: 560px; }
+    .action-row { display: flex; flex-direction: column; gap: 0.5rem; margin-top: 1.5rem; width: 100%; max-width: 560px; }
     .send-btn {
       width: 100%; padding: 14px; font-family: 'Inter', sans-serif; font-size: 0.7rem; font-weight: 600;
       letter-spacing: 0.15em; text-transform: uppercase; border: none; background: #fff; color: #000;
       cursor: pointer; transition: all 0.2s;
     }
     .send-btn:hover { background: #04D9FF; }
-    .send-btn:disabled { opacity: 0.3; cursor: not-allowed; }
-    .send-btn.sending { opacity: 0.5; }
 
-    .test-btn {
-      width: 100%; padding: 12px; font-family: 'Inter', sans-serif; font-size: 0.65rem; font-weight: 500;
-      letter-spacing: 0.12em; text-transform: uppercase; border: 1px solid rgba(255,255,255,0.15);
-      background: none; color: rgba(255,255,255,0.4); cursor: pointer; transition: all 0.2s;
+    .test-row { display: flex; gap: 0; }
+    .test-email-input {
+      flex: 1; padding: 12px; font-family: 'Inter', sans-serif; font-size: 0.75rem;
+      border: 1px solid rgba(255,255,255,0.15); border-right: none; background: none; color: #fff; outline: none;
     }
-    .test-btn:hover { border-color: #fff; color: #fff; }
+    .test-email-input::placeholder { color: rgba(255,255,255,0.25); }
+    .test-email-input:focus { border-color: rgba(255,255,255,0.4); }
+    .test-send-btn {
+      padding: 12px 20px; font-family: 'Inter', sans-serif; font-size: 0.6rem; font-weight: 600;
+      letter-spacing: 0.12em; text-transform: uppercase; border: 1px solid rgba(255,255,255,0.15);
+      background: none; color: rgba(255,255,255,0.4); cursor: pointer; transition: all 0.15s; white-space: nowrap;
+    }
+    .test-send-btn:hover { border-color: #fff; color: #fff; }
 
     .toast {
       position: fixed; bottom: 2rem; left: 50%; transform: translateX(-50%);
@@ -77,9 +104,6 @@
     .toast.success { background: #16a34a; }
     .toast.error { background: #dc2626; }
     .toast.visible { opacity: 1; }
-
-    .empty-state { text-align: center; padding: 4rem; }
-    .empty-state p { font-size: 0.9rem; color: rgba(255,255,255,0.4); margin: 0 0 2rem; }
 
     .confirm-overlay {
       position: fixed; inset: 0; background: rgba(0,0,0,0.8); display: none; align-items: center;
@@ -92,14 +116,15 @@
     .confirm-actions { display: flex; gap: 0.5rem; }
     .confirm-actions button { flex: 1; padding: 12px; font-family: 'Inter', sans-serif; font-size: 0.7rem; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; cursor: pointer; transition: all 0.2s; }
     .confirm-cancel { border: 1px solid #ddd; background: none; color: #000; }
-    .confirm-cancel:hover { border-color: #000; }
     .confirm-send { border: none; background: #000; color: #fff; }
     .confirm-send:hover { background: #222; }
+
+    .empty-state { text-align: center; padding: 4rem; }
+    .empty-state p { font-size: 0.9rem; color: rgba(255,255,255,0.4); margin: 0 0 2rem; }
   </style>
 </head>
 <body>
 
-  <!-- Header -->
   <div class="swipe-header">
     <a href="{% url 'admin_email' %}">Back</a>
     <span style="font-size: 0.65rem; color: rgba(255,255,255,0.2); letter-spacing: 0.2em; text-transform: uppercase;">Swipe & Send</span>
@@ -108,10 +133,23 @@
 
   {% if template_count > 0 %}
 
+  <!-- Category Filters -->
+  <div class="filters" id="filters">
+    <button class="filter-btn active" onclick="filterCategory('all')">All</button>
+  </div>
+
   <!-- Card -->
-  <div class="card-container">
+  <div class="card-container" id="card-container">
     <div class="card" id="card">
       <input type="text" class="card-subject" id="card-subject" value="" placeholder="Subject line..." />
+      <div class="card-image" id="card-image-area">
+        <img id="card-img" src="" style="display: none;" />
+        <div class="card-image-upload">
+          <button class="attach-btn" onclick="document.getElementById('img-upload').click()">Attach Image</button>
+          <button class="remove-img-btn" id="remove-img-btn" onclick="removeImage()" style="display: none;">Remove</button>
+          <input type="file" id="img-upload" accept="image/*" style="display: none;" onchange="handleImageUpload(this)" />
+        </div>
+      </div>
       <div class="card-body" id="card-body" contenteditable="true"></div>
       <div class="card-footer">
         <span class="card-meta" id="card-meta"></span>
@@ -134,16 +172,17 @@
   <!-- Actions -->
   <div class="action-row">
     <button class="send-btn" id="send-btn" onclick="confirmSend()">Send to {{ subscriber_count }} subscriber{{ subscriber_count|pluralize:"s" }}</button>
-    <button class="test-btn" onclick="sendTest()">Send test to me</button>
+    <div class="test-row">
+      <input type="email" class="test-email-input" id="test-email" placeholder="Test email address..." value="{{ user.email }}" />
+      <button class="test-send-btn" onclick="sendTest()">Send Test</button>
+    </div>
   </div>
 
   {% else %}
-
   <div class="empty-state">
-    <p>No active email templates. Create some first.</p>
+    <p>No active email templates.</p>
     <a href="{% url 'admin_email_templates' %}" style="font-size: 0.7rem; font-weight: 600; letter-spacing: 0.15em; text-transform: uppercase; color: #fff; text-decoration: none; padding: 12px 32px; border: 1px solid rgba(255,255,255,0.2);">Create Templates</a>
   </div>
-
   {% endif %}
 
   <!-- Confirm Modal -->
@@ -158,127 +197,156 @@
     </div>
   </div>
 
-  <!-- Toast -->
   <div class="toast" id="toast"></div>
 
 <script>
-var templates = {{ templates_json|safe }};
+var allTemplates = {{ templates_json|safe }};
+var filtered = allTemplates.slice();
 var idx = 0;
 var sentIds = {};
 var csrfToken = '{{ csrf_token }}';
+var currentImageData = null;
+
+// Build category filter buttons
+(function() {
+  var folders = {};
+  allTemplates.forEach(function(t) { folders[t.folder || 'general'] = true; });
+  var filtersEl = document.getElementById('filters');
+  Object.keys(folders).sort().forEach(function(f) {
+    var btn = document.createElement('button');
+    btn.className = 'filter-btn';
+    btn.textContent = f;
+    btn.onclick = function() { filterCategory(f); };
+    filtersEl.appendChild(btn);
+  });
+})();
+
+function filterCategory(cat) {
+  filtered = cat === 'all' ? allTemplates.slice() : allTemplates.filter(function(t) { return t.folder === cat; });
+  idx = 0;
+  document.querySelectorAll('.filter-btn').forEach(function(b) { b.classList.toggle('active', b.textContent.toLowerCase() === cat.toLowerCase() || (cat === 'all' && b.textContent === 'All')); });
+  if (filtered.length) showCard();
+  else document.getElementById('card-body').innerHTML = '<p style="color:#bbb;">No templates in this category.</p>';
+  document.getElementById('counter').textContent = filtered.length ? (idx + 1) + ' / ' + filtered.length : '0 / 0';
+}
 
 function showCard() {
-  if (!templates.length) return;
-  var t = templates[idx];
+  if (!filtered.length) return;
+  var t = filtered[idx];
   document.getElementById('card-subject').value = t.subject;
-  document.getElementById('card-body').innerHTML = t.body || '<p style="color: #bbb;">No body content. Click to type.</p>';
-  document.getElementById('card-meta').textContent = (t.folder || t.type || 'template') + ' — used ' + t.times_used + 'x';
-  document.getElementById('counter').textContent = (idx + 1) + ' / ' + templates.length;
+  document.getElementById('card-body').innerHTML = t.body || '<p style="color:#bbb;">No body. Click to type.</p>';
+  document.getElementById('card-meta').textContent = (t.folder || t.type) + ' — used ' + t.times_used + 'x';
+  document.getElementById('counter').textContent = (idx + 1) + ' / ' + filtered.length;
   document.getElementById('prev-btn').disabled = idx === 0;
-  document.getElementById('next-btn').disabled = idx === templates.length - 1;
-
-  var badge = document.getElementById('card-badge');
-  badge.classList.toggle('visible', !!sentIds[t.id]);
+  document.getElementById('next-btn').disabled = idx === filtered.length - 1;
+  document.getElementById('card-badge').classList.toggle('visible', !!sentIds[t.id]);
+  // Reset image
+  currentImageData = null;
+  document.getElementById('card-img').style.display = 'none';
+  document.getElementById('remove-img-btn').style.display = 'none';
 }
 
 function navigate(dir) {
-  var newIdx = idx + dir;
-  if (newIdx >= 0 && newIdx < templates.length) {
-    idx = newIdx;
-    showCard();
-  }
+  var n = idx + dir;
+  if (n >= 0 && n < filtered.length) { idx = n; showCard(); }
 }
 
-// Keyboard navigation
+// Keyboard nav
 document.addEventListener('keydown', function(e) {
   if (e.target.tagName === 'INPUT' || e.target.contentEditable === 'true') return;
   if (e.key === 'ArrowLeft') navigate(-1);
   if (e.key === 'ArrowRight') navigate(1);
 });
 
-function confirmSend() {
-  document.getElementById('confirm-overlay').classList.add('visible');
+// Mobile swipe
+(function() {
+  var el = document.getElementById('card-container');
+  if (!el) return;
+  var startX = 0;
+  el.addEventListener('touchstart', function(e) { startX = e.changedTouches[0].screenX; }, { passive: true });
+  el.addEventListener('touchend', function(e) {
+    var diff = e.changedTouches[0].screenX - startX;
+    if (Math.abs(diff) > 60) { diff > 0 ? navigate(-1) : navigate(1); }
+  }, { passive: true });
+})();
+
+// Image attachment
+function handleImageUpload(input) {
+  var file = input.files[0];
+  if (!file) return;
+  var reader = new FileReader();
+  reader.onload = function(e) {
+    currentImageData = e.target.result;
+    var img = document.getElementById('card-img');
+    img.src = currentImageData;
+    img.style.display = 'block';
+    document.getElementById('remove-img-btn').style.display = 'inline';
+  };
+  reader.readAsDataURL(file);
+  input.value = '';
 }
-function closeConfirm() {
-  document.getElementById('confirm-overlay').classList.remove('visible');
+
+function removeImage() {
+  currentImageData = null;
+  document.getElementById('card-img').style.display = 'none';
+  document.getElementById('remove-img-btn').style.display = 'none';
 }
+
+function getBodyWithImage() {
+  var body = document.getElementById('card-body').innerHTML;
+  if (currentImageData) {
+    body = '<img src="' + currentImageData + '" style="max-width:100%;height:auto;display:block;margin-bottom:16px;" />' + body;
+  }
+  return body;
+}
+
+// Send
+function confirmSend() { document.getElementById('confirm-overlay').classList.add('visible'); }
+function closeConfirm() { document.getElementById('confirm-overlay').classList.remove('visible'); }
 
 function doSend() {
-  var t = templates[idx];
+  var t = filtered[idx];
   var btn = document.getElementById('confirm-send-btn');
-  btn.textContent = 'Sending...';
-  btn.disabled = true;
-
+  btn.textContent = 'Sending...'; btn.disabled = true;
   var body = new URLSearchParams();
   body.append('action', 'send');
   body.append('template_id', t.id);
   body.append('subject', document.getElementById('card-subject').value);
-  body.append('body', document.getElementById('card-body').innerHTML);
-
-  fetch(window.location.pathname, {
-    method: 'POST',
-    headers: { 'X-CSRFToken': csrfToken, 'Content-Type': 'application/x-www-form-urlencoded' },
-    body: body.toString()
-  })
+  body.append('body', getBodyWithImage());
+  fetch(window.location.pathname, { method: 'POST', headers: { 'X-CSRFToken': csrfToken, 'Content-Type': 'application/x-www-form-urlencoded' }, body: body.toString() })
   .then(function(r) { return r.json(); })
   .then(function(d) {
-    closeConfirm();
-    btn.textContent = 'Send';
-    btn.disabled = false;
-    if (d.success) {
-      sentIds[t.id] = true;
-      showCard();
-      showToast('Sent to ' + d.sent + ' subscriber' + (d.sent !== 1 ? 's' : ''), 'success');
-      if (idx < templates.length - 1) setTimeout(function() { navigate(1); }, 1500);
-    } else {
-      showToast(d.error || 'Send failed', 'error');
-    }
-  })
-  .catch(function() {
-    closeConfirm();
-    btn.textContent = 'Send';
-    btn.disabled = false;
-    showToast('Network error', 'error');
-  });
+    closeConfirm(); btn.textContent = 'Send'; btn.disabled = false;
+    if (d.success) { sentIds[t.id] = true; showCard(); showToast('Sent to ' + d.sent + ' subscriber' + (d.sent !== 1 ? 's' : ''), 'success'); if (idx < filtered.length - 1) setTimeout(function() { navigate(1); }, 1500); }
+    else showToast(d.error || 'Send failed', 'error');
+  }).catch(function() { closeConfirm(); btn.textContent = 'Send'; btn.disabled = false; showToast('Network error', 'error'); });
 }
 
 function sendTest() {
-  var t = templates[idx];
-  var btn = document.querySelector('.test-btn');
+  var t = filtered[idx];
+  var email = document.getElementById('test-email').value.trim();
+  if (!email) { showToast('Enter an email address', 'error'); return; }
+  var btn = document.querySelector('.test-send-btn');
   btn.textContent = 'Sending...';
-
   var body = new URLSearchParams();
   body.append('action', 'send_test');
   body.append('template_id', t.id);
   body.append('subject', document.getElementById('card-subject').value);
-  body.append('body', document.getElementById('card-body').innerHTML);
-
-  fetch(window.location.pathname, {
-    method: 'POST',
-    headers: { 'X-CSRFToken': csrfToken, 'Content-Type': 'application/x-www-form-urlencoded' },
-    body: body.toString()
-  })
+  body.append('body', getBodyWithImage());
+  body.append('test_email', email);
+  fetch(window.location.pathname, { method: 'POST', headers: { 'X-CSRFToken': csrfToken, 'Content-Type': 'application/x-www-form-urlencoded' }, body: body.toString() })
   .then(function(r) { return r.json(); })
-  .then(function(d) {
-    btn.textContent = 'Send test to me';
-    showToast(d.success ? 'Test sent — check your inbox' : (d.error || 'Failed'), d.success ? 'success' : 'error');
-  })
-  .catch(function() {
-    btn.textContent = 'Send test to me';
-    showToast('Network error', 'error');
-  });
+  .then(function(d) { btn.textContent = 'Send Test'; showToast(d.success ? 'Test sent to ' + email : (d.error || 'Failed'), d.success ? 'success' : 'error'); })
+  .catch(function() { btn.textContent = 'Send Test'; showToast('Network error', 'error'); });
 }
 
 function showToast(msg, type) {
   var el = document.getElementById('toast');
-  el.textContent = msg;
-  el.className = 'toast ' + type + ' visible';
+  el.textContent = msg; el.className = 'toast ' + type + ' visible';
   setTimeout(function() { el.classList.remove('visible'); }, 3000);
 }
 
-// Init
-if (templates.length) showCard();
+if (filtered.length) showCard();
 </script>
-
 </body>
 </html>

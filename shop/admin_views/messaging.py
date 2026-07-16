@@ -2652,14 +2652,16 @@ def email_swipe(request):
             template_id = request.POST.get("template_id")
             subject_override = request.POST.get("subject", "").strip()
             body_override = request.POST.get("body", "").strip()
+            test_email = request.POST.get("test_email", "").strip()
 
             try:
                 template = EmailTemplate.objects.get(id=template_id)
                 subject = subject_override or template.subject
                 body = body_override or template.html_body
+                recipient = test_email or request.user.email or "admin@blueprnt.store"
 
                 success, log = send_email(
-                    email_address=request.user.email or "admin@blueprnt.store",
+                    email_address=recipient,
                     subject=f"[TEST] {subject}",
                     html_body=body,
                     template=template,
