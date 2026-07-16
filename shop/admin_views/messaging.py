@@ -2622,6 +2622,17 @@ def email_swipe(request):
                 body = body_override or template.html_body
 
                 subscribers = EmailSubscription.objects.filter(is_active=True)
+
+                # Create QuickMessage for tracking
+                qm = QuickMessage.objects.create(
+                    message_type="email",
+                    subject=subject,
+                    content=body,
+                    status="sending",
+                    recipient_count=subscribers.count(),
+                    sent_by=request.user,
+                )
+
                 sent = 0
                 failed = 0
 
@@ -2631,11 +2642,19 @@ def email_swipe(request):
                         subject=subject,
                         html_body=body,
                         template=template,
+                        quick_message=qm,
                     )
                     if success:
                         sent += 1
                     else:
                         failed += 1
+
+                # Update QuickMessage with results
+                qm.sent_count = sent
+                qm.failed_count = failed
+                qm.status = "sent" if failed == 0 else "partial"
+                qm.sent_at = timezone.now()
+                qm.save()
 
                 return JsonResponse({
                     "success": True,
@@ -2685,10 +2704,33 @@ def email_swipe(request):
         for t in templates
     ]
 
+    # Sent history — recent QuickMessages
+    sent_messages = QuickMessage.objects.filter(
+        message_type="email",
+        status__in=["sent", "partial", "sending"],
+    ).order_by("-created_at")[:50]
+
+    sent_data = [
+        {
+            "id": m.id,
+            "subject": m.subject,
+            "body": m.content,
+            "status": m.status,
+            "recipient_count": m.recipient_count,
+            "sent_count": m.sent_count,
+            "failed_count": m.failed_count,
+            "sent_at": m.sent_at.strftime("%b %d, %Y %I:%M %p") if m.sent_at else m.created_at.strftime("%b %d, %Y %I:%M %p"),
+            "sent_by": m.sent_by.get_full_name() or m.sent_by.username if m.sent_by else "",
+        }
+        for m in sent_messages
+    ]
+
     context = {
         "templates_json": json.dumps(templates_data),
         "template_count": len(templates_data),
         "subscriber_count": subscriber_count,
+        "sent_json": json.dumps(sent_data),
+        "sent_count": len(sent_data),
     }
 
     return render(request, "admin/email_swipe.html", context)
