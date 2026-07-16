@@ -90,6 +90,15 @@ else
     exit 1
 fi
 
+# Step 4: Seed email templates
+log_section "Step 4: Seeding Email Templates"
+log_info "Creating email templates..."
+if python manage.py create_email_templates; then
+    log_success "Email templates seeded"
+else
+    log_warning "Email template seeding failed (non-fatal)"
+fi
+
 # Build complete
 log_section "Build Complete"
 log_success "Production build finished successfully!"

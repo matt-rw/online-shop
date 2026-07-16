@@ -31,7 +31,15 @@ def sig():
 class Command(BaseCommand):
     help = "Create 100 email templates"
 
+    def add_arguments(self, parser):
+        parser.add_argument('--force', action='store_true', help='Delete existing templates and recreate')
+
     def handle(self, *args, **options):
+        existing = EmailTemplate.objects.count()
+        if existing >= 50 and not options.get('force'):
+            self.stdout.write(f"Already have {existing} templates. Use --force to recreate.")
+            return
+
         EmailTemplate.objects.all().delete()
 
         templates = []
