@@ -383,25 +383,37 @@ function handleImageUpload(input) {
   reader.readAsDataURL(file); input.value = '';
 }
 function removeImage() { currentImageData = null; document.getElementById('card-img').style.display = 'none'; document.getElementById('remove-img-btn').style.display = 'none'; }
-function getBodyWithImage() {
-  var body = document.getElementById('card-body').innerHTML;
+var emailFooter = '<div style="margin-top: 32px; padding-top: 16px; border-top: 1px solid #eee; text-align: center;">'
+  + '<a href="https://www.blueprnt.store" style="font-size: 11px; letter-spacing: 0.15em; text-transform: uppercase; color: #999; text-decoration: none;">Blueprint Apparel</a>'
+  + '<p style="font-size: 10px; color: #ccc; margin: 6px 0 0;">Est. 2025 — Chicago</p>'
+  + '<p style="font-size: 10px; margin: 4px 0 0;"><a href="https://www.blueprnt.store/shop/" style="color: #bbb; text-decoration: none; margin: 0 6px;">Shop</a><a href="https://www.blueprnt.store/shop/about/" style="color: #bbb; text-decoration: none; margin: 0 6px;">About</a></p>'
+  + '</div>';
 
-  // Wrap image professionally if attached
-  if (currentImageData) {
-    body = '<div style="margin: 0 0 24px; text-align: center;"><img src="' + currentImageData + '" style="max-width: 100%; height: auto; display: block; margin: 0 auto;" alt="Blueprint Apparel" /></div>' + body;
+function getBodyWithImage() {
+  // Get the raw template body — strip any existing outer wrapper to avoid double-nesting
+  var el = document.getElementById('card-body');
+  var body = el.innerHTML;
+
+  // Strip outer wrapper div if the template already has one
+  var tmp = document.createElement('div');
+  tmp.innerHTML = body.trim();
+  if (tmp.children.length === 1 && tmp.children[0].tagName === 'DIV' && tmp.children[0].style.maxWidth) {
+    // Template has its own container — work inside it
+    var inner = tmp.children[0];
+    // Prepend image if attached
+    if (currentImageData) {
+      inner.insertAdjacentHTML('afterbegin', '<img src="' + currentImageData + '" style="max-width: 100%; height: auto; display: block; margin: 0 0 20px;" alt="Blueprint Apparel" />');
+    }
+    // Append footer
+    inner.insertAdjacentHTML('beforeend', emailFooter);
+    return tmp.innerHTML;
   }
 
-  // Add footer signature
-  body += '<div style="margin-top: 40px; padding-top: 20px; border-top: 1px solid #eee; text-align: center;">'
-    + '<a href="https://www.blueprnt.store" style="font-size: 11px; letter-spacing: 0.15em; text-transform: uppercase; color: #999; text-decoration: none;">Blueprint Apparel</a>'
-    + '<p style="font-size: 10px; color: #ccc; margin: 8px 0 0;">Est. 2025 — Chicago</p>'
-    + '<p style="font-size: 10px; color: #ddd; margin: 6px 0 0;"><a href="https://www.blueprnt.store/shop/" style="color: #bbb; text-decoration: none; margin: 0 8px;">Shop</a><a href="https://www.blueprnt.store/shop/about/" style="color: #bbb; text-decoration: none; margin: 0 8px;">About</a><a href="https://www.blueprnt.store/shop/lookbook/" style="color: #bbb; text-decoration: none; margin: 0 8px;">Lookbook</a></p>'
-    + '</div>';
-
-  // Wrap in email container
-  body = '<div style="font-family: Helvetica, Arial, sans-serif; max-width: 520px; margin: 0 auto; padding: 40px 20px; color: #333;">' + body + '</div>';
-
-  return body;
+  // No wrapper — build minimal one
+  if (currentImageData) {
+    body = '<img src="' + currentImageData + '" style="max-width: 100%; height: auto; display: block; margin: 0 0 20px;" alt="Blueprint Apparel" />' + body;
+  }
+  return '<div style="font-family: Helvetica, Arial, sans-serif; max-width: 520px; margin: 0 auto; padding: 40px 20px; color: #333;">' + body + emailFooter + '</div>';
 }
 
 // Send
