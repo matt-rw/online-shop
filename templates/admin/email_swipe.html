@@ -358,7 +358,22 @@ function handleImageUpload(input) {
 function removeImage() { currentImageData = null; document.getElementById('card-img').style.display = 'none'; document.getElementById('remove-img-btn').style.display = 'none'; }
 function getBodyWithImage() {
   var body = document.getElementById('card-body').innerHTML;
-  if (currentImageData) body = '<img src="' + currentImageData + '" style="max-width:100%;height:auto;display:block;margin-bottom:16px;" />' + body;
+
+  // Wrap image professionally if attached
+  if (currentImageData) {
+    body = '<div style="margin: 0 0 24px; text-align: center;"><img src="' + currentImageData + '" style="max-width: 100%; height: auto; display: block; margin: 0 auto;" alt="Blueprint Apparel" /></div>' + body;
+  }
+
+  // Add footer signature
+  body += '<div style="margin-top: 40px; padding-top: 20px; border-top: 1px solid #eee; text-align: center;">'
+    + '<a href="https://www.blueprnt.store" style="font-size: 11px; letter-spacing: 0.15em; text-transform: uppercase; color: #999; text-decoration: none;">Blueprint Apparel</a>'
+    + '<p style="font-size: 10px; color: #ccc; margin: 8px 0 0;">Est. 2025 — Chicago</p>'
+    + '<p style="font-size: 10px; color: #ddd; margin: 6px 0 0;"><a href="https://www.blueprnt.store/shop/" style="color: #bbb; text-decoration: none; margin: 0 8px;">Shop</a><a href="https://www.blueprnt.store/shop/about/" style="color: #bbb; text-decoration: none; margin: 0 8px;">About</a><a href="https://www.blueprnt.store/shop/lookbook/" style="color: #bbb; text-decoration: none; margin: 0 8px;">Lookbook</a></p>'
+    + '</div>';
+
+  // Wrap in email container
+  body = '<div style="font-family: Helvetica, Arial, sans-serif; max-width: 520px; margin: 0 auto; padding: 40px 20px; color: #333;">' + body + '</div>';
+
   return body;
 }
 
