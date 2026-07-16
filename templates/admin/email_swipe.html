@@ -352,7 +352,40 @@ document.addEventListener('keydown', function(e) {
 function handleImageUpload(input) {
   var file = input.files[0]; if (!file) return;
   var reader = new FileReader();
-  reader.onload = function(e) { currentImageData = e.target.result; document.getElementById('card-img').src = currentImageData; document.getElementById('card-img').style.display = 'block'; document.getElementById('remove-img-btn').style.display = 'inline'; };
+  reader.onload = function(e) {
+    var base64 = e.target.result;
+    // Show preview immediately
+    document.getElementById('card-img').src = base64;
+    document.getElementById('card-img').style.display = 'block';
+    document.getElementById('remove-img-btn').style.display = 'inline';
+    document.getElementById('remove-img-btn').textContent = 'Uploading...';
+
+    // Upload to server for hosted URL
+    var body = new URLSearchParams();
+    body.append('action', 'upload_image');
+    body.append('image_data', base64);
+    fetch(window.location.pathname, {
+      method: 'POST',
+      headers: { 'X-CSRFToken': csrfToken, 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: body.toString()
+    })
+    .then(function(r) { return r.json(); })
+    .then(function(d) {
+      if (d.success) {
+        currentImageData = d.url;
+        document.getElementById('card-img').src = d.url;
+        document.getElementById('remove-img-btn').textContent = 'Remove';
+      } else {
+        currentImageData = base64; // fallback to base64
+        document.getElementById('remove-img-btn').textContent = 'Remove';
+        showToast('Image upload failed, using inline', 'error');
+      }
+    })
+    .catch(function() {
+      currentImageData = base64;
+      document.getElementById('remove-img-btn').textContent = 'Remove';
+    });
+  };
   reader.readAsDataURL(file); input.value = '';
 }
 function removeImage() { currentImageData = null; document.getElementById('card-img').style.display = 'none'; document.getElementById('remove-img-btn').style.display = 'none'; }

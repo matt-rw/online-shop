@@ -2611,6 +2611,40 @@ def email_swipe(request):
     if request.method == "POST":
         action = request.POST.get("action")
 
+        if action == "upload_image":
+            import base64
+            from django.conf import settings as django_settings
+
+            image_data = request.POST.get("image_data", "")
+            if not image_data or "base64," not in image_data:
+                return JsonResponse({"success": False, "error": "No image data"})
+
+            try:
+                format_part, data_part = image_data.split("base64,", 1)
+                image_bytes = base64.b64decode(data_part)
+
+                if getattr(django_settings, 'CLOUDINARY_ENABLED', False):
+                    import cloudinary.uploader
+                    import uuid
+                    result = cloudinary.uploader.upload(
+                        image_bytes,
+                        folder="email",
+                        public_id=f"email_{uuid.uuid4().hex[:8]}",
+                        resource_type="image"
+                    )
+                    url = result['secure_url']
+                else:
+                    from django.core.files.base import ContentFile
+                    from django.core.files.storage import default_storage
+                    import uuid
+                    filename = f"email/email_{uuid.uuid4().hex[:8]}.png"
+                    path = default_storage.save(filename, ContentFile(image_bytes))
+                    url = default_storage.url(path)
+
+                return JsonResponse({"success": True, "url": url})
+            except Exception as e:
+                return JsonResponse({"success": False, "error": str(e)})
+
         if action == "send":
             template_id = request.POST.get("template_id")
             subject_override = request.POST.get("subject", "").strip()
