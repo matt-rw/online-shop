@@ -1175,8 +1175,19 @@ def categories_dashboard(request):
             except Exception as e:
                 return JsonResponse({"success": False, "error": str(e)})
 
+    # Handle reorder
+    if request.method == "POST" and request.POST.get("action") == "reorder_categories":
+        try:
+            import json
+            order = json.loads(request.POST.get("order", "[]"))
+            for i, cat_id in enumerate(order):
+                Category.objects.filter(id=cat_id).update(display_order=i)
+            return JsonResponse({"success": True})
+        except Exception as e:
+            return JsonResponse({"success": False, "error": str(e)})
+
     # Get all categories with product counts
-    categories = Category.objects.all().order_by("name")
+    categories = Category.objects.all().order_by("display_order", "name")
     categories_data = []
 
     for category in categories:
@@ -1202,6 +1213,7 @@ def categories_dashboard(request):
                 "id": category.id,
                 "name": category.name,
                 "slug": category.slug,
+                "display_order": category.display_order,
                 "description": category.description,
                 "uses_size": category.uses_size,
                 "uses_color": category.uses_color,

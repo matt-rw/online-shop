@@ -316,9 +316,9 @@
       <p style="font-size: 0.75rem; color: #94a3b8; margin-bottom: 1.5rem;"><i class="fa-solid fa-circle-info" style="margin-right: 0.25rem;"></i>Use <i class="fa-solid fa-eye-slash" style="margin: 0 0.125rem;"></i> to hide from storefront. Delete requires 0 products.</p>
 
       {% if categories %}
-        <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 1.5rem;">
+        <div id="categories-grid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 1.5rem;">
         {% for category in categories %}
-        <div class="category-item" style="border: 1px solid #e2e8f0; border-radius: 12px; padding: 1.5rem; transition: all 0.3s; cursor: pointer; position: relative; overflow: hidden;{% if category.is_hidden %} opacity: 0.6;{% endif %}" onmouseover="this.style.transform='translateY(-4px)'; this.style.boxShadow='0 8px 16px rgba(0,0,0,0.1)'" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='none'" id="category-card-{{ category.id }}">
+        <div class="category-item" draggable="true" data-id="{{ category.id }}" style="border: 1px solid #e2e8f0; border-radius: 12px; padding: 1.5rem; transition: all 0.3s; cursor: grab; position: relative; overflow: hidden;{% if category.is_hidden %} opacity: 0.6;{% endif %}" onmouseover="this.style.transform='translateY(-4px)'; this.style.boxShadow='0 8px 16px rgba(0,0,0,0.1)'" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='none'" id="category-card-{{ category.id }}">
           <div style="position: absolute; top: 0; left: 0; right: 0; height: 4px; background: linear-gradient(90deg, {% if category.is_hidden %}#94a3b8, #64748b{% else %}#f59e0b, #d97706{% endif %});"></div>
 
           <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 1.5rem;">
@@ -586,6 +586,58 @@
         alert('Error deleting category');
       }
     }
+
+    // Drag to reorder categories
+    (function() {
+      var grid = document.getElementById('categories-grid');
+      if (!grid) return;
+      var dragItem = null;
+
+      grid.addEventListener('dragstart', function(e) {
+        dragItem = e.target.closest('.category-item');
+        if (dragItem) {
+          dragItem.style.opacity = '0.4';
+          e.dataTransfer.effectAllowed = 'move';
+        }
+      });
+
+      grid.addEventListener('dragend', function(e) {
+        if (dragItem) dragItem.style.opacity = '';
+        dragItem = null;
+      });
+
+      grid.addEventListener('dragover', function(e) {
+        e.preventDefault();
+        e.dataTransfer.dropEffect = 'move';
+      });
+
+      grid.addEventListener('drop', function(e) {
+        e.preventDefault();
+        var target = e.target.closest('.category-item');
+        if (!target || !dragItem || target === dragItem) return;
+
+        // Reorder in DOM
+        var items = Array.from(grid.querySelectorAll('.category-item'));
+        var fromIdx = items.indexOf(dragItem);
+        var toIdx = items.indexOf(target);
+        if (fromIdx < toIdx) target.parentNode.insertBefore(dragItem, target.nextSibling);
+        else target.parentNode.insertBefore(dragItem, target);
+
+        // Save new order
+        var order = Array.from(grid.querySelectorAll('.category-item')).map(function(el) { return el.dataset.id; });
+        fetch(window.location.pathname, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/x-www-form-urlencoded', 'X-CSRFToken': '{{ csrf_token }}' },
+          body: 'action=reorder_categories&order=' + encodeURIComponent(JSON.stringify(order))
+        }).then(function(r) { return r.json(); }).then(function(d) {
+          if (d.success) {
+            // Brief flash to confirm
+            dragItem.style.background = '#f0fdf4';
+            setTimeout(function() { dragItem.style.background = ''; }, 500);
+          }
+        });
+      });
+    })();
   </script>
 </body>
 </html>
