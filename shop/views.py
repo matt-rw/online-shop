@@ -631,8 +631,8 @@ def product_detail(request, slug):
 
     product = get_object_or_404(Product, slug=slug, is_active=True)
 
-    # Get all variants with unified attributes (and legacy fields for fallback)
-    variants = product.variants.filter(is_active=True).prefetch_related(
+    # Get all variants (including inactive — shown as unavailable on frontend)
+    variants = product.variants.all().prefetch_related(
         "attributes__attribute"
     ).select_related("size", "color")  # Keep legacy for fallback
 
@@ -644,8 +644,8 @@ def product_detail(request, slug):
     # OrderedDict preserves attribute display_order
     attributes_map = OrderedDict()  # {attr_slug: {'attribute': attr, 'values': OrderedDict}}
 
-    # Calculate total stock across all variants
-    total_stock = sum(v.stock_quantity for v in variants)
+    # Calculate total stock across active variants only
+    total_stock = sum(v.stock_quantity for v in variants if v.is_active)
 
     for variant in variants:
         # Get attributes from unified system
@@ -667,11 +667,11 @@ def product_detail(request, slug):
                     'value': attr_value.value,
                     'display_order': attr_value.display_order,
                     'metadata': attr_value.metadata,
-                    'available': variant.stock_quantity > 0,
-                    'stock': variant.stock_quantity,
+                    'available': variant.is_active and variant.stock_quantity > 0,
+                    'stock': variant.stock_quantity if variant.is_active else 0,
                 }
-            elif variant.stock_quantity > 0:
-                # Update availability if any variant with this value has stock
+            elif variant.is_active and variant.stock_quantity > 0:
+                # Update availability if any active variant with this value has stock
                 attributes_map[attr_slug]['values'][attr_value.value]['available'] = True
 
         # Fallback to legacy fields if no unified attributes
@@ -692,7 +692,7 @@ def product_detail(request, slug):
         key = "_".join(key_parts)
         variant_data[key] = {
             "id": variant.id,
-            "stock": variant.stock_quantity,
+            "stock": variant.stock_quantity if variant.is_active else 0,
             "price": str(variant.price),
             "attributes": variant_attrs,
         }
