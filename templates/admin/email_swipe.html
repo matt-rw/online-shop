@@ -196,18 +196,9 @@
       <div class="card" id="sent-card">
         <div class="card-subject" style="cursor: default; background: none;" id="sent-subject"></div>
         <div class="card-body" id="sent-body" style="cursor: default;"></div>
-        <div style="border-top: 1px solid #eee; padding: 1.25rem 2rem; display: flex; justify-content: space-between; align-items: flex-start;">
-          <div>
-            <p style="font-size: 0.85rem; font-weight: 600; color: #000; margin: 0 0 0.25rem;" id="sent-date"></p>
-            <p style="font-size: 0.65rem; color: #bbb; margin: 0;" id="sent-by"></p>
-          </div>
-          <div style="text-align: right;">
-            <p style="font-size: 0.65rem; color: #999; margin: 0 0 0.35rem;"><span id="sent-stat-total" style="font-weight: 700; color: #000; font-size: 0.85rem;">0</span> sent</p>
-            <div style="display: flex; gap: 0.75rem; justify-content: flex-end;">
-              <span style="font-size: 0.6rem;"><span id="sent-stat-delivered" style="font-weight: 600; color: #16a34a;">0</span> <span style="color: #bbb;">delivered</span></span>
-              <span style="font-size: 0.6rem;"><span id="sent-stat-failed" style="font-weight: 600; color: #dc2626;">0</span> <span style="color: #bbb;">failed</span></span>
-            </div>
-          </div>
+        <div class="card-footer">
+          <span class="card-meta" id="sent-date"></span>
+          <span class="card-meta"><span id="sent-stat-delivered">0</span> / <span id="sent-stat-total">0</span></span>
         </div>
       </div>
     </div>
@@ -313,9 +304,9 @@ function showSentCard() {
   document.getElementById('sent-body').innerHTML = m.body || '';
   document.getElementById('sent-stat-total').textContent = m.recipient_count;
   document.getElementById('sent-stat-delivered').textContent = m.sent_count;
-  document.getElementById('sent-stat-failed').textContent = m.failed_count;
+  if (m.failed_count > 0) document.getElementById('sent-stat-delivered').style.color = '#dc2626';
+  else document.getElementById('sent-stat-delivered').style.color = '';
   document.getElementById('sent-date').textContent = m.sent_at;
-  document.getElementById('sent-by').textContent = m.sent_by ? 'by ' + m.sent_by : '';
   document.getElementById('sent-counter').textContent = (sentIdx + 1) + ' / ' + sentMessages.length;
   document.getElementById('sent-prev-btn').disabled = sentIdx === 0;
   document.getElementById('sent-next-btn').disabled = sentIdx === sentMessages.length - 1;
