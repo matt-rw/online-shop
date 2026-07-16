@@ -956,9 +956,14 @@
     <div class="container">
       <div class="header">
         <h1>Messages</h1>
-        <button class="header-action-btn" onclick="openCompose()">
-          <i class="fa-solid fa-plus"></i> Compose
-        </button>
+        <div style="display: flex; gap: 0.5rem;">
+          <a href="{% url 'admin_email_swipe' %}" class="header-action-btn" style="text-decoration: none;">
+            <i class="fa-solid fa-envelopes-bulk"></i> Swipe & Send
+          </a>
+          <button class="header-action-btn" onclick="openCompose()">
+            <i class="fa-solid fa-plus"></i> Compose
+          </button>
+        </div>
       </div>
     </div>
   </div>
