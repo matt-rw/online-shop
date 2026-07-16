@@ -22,7 +22,7 @@
       letter-spacing: 0.15em; text-transform: uppercase; border: 1px solid rgba(255,255,255,0.1);
       background: none; color: rgba(255,255,255,0.3); cursor: pointer; transition: all 0.15s;
     }
-    .mode-btn:first-child { border-right: none; }
+    .mode-btn + .mode-btn { border-left: none; }
     .mode-btn.active { background: #fff; color: #000; border-color: #fff; }
 
     /* Filters */
@@ -122,6 +122,32 @@
     .confirm-cancel { border: 1px solid #ddd; background: none; color: #000; }
     .confirm-send { border: none; background: #000; color: #fff; }
 
+    /* Heart button */
+    .heart-btn {
+      position: absolute; top: 1rem; right: 1rem; z-index: 5; width: 36px; height: 36px;
+      display: flex; align-items: center; justify-content: center; border: none;
+      background: none; cursor: pointer; transition: transform 0.15s; color: #ddd;
+    }
+    .heart-btn:hover { transform: scale(1.15); }
+    .heart-btn.hearted { color: #dc2626; }
+    .heart-btn svg { width: 20px; height: 20px; }
+
+    /* Deck list */
+    .deck-list { width: 100%; max-width: 640px; display: flex; flex-direction: column; gap: 2px; }
+    .deck-item {
+      background: #1a1a1a; padding: 1rem 1.5rem; display: flex; align-items: center; gap: 1rem;
+      cursor: grab; transition: background 0.1s;
+    }
+    .deck-item:hover { background: #222; }
+    .deck-item.dragging { opacity: 0.4; }
+    .deck-item-num { font-size: 0.6rem; color: rgba(255,255,255,0.2); font-weight: 600; min-width: 1.5rem; }
+    .deck-item-subject { flex: 1; font-size: 0.8rem; font-weight: 500; color: rgba(255,255,255,0.7); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .deck-item-folder { font-size: 0.6rem; color: rgba(255,255,255,0.2); letter-spacing: 0.1em; text-transform: uppercase; }
+    .deck-item-remove { border: none; background: none; color: rgba(255,255,255,0.15); cursor: pointer; padding: 4px; transition: color 0.15s; }
+    .deck-item-remove:hover { color: #dc2626; }
+
+    .deck-actions { width: 100%; max-width: 640px; margin-top: 1.5rem; }
+
     .hidden { display: none !important; }
   </style>
 </head>
@@ -136,6 +162,7 @@
   <!-- Mode Toggle -->
   <div class="mode-toggle">
     <button class="mode-btn active" id="mode-compose" onclick="setMode('compose')">Compose</button>
+    <button class="mode-btn" id="mode-deck" onclick="setMode('deck')">Deck (<span id="deck-count">0</span>)</button>
     <button class="mode-btn" id="mode-sent" onclick="setMode('sent')">Sent ({{ sent_count }})</button>
   </div>
 
@@ -148,7 +175,10 @@
 
     <div class="card-container" id="card-container">
       <div class="card" id="card">
-        <input type="text" class="card-subject" id="card-subject" value="" placeholder="Subject line..." />
+        <button class="heart-btn" id="heart-btn" onclick="toggleHeart()" title="Add to deck">
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/></svg>
+      </button>
+      <input type="text" class="card-subject" id="card-subject" value="" placeholder="Subject line..." />
         <div class="card-image" id="card-image-area">
           <img id="card-img" src="" style="display: none;" />
           <div class="card-image-upload">
@@ -214,6 +244,19 @@
     </div>
   </div>
 
+  <!-- ============ DECK MODE ============ -->
+  <div id="deck-view" class="hidden">
+    <div class="deck-list" id="deck-list"></div>
+    <div id="deck-empty" style="text-align: center; padding: 4rem;">
+      <p style="font-size: 0.85rem; color: rgba(255,255,255,0.3); margin: 0;">No templates in your deck yet.</p>
+      <p style="font-size: 0.7rem; color: rgba(255,255,255,0.15); margin: 0.5rem 0 0;">Swipe through Compose and heart the ones you like.</p>
+    </div>
+    <div class="deck-actions" id="deck-actions" style="display: none;">
+      <button class="send-btn" onclick="sendDeck()">Send Deck ({{ subscriber_count }} subscribers)</button>
+      <button class="test-btn" onclick="clearDeck()" style="margin-top: 0.5rem; width: 100%; padding: 12px; font-family: 'Inter', sans-serif; font-size: 0.6rem; font-weight: 500; letter-spacing: 0.12em; text-transform: uppercase; border: 1px solid rgba(255,255,255,0.1); background: none; color: rgba(255,255,255,0.25); cursor: pointer;">Clear Deck</button>
+    </div>
+  </div>
+
   <!-- Confirm Modal -->
   <div class="confirm-overlay" id="confirm-overlay" onclick="if(event.target===this)closeConfirm()">
     <div class="confirm-box">
@@ -239,14 +282,139 @@ var csrfToken = '{{ csrf_token }}';
 var currentImageData = null;
 var currentMode = 'compose';
 
+// Deck — localStorage
+var deck = JSON.parse(localStorage.getItem('emailDeck') || '[]');
+
+function saveDeck() {
+  localStorage.setItem('emailDeck', JSON.stringify(deck));
+  document.getElementById('deck-count').textContent = deck.length;
+}
+
+function isDeckItem(id) { return deck.some(function(d) { return d.id === id; }); }
+
+function toggleHeart() {
+  if (!filtered.length) return;
+  var t = filtered[idx];
+  if (isDeckItem(t.id)) {
+    deck = deck.filter(function(d) { return d.id !== t.id; });
+    showToast('Removed from deck', 'error');
+  } else {
+    deck.push({ id: t.id, name: t.name, subject: t.subject, body: t.body, folder: t.folder });
+    showToast('Added to deck', 'success');
+  }
+  saveDeck();
+  updateHeartState();
+}
+
+function updateHeartState() {
+  var btn = document.getElementById('heart-btn');
+  if (!btn || !filtered.length) return;
+  var inDeck = isDeckItem(filtered[idx].id);
+  btn.classList.toggle('hearted', inDeck);
+  btn.querySelector('svg').setAttribute('fill', inDeck ? 'currentColor' : 'none');
+}
+
+function renderDeck() {
+  var list = document.getElementById('deck-list');
+  var empty = document.getElementById('deck-empty');
+  var actions = document.getElementById('deck-actions');
+  list.innerHTML = '';
+
+  if (!deck.length) {
+    empty.style.display = '';
+    actions.style.display = 'none';
+    return;
+  }
+  empty.style.display = 'none';
+  actions.style.display = '';
+
+  deck.forEach(function(item, i) {
+    var el = document.createElement('div');
+    el.className = 'deck-item';
+    el.draggable = true;
+    el.dataset.idx = i;
+    el.innerHTML = '<span class="deck-item-num">' + (i + 1) + '</span>'
+      + '<span class="deck-item-subject">' + (item.subject || '(no subject)') + '</span>'
+      + '<span class="deck-item-folder">' + (item.folder || '') + '</span>'
+      + '<button class="deck-item-remove" onclick="removeDeckItem(' + i + ')"><svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg></button>';
+
+    // Drag and drop reorder
+    el.addEventListener('dragstart', function(e) { e.dataTransfer.setData('text/plain', i); el.classList.add('dragging'); });
+    el.addEventListener('dragend', function() { el.classList.remove('dragging'); });
+    el.addEventListener('dragover', function(e) { e.preventDefault(); });
+    el.addEventListener('drop', function(e) {
+      e.preventDefault();
+      var from = parseInt(e.dataTransfer.getData('text/plain'));
+      var to = i;
+      if (from === to) return;
+      var moved = deck.splice(from, 1)[0];
+      deck.splice(to, 0, moved);
+      saveDeck();
+      renderDeck();
+    });
+
+    list.appendChild(el);
+  });
+}
+
+function removeDeckItem(i) {
+  deck.splice(i, 1);
+  saveDeck();
+  renderDeck();
+}
+
+function clearDeck() {
+  if (!confirm('Clear your entire deck?')) return;
+  deck = [];
+  saveDeck();
+  renderDeck();
+}
+
+function sendDeck() {
+  if (!deck.length) return;
+  if (!confirm('Send all ' + deck.length + ' emails in your deck to {{ subscriber_count }} subscribers?')) return;
+  // Send first item, then advance
+  var sendIdx = 0;
+  var btn = document.querySelector('.deck-actions .send-btn');
+  btn.textContent = 'Sending 1 / ' + deck.length + '...';
+  btn.disabled = true;
+
+  function sendNext() {
+    if (sendIdx >= deck.length) {
+      btn.textContent = 'Send Deck ({{ subscriber_count }} subscribers)';
+      btn.disabled = false;
+      showToast('Deck sent — ' + deck.length + ' emails', 'success');
+      return;
+    }
+    var item = deck[sendIdx];
+    var body = new URLSearchParams();
+    body.append('action', 'send');
+    body.append('template_id', item.id);
+    body.append('subject', item.subject);
+    body.append('body', item.body);
+    fetch(window.location.pathname, { method: 'POST', headers: { 'X-CSRFToken': csrfToken, 'Content-Type': 'application/x-www-form-urlencoded' }, body: body.toString() })
+    .then(function(r) { return r.json(); })
+    .then(function(d) {
+      sendIdx++;
+      btn.textContent = 'Sending ' + Math.min(sendIdx + 1, deck.length) + ' / ' + deck.length + '...';
+      sendNext();
+    })
+    .catch(function() { btn.textContent = 'Error — retry'; btn.disabled = false; });
+  }
+  sendNext();
+}
+
 // Mode toggle
 function setMode(mode) {
   currentMode = mode;
   document.getElementById('compose-view').classList.toggle('hidden', mode !== 'compose');
   document.getElementById('sent-view').classList.toggle('hidden', mode !== 'sent');
+  document.getElementById('deck-view').classList.toggle('hidden', mode !== 'deck');
   document.getElementById('mode-compose').classList.toggle('active', mode === 'compose');
   document.getElementById('mode-sent').classList.toggle('active', mode === 'sent');
+  document.getElementById('mode-deck').classList.toggle('active', mode === 'deck');
   if (mode === 'sent' && sentMessages.length) showSentCard();
+  if (mode === 'deck') renderDeck();
 }
 
 // Compose: category filters
@@ -285,6 +453,7 @@ function showCard() {
   currentImageData = null;
   document.getElementById('card-img').style.display = 'none';
   document.getElementById('remove-img-btn').style.display = 'none';
+  updateHeartState();
 }
 
 function navigate(dir) {
@@ -469,6 +638,7 @@ function showToast(msg, type) {
 }
 
 // Init
+document.getElementById('deck-count').textContent = deck.length;
 if (filtered.length) showCard();
 </script>
 </body>
