@@ -1,0 +1,284 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Swipe & Send — Blueprint Admin</title>
+  <link rel="icon" type="image/svg+xml" href="{% static 'admin-favicon.svg' %}">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: 'Inter', sans-serif; background: #111; color: #fff; min-height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 2rem; }
+
+    .swipe-header { position: fixed; top: 0; left: 0; right: 0; padding: 1.25rem 2rem; display: flex; justify-content: space-between; align-items: center; z-index: 10; }
+    .swipe-header a { font-size: 0.7rem; font-weight: 600; letter-spacing: 0.15em; text-transform: uppercase; color: rgba(255,255,255,0.35); text-decoration: none; transition: color 0.2s; }
+    .swipe-header a:hover { color: #fff; }
+
+    .card-container { position: relative; width: 100%; max-width: 560px; }
+    .card {
+      background: #fff; color: #000; width: 100%; min-height: 400px;
+      display: flex; flex-direction: column; position: relative;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+    }
+
+    .card-subject {
+      padding: 2rem 2.5rem 1rem; font-size: 1.1rem; font-weight: 700; color: #000;
+      letter-spacing: -0.02em; border: none; outline: none; width: 100%;
+      border-bottom: 1px solid #eee; background: none; font-family: 'Inter', sans-serif;
+      -webkit-font-smoothing: antialiased;
+    }
+    .card-subject:focus { border-bottom-color: #000; }
+
+    .card-body {
+      padding: 1.5rem 2.5rem 2rem; flex: 1; font-size: 0.85rem; font-weight: 300;
+      color: #444; line-height: 1.8; outline: none; min-height: 250px;
+      overflow-y: auto; max-height: 50vh;
+    }
+
+    .card-footer { padding: 1rem 2.5rem; border-top: 1px solid #eee; display: flex; justify-content: space-between; align-items: center; }
+    .card-meta { font-size: 0.6rem; font-weight: 500; letter-spacing: 0.2em; text-transform: uppercase; color: #bbb; }
+    .card-badge { font-size: 0.55rem; font-weight: 600; letter-spacing: 0.15em; text-transform: uppercase; padding: 3px 8px; background: #16a34a; color: #fff; display: none; }
+    .card-badge.visible { display: inline-block; }
+
+    .nav-row { display: flex; align-items: center; justify-content: center; gap: 2rem; margin-top: 2rem; }
+    .nav-btn {
+      width: 48px; height: 48px; border: 1px solid rgba(255,255,255,0.15); background: none;
+      color: rgba(255,255,255,0.5); display: flex; align-items: center; justify-content: center;
+      cursor: pointer; transition: all 0.15s; border-radius: 0;
+    }
+    .nav-btn:hover { border-color: #fff; color: #fff; }
+    .nav-btn:disabled { opacity: 0.15; cursor: not-allowed; }
+    .nav-btn:disabled:hover { border-color: rgba(255,255,255,0.15); color: rgba(255,255,255,0.5); }
+    .counter { font-size: 0.7rem; color: rgba(255,255,255,0.3); letter-spacing: 0.1em; min-width: 60px; text-align: center; }
+
+    .action-row { display: flex; flex-direction: column; gap: 0.5rem; margin-top: 2rem; width: 100%; max-width: 560px; }
+    .send-btn {
+      width: 100%; padding: 14px; font-family: 'Inter', sans-serif; font-size: 0.7rem; font-weight: 600;
+      letter-spacing: 0.15em; text-transform: uppercase; border: none; background: #fff; color: #000;
+      cursor: pointer; transition: all 0.2s;
+    }
+    .send-btn:hover { background: #04D9FF; }
+    .send-btn:disabled { opacity: 0.3; cursor: not-allowed; }
+    .send-btn.sending { opacity: 0.5; }
+
+    .test-btn {
+      width: 100%; padding: 12px; font-family: 'Inter', sans-serif; font-size: 0.65rem; font-weight: 500;
+      letter-spacing: 0.12em; text-transform: uppercase; border: 1px solid rgba(255,255,255,0.15);
+      background: none; color: rgba(255,255,255,0.4); cursor: pointer; transition: all 0.2s;
+    }
+    .test-btn:hover { border-color: #fff; color: #fff; }
+
+    .toast {
+      position: fixed; bottom: 2rem; left: 50%; transform: translateX(-50%);
+      padding: 0.75rem 1.5rem; font-size: 0.75rem; font-weight: 500; color: #fff;
+      z-index: 100; opacity: 0; transition: opacity 0.3s; pointer-events: none;
+    }
+    .toast.success { background: #16a34a; }
+    .toast.error { background: #dc2626; }
+    .toast.visible { opacity: 1; }
+
+    .empty-state { text-align: center; padding: 4rem; }
+    .empty-state p { font-size: 0.9rem; color: rgba(255,255,255,0.4); margin: 0 0 2rem; }
+
+    .confirm-overlay {
+      position: fixed; inset: 0; background: rgba(0,0,0,0.8); display: none; align-items: center;
+      justify-content: center; z-index: 50;
+    }
+    .confirm-overlay.visible { display: flex; }
+    .confirm-box { background: #fff; color: #000; padding: 2.5rem; max-width: 400px; width: 100%; margin: 1.5rem; }
+    .confirm-box h3 { font-size: 1rem; font-weight: 700; margin: 0 0 0.75rem; }
+    .confirm-box p { font-size: 0.85rem; color: #666; margin: 0 0 2rem; line-height: 1.6; }
+    .confirm-actions { display: flex; gap: 0.5rem; }
+    .confirm-actions button { flex: 1; padding: 12px; font-family: 'Inter', sans-serif; font-size: 0.7rem; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; cursor: pointer; transition: all 0.2s; }
+    .confirm-cancel { border: 1px solid #ddd; background: none; color: #000; }
+    .confirm-cancel:hover { border-color: #000; }
+    .confirm-send { border: none; background: #000; color: #fff; }
+    .confirm-send:hover { background: #222; }
+  </style>
+</head>
+<body>
+
+  <!-- Header -->
+  <div class="swipe-header">
+    <a href="{% url 'admin_email' %}">Back</a>
+    <span style="font-size: 0.65rem; color: rgba(255,255,255,0.2); letter-spacing: 0.2em; text-transform: uppercase;">Swipe & Send</span>
+    <a href="{% url 'admin_home' %}">Dashboard</a>
+  </div>
+
+  {% if template_count > 0 %}
+
+  <!-- Card -->
+  <div class="card-container">
+    <div class="card" id="card">
+      <input type="text" class="card-subject" id="card-subject" value="" placeholder="Subject line..." />
+      <div class="card-body" id="card-body" contenteditable="true"></div>
+      <div class="card-footer">
+        <span class="card-meta" id="card-meta"></span>
+        <span class="card-badge" id="card-badge">Sent</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Navigation -->
+  <div class="nav-row">
+    <button class="nav-btn" id="prev-btn" onclick="navigate(-1)" disabled>
+      <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
+    </button>
+    <span class="counter" id="counter">1 / 1</span>
+    <button class="nav-btn" id="next-btn" onclick="navigate(1)">
+      <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+    </button>
+  </div>
+
+  <!-- Actions -->
+  <div class="action-row">
+    <button class="send-btn" id="send-btn" onclick="confirmSend()">Send to {{ subscriber_count }} subscriber{{ subscriber_count|pluralize:"s" }}</button>
+    <button class="test-btn" onclick="sendTest()">Send test to me</button>
+  </div>
+
+  {% else %}
+
+  <div class="empty-state">
+    <p>No active email templates. Create some first.</p>
+    <a href="{% url 'admin_email_templates' %}" style="font-size: 0.7rem; font-weight: 600; letter-spacing: 0.15em; text-transform: uppercase; color: #fff; text-decoration: none; padding: 12px 32px; border: 1px solid rgba(255,255,255,0.2);">Create Templates</a>
+  </div>
+
+  {% endif %}
+
+  <!-- Confirm Modal -->
+  <div class="confirm-overlay" id="confirm-overlay" onclick="if(event.target===this)closeConfirm()">
+    <div class="confirm-box">
+      <h3>Send this email?</h3>
+      <p id="confirm-text">This will send to {{ subscriber_count }} subscriber{{ subscriber_count|pluralize:"s" }}. This cannot be undone.</p>
+      <div class="confirm-actions">
+        <button class="confirm-cancel" onclick="closeConfirm()">Cancel</button>
+        <button class="confirm-send" id="confirm-send-btn" onclick="doSend()">Send</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast -->
+  <div class="toast" id="toast"></div>
+
+<script>
+var templates = {{ templates_json|safe }};
+var idx = 0;
+var sentIds = {};
+var csrfToken = '{{ csrf_token }}';
+
+function showCard() {
+  if (!templates.length) return;
+  var t = templates[idx];
+  document.getElementById('card-subject').value = t.subject;
+  document.getElementById('card-body').innerHTML = t.body || '<p style="color: #bbb;">No body content. Click to type.</p>';
+  document.getElementById('card-meta').textContent = (t.folder || t.type || 'template') + ' — used ' + t.times_used + 'x';
+  document.getElementById('counter').textContent = (idx + 1) + ' / ' + templates.length;
+  document.getElementById('prev-btn').disabled = idx === 0;
+  document.getElementById('next-btn').disabled = idx === templates.length - 1;
+
+  var badge = document.getElementById('card-badge');
+  badge.classList.toggle('visible', !!sentIds[t.id]);
+}
+
+function navigate(dir) {
+  var newIdx = idx + dir;
+  if (newIdx >= 0 && newIdx < templates.length) {
+    idx = newIdx;
+    showCard();
+  }
+}
+
+// Keyboard navigation
+document.addEventListener('keydown', function(e) {
+  if (e.target.tagName === 'INPUT' || e.target.contentEditable === 'true') return;
+  if (e.key === 'ArrowLeft') navigate(-1);
+  if (e.key === 'ArrowRight') navigate(1);
+});
+
+function confirmSend() {
+  document.getElementById('confirm-overlay').classList.add('visible');
+}
+function closeConfirm() {
+  document.getElementById('confirm-overlay').classList.remove('visible');
+}
+
+function doSend() {
+  var t = templates[idx];
+  var btn = document.getElementById('confirm-send-btn');
+  btn.textContent = 'Sending...';
+  btn.disabled = true;
+
+  var body = new URLSearchParams();
+  body.append('action', 'send');
+  body.append('template_id', t.id);
+  body.append('subject', document.getElementById('card-subject').value);
+  body.append('body', document.getElementById('card-body').innerHTML);
+
+  fetch(window.location.pathname, {
+    method: 'POST',
+    headers: { 'X-CSRFToken': csrfToken, 'Content-Type': 'application/x-www-form-urlencoded' },
+    body: body.toString()
+  })
+  .then(function(r) { return r.json(); })
+  .then(function(d) {
+    closeConfirm();
+    btn.textContent = 'Send';
+    btn.disabled = false;
+    if (d.success) {
+      sentIds[t.id] = true;
+      showCard();
+      showToast('Sent to ' + d.sent + ' subscriber' + (d.sent !== 1 ? 's' : ''), 'success');
+      if (idx < templates.length - 1) setTimeout(function() { navigate(1); }, 1500);
+    } else {
+      showToast(d.error || 'Send failed', 'error');
+    }
+  })
+  .catch(function() {
+    closeConfirm();
+    btn.textContent = 'Send';
+    btn.disabled = false;
+    showToast('Network error', 'error');
+  });
+}
+
+function sendTest() {
+  var t = templates[idx];
+  var btn = document.querySelector('.test-btn');
+  btn.textContent = 'Sending...';
+
+  var body = new URLSearchParams();
+  body.append('action', 'send_test');
+  body.append('template_id', t.id);
+  body.append('subject', document.getElementById('card-subject').value);
+  body.append('body', document.getElementById('card-body').innerHTML);
+
+  fetch(window.location.pathname, {
+    method: 'POST',
+    headers: { 'X-CSRFToken': csrfToken, 'Content-Type': 'application/x-www-form-urlencoded' },
+    body: body.toString()
+  })
+  .then(function(r) { return r.json(); })
+  .then(function(d) {
+    btn.textContent = 'Send test to me';
+    showToast(d.success ? 'Test sent — check your inbox' : (d.error || 'Failed'), d.success ? 'success' : 'error');
+  })
+  .catch(function() {
+    btn.textContent = 'Send test to me';
+    showToast('Network error', 'error');
+  });
+}
+
+function showToast(msg, type) {
+  var el = document.getElementById('toast');
+  el.textContent = msg;
+  el.className = 'toast ' + type + ' visible';
+  setTimeout(function() { el.classList.remove('visible'); }, 3000);
+}
+
+// Init
+if (templates.length) showCard();
+</script>
+
+</body>
+</html>

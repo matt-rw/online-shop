@@ -89,6 +89,7 @@ urlpatterns = [
     path("bp-manage/email/", admin_views.email_dashboard, name="admin_email"),
     path("bp-manage/email/campaigns/", admin_views.email_campaigns, name="admin_email_campaigns"),
     path("bp-manage/email/templates/", admin_views.email_templates, name="admin_email_templates"),
+    path("bp-manage/email/swipe/", admin_views.email_swipe, name="admin_email_swipe"),
     path("bp-manage/ab-testing/", admin_views.ab_testing_dashboard, name="admin_ab_testing"),
     path("bp-manage/scheduled-reports/", admin_views.scheduled_reports_dashboard, name="admin_scheduled_reports"),
     path("bp-manage/bundles/", admin_views.bundles_dashboard, name="admin_bundles"),

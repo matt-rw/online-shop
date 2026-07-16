@@ -2598,3 +2598,95 @@ def campaign_edit(request, campaign_id):
     return render(request, "admin/campaign_edit.html", context)
 
 
+@staff_member_required
+def email_swipe(request):
+    """
+    Tinder-style email card swipe interface.
+    Browse email templates as cards, edit inline, send to subscribers.
+    """
+    from shop.utils.email_helper import send_email
+
+    subscriber_count = EmailSubscription.objects.filter(is_active=True).count()
+
+    if request.method == "POST":
+        action = request.POST.get("action")
+
+        if action == "send":
+            template_id = request.POST.get("template_id")
+            subject_override = request.POST.get("subject", "").strip()
+            body_override = request.POST.get("body", "").strip()
+
+            try:
+                template = EmailTemplate.objects.get(id=template_id)
+                subject = subject_override or template.subject
+                body = body_override or template.html_body
+
+                subscribers = EmailSubscription.objects.filter(is_active=True)
+                sent = 0
+                failed = 0
+
+                for sub in subscribers:
+                    success, log = send_email(
+                        email_address=sub.email,
+                        subject=subject,
+                        html_body=body,
+                        template=template,
+                    )
+                    if success:
+                        sent += 1
+                    else:
+                        failed += 1
+
+                return JsonResponse({
+                    "success": True,
+                    "sent": sent,
+                    "failed": failed,
+                    "total": subscribers.count(),
+                })
+            except EmailTemplate.DoesNotExist:
+                return JsonResponse({"success": False, "error": "Template not found"})
+            except Exception as e:
+                return JsonResponse({"success": False, "error": str(e)})
+
+        elif action == "send_test":
+            template_id = request.POST.get("template_id")
+            subject_override = request.POST.get("subject", "").strip()
+            body_override = request.POST.get("body", "").strip()
+
+            try:
+                template = EmailTemplate.objects.get(id=template_id)
+                subject = subject_override or template.subject
+                body = body_override or template.html_body
+
+                success, log = send_email(
+                    email_address=request.user.email or "admin@blueprnt.store",
+                    subject=f"[TEST] {subject}",
+                    html_body=body,
+                    template=template,
+                )
+                return JsonResponse({"success": success})
+            except Exception as e:
+                return JsonResponse({"success": False, "error": str(e)})
+
+    # GET: load templates as JSON
+    templates = EmailTemplate.objects.filter(is_active=True).order_by("folder", "template_type", "name")
+    templates_data = [
+        {
+            "id": t.id,
+            "name": t.name,
+            "subject": t.subject,
+            "body": t.html_body or t.text_body or "",
+            "type": t.template_type,
+            "folder": t.folder,
+            "times_used": t.times_used,
+        }
+        for t in templates
+    ]
+
+    context = {
+        "templates_json": json.dumps(templates_data),
+        "template_count": len(templates_data),
+        "subscriber_count": subscriber_count,
+    }
+
+    return render(request, "admin/email_swipe.html", context)
