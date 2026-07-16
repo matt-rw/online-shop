@@ -70,11 +70,6 @@
     .badge-partial { background: #d97706; }
 
     /* Sent card stats */
-    .sent-stats { display: flex; gap: 0; padding: 0 2rem; border-top: 1px solid #eee; }
-    .sent-stat { flex: 1; padding: 0.875rem 0; text-align: center; border-right: 1px solid #eee; }
-    .sent-stat:last-child { border-right: none; }
-    .sent-stat-num { font-size: 0.95rem; font-weight: 700; }
-    .sent-stat-label { font-size: 0.5rem; font-weight: 500; letter-spacing: 0.15em; text-transform: uppercase; color: #bbb; margin-top: 0.2rem; }
 
     .nav-row { display: flex; align-items: center; justify-content: center; gap: 2rem; margin-top: 1.5rem; }
     .nav-btn {
@@ -198,25 +193,17 @@
   <div id="sent-view" class="hidden">
     <div class="card-container" id="sent-card-container">
       <div class="card" id="sent-card">
-        <div class="card-subject-static" id="sent-subject"></div>
-        <div class="card-body" id="sent-body" contenteditable="false" style="cursor: default;"></div>
-        <div class="sent-stats">
-          <div class="sent-stat">
-            <div class="sent-stat-num" style="color: #000;" id="sent-stat-total">0</div>
-            <div class="sent-stat-label">Sent</div>
-          </div>
-          <div class="sent-stat">
-            <div class="sent-stat-num" style="color: #16a34a;" id="sent-stat-delivered">0</div>
-            <div class="sent-stat-label">Delivered</div>
-          </div>
-          <div class="sent-stat">
-            <div class="sent-stat-num" style="color: #dc2626;" id="sent-stat-failed">0</div>
-            <div class="sent-stat-label">Failed</div>
-          </div>
-        </div>
+        <div class="card-subject" style="cursor: default; background: none;" id="sent-subject"></div>
+        <div class="card-body" id="sent-body" style="cursor: default;"></div>
         <div class="card-footer">
           <span class="card-meta" id="sent-meta"></span>
-          <span class="card-badge visible" id="sent-badge"></span>
+          <span style="font-size: 0.55rem; color: #888;">
+            <span id="sent-stat-total" style="font-weight: 600; color: #000;">0</span> sent
+            <span style="color: #ddd; margin: 0 4px;">·</span>
+            <span id="sent-stat-delivered" style="font-weight: 600; color: #16a34a;">0</span> delivered
+            <span style="color: #ddd; margin: 0 4px;">·</span>
+            <span id="sent-stat-failed" style="font-weight: 600; color: #dc2626;">0</span> failed
+          </span>
         </div>
       </div>
     </div>
@@ -317,9 +304,6 @@ function showSentCard() {
   document.getElementById('sent-stat-delivered').textContent = m.sent_count;
   document.getElementById('sent-stat-failed').textContent = m.failed_count;
   document.getElementById('sent-meta').textContent = m.sent_at + (m.sent_by ? ' — ' + m.sent_by : '');
-  var badge = document.getElementById('sent-badge');
-  badge.textContent = m.status === 'sent' ? 'Sent' : m.status;
-  badge.className = 'card-badge visible ' + (m.status === 'sent' ? 'badge-sent' : 'badge-partial');
   document.getElementById('sent-counter').textContent = (sentIdx + 1) + ' / ' + sentMessages.length;
   document.getElementById('sent-prev-btn').disabled = sentIdx === 0;
   document.getElementById('sent-next-btn').disabled = sentIdx === sentMessages.length - 1;
