@@ -261,8 +261,11 @@
       </div>
 
       <div class="action-row">
-        <button class="send-btn" id="deck-send-btn" onclick="sendDeck()">Send Deck to {{ subscriber_count }} subscribers</button>
-        <button class="test-btn" onclick="clearDeck()" style="width: 100%;">Clear Deck</button>
+        <button class="send-btn" onclick="sendFromDeck()">Send to {{ subscriber_count }} subscriber{{ subscriber_count|pluralize:"s" }}</button>
+        <div class="test-row">
+          <input type="email" class="test-email-input" id="deck-test-email" placeholder="Test email address..." value="{{ user.email }}" />
+          <button class="test-send-btn" onclick="sendTestFromDeck()">Send Test</button>
+        </div>
       </div>
     </div>
   </div>
@@ -383,23 +386,19 @@ function clearDeck() {
   renderDeck();
 }
 
-function sendDeck() {
+function sendFromDeck() {
   if (!deck.length) return;
-  if (!confirm('Send all ' + deck.length + ' emails in your deck to {{ subscriber_count }} subscribers?')) return;
-  // Send first item, then advance
-  var sendIdx = 0;
-  var btn = document.querySelector('.deck-actions .send-btn');
-  btn.textContent = 'Sending 1 / ' + deck.length + '...';
-  btn.disabled = true;
+  // Save current edits
+  deck[deckIdx].subject = document.getElementById('deck-subject').value;
+  deck[deckIdx].body = document.getElementById('deck-body').innerHTML;
+  saveDeck();
 
-  function sendNext() {
-    if (sendIdx >= deck.length) {
-      btn.textContent = 'Send Deck ({{ subscriber_count }} subscribers)';
-      btn.disabled = false;
-      showToast('Deck sent — ' + deck.length + ' emails', 'success');
-      return;
-    }
-    var item = deck[sendIdx];
+  document.getElementById('confirm-overlay').classList.add('visible');
+  // Override confirm send to use deck item
+  document.getElementById('confirm-send-btn').onclick = function() {
+    var item = deck[deckIdx];
+    var btn = document.getElementById('confirm-send-btn');
+    btn.textContent = 'Sending...'; btn.disabled = true;
     var body = new URLSearchParams();
     body.append('action', 'send');
     body.append('template_id', item.id);
@@ -408,13 +407,37 @@ function sendDeck() {
     fetch(window.location.pathname, { method: 'POST', headers: { 'X-CSRFToken': csrfToken, 'Content-Type': 'application/x-www-form-urlencoded' }, body: body.toString() })
     .then(function(r) { return r.json(); })
     .then(function(d) {
-      sendIdx++;
-      btn.textContent = 'Sending ' + Math.min(sendIdx + 1, deck.length) + ' / ' + deck.length + '...';
-      sendNext();
-    })
-    .catch(function() { btn.textContent = 'Error — retry'; btn.disabled = false; });
-  }
-  sendNext();
+      closeConfirm(); btn.textContent = 'Send'; btn.disabled = false;
+      btn.onclick = doSend; // restore default
+      if (d.success) {
+        showToast('Sent to ' + d.sent + ' subscriber' + (d.sent !== 1 ? 's' : ''), 'success');
+        // Remove from deck after sending
+        deck.splice(deckIdx, 1);
+        if (deckIdx >= deck.length && deckIdx > 0) deckIdx--;
+        saveDeck();
+        setTimeout(function() { renderDeck(); }, 1000);
+      } else showToast(d.error || 'Send failed', 'error');
+    }).catch(function() { closeConfirm(); btn.textContent = 'Send'; btn.disabled = false; btn.onclick = doSend; showToast('Network error', 'error'); });
+  };
+}
+
+function sendTestFromDeck() {
+  if (!deck.length) return;
+  deck[deckIdx].subject = document.getElementById('deck-subject').value;
+  deck[deckIdx].body = document.getElementById('deck-body').innerHTML;
+  var item = deck[deckIdx];
+  var email = document.getElementById('deck-test-email').value.trim();
+  if (!email) { showToast('Enter an email address', 'error'); return; }
+  var body = new URLSearchParams();
+  body.append('action', 'send_test');
+  body.append('template_id', item.id);
+  body.append('subject', item.subject);
+  body.append('body', item.body);
+  body.append('test_email', email);
+  fetch(window.location.pathname, { method: 'POST', headers: { 'X-CSRFToken': csrfToken, 'Content-Type': 'application/x-www-form-urlencoded' }, body: body.toString() })
+  .then(function(r) { return r.json(); })
+  .then(function(d) { showToast(d.success ? 'Test sent to ' + email : (d.error || 'Failed'), d.success ? 'success' : 'error'); })
+  .catch(function() { showToast('Network error', 'error'); });
 }
 
 // Mode toggle
