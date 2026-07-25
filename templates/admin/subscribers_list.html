@@ -589,6 +589,7 @@
               <tr>
                 <th>Email</th>
                 <th>Name</th>
+                <th>Type</th>
                 <th>Status</th>
                 <th>Subscribed</th>
               </tr>
@@ -603,6 +604,13 @@
                     <i class="fa-solid fa-envelope"></i>
                     Email
                   </span>
+                </td>
+                <td>
+                  {% if subscriber.is_active %}
+                  <span class="badge" style="background: #dcfce7; color: #166534;">Active</span>
+                  {% else %}
+                  <span class="badge" style="background: #fee2e2; color: #991b1b;">Inactive</span>
+                  {% endif %}
                 </td>
                 <td style="color: #64748b; font-size: 0.875rem;">{{ subscriber.subscribed_at|date:"M d, Y g:i A" }}</td>
               </tr>
@@ -629,6 +637,7 @@
               <tr>
                 <th>Phone</th>
                 <th>Name</th>
+                <th>Type</th>
                 <th>Status</th>
                 <th>Subscribed</th>
               </tr>
@@ -643,6 +652,13 @@
                     <i class="fa-solid fa-message"></i>
                     SMS
                   </span>
+                </td>
+                <td>
+                  {% if subscriber.is_active %}
+                  <span class="badge" style="background: #dcfce7; color: #166534;">Active</span>
+                  {% else %}
+                  <span class="badge" style="background: #fee2e2; color: #991b1b;">Inactive</span>
+                  {% endif %}
                 </td>
                 <td style="color: #64748b; font-size: 0.875rem;">{{ subscriber.subscribed_at|date:"M d, Y g:i A" }}</td>
               </tr>

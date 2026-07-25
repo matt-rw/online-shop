@@ -57,8 +57,18 @@ def subscribe(request):
                     logger.info(f"New email subscription: {sub.email}")
                     messages.success(request, "Thank you for subscribing!")
                 else:
-                    logger.info(f"Existing subscription attempt: {sub.email}")
-                    messages.info(request, "You're already subscribed!")
+                    if sub.is_active:
+                        logger.info(f"Existing subscription attempt: {sub.email}")
+                        messages.info(request, "You're already subscribed!")
+                    else:
+                        # Reactivate subscription
+                        sub.is_active = True
+                        sub.unsubscribed_at = None
+                        sub.save()
+                        logger.info(f"Reactivated email subscription: {sub.email}")
+                        messages.success(
+                            request, "Welcome back! You're now resubscribed."
+                        )
 
                 # TODO: Send confirmation email when ready
                 # full_message = f"Thank you for subscribing to Blueprint Apparel!"
