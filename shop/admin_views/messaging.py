@@ -2746,14 +2746,14 @@ def email_swipe(request):
     qm_id = request.GET.get("poll_qm")
     if qm_id:
         try:
-            qm = QuickMessage.objects.get(id=qm_id)
+            qm = QuickMessage.objects.get(id=int(qm_id))
             return JsonResponse({
                 "status": qm.status,
                 "sent": qm.sent_count,
                 "failed": qm.failed_count,
                 "total": qm.recipient_count,
             })
-        except QuickMessage.DoesNotExist:
+        except (QuickMessage.DoesNotExist, ValueError, TypeError):
             return JsonResponse({"status": "not_found"})
 
     # GET: load templates as JSON
