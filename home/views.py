@@ -1,9 +1,11 @@
 from django.shortcuts import render
+from django.views.decorators.cache import cache_page
 
 from shop.models import Product
 from shop.models.settings import SiteSettings
 
 
+@cache_page(60 * 2)  # Cache for 2 minutes
 def home_page(request):
     """Render the home page."""
     site_settings = SiteSettings.load()
@@ -16,10 +18,20 @@ def home_page(request):
         featured=True
     ).select_related('category_obj').prefetch_related('variants')[:4]
 
-    # Attach sale info to each featured product
+    # Attach sale info and resolved image to each featured product
     featured_products_with_sales = []
     for product in featured_products:
         product.sale_info = product.get_sale_info(_active_sales=active_sales)
+        # Resolve image from product or first variant (uses prefetched data)
+        if product.images:
+            product.resolved_image = product.images[0]
+        else:
+            variants = list(product.variants.all())
+            first_variant = variants[0] if variants else None
+            if first_variant and first_variant.images:
+                product.resolved_image = first_variant.images[0]
+            else:
+                product.resolved_image = None
         featured_products_with_sales.append(product)
 
     # Get hero slides (use database slides if available, otherwise use defaults)

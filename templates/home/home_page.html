@@ -313,18 +313,12 @@
         {% for product in featured_products %}
         <a href="{% url 'shop:product_detail' slug=product.slug %}" class="group" style="display: block; text-decoration: none; color: inherit; background: #f5f5f0;">
           <div style="overflow: hidden; aspect-ratio: 3/4;">
-            {% if product.images %}
-            <img src="{{ product.images.0 }}" alt="{{ product.name }}" style="width: 100%; height: 100%; object-fit: cover; transition: transform 0.8s ease;" class="group-hover:scale-105" loading="lazy" />
-            {% else %}
-            {% with first_variant=product.variants.first %}
-            {% if first_variant and first_variant.images %}
-            <img src="{{ first_variant.images.0 }}" alt="{{ product.name }}" style="width: 100%; height: 100%; object-fit: cover; transition: transform 0.8s ease;" class="group-hover:scale-105" loading="lazy" />
+            {% if product.resolved_image %}
+            <img src="{{ product.resolved_image }}" alt="{{ product.name }}" style="width: 100%; height: 100%; object-fit: cover; transition: transform 0.8s ease;" class="group-hover:scale-105" loading="lazy" />
             {% else %}
             <div style="width: 100%; height: 100%; display: flex; align-items: center; justify-content: center;">
               <span style="color: #ccc; font-size: 0.75rem; letter-spacing: 0.1em; text-transform: uppercase;">No image</span>
             </div>
-            {% endif %}
-            {% endwith %}
             {% endif %}
           </div>
           <div style="padding: 1.25rem 1rem; display: flex; justify-content: space-between; align-items: baseline;">
