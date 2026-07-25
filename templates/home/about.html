@@ -6,11 +6,11 @@
 {% block extra_css %}
 <style>
   @keyframes shadowCrossfade {
-    0%, 40% { opacity: 0; }
-    50%, 90% { opacity: 1; }
+    0%, 30% { opacity: 0; }
+    50%, 80% { opacity: 1; }
     100% { opacity: 0; }
   }
-  .shadow-fade { animation: shadowCrossfade 6s ease-in-out infinite; }
+  .shadow-fade { animation: shadowCrossfade 3s ease-in-out infinite; }
 
   @media (max-width: 768px) {
     .about-hero-heading { font-size: 2.5rem !important; right: 2rem !important; }
@@ -82,18 +82,18 @@
 
 <!-- Collections: image left, text right -->
 <section style="background: #fff; padding: 0 2rem 10rem;">
-  <div class="about-split" style="max-width: 70rem; margin: 0 auto; display: grid; grid-template-columns: 1fr 1.2fr; gap: 6rem; align-items: start;">
+  <div class="about-split" style="max-width: 70rem; margin: 0 auto; display: grid; grid-template-columns: 1.4fr 1fr; gap: 6rem; align-items: center;">
 
     <!-- Left: crossfade images -->
     <div>
-      <div class="shadow-crossfade" style="position: relative; overflow: hidden; aspect-ratio: 3/2;">
+      <div class="shadow-crossfade" style="position: relative; overflow: hidden; aspect-ratio: 4/3;">
         <img src="{% static 'images/shadow1.JPG' %}" alt="Blueprint Apparel" style="position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover;" loading="lazy" />
         <img src="{% static 'images/shadow2.JPG' %}" alt="Blueprint Apparel" class="shadow-fade" style="position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; opacity: 0;" loading="lazy" />
       </div>
     </div>
 
-    <!-- Right: collections text, pushed down -->
-    <div style="padding-top: 4rem;">
+    <!-- Right: collections text -->
+    <div>
       <p style="font-family: 'Inter', sans-serif; font-size: 0.55rem; font-weight: 500; letter-spacing: 0.3em; text-transform: uppercase; color: #ccc; margin: 0 0 3rem;">Collections</p>
       <p style="font-family: 'Inter', sans-serif; font-size: 1.1rem; font-weight: 300; color: #444; line-height: 2; margin: 0 0 1.25rem;"><span style="font-weight: 600; color: #000;">Foundation</span> — released January 2026. The first line drawn. The starting point everything else builds on.</p>
       <p style="font-family: 'Inter', sans-serif; font-size: 1.1rem; font-weight: 300; color: #444; line-height: 2; margin: 0 0 2.5rem;"><span style="font-weight: 600; color: #000;">Discovery</span> — late summer. The next chapter.</p>
