@@ -7,6 +7,7 @@ from django.http import JsonResponse
 from django.shortcuts import redirect, render
 from django.urls import reverse
 from django.utils.http import url_has_allowed_host_and_scheme
+from django.views.decorators.cache import cache_page
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_http_methods
 
@@ -630,6 +631,7 @@ def order_detail(request, order_number):
     return render(request, "shop/order_detail.html", context)
 
 
+@cache_page(60 * 2)  # Cache for 2 minutes
 def product_detail(request, slug):
     """Product detail page."""
     import json
@@ -658,9 +660,9 @@ def product_detail(request, slug):
     total_stock = sum(v.stock_quantity for v in variants if v.is_active)
 
     for variant in variants:
-        # Get attributes from unified system
+        # Get attributes from unified system (already prefetched above)
         variant_attrs = {}
-        for attr_value in variant.attributes.select_related('attribute').order_by('attribute__display_order'):
+        for attr_value in sorted(variant.attributes.all(), key=lambda a: a.attribute.display_order):
             attr = attr_value.attribute
             attr_slug = attr.slug
             variant_attrs[attr_slug] = attr_value.value
@@ -828,6 +830,7 @@ def product_detail(request, slug):
     return render(request, "shop/product_detail.html", context)
 
 
+@cache_page(60 * 2)  # Cache for 2 minutes
 def shop(request):
     """Shop catalog page - lists all products and bundles with filtering."""
     from django.db.models import Prefetch
@@ -921,7 +924,9 @@ def shop(request):
                 if image and not image.startswith(("/", "http", "data:")):
                     image = f"/static/{image}"
             else:
-                first_item = bundle.items.first()
+                # Use prefetched items instead of .first() which bypasses prefetch
+                items = list(bundle.items.all())
+                first_item = items[0] if items else None
                 if first_item and first_item.product.images:
                     image = first_item.product.images[0]
                     if image and not image.startswith(("/", "http", "data:")):

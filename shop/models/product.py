@@ -50,6 +50,10 @@ class Category(models.Model):
     class Meta:
         verbose_name_plural = "Categories"
         ordering = ["name"]
+        indexes = [
+            models.Index(fields=["slug"], name="category_slug_idx"),
+            models.Index(fields=["is_hidden", "display_order"], name="category_visible_idx"),
+        ]
 
     def __str__(self):
         return self.name
@@ -136,6 +140,8 @@ class Product(models.Model):
             models.Index(fields=["is_active", "-created_at"], name="product_active_idx"),
             # Featured products query
             models.Index(fields=["featured", "is_active"], name="product_featured_idx"),
+            # Category filtering on shop page
+            models.Index(fields=["category_obj", "is_active"], name="product_category_active_idx"),
         ]
 
     def __str__(self):
@@ -650,8 +656,14 @@ def get_active_sales():
     """
     Fetch all active codeless discounts (sales) in a single query.
     Attaches _product_ids to each discount for efficient product matching.
+    Results are cached for 2 minutes.
     """
+    from django.core.cache import cache
     from django.utils import timezone
+
+    cached = cache.get("active_sales")
+    if cached is not None:
+        return cached
 
     now = timezone.now()
     sales = list(
@@ -674,4 +686,5 @@ def get_active_sales():
         else:
             sale._product_ids = set()
 
+    cache.set("active_sales", sales, 60 * 2)
     return sales
