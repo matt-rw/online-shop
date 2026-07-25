@@ -5,17 +5,15 @@
 
 {% block extra_css %}
 <style>
-  @keyframes shadowCrossfade {
-    0%, 30% { opacity: 0; }
-    50%, 80% { opacity: 1; }
-    100% { opacity: 0; }
-  }
-  .shadow-fade { animation: shadowCrossfade 3s ease-in-out infinite; }
 
   @media (max-width: 768px) {
     .about-hero-heading { font-size: 2.5rem !important; right: 2rem !important; }
     .about-split { grid-template-columns: 1fr !important; }
-    .about-origin-text { padding: 4rem 2rem !important; }
+    .about-origin-text { padding: 0 2rem !important; order: -1; }
+    .about-origin-section { padding-bottom: 5rem !important; }
+    .about-breath { height: 3rem !important; }
+    .about-collections-section { padding-bottom: 5rem !important; }
+    .about-spacer { height: 2rem !important; }
     .about-statement { padding: 5rem 2rem !important; }
     .about-statement p { font-size: 1.5rem !important; }
     .about-bottom { flex-direction: column !important; }
@@ -44,10 +42,10 @@
 </section>
 
 <!-- White space breath -->
-<div style="background: #fff; height: 8rem;"></div>
+<div class="about-breath" style="background: #fff; height: 8rem;"></div>
 
 <!-- Origin story: asymmetric -->
-<section style="background: #fff; padding: 0 2rem 10rem;">
+<section class="about-origin-section" style="background: #fff; padding: 0 2rem 10rem;">
   <div style="max-width: 70rem; margin: 0 auto;">
     <div class="about-split" style="display: grid; grid-template-columns: 1fr 1.2fr; gap: 6rem; align-items: start;">
 
@@ -78,17 +76,16 @@
 </section>
 
 <!-- Large white space -->
-<div style="background: #fff; height: 6rem;"></div>
+<div class="about-spacer" style="background: #fff; height: 6rem;"></div>
 
 <!-- Collections: image left, text right -->
-<section style="background: #fff; padding: 0 2rem 10rem;">
-  <div class="about-split" style="max-width: 70rem; margin: 0 auto; display: grid; grid-template-columns: 1.4fr 1fr; gap: 6rem; align-items: center;">
+<section class="about-collections-section" style="background: #fff; padding: 0 2rem 10rem;">
+  <div class="about-split" style="max-width: 70rem; margin: 0 auto; display: grid; grid-template-columns: 1.6fr 1fr; gap: 4rem; align-items: center;">
 
     <!-- Left: crossfade images -->
     <div>
-      <div class="shadow-crossfade" style="position: relative; overflow: hidden; aspect-ratio: 4/3;">
-        <img src="{% static 'images/shadow1.JPG' %}" alt="Blueprint Apparel" style="position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover;" loading="lazy" />
-        <img src="{% static 'images/shadow2.JPG' %}" alt="Blueprint Apparel" class="shadow-fade" style="position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; opacity: 0;" loading="lazy" />
+      <div style="overflow: hidden; aspect-ratio: 3/2;">
+        <img src="{% static 'images/shadow1.JPG' %}" alt="Blueprint Apparel" style="width: 100%; height: 100%; object-fit: cover; display: block;" loading="lazy" />
       </div>
     </div>
 
@@ -102,7 +99,6 @@
 
   </div>
 </section>
-
 <!-- Subscribe: black, split layout -->
 <section style="background: #000;">
   <div class="about-bottom" style="max-width: 80rem; margin: 0 auto; display: flex; min-height: 50vh;">
