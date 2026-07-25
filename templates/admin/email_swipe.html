@@ -51,7 +51,7 @@
     .card-subject-static { padding: 1.75rem 2rem 0.75rem; font-size: 1.05rem; font-weight: 700; color: #000; letter-spacing: -0.02em; border-bottom: 1px solid #eee; }
 
     .card-image { padding: 0 2rem; }
-    .card-image img { max-width: 100%; max-height: 180px; width: auto; height: auto; display: block; margin-top: 0.75rem; object-fit: contain; }
+    .card-image img { max-width: 100%; max-height: 180px; width: auto; height: auto; display: block; margin: 0.75rem auto 0; object-fit: contain; }
     .card-image-upload { display: flex; align-items: center; gap: 0.75rem; padding: 0.75rem 0 0; }
     .attach-btn { font-family: 'Inter', sans-serif; font-size: 0.6rem; font-weight: 500; letter-spacing: 0.1em; text-transform: uppercase; color: #999; border: 1px solid #ddd; background: none; padding: 5px 10px; cursor: pointer; }
     .attach-btn:hover { border-color: #000; color: #000; }
@@ -416,7 +416,7 @@ function sendFromDeck() {
     btn.textContent = 'Sending...'; btn.disabled = true;
     var body = new URLSearchParams();
     var sendBody = item.body;
-    if (item.image) sendBody = '<img src="' + item.image + '" style="max-width: 100%; height: auto; display: block; margin: 0 0 20px;" alt="Blueprint Apparel" />' + sendBody;
+    if (item.image) sendBody = '<img src="' + item.image + '" style="max-width: 100%; height: auto; display: block; margin: 0 auto 20px;" alt="Blueprint Apparel" />' + sendBody;
     body.append('action', 'send');
     body.append('template_id', item.id);
     body.append('subject', item.subject);
@@ -447,7 +447,7 @@ function sendTestFromDeck() {
   if (!email) { showToast('Enter an email address', 'error'); return; }
   var body = new URLSearchParams();
   var testBody = item.body;
-  if (item.image) testBody = '<img src="' + item.image + '" style="max-width: 100%; height: auto; display: block; margin: 0 0 20px;" alt="Blueprint Apparel" />' + testBody;
+  if (item.image) testBody = '<img src="' + item.image + '" style="max-width: 100%; height: auto; display: block; margin: 0 auto 20px;" alt="Blueprint Apparel" />' + testBody;
   body.append('action', 'send_test');
   body.append('template_id', item.id);
   body.append('subject', item.subject);
@@ -627,7 +627,7 @@ function getBodyWithImage() {
     var inner = tmp.children[0];
     // Prepend image if attached
     if (currentImageData) {
-      inner.insertAdjacentHTML('afterbegin', '<img src="' + currentImageData + '" style="max-width: 100%; height: auto; display: block; margin: 0 0 20px;" alt="Blueprint Apparel" />');
+      inner.insertAdjacentHTML('afterbegin', '<img src="' + currentImageData + '" style="max-width: 100%; height: auto; display: block; margin: 0 auto 20px;" alt="Blueprint Apparel" />');
     }
     // Append footer
     inner.insertAdjacentHTML('beforeend', emailFooter);
@@ -636,7 +636,7 @@ function getBodyWithImage() {
 
   // No wrapper — build minimal one
   if (currentImageData) {
-    body = '<img src="' + currentImageData + '" style="max-width: 100%; height: auto; display: block; margin: 0 0 20px;" alt="Blueprint Apparel" />' + body;
+    body = '<img src="' + currentImageData + '" style="max-width: 100%; height: auto; display: block; margin: 0 auto 20px;" alt="Blueprint Apparel" />' + body;
   }
   return '<div style="font-family: Helvetica, Arial, sans-serif; max-width: 520px; margin: 0 auto; padding: 40px 20px; color: #333;">' + body + emailFooter + '</div>';
 }
