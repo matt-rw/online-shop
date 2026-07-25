@@ -2694,8 +2694,11 @@ def email_swipe(request):
                         else:
                             failed += 1
 
-                    qm.sent_count = sent
-                    qm.failed_count = failed
+                        # Update progress after each email
+                        qm.sent_count = sent
+                        qm.failed_count = failed
+                        qm.save(update_fields=["sent_count", "failed_count"])
+
                     qm.status = "sent" if failed == 0 else "partial"
                     qm.sent_at = timezone.now()
                     qm.save()
@@ -2709,8 +2712,7 @@ def email_swipe(request):
 
                 return JsonResponse({
                     "success": True,
-                    "sent": subscriber_count,
-                    "failed": 0,
+                    "qm_id": qm.id,
                     "total": subscriber_count,
                 })
             except EmailTemplate.DoesNotExist:
@@ -2739,6 +2741,20 @@ def email_swipe(request):
                 return JsonResponse({"success": success})
             except Exception as e:
                 return JsonResponse({"success": False, "error": str(e)})
+
+    # Poll send progress
+    qm_id = request.GET.get("poll_qm")
+    if qm_id:
+        try:
+            qm = QuickMessage.objects.get(id=qm_id)
+            return JsonResponse({
+                "status": qm.status,
+                "sent": qm.sent_count,
+                "failed": qm.failed_count,
+                "total": qm.recipient_count,
+            })
+        except QuickMessage.DoesNotExist:
+            return JsonResponse({"status": "not_found"})
 
     # GET: load templates as JSON
     templates = EmailTemplate.objects.filter(is_active=True).order_by("folder", "template_type", "name")

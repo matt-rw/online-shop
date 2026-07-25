@@ -645,42 +645,61 @@ function getBodyWithImage() {
 function confirmSend() { document.getElementById('confirm-overlay').classList.add('visible'); }
 function closeConfirm() { document.getElementById('confirm-overlay').classList.remove('visible'); }
 
-var sendProgressInterval = null;
-function startSendProgress() {
+var sendPollInterval = null;
+
+function showProgress(pct, msg) {
   var fill = document.getElementById('send-progress-fill');
   var text = document.getElementById('send-progress-text');
   var progress = document.getElementById('send-progress');
-  fill.style.width = '0%'; progress.classList.add('visible');
-  text.textContent = 'Sending...';
-  var pct = 0;
-  sendProgressInterval = setInterval(function() {
-    // Slow continuous climb — never quite reaches 100 until response arrives
-    var remaining = 99 - pct;
-    pct += remaining * 0.03 + 0.2;
-    if (pct > 99) pct = 99;
-    fill.style.width = Math.round(pct) + '%';
-    text.textContent = 'Sending... ' + Math.round(pct) + '%';
-  }, 150);
+  progress.classList.add('visible');
+  fill.style.width = pct + '%';
+  text.textContent = msg;
 }
-function finishSendProgress(success, msg) {
-  clearInterval(sendProgressInterval);
-  var fill = document.getElementById('send-progress-fill');
-  var text = document.getElementById('send-progress-text');
-  fill.style.width = '100%';
-  text.textContent = success ? msg : 'Failed';
-}
+
 function resetSendProgress() {
-  clearInterval(sendProgressInterval);
+  clearInterval(sendPollInterval);
   var fill = document.getElementById('send-progress-fill');
   var progress = document.getElementById('send-progress');
   fill.style.width = '0%'; progress.classList.remove('visible');
+}
+
+function pollSendProgress(qmId, total, templateObj) {
+  sendPollInterval = setInterval(function() {
+    fetch(window.location.pathname + '?poll_qm=' + qmId)
+    .then(function(r) { return r.json(); })
+    .then(function(d) {
+      var done = d.sent + d.failed;
+      var pct = total > 0 ? Math.round((done / total) * 100) : 0;
+      showProgress(pct, 'Sent ' + d.sent + ' of ' + total + (d.failed > 0 ? ' (' + d.failed + ' failed)' : ''));
+
+      if (d.status === 'sent' || d.status === 'partial') {
+        clearInterval(sendPollInterval);
+        showProgress(100, 'Done — ' + d.sent + ' sent' + (d.failed > 0 ? ', ' + d.failed + ' failed' : ''));
+        setTimeout(function() {
+          var btn = document.getElementById('confirm-send-btn');
+          closeConfirm(); btn.textContent = 'Send'; btn.disabled = false;
+          document.querySelector('.confirm-cancel').disabled = false;
+          resetSendProgress();
+          showToast('Sent to ' + d.sent + ' subscriber' + (d.sent !== 1 ? 's' : ''), d.failed > 0 ? 'error' : 'success');
+          sentIds[templateObj.id] = true;
+          var used = filtered.splice(idx, 1)[0];
+          filtered.push(used);
+          if (idx >= filtered.length) idx = 0;
+          showCard();
+          var sentBtn = document.getElementById('mode-sent');
+          var count = parseInt(sentBtn.textContent.match(/\d+/)?.[0] || 0) + 1;
+          sentBtn.textContent = 'Sent (' + count + ')';
+        }, 1000);
+      }
+    });
+  }, 1000);
 }
 
 function doSend() {
   var t = filtered[idx]; var btn = document.getElementById('confirm-send-btn');
   btn.textContent = 'Sending...'; btn.disabled = true;
   document.querySelector('.confirm-cancel').disabled = true;
-  startSendProgress();
+  showProgress(0, 'Starting...');
   var body = new URLSearchParams();
   body.append('action', 'send'); body.append('template_id', t.id);
   body.append('subject', document.getElementById('card-subject').value);
@@ -689,23 +708,10 @@ function doSend() {
   .then(function(r) { return r.json(); })
   .then(function(d) {
     if (d.success) {
-      finishSendProgress(true, 'Sent to ' + d.sent + ' subscriber' + (d.sent !== 1 ? 's' : ''));
-      sentIds[t.id] = true;
-      setTimeout(function() {
-        closeConfirm(); btn.textContent = 'Send'; btn.disabled = false;
-        document.querySelector('.confirm-cancel').disabled = false;
-        resetSendProgress();
-        showToast('Sent to ' + d.sent + ' subscriber' + (d.sent !== 1 ? 's' : ''), 'success');
-        var used = filtered.splice(idx, 1)[0];
-        filtered.push(used);
-        if (idx >= filtered.length) idx = 0;
-        showCard();
-        var sentBtn = document.getElementById('mode-sent');
-        var count = parseInt(sentBtn.textContent.match(/\d+/)?.[0] || 0) + 1;
-        sentBtn.textContent = 'Sent (' + count + ')';
-      }, 800);
+      // Start polling for real progress
+      pollSendProgress(d.qm_id, d.total, t);
     } else {
-      finishSendProgress(false);
+      showProgress(0, 'Failed');
       setTimeout(function() {
         closeConfirm(); btn.textContent = 'Send'; btn.disabled = false;
         document.querySelector('.confirm-cancel').disabled = false;
@@ -714,7 +720,7 @@ function doSend() {
       }, 800);
     }
   }).catch(function() {
-    finishSendProgress(false);
+    showProgress(0, 'Network error');
     setTimeout(function() {
       closeConfirm(); btn.textContent = 'Send'; btn.disabled = false;
       document.querySelector('.confirm-cancel').disabled = false;
