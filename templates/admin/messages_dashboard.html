@@ -1319,40 +1319,22 @@
           </div>
         </div>
 
-        <div class="contact-list" id="contactList">
-          <!-- Contact messages rendered by JavaScript -->
+        <!-- Bulk action bar -->
+        <div id="contactBulkBar" style="display: none; padding: 0.625rem 1rem; background: #0f172a; color: #fff; border-radius: 8px; margin-bottom: 0.75rem; align-items: center; gap: 0.75rem; font-size: 0.8125rem;">
+          <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer; margin-right: auto;">
+            <input type="checkbox" id="contactSelectAll" onchange="toggleSelectAllContacts(this.checked)" style="accent-color: #fff;" />
+            <span id="contactSelectedCount">0 selected</span>
+          </label>
+          <button onclick="bulkArchiveContacts()" style="background: none; border: 1px solid rgba(255,255,255,0.2); color: #fff; padding: 0.375rem 0.75rem; border-radius: 4px; cursor: pointer; font-size: 0.75rem; font-family: inherit;">
+            <i class="fa-solid fa-box-archive"></i> Archive
+          </button>
+          <button onclick="bulkDeleteContacts()" style="background: #dc2626; border: none; color: #fff; padding: 0.375rem 0.75rem; border-radius: 4px; cursor: pointer; font-size: 0.75rem; font-family: inherit;">
+            <i class="fa-solid fa-trash"></i> Delete
+          </button>
         </div>
 
-        <!-- Contact Message Detail View -->
-        <div class="contact-detail" id="contactDetail" style="display: none;">
-          <div class="message-view-header">
-            <button class="back-btn" onclick="closeContactDetail()">
-              <i class="fa-solid fa-arrow-left"></i> Back
-            </button>
-            <div class="message-actions">
-              <button class="action-btn" id="replyEmailBtn" onclick="replyToContact()">
-                <i class="fa-solid fa-reply"></i> Reply via Email
-              </button>
-              <button class="action-btn" id="markRepliedBtn" onclick="markContactReplied()">
-                <i class="fa-solid fa-check"></i> Mark Replied
-              </button>
-              <button class="action-btn" onclick="archiveContact()">
-                <i class="fa-solid fa-box-archive"></i> Archive
-              </button>
-              <button class="action-btn danger" onclick="deleteContact()">
-                <i class="fa-solid fa-trash"></i> Delete
-              </button>
-            </div>
-          </div>
-          <div class="message-view-body">
-            <div class="message-meta" id="contactMeta"></div>
-            <h2 class="message-subject" id="contactSubject"></h2>
-            <div class="message-body" id="contactBody" style="white-space: pre-wrap;"></div>
-            <div style="margin-top: 1.5rem; padding-top: 1rem; border-top: 1px solid #e2e8f0;">
-              <label style="font-size: 0.75rem; font-weight: 600; color: #64748b; text-transform: uppercase; letter-spacing: 0.05em;">Internal Notes</label>
-              <textarea id="contactNotes" placeholder="Add notes about this inquiry..." style="width: 100%; margin-top: 0.5rem; padding: 0.75rem; border: 1px solid #e2e8f0; border-radius: 8px; resize: vertical; min-height: 80px; font-family: inherit; font-size: 0.875rem;" onchange="updateContactNotes()"></textarea>
-            </div>
-          </div>
+        <div class="contact-list" id="contactList">
+          <!-- Contact messages rendered by JavaScript -->
         </div>
       </div>
     </div>
@@ -2604,6 +2586,8 @@
     let currentContactCategory = 'contact-all';
     let contactFilters = { new: true, read: true, replied: true };
 
+    var contactSelected = new Set();
+
     function renderContactMessages() {
       const container = document.getElementById('contactList');
       const categoryFilter = contactCategories[currentContactCategory];
@@ -2623,14 +2607,12 @@
 
       // Filter messages
       let filtered = contactMessages.filter(m => {
-        // Archived folder shows only archived
         if (currentContactCategory === 'contact-archived') {
           return m.status === 'archived';
         }
-        // Other folders exclude archived and filter by category
         if (m.status === 'archived') return false;
         if (!contactFilters[m.status]) return false;
-        if (categoryFilter === null) return true; // All messages
+        if (categoryFilter === null) return true;
         return m.subject === categoryFilter;
       });
 
@@ -2642,24 +2624,39 @@
             <p style="font-size: 0.875rem;">No contact messages in this category</p>
           </div>
         `;
+        document.getElementById('contactBulkBar').style.display = 'none';
         return;
       }
 
       container.innerHTML = filtered.map(m => `
-        <div class="message-row" onclick="viewContact(${m.id})" style="cursor: pointer; ${m.status === 'new' ? 'background: #fef2f2; border-left: 3px solid #ef4444;' : ''}">
-          <div class="msg-icon" style="background: ${m.status === 'new' ? '#fef2f2' : m.status === 'replied' ? '#dcfce7' : '#f1f5f9'};">
+        <div class="message-row" style="cursor: pointer; flex-wrap: wrap; ${m.status === 'new' ? 'background: #fef2f2; border-left: 3px solid #ef4444;' : ''}" data-contact-id="${m.id}">
+          <input type="checkbox" class="contact-checkbox" data-id="${m.id}" onclick="event.stopPropagation(); toggleContactSelect(${m.id}, this.checked)" ${contactSelected.has(m.id) ? 'checked' : ''}
+            style="accent-color: #0f172a; margin-right: 0.5rem; cursor: pointer;" />
+          <div class="msg-icon" onclick="toggleContactExpand(${m.id}, this)" style="background: ${m.status === 'new' ? '#fef2f2' : m.status === 'replied' ? '#dcfce7' : '#f1f5f9'};">
             <i class="fa-solid ${m.status === 'new' ? 'fa-envelope' : m.status === 'replied' ? 'fa-check' : 'fa-envelope-open'}" style="color: ${m.status === 'new' ? '#ef4444' : m.status === 'replied' ? '#22c55e' : '#64748b'};"></i>
           </div>
-          <div class="msg-content" style="flex: 1;">
+          <div class="msg-content" style="flex: 1;" onclick="toggleContactExpand(${m.id}, this)">
             <div class="msg-subject" style="font-weight: ${m.status === 'new' ? '600' : '500'};">${escapeHtml(m.name)}</div>
             <div class="msg-preview" style="font-size: 0.8125rem; color: #64748b;">
               ${escapeHtml(m.email)}
               ${m.orderNumber ? `<span style="margin-left: 0.5rem; padding: 0.125rem 0.375rem; background: #f1f5f9; border-radius: 3px; font-size: 0.75rem;">Order: ${escapeHtml(m.orderNumber)}</span>` : ''}
             </div>
           </div>
-          <div class="msg-date" style="font-size: 0.75rem; color: #94a3b8;">${m.createdAt}</div>
+          <div class="msg-date" onclick="toggleContactExpand(${m.id}, this)" style="font-size: 0.75rem; color: #94a3b8;">${m.createdAt}</div>
+          <div class="contact-expand" id="contact-expand-${m.id}" style="display: none; width: 100%; padding: 1rem 0 0.5rem; margin-top: 0.75rem; border-top: 1px solid #e2e8f0;">
+            ${m.subject ? `<div style="font-size: 0.8125rem; font-weight: 600; color: #0f172a; margin-bottom: 0.5rem;">${escapeHtml(m.subject)}</div>` : ''}
+            <div style="font-size: 0.8125rem; color: #334155; line-height: 1.7; white-space: pre-wrap;">${escapeHtml(m.message)}</div>
+            <div style="display: flex; gap: 0.5rem; margin-top: 1rem; flex-wrap: wrap;">
+              <a href="mailto:${escapeHtml(m.email)}?subject=Re: ${encodeURIComponent(m.subject || '')}" style="font-size: 0.7rem; padding: 0.375rem 0.75rem; border: 1px solid #e2e8f0; border-radius: 4px; color: #334155; text-decoration: none; font-family: inherit;"><i class="fa-solid fa-reply"></i> Reply</a>
+              <button onclick="event.stopPropagation(); quickMarkReplied(${m.id})" style="font-size: 0.7rem; padding: 0.375rem 0.75rem; border: 1px solid #e2e8f0; border-radius: 4px; background: none; color: #334155; cursor: pointer; font-family: inherit;"><i class="fa-solid fa-check"></i> Mark Replied</button>
+              <button onclick="event.stopPropagation(); quickArchive(${m.id})" style="font-size: 0.7rem; padding: 0.375rem 0.75rem; border: 1px solid #e2e8f0; border-radius: 4px; background: none; color: #334155; cursor: pointer; font-family: inherit;"><i class="fa-solid fa-box-archive"></i> Archive</button>
+              <button onclick="event.stopPropagation(); quickDelete(${m.id})" style="font-size: 0.7rem; padding: 0.375rem 0.75rem; border: 1px solid #fee2e2; border-radius: 4px; background: none; color: #dc2626; cursor: pointer; font-family: inherit;"><i class="fa-solid fa-trash"></i> Delete</button>
+            </div>
+          </div>
         </div>
       `).join('');
+
+      updateBulkBar();
     }
 
     function toggleContactFilter(status) {
@@ -2668,104 +2665,132 @@
       renderContactMessages();
     }
 
-    function viewContact(id) {
-      const msg = contactMessages.find(m => m.id === id);
-      if (!msg) return;
-
-      currentContactId = id;
-
-      // Mark as read if new
-      if (msg.status === 'new') {
-        fetch('{% url "admin_messages" %}', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/x-www-form-urlencoded', 'X-CSRFToken': '{{ csrf_token }}' },
-          body: `action=mark_contact_read&message_id=${id}`
-        }).then(() => {
-          msg.status = 'read';
-          renderContactMessages();
-        });
-      }
-
-      // Show detail view
-      document.getElementById('contactList').style.display = 'none';
-      document.getElementById('contactDetail').style.display = 'block';
-
-      document.getElementById('contactMeta').innerHTML = `
-        <div style="display: flex; flex-wrap: wrap; gap: 1rem; margin-bottom: 1rem;">
-          <div><strong>From:</strong> ${escapeHtml(msg.name)}</div>
-          <div><strong>Email:</strong> <a href="mailto:${escapeHtml(msg.email)}">${escapeHtml(msg.email)}</a></div>
-          ${msg.phone ? `<div><strong>Phone:</strong> ${escapeHtml(msg.phone)}</div>` : ''}
-          ${msg.orderNumber ? `<div><strong>Order:</strong> ${escapeHtml(msg.orderNumber)}</div>` : ''}
-          <div><strong>Received:</strong> ${msg.createdAt}</div>
-          <div><span style="padding: 0.25rem 0.5rem; border-radius: 4px; font-size: 0.75rem; font-weight: 600; background: ${msg.status === 'new' ? '#fef2f2; color: #ef4444' : msg.status === 'replied' ? '#dcfce7; color: #22c55e' : '#f1f5f9; color: #64748b'};">${msg.status.charAt(0).toUpperCase() + msg.status.slice(1)}</span></div>
-        </div>
-      `;
-      document.getElementById('contactSubject').textContent = msg.subject;
-      document.getElementById('contactBody').textContent = msg.message;
-      document.getElementById('contactNotes').value = msg.adminNotes || '';
-    }
-
-    function closeContactDetail() {
-      currentContactId = null;
-      document.getElementById('contactDetail').style.display = 'none';
-      document.getElementById('contactList').style.display = 'block';
-    }
-
-    function replyToContact() {
-      const msg = contactMessages.find(m => m.id === currentContactId);
-      if (msg) {
-        window.location.href = `mailto:${msg.email}?subject=Re: ${encodeURIComponent(msg.subject)}`;
+    function toggleContactExpand(id) {
+      const el = document.getElementById('contact-expand-' + id);
+      if (!el) return;
+      const isOpen = el.style.display !== 'none';
+      // Close all others
+      document.querySelectorAll('.contact-expand').forEach(e => e.style.display = 'none');
+      if (!isOpen) {
+        el.style.display = 'block';
+        // Mark as read if new
+        const msg = contactMessages.find(m => m.id === id);
+        if (msg && msg.status === 'new') {
+          fetch('{% url "admin_messages" %}', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded', 'X-CSRFToken': '{{ csrf_token }}' },
+            body: `action=mark_contact_read&message_id=${id}`
+          }).then(() => {
+            msg.status = 'read';
+            // Update row styling without collapsing
+            const row = el.closest('.message-row');
+            if (row) { row.style.background = ''; row.style.borderLeft = ''; }
+            updateContactBadges();
+          });
+        }
       }
     }
 
-    function markContactReplied() {
-      if (!currentContactId) return;
+    function toggleContactSelect(id, checked) {
+      if (checked) contactSelected.add(id); else contactSelected.delete(id);
+      updateBulkBar();
+    }
+
+    function toggleSelectAllContacts(checked) {
+      document.querySelectorAll('.contact-checkbox').forEach(cb => {
+        cb.checked = checked;
+        var id = parseInt(cb.dataset.id);
+        if (checked) contactSelected.add(id); else contactSelected.delete(id);
+      });
+      updateBulkBar();
+    }
+
+    function updateBulkBar() {
+      const bar = document.getElementById('contactBulkBar');
+      const count = contactSelected.size;
+      if (count > 0) {
+        bar.style.display = 'flex';
+        document.getElementById('contactSelectedCount').textContent = count + ' selected';
+      } else {
+        bar.style.display = 'none';
+      }
+    }
+
+    function bulkDeleteContacts() {
+      if (contactSelected.size === 0) return;
+      if (!confirm('Delete ' + contactSelected.size + ' message' + (contactSelected.size > 1 ? 's' : '') + ' permanently?')) return;
+      const ids = Array.from(contactSelected);
       fetch('{% url "admin_messages" %}', {
         method: 'POST',
         headers: { 'Content-Type': 'application/x-www-form-urlencoded', 'X-CSRFToken': '{{ csrf_token }}' },
-        body: `action=mark_contact_replied&message_id=${currentContactId}`
+        body: 'action=bulk_delete_contacts&ids=' + encodeURIComponent(JSON.stringify(ids))
       }).then(r => r.json()).then(data => {
         if (data.success) {
-          const msg = contactMessages.find(m => m.id === currentContactId);
+          contactMessages = contactMessages.filter(m => !contactSelected.has(m.id));
+          contactSelected.clear();
+          renderContactMessages();
+          updateContactBadges();
+        }
+      });
+    }
+
+    function bulkArchiveContacts() {
+      if (contactSelected.size === 0) return;
+      const ids = Array.from(contactSelected);
+      fetch('{% url "admin_messages" %}', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded', 'X-CSRFToken': '{{ csrf_token }}' },
+        body: 'action=bulk_archive_contacts&ids=' + encodeURIComponent(JSON.stringify(ids))
+      }).then(r => r.json()).then(data => {
+        if (data.success) {
+          contactMessages.forEach(m => { if (contactSelected.has(m.id)) m.status = 'archived'; });
+          contactSelected.clear();
+          renderContactMessages();
+          updateContactBadges();
+        }
+      });
+    }
+
+    function quickMarkReplied(id) {
+      fetch('{% url "admin_messages" %}', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded', 'X-CSRFToken': '{{ csrf_token }}' },
+        body: 'action=mark_contact_replied&message_id=' + id
+      }).then(r => r.json()).then(data => {
+        if (data.success) {
+          const msg = contactMessages.find(m => m.id === id);
           if (msg) msg.status = 'replied';
-          viewContact(currentContactId); // Refresh view
           renderContactMessages();
           updateContactBadges();
         }
       });
     }
 
-    function archiveContact() {
-      if (!currentContactId) return;
-      if (!confirm('Archive this message?')) return;
+    function quickArchive(id) {
       fetch('{% url "admin_messages" %}', {
         method: 'POST',
         headers: { 'Content-Type': 'application/x-www-form-urlencoded', 'X-CSRFToken': '{{ csrf_token }}' },
-        body: `action=archive_contact&message_id=${currentContactId}`
+        body: 'action=archive_contact&message_id=' + id
       }).then(r => r.json()).then(data => {
         if (data.success) {
-          // Mark as archived instead of removing
-          const msg = contactMessages.find(m => m.id === currentContactId);
+          const msg = contactMessages.find(m => m.id === id);
           if (msg) msg.status = 'archived';
-          closeContactDetail();
           renderContactMessages();
           updateContactBadges();
         }
       });
     }
 
-    function deleteContact() {
-      if (!currentContactId) return;
+    function quickDelete(id) {
       if (!confirm('Delete this message permanently?')) return;
       fetch('{% url "admin_messages" %}', {
         method: 'POST',
         headers: { 'Content-Type': 'application/x-www-form-urlencoded', 'X-CSRFToken': '{{ csrf_token }}' },
-        body: `action=delete_contact&message_id=${currentContactId}`
+        body: 'action=delete_contact&message_id=' + id
       }).then(r => r.json()).then(data => {
         if (data.success) {
-          const idx = contactMessages.findIndex(m => m.id === currentContactId);
+          const idx = contactMessages.findIndex(m => m.id === id);
           if (idx > -1) contactMessages.splice(idx, 1);
-          closeContactDetail();
           renderContactMessages();
           updateContactBadges();
         }

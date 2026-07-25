@@ -965,7 +965,7 @@ def messages_dashboard(request):
 
     # Handle contact message actions
     if request.method == "POST" and request.POST.get("action") in [
-        "mark_contact_read", "mark_contact_replied", "archive_contact", "delete_contact", "update_contact_notes"
+        "mark_contact_read", "mark_contact_replied", "archive_contact", "delete_contact", "update_contact_notes",
     ]:
         action = request.POST.get("action")
         message_id = request.POST.get("message_id")
@@ -998,6 +998,25 @@ def messages_dashboard(request):
 
         except ContactMessage.DoesNotExist:
             return JsonResponse({"success": False, "error": "Message not found"})
+        except Exception as e:
+            return JsonResponse({"success": False, "error": str(e)})
+
+    # Bulk contact actions
+    if request.method == "POST" and request.POST.get("action") in (
+        "bulk_delete_contacts", "bulk_archive_contacts"
+    ):
+        import json as json_mod
+        action = request.POST.get("action")
+        try:
+            ids = json_mod.loads(request.POST.get("ids", "[]"))
+            qs = ContactMessage.objects.filter(id__in=ids)
+            if action == "bulk_delete_contacts":
+                count = qs.count()
+                qs.delete()
+                return JsonResponse({"success": True, "deleted": count})
+            else:
+                count = qs.update(status="archived")
+                return JsonResponse({"success": True, "archived": count})
         except Exception as e:
             return JsonResponse({"success": False, "error": str(e)})
 
