@@ -247,6 +247,7 @@ def coming_soon(request):
     return render(request, "home/coming_soon.html")
 
 
+@cache_page(60 * 5)  # Cache for 5 minutes
 def about(request):
     """About page with Our Story and Foundation Line sections."""
     from shop.models.settings import SiteSettings
@@ -260,6 +261,7 @@ def about(request):
     return render(request, "home/about.html", context)
 
 
+@cache_page(60 * 5)  # Cache for 5 minutes
 def lookbook(request):
     """Lookbook page with immersive page-flipping magazine experience."""
     import json
@@ -293,11 +295,13 @@ def lookbook(request):
     return render(request, "home/lookbook.html", context)
 
 
+@cache_page(60 * 60)  # Cache for 1 hour
 def privacy(request):
     """Privacy Policy page."""
     return render(request, "home/privacy.html")
 
 
+@cache_page(60 * 60)  # Cache for 1 hour
 def terms(request):
     """Terms of Service page."""
     return render(request, "home/terms.html")
