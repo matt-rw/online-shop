@@ -1321,10 +1321,8 @@
 
         <!-- Bulk action bar -->
         <div id="contactBulkBar" style="display: none; padding: 0.5rem 1rem; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 6px; margin-bottom: 0.75rem; align-items: center; gap: 0.75rem; font-size: 0.8125rem; color: #334155;">
-          <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer; margin-right: auto;">
-            <input type="checkbox" id="contactSelectAll" onchange="toggleSelectAllContacts(this.checked)" style="accent-color: #334155;" />
-            <span id="contactSelectedCount" style="font-weight: 500;">0 selected</span>
-          </label>
+          <span id="contactSelectedCount" style="font-weight: 500; margin-right: auto;">0 selected</span>
+          <button onclick="toggleSelectAllContacts(false)" style="background: none; border: none; color: #94a3b8; padding: 0.375rem 0; cursor: pointer; font-size: 0.75rem; font-family: inherit; text-decoration: underline;">Clear</button>
           <button onclick="bulkArchiveContacts()" style="background: none; border: 1px solid #e2e8f0; color: #334155; padding: 0.375rem 0.75rem; border-radius: 4px; cursor: pointer; font-size: 0.75rem; font-family: inherit;">
             <i class="fa-solid fa-box-archive"></i> Archive
           </button>
@@ -2631,7 +2629,8 @@
       container.innerHTML = filtered.map(m => `
         <div class="message-row" style="cursor: pointer; flex-wrap: wrap; ${m.status === 'new' ? 'background: #fef2f2; border-left: 3px solid #ef4444;' : ''}" data-contact-id="${m.id}">
           <input type="checkbox" class="contact-checkbox" data-id="${m.id}" onclick="event.stopPropagation(); toggleContactSelect(${m.id}, this.checked)" ${contactSelected.has(m.id) ? 'checked' : ''}
-            style="accent-color: #0f172a; margin-right: 0.5rem; cursor: pointer;" />
+            style="accent-color: #94a3b8; width: 14px; height: 14px; margin-right: 0.375rem; cursor: pointer; opacity: 0.5; transition: opacity 0.15s;"
+            onmouseenter="this.style.opacity='1'" onmouseleave="this.style.opacity=this.checked?'1':'0.5'" />
           <div class="msg-icon" onclick="toggleContactExpand(${m.id}, this)" style="background: ${m.status === 'new' ? '#fef2f2' : m.status === 'replied' ? '#dcfce7' : '#f1f5f9'};">
             <i class="fa-solid ${m.status === 'new' ? 'fa-envelope' : m.status === 'replied' ? 'fa-check' : 'fa-envelope-open'}" style="color: ${m.status === 'new' ? '#ef4444' : m.status === 'replied' ? '#22c55e' : '#64748b'};"></i>
           </div>
