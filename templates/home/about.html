@@ -10,6 +10,8 @@
     .about-hero-heading { font-size: 2.5rem !important; right: 2rem !important; }
     .about-split { grid-template-columns: 1fr !important; }
     .about-origin-text { padding: 0 2rem !important; order: -1; }
+    .about-label-desktop { display: none !important; }
+    .about-label-mobile { display: block !important; }
     .about-origin-section { padding-bottom: 5rem !important; }
     .about-breath { height: 3rem !important; }
     .about-collections-section { padding-bottom: 5rem !important; }
@@ -51,7 +53,7 @@
 
       <!-- Left: just the label and one image -->
       <div>
-        <p style="font-family: 'Inter', sans-serif; font-size: 0.55rem; font-weight: 500; letter-spacing: 0.3em; text-transform: uppercase; color: #ccc; margin: 0 0 3rem;">About</p>
+        <p class="about-label-desktop" style="font-family: 'Inter', sans-serif; font-size: 0.55rem; font-weight: 500; letter-spacing: 0.3em; text-transform: uppercase; color: #ccc; margin: 0 0 3rem;">About</p>
         <div style="overflow: hidden; aspect-ratio: 4/5;">
           <video src="{% static 'images/about-video.mp4' %}" autoplay muted loop playsinline style="width: 100%; height: 100%; object-fit: cover; display: block;"></video>
         </div>
@@ -59,6 +61,7 @@
 
       <!-- Right: the story, pushed down -->
       <div class="about-origin-text" style="padding-top: 8rem;">
+        <p class="about-label-mobile" style="display: none; font-family: 'Inter', sans-serif; font-size: 0.55rem; font-weight: 500; letter-spacing: 0.3em; text-transform: uppercase; color: #ccc; margin: 0 0 3rem;">About</p>
         <p style="font-family: 'Inter', sans-serif; font-size: 1.1rem; font-weight: 300; color: #444; line-height: 2; margin: 0 0 1.75rem;">Blueprint was created by Kevin Lee — raised on Chicago basketball, rooted in Korean heritage. The brand started the way most real things do: someone who always wanted to make something finally did.</p>
         <p style="font-family: 'Inter', sans-serif; font-size: 1.1rem; font-weight: 300; color: #444; line-height: 2; margin: 0 0 1.75rem;">Every graphic tells that story. The quiet discipline of knowing where you come from — and the nerve to go somewhere new.</p>
         <p style="font-family: 'Inter', sans-serif; font-size: 1.1rem; font-weight: 300; color: #444; line-height: 2; margin: 0;">Kevin linked up with longtime friend Matt and they built it from the ground up. Two people, one vision.</p>
