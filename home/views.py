@@ -1,11 +1,13 @@
 from django.shortcuts import render
 from django.views.decorators.cache import cache_page
+from django.views.decorators.vary import vary_on_cookie
 
 from shop.models import Product
 from shop.models.settings import SiteSettings
 
 
 @cache_page(60 * 5)  # Cache for 5 minutes
+@vary_on_cookie
 def home_page(request):
     """Render the home page."""
     site_settings = SiteSettings.load()

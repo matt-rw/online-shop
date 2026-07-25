@@ -8,6 +8,7 @@ from django.shortcuts import redirect, render
 from django.urls import reverse
 from django.utils.http import url_has_allowed_host_and_scheme
 from django.views.decorators.cache import cache_page
+from django.views.decorators.vary import vary_on_cookie
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_http_methods
 
@@ -248,6 +249,7 @@ def coming_soon(request):
 
 
 @cache_page(60 * 5)  # Cache for 5 minutes
+@vary_on_cookie
 def about(request):
     """About page with Our Story and Foundation Line sections."""
     from shop.models.settings import SiteSettings
@@ -262,6 +264,7 @@ def about(request):
 
 
 @cache_page(60 * 5)  # Cache for 5 minutes
+@vary_on_cookie
 def lookbook(request):
     """Lookbook page with immersive page-flipping magazine experience."""
     import json
@@ -296,12 +299,14 @@ def lookbook(request):
 
 
 @cache_page(60 * 60)  # Cache for 1 hour
+@vary_on_cookie
 def privacy(request):
     """Privacy Policy page."""
     return render(request, "home/privacy.html")
 
 
 @cache_page(60 * 60)  # Cache for 1 hour
+@vary_on_cookie
 def terms(request):
     """Terms of Service page."""
     return render(request, "home/terms.html")
@@ -636,6 +641,7 @@ def order_detail(request, order_number):
 
 
 @cache_page(60 * 5)  # Cache for 5 minutes
+@vary_on_cookie
 def product_detail(request, slug):
     """Product detail page."""
     import json
@@ -835,6 +841,7 @@ def product_detail(request, slug):
 
 
 @cache_page(60 * 5)  # Cache for 5 minutes
+@vary_on_cookie
 def shop(request):
     """Shop catalog page - lists all products and bundles with filtering."""
     from django.db.models import Prefetch
