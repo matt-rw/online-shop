@@ -654,11 +654,13 @@ function startSendProgress() {
   text.textContent = 'Sending...';
   var pct = 0;
   sendProgressInterval = setInterval(function() {
-    // Ease toward 90% — never hits 100 until response arrives
-    pct += (90 - pct) * 0.08;
+    // Slow continuous climb — never quite reaches 100 until response arrives
+    var remaining = 99 - pct;
+    pct += remaining * 0.03 + 0.2;
+    if (pct > 99) pct = 99;
     fill.style.width = Math.round(pct) + '%';
     text.textContent = 'Sending... ' + Math.round(pct) + '%';
-  }, 200);
+  }, 150);
 }
 function finishSendProgress(success, msg) {
   clearInterval(sendProgressInterval);
