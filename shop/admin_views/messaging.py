@@ -2646,6 +2646,8 @@ def email_swipe(request):
                 return JsonResponse({"success": False, "error": str(e)})
 
         if action == "send":
+            import threading
+
             template_id = request.POST.get("template_id")
             subject_override = request.POST.get("subject", "").strip()
             body_override = request.POST.get("body", "").strip()
@@ -2655,7 +2657,7 @@ def email_swipe(request):
                 subject = subject_override or template.subject
                 body = body_override or template.html_body
 
-                subscribers = EmailSubscription.objects.filter(is_active=True)
+                subscriber_count = EmailSubscription.objects.filter(is_active=True).count()
 
                 # Create QuickMessage for tracking
                 qm = QuickMessage.objects.create(
@@ -2663,38 +2665,53 @@ def email_swipe(request):
                     subject=subject,
                     content=body,
                     status="sending",
-                    recipient_count=subscribers.count(),
+                    recipient_count=subscriber_count,
                     sent_by=request.user,
                 )
 
-                sent = 0
-                failed = 0
+                # Send in background thread to avoid Gunicorn timeout
+                def _send_all(qm_id, template_id, subject, body):
+                    from django.db import connection
+                    connection.close()  # Get fresh DB connection in thread
 
-                for sub in subscribers:
-                    success, log = send_email(
-                        email_address=sub.email,
-                        subject=subject,
-                        html_body=body,
-                        template=template,
-                        quick_message=qm,
-                    )
-                    if success:
-                        sent += 1
-                    else:
-                        failed += 1
+                    qm = QuickMessage.objects.get(id=qm_id)
+                    template = EmailTemplate.objects.get(id=template_id)
+                    subscribers = EmailSubscription.objects.filter(is_active=True)
 
-                # Update QuickMessage with results
-                qm.sent_count = sent
-                qm.failed_count = failed
-                qm.status = "sent" if failed == 0 else "partial"
-                qm.sent_at = timezone.now()
-                qm.save()
+                    sent = 0
+                    failed = 0
+
+                    for sub in subscribers:
+                        success, log = send_email(
+                            email_address=sub.email,
+                            subject=subject,
+                            html_body=body,
+                            template=template,
+                            quick_message=qm,
+                        )
+                        if success:
+                            sent += 1
+                        else:
+                            failed += 1
+
+                    qm.sent_count = sent
+                    qm.failed_count = failed
+                    qm.status = "sent" if failed == 0 else "partial"
+                    qm.sent_at = timezone.now()
+                    qm.save()
+
+                thread = threading.Thread(
+                    target=_send_all,
+                    args=(qm.id, template.id, subject, body),
+                    daemon=True,
+                )
+                thread.start()
 
                 return JsonResponse({
                     "success": True,
-                    "sent": sent,
-                    "failed": failed,
-                    "total": subscribers.count(),
+                    "sent": subscriber_count,
+                    "failed": 0,
+                    "total": subscriber_count,
                 })
             except EmailTemplate.DoesNotExist:
                 return JsonResponse({"success": False, "error": "Template not found"})
