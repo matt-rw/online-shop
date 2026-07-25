@@ -5,6 +5,13 @@
 
 {% block extra_css %}
 <style>
+  @keyframes shadowCrossfade {
+    0%, 40% { opacity: 0; }
+    50%, 90% { opacity: 1; }
+    100% { opacity: 0; }
+  }
+  .shadow-fade { animation: shadowCrossfade 6s ease-in-out infinite; }
+
   @media (max-width: 768px) {
     .about-hero-heading { font-size: 2.5rem !important; right: 2rem !important; }
     .about-split { grid-template-columns: 1fr !important; }
@@ -73,15 +80,26 @@
 <!-- Large white space -->
 <div style="background: #fff; height: 6rem;"></div>
 
-<!-- Collections: right-aligned, minimal -->
+<!-- Collections: image left, text right -->
 <section style="background: #fff; padding: 0 2rem 10rem;">
-  <div style="max-width: 70rem; margin: 0 auto; display: flex; justify-content: flex-end;">
-    <div style="max-width: 380px;">
+  <div class="about-split" style="max-width: 70rem; margin: 0 auto; display: grid; grid-template-columns: 1fr 1.2fr; gap: 6rem; align-items: start;">
+
+    <!-- Left: crossfade images -->
+    <div>
+      <div class="shadow-crossfade" style="position: relative; overflow: hidden; aspect-ratio: 3/2;">
+        <img src="{% static 'images/shadow1.JPG' %}" alt="Blueprint Apparel" style="position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover;" loading="lazy" />
+        <img src="{% static 'images/shadow2.JPG' %}" alt="Blueprint Apparel" class="shadow-fade" style="position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; opacity: 0;" loading="lazy" />
+      </div>
+    </div>
+
+    <!-- Right: collections text, pushed down -->
+    <div style="padding-top: 4rem;">
       <p style="font-family: 'Inter', sans-serif; font-size: 0.55rem; font-weight: 500; letter-spacing: 0.3em; text-transform: uppercase; color: #ccc; margin: 0 0 3rem;">Collections</p>
       <p style="font-family: 'Inter', sans-serif; font-size: 1.1rem; font-weight: 300; color: #444; line-height: 2; margin: 0 0 1.25rem;"><span style="font-weight: 600; color: #000;">Foundation</span> — released January 2026. The first line drawn. The starting point everything else builds on.</p>
       <p style="font-family: 'Inter', sans-serif; font-size: 1.1rem; font-weight: 300; color: #444; line-height: 2; margin: 0 0 2.5rem;"><span style="font-weight: 600; color: #000;">Discovery</span> — late summer. The next chapter.</p>
       <a href="{% url 'shop:shop' %}" style="font-family: 'Inter', sans-serif; font-size: 0.7rem; font-weight: 600; letter-spacing: 0.15em; text-transform: uppercase; color: #000; text-decoration: none; padding: 13px 36px; border: 1px solid #000; display: inline-block; transition: all 0.2s;" onmouseenter="this.style.background='#000'; this.style.color='#fff'" onmouseleave="this.style.background='transparent'; this.style.color='#000'">Shop Foundation</a>
     </div>
+
   </div>
 </section>
 
