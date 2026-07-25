@@ -635,7 +635,7 @@ def order_detail(request, order_number):
     return render(request, "shop/order_detail.html", context)
 
 
-@cache_page(60 * 2)  # Cache for 2 minutes
+@cache_page(60 * 5)  # Cache for 5 minutes
 def product_detail(request, slug):
     """Product detail page."""
     import json
@@ -834,7 +834,7 @@ def product_detail(request, slug):
     return render(request, "shop/product_detail.html", context)
 
 
-@cache_page(60 * 2)  # Cache for 2 minutes
+@cache_page(60 * 5)  # Cache for 5 minutes
 def shop(request):
     """Shop catalog page - lists all products and bundles with filtering."""
     from django.db.models import Prefetch

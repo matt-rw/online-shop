@@ -5,7 +5,7 @@ from shop.models import Product
 from shop.models.settings import SiteSettings
 
 
-@cache_page(60 * 2)  # Cache for 2 minutes
+@cache_page(60 * 5)  # Cache for 5 minutes
 def home_page(request):
     """Render the home page."""
     site_settings = SiteSettings.load()
