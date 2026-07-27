@@ -345,6 +345,16 @@
     }
   }
 
+  // Close mobile sidebar when clicking a nav link
+  document.querySelectorAll('.sidebar-item').forEach(function(item) {
+    item.addEventListener('click', function() {
+      var sidebar = document.getElementById('adminSidebar');
+      if (sidebar && sidebar.classList.contains('mobile-open')) {
+        sidebar.classList.remove('mobile-open');
+      }
+    });
+  });
+
   // Close mobile sidebar when clicking outside
   document.addEventListener('click', function(e) {
     const sidebar = document.getElementById('adminSidebar');
