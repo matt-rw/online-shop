@@ -12,13 +12,8 @@
     </title>
 
     <!-- Favicon -->
-    {% if site_settings.favicon %}
-    <link rel="icon" href="{{ site_settings.favicon.url }}" type="image/png" sizes="180x180" />
-    <link rel="apple-touch-icon" href="{{ site_settings.favicon.url }}" />
-    {% else %}
     <link rel="icon" href="{% static 'images/blueprint-black.svg' %}" type="image/svg+xml" />
-    <link rel="icon" href="{% static 'favicon.png' %}" type="image/png" sizes="128x128" />
-    {% endif %}
+    <link rel="apple-touch-icon" href="{% static 'images/blueprint-black.svg' %}" />
 
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
