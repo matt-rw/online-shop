@@ -780,6 +780,21 @@
   </div>
 
   <div class="main-content">
+    <!-- Table of Contents -->
+    <div style="background: white; border-radius: 12px; padding: 1.25rem 1.5rem; box-shadow: 0 1px 3px rgba(0,0,0,0.08); margin-bottom: 1.5rem;">
+      <div style="font-size: 0.7rem; font-weight: 600; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 0.75rem;">Jump to</div>
+      <div style="display: flex; flex-wrap: wrap; gap: 0.5rem;">
+        <a href="#sec-hero" style="font-size: 0.8125rem; color: #667eea; text-decoration: none; padding: 0.375rem 0.75rem; background: #f0f0ff; border-radius: 6px;">Hero Slideshow</a>
+        <a href="#sec-hero-text" style="font-size: 0.8125rem; color: #667eea; text-decoration: none; padding: 0.375rem 0.75rem; background: #f0f0ff; border-radius: 6px;">Hero Text</a>
+        <a href="#sec-gallery" style="font-size: 0.8125rem; color: #667eea; text-decoration: none; padding: 0.375rem 0.75rem; background: #f0f0ff; border-radius: 6px;">Gallery</a>
+        <a href="#sec-footer-quote" style="font-size: 0.8125rem; color: #667eea; text-decoration: none; padding: 0.375rem 0.75rem; background: #f0f0ff; border-radius: 6px;">Footer Quote</a>
+        <a href="#sec-ticker" style="font-size: 0.8125rem; color: #667eea; text-decoration: none; padding: 0.375rem 0.75rem; background: #f0f0ff; border-radius: 6px;">News Ticker</a>
+        <a href="#sec-site-lock" style="font-size: 0.8125rem; color: #667eea; text-decoration: none; padding: 0.375rem 0.75rem; background: #f0f0ff; border-radius: 6px;">Site Lock</a>
+        <a href="#sec-social" style="font-size: 0.8125rem; color: #667eea; text-decoration: none; padding: 0.375rem 0.75rem; background: #f0f0ff; border-radius: 6px;">Social Links</a>
+        <a href="#sec-favicon" style="font-size: 0.8125rem; color: #667eea; text-decoration: none; padding: 0.375rem 0.75rem; background: #f0f0ff; border-radius: 6px;">Favicon</a>
+      </div>
+    </div>
+
     <!-- Homepage Performance -->
     <div style="display: flex; gap: 1rem; margin-bottom: 1.5rem;">
       <div style="flex: 1; background: white; border-radius: 12px; padding: 1.25rem 1.5rem; box-shadow: 0 1px 3px rgba(0,0,0,0.08);">
@@ -810,7 +825,7 @@
     </div>
 
     <!-- Hero Slideshow -->
-    <div class="section-card">
+    <div class="section-card" id="sec-hero">
       <h2 class="section-title">
         <i class="fas fa-images"></i> Hero Slideshow
         <span id="slide-count" style="font-size: 0.875rem; font-weight: 500; color: #64748b; margin-left: 1rem;"></span>
@@ -903,7 +918,7 @@
 
     <!-- Hero Text -->
     <div class="section-card">
-      <h2 class="section-title"><i class="fas fa-font"></i> Hero Text</h2>
+      <h2 class="section-title" id="sec-hero-text"><i class="fas fa-font"></i> Hero Text</h2>
       <form method="POST">
         {% csrf_token %}
         <div class="form-group">
@@ -924,7 +939,7 @@
 
     <!-- Gallery Images -->
     <div class="section-card">
-      <h2 class="section-title">
+      <h2 class="section-title" id="sec-gallery">
         <i class="fas fa-images"></i> Gallery Images
         <span id="gallery-count" style="margin-left: auto; font-size: 0.875rem; font-weight: 500; color: #64748b;"></span>
       </h2>
@@ -947,7 +962,7 @@
 
     <!-- Footer Quote -->
     <div class="section-card">
-      <h2 class="section-title"><i class="fas fa-quote-left"></i> Footer Quote</h2>
+      <h2 class="section-title" id="sec-footer-quote"><i class="fas fa-quote-left"></i> Footer Quote</h2>
       <p style="color: #64748b; font-size: 0.875rem; margin-bottom: 1.5rem;">
         Large text displayed in the footer. Leave blank to hide.
       </p>
@@ -967,7 +982,7 @@
 
     <!-- News Ticker -->
     <div class="section-card">
-      <h2 class="section-title"><i class="fas fa-newspaper"></i> News Ticker</h2>
+      <h2 class="section-title" id="sec-ticker"><i class="fas fa-newspaper"></i> News Ticker</h2>
       <p style="color: #64748b; font-size: 0.875rem; margin-bottom: 1.5rem;">
         Scrolling announcement banner displayed on the homepage. Add multiple messages to display them in rotation.
       </p>
@@ -1043,7 +1058,7 @@
 
     <!-- Site Lock -->
     <div class="section-card">
-      <h2 class="section-title"><i class="fas fa-lock"></i> Site Lock (Early Access)</h2>
+      <h2 class="section-title" id="sec-site-lock"><i class="fas fa-lock"></i> Site Lock (Early Access)</h2>
       <p style="color: #64748b; font-size: 0.875rem; margin-bottom: 1.5rem;">
         Require visitors to enter an access code before browsing the site. Staff users bypass the lock automatically.
       </p>
@@ -1109,7 +1124,7 @@
 
     <!-- Social Links -->
     <div class="section-card">
-      <h2 class="section-title"><i class="fab fa-instagram"></i> Social Links</h2>
+      <h2 class="section-title" id="sec-social"><i class="fab fa-instagram"></i> Social Links</h2>
       <p style="color: #64748b; font-size: 0.875rem; margin-bottom: 1.5rem;">
         Update your social media links displayed in the footer and throughout the site.
       </p>
@@ -1151,7 +1166,7 @@
 
     <!-- Favicon -->
     <div class="section-card">
-      <h2 class="section-title"><i class="fas fa-globe"></i> Favicon</h2>
+      <h2 class="section-title" id="sec-favicon"><i class="fas fa-globe"></i> Favicon</h2>
       <p style="color: #64748b; font-size: 0.875rem; margin-bottom: 1.5rem;">
         The small icon shown in browser tabs. Recommended: square PNG or ICO, at least 128×128px.
       </p>
@@ -1172,14 +1187,12 @@
       </div>
       {% endif %}
 
-      <form method="POST" enctype="multipart/form-data">
+      <form method="POST" enctype="multipart/form-data" id="faviconForm">
         {% csrf_token %}
-        <div style="display: flex; align-items: center; gap: 1rem;">
-          <input type="file" name="favicon" accept="image/png,image/x-icon,image/svg+xml,image/ico" style="font-size: 0.875rem; font-family: inherit;" />
-          <button type="submit" class="btn btn-primary" style="white-space: nowrap;">
-            <i class="fas fa-upload"></i> Upload Favicon
-          </button>
-        </div>
+        <input type="file" name="favicon" id="faviconInput" accept="image/png,image/x-icon,image/svg+xml" style="display: none;" onchange="document.getElementById('faviconForm').submit()" />
+        <button type="button" onclick="document.getElementById('faviconInput').click()" class="btn btn-primary">
+          <i class="fas fa-upload"></i> {% if site_settings.favicon %}Replace Favicon{% else %}Upload Favicon{% endif %}
+        </button>
       </form>
     </div>
   </div>
