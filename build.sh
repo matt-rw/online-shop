@@ -51,10 +51,8 @@ log_info "Pip version: $(pip --version)"
 # Step 1: Install dependencies
 log_section "Step 1/3: Installing Python Dependencies"
 log_info "Installing packages from requirements.txt..."
-if pip install -r requirements.txt --no-cache-dir; then
+if pip install -r requirements.txt; then
     log_success "Dependencies installed successfully"
-    log_info "Installed packages:"
-    pip list | grep -E "(Django|wagtail|gunicorn|stripe|whitenoise)" || true
 else
     log_error "Failed to install dependencies"
     exit 1
@@ -63,15 +61,8 @@ fi
 # Step 2: Collect static files
 log_section "Step 2/3: Collecting Static Files"
 log_info "Running collectstatic..."
-if python manage.py collectstatic --no-input --clear; then
+if python manage.py collectstatic --no-input; then
     log_success "Static files collected successfully"
-    # Show some stats
-    if [ -d "staticfiles" ]; then
-        FILE_COUNT=$(find staticfiles -type f | wc -l)
-        DIR_SIZE=$(du -sh staticfiles | cut -f1)
-        log_info "Total static files: $FILE_COUNT"
-        log_info "Total size: $DIR_SIZE"
-    fi
 else
     log_error "Failed to collect static files"
     exit 1
@@ -82,31 +73,10 @@ log_section "Step 3/3: Running Database Migrations"
 log_info "Checking for pending migrations..."
 if python manage.py migrate --no-input; then
     log_success "Database migrations completed successfully"
-    # Show migration status
-    log_info "Migration status:"
-    python manage.py showmigrations --plan | tail -n 5 || true
 else
     log_error "Failed to run migrations"
     exit 1
 fi
-
-# Step 4: Seed email templates
-log_section "Step 4: Seeding Email Templates"
-log_info "Creating email templates..."
-if python manage.py create_email_templates; then
-    log_success "Email templates seeded"
-else
-    log_warning "Email template seeding failed (non-fatal)"
-fi
-if python manage.py add_more_templates; then
-    log_success "Additional templates added"
-else
-    log_warning "Additional template seeding failed (non-fatal)"
-fi
-
-# Step 5: Set category order
-log_info "Setting category order..."
-python manage.py set_category_order || true
 
 # Build complete
 log_section "Build Complete"
