@@ -582,10 +582,66 @@ def homepage_settings(request):
     if request.method == "POST":
         # Handle favicon upload
         if "favicon" in request.FILES:
+            import io
             from django.core.files.base import ContentFile
+            from PIL import Image
 
             uploaded_file = request.FILES["favicon"]
-            site_settings.favicon.save(uploaded_file.name, uploaded_file, save=False)
+            img = Image.open(uploaded_file)
+
+            # Convert to RGBA for consistent processing
+            if img.mode != "RGBA":
+                img = img.convert("RGBA")
+
+            # Auto-crop transparent/white borders to maximize icon space
+            # Get bounding box of non-transparent, non-white content
+            pixels = img.getdata()
+            width, height = img.size
+            left, top, right, bottom = width, height, 0, 0
+            for i, px in enumerate(pixels):
+                x, y = i % width, i // width
+                # Consider pixel as content if it's not fully transparent and not near-white
+                if px[3] > 20 and not (px[0] > 240 and px[1] > 240 and px[2] > 240):
+                    left = min(left, x)
+                    top = min(top, y)
+                    right = max(right, x)
+                    bottom = max(bottom, y)
+
+            if right > left and bottom > top:
+                # Add small padding (5%)
+                pad = max(1, int((right - left) * 0.05))
+                left = max(0, left - pad)
+                top = max(0, top - pad)
+                right = min(width, right + pad + 1)
+                bottom = min(height, bottom + pad + 1)
+
+                # Make it square by expanding the shorter side
+                crop_w = right - left
+                crop_h = bottom - top
+                if crop_w > crop_h:
+                    diff = crop_w - crop_h
+                    top = max(0, top - diff // 2)
+                    bottom = top + crop_w
+                    if bottom > height:
+                        bottom = height
+                        top = max(0, bottom - crop_w)
+                elif crop_h > crop_w:
+                    diff = crop_h - crop_w
+                    left = max(0, left - diff // 2)
+                    right = left + crop_h
+                    if right > width:
+                        right = width
+                        left = max(0, right - crop_h)
+
+                img = img.crop((left, top, right, bottom))
+
+            # Resize to 180x180 (largest common favicon size)
+            img = img.resize((180, 180), Image.LANCZOS)
+
+            # Save as PNG
+            buf = io.BytesIO()
+            img.save(buf, format="PNG", optimize=True)
+            site_settings.favicon.save("favicon.png", ContentFile(buf.getvalue()), save=False)
             site_settings.save()
             messages.success(request, "Favicon updated successfully!")
             return redirect("admin_homepage")
