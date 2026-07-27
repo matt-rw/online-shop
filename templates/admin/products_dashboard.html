@@ -598,7 +598,11 @@
             Showing <strong>{{ total_products }} core products</strong>. Each product may have multiple size/color combinations.
           </p>
         </div>
-        <div style="display: flex; align-items: center; gap: 0.5rem;">
+        <div style="display: flex; align-items: center; gap: 0.75rem;">
+          <div style="position: relative;">
+            <i class="fa-solid fa-search" style="position: absolute; left: 0.75rem; top: 50%; transform: translateY(-50%); color: #94a3b8; font-size: 0.8rem;"></i>
+            <input type="text" id="productSearch" placeholder="Search products..." oninput="filterProducts(this.value)" style="padding: 0.5rem 1rem 0.5rem 2.25rem; border: 1px solid #e2e8f0; border-radius: 8px; font-size: 0.875rem; font-family: inherit; width: 200px; transition: border-color 0.2s;" onfocus="this.style.borderColor='#667eea'" onblur="this.style.borderColor='#e2e8f0'" />
+          </div>
           <label style="font-size: 0.875rem; color: #64748b;">Sort by:</label>
           <select id="sortSelect" onchange="applySort(this.value)" style="padding: 0.5rem 1rem; border: 1px solid #e2e8f0; border-radius: 8px; font-size: 0.875rem; background: white; cursor: pointer;">
             <option value="newest" {% if sort_by == 'newest' %}selected{% endif %}>Newest First</option>
@@ -1540,6 +1544,21 @@
       const url = new URL(window.location.href);
       url.searchParams.set('sort', sortValue);
       window.location.href = url.toString();
+    }
+
+    function filterProducts(query) {
+      var q = query.toLowerCase().trim();
+      document.querySelectorAll('.product-row').forEach(function(row) {
+        var name = (row.querySelector('.product-name') || {}).textContent || '';
+        var slug = (row.querySelector('.product-slug') || {}).textContent || '';
+        var category = row.querySelectorAll('.badge')[0];
+        var catText = category ? category.textContent : '';
+        var match = !q || name.toLowerCase().includes(q) || slug.toLowerCase().includes(q) || catText.toLowerCase().includes(q);
+        row.style.display = match ? '' : 'none';
+        // Also hide the variants row
+        var variantsRow = document.getElementById('variants-row-' + row.dataset.productId);
+        if (variantsRow && !match) variantsRow.style.display = 'none';
+      });
     }
 
     function deleteProduct(productId, productName) {
