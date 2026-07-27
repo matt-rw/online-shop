@@ -1148,6 +1148,40 @@
         </button>
       </div>
     </div>
+
+    <!-- Favicon -->
+    <div class="section-card">
+      <h2 class="section-title"><i class="fas fa-globe"></i> Favicon</h2>
+      <p style="color: #64748b; font-size: 0.875rem; margin-bottom: 1.5rem;">
+        The small icon shown in browser tabs. Recommended: square PNG or ICO, at least 128×128px.
+      </p>
+
+      {% if site_settings.favicon %}
+      <div style="display: flex; align-items: center; gap: 1.5rem; margin-bottom: 1.5rem;">
+        <div style="width: 64px; height: 64px; border: 2px solid #e2e8f0; border-radius: 8px; display: flex; align-items: center; justify-content: center; background: #f8fafc;">
+          <img src="{{ site_settings.favicon.url }}" alt="Current favicon" style="max-width: 48px; max-height: 48px; object-fit: contain;" />
+        </div>
+        <div>
+          <div style="font-size: 0.8125rem; font-weight: 600; color: #0f172a;">Current favicon</div>
+          <form method="POST" style="margin-top: 0.5rem;">
+            {% csrf_token %}
+            <input type="hidden" name="remove_favicon" value="true" />
+            <button type="submit" style="font-size: 0.75rem; color: #dc2626; background: none; border: none; cursor: pointer; text-decoration: underline; font-family: inherit;">Remove</button>
+          </form>
+        </div>
+      </div>
+      {% endif %}
+
+      <form method="POST" enctype="multipart/form-data">
+        {% csrf_token %}
+        <div style="display: flex; align-items: center; gap: 1rem;">
+          <input type="file" name="favicon" accept="image/png,image/x-icon,image/svg+xml,image/ico" style="font-size: 0.875rem; font-family: inherit;" />
+          <button type="submit" class="btn btn-primary" style="white-space: nowrap;">
+            <i class="fas fa-upload"></i> Upload Favicon
+          </button>
+        </div>
+      </form>
+    </div>
   </div>
 
   <!-- Position Modal -->

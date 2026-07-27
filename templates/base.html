@@ -12,8 +12,12 @@
     </title>
 
     <!-- Favicon -->
+    {% if site_settings.favicon %}
+    <link rel="icon" href="{{ site_settings.favicon.url }}" />
+    {% else %}
     <link rel="icon" href="{% static 'favicon.ico' %}" type="image/x-icon" />
     <link rel="icon" href="{% static 'favicon.png' %}" type="image/png" sizes="128x128" />
+    {% endif %}
 
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">

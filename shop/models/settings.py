@@ -216,6 +216,11 @@ class SiteSettings(models.Model):
     Should only have one instance (singleton pattern).
     """
 
+    # Branding
+    favicon = models.ImageField(
+        upload_to="site/favicon/", blank=True, null=True, help_text="Site favicon (displayed in browser tab)"
+    )
+
     # Hero/Homepage settings
     hero_image = models.ImageField(
         upload_to="site/hero/", blank=True, null=True, help_text="Main hero image for the homepage"

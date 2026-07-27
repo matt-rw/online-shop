@@ -580,6 +580,25 @@ def homepage_settings(request):
         return JsonResponse({"success": False, "error": "Unknown action"})
 
     if request.method == "POST":
+        # Handle favicon upload
+        if "favicon" in request.FILES:
+            from django.core.files.base import ContentFile
+
+            uploaded_file = request.FILES["favicon"]
+            site_settings.favicon.save(uploaded_file.name, uploaded_file, save=False)
+            site_settings.save()
+            messages.success(request, "Favicon updated successfully!")
+            return redirect("admin_homepage")
+
+        # Handle favicon removal
+        if request.POST.get("remove_favicon") == "true":
+            if site_settings.favicon:
+                site_settings.favicon.delete(save=False)
+                site_settings.favicon = None
+                site_settings.save()
+                messages.success(request, "Favicon removed. Using default.")
+            return redirect("admin_homepage")
+
         # Handle image removal
         if request.POST.get("remove_image") == "true":
             if site_settings.hero_image:
