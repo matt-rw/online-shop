@@ -747,15 +747,18 @@ def admin_home(request):
     # Conversion funnel
     from shop.models.cart import Cart
     funnel_visitors = VisitorSession.objects.filter(last_seen__gte=last_30d).filter(_no_bots).count() or 1
-    funnel_carts = Cart.objects.filter(created_at__gte=last_30d).count()
+    funnel_carts = Cart.objects.filter(created_at__gte=last_30d, items__isnull=False).distinct().count()
     funnel_orders = orders_30d
     funnel_data = {
         "visitors": funnel_visitors,
         "carts": funnel_carts,
         "cart_rate": round(funnel_carts / funnel_visitors * 100, 1) if funnel_visitors else 0,
         "orders": funnel_orders,
-        "order_rate": round(funnel_orders / funnel_visitors * 100, 1) if funnel_visitors else 0,
+        "order_rate": round(funnel_orders / max(funnel_carts, 1) * 100, 1),
     }
+
+    # In-transit orders
+    in_transit_count = Order.objects.filter(status="SHIPPED").count()
 
     # Last order time
     last_order = Order.objects.order_by('-created_at').first()
@@ -867,6 +870,7 @@ def admin_home(request):
         "product_perf_json": json_mod.dumps(product_perf),
         "sub_sparkline_json": json_mod.dumps(sub_sparkline),
         "funnel_json": json_mod.dumps(funnel_data),
+        "in_transit_count": in_transit_count,
         "last_order_time": last_order_time,
         "drafts": drafts,
         "load_draft": load_draft,
