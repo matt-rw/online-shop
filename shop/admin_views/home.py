@@ -40,6 +40,8 @@ def admin_home(request):
     Central admin dashboard with quick access to all admin tools.
     Only accessible to admin/staff users.
     """
+    now = timezone.now()
+
     # Calendar AJAX handlers
     if request.method == "POST" and request.POST.get("action") == "calendar_add_event":
         try:

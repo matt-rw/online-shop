@@ -3115,8 +3115,10 @@
             curYear = year;
             curMonth = month;
             renderCal(data);
+          } else {
+            console.error('Calendar error:', data.error);
           }
-        });
+        }).catch(function(err) { console.error('Calendar fetch failed:', err); });
       }
 
       window.calNavMonth = function(dir) {
