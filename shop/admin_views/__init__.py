@@ -71,6 +71,7 @@ from .analytics import (
     ab_testing_dashboard,
 )
 from .reporting import scheduled_reports_dashboard
+from .team import team_dashboard
 from .testing import (
     test_center,
     test_checkout,

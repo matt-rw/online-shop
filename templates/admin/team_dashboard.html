@@ -1,0 +1,1031 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Team & Tasks - Admin</title>
+  <link rel="icon" type="image/svg+xml" href="{% static 'admin-favicon.svg' %}">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <style>
+    {% include "admin/partials/sidebar_styles.html" %}
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background: #0a0a14;
+      color: rgba(255, 255, 255, 0.85);
+      min-height: 100vh;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
+
+    /* ── Header ─────────────────────────────────────── */
+
+    .top-bar {
+      background: linear-gradient(160deg, #0f0f1a 0%, #1a1035 100%);
+      padding: 1.5rem 0 1.5rem;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .top-bar::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background-image:
+        linear-gradient(rgba(102, 126, 234, 0.04) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(102, 126, 234, 0.04) 1px, transparent 1px);
+      background-size: 40px 40px;
+      pointer-events: none;
+    }
+
+    .top-bar::after {
+      content: '';
+      position: absolute;
+      top: -50%; left: -20%; width: 60%; height: 200%;
+      background: radial-gradient(ellipse, rgba(102, 126, 234, 0.08) 0%, transparent 60%);
+      pointer-events: none;
+    }
+
+    .container {
+      max-width: 100%;
+      padding: 0 2rem;
+      position: relative;
+      z-index: 1;
+    }
+
+    .header h1 {
+      color: white;
+      font-size: 1.75rem;
+      font-weight: 700;
+      letter-spacing: -0.03em;
+      font-family: 'JetBrains Mono', monospace;
+    }
+
+    /* ── Panels ─────────────────────────────────────── */
+
+    .glass-panel {
+      background: rgba(255, 255, 255, 0.04);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border: 1px solid rgba(255, 255, 255, 0.06);
+      border-radius: 12px;
+    }
+
+    .section-title {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.7rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      color: rgba(255, 255, 255, 0.35);
+      margin-bottom: 0.75rem;
+    }
+
+    /* ── Team Strip ─────────────────────────────────── */
+
+    .team-strip {
+      display: flex;
+      gap: 0.5rem;
+      overflow-x: auto;
+      padding: 0 2rem;
+      margin-top: 1.25rem;
+      padding-bottom: 0.25rem;
+    }
+
+    .team-strip::-webkit-scrollbar { height: 4px; }
+    .team-strip::-webkit-scrollbar-track { background: transparent; }
+    .team-strip::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 2px; }
+
+    .team-card {
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+      padding: 0.5rem 0.75rem;
+      border-radius: 8px;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: all 0.15s ease;
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid rgba(255, 255, 255, 0.06);
+      flex-shrink: 0;
+    }
+
+    .team-card:hover {
+      background: rgba(255, 255, 255, 0.08);
+      border-color: rgba(255, 255, 255, 0.12);
+    }
+
+    .team-card.active {
+      background: rgba(102, 126, 234, 0.15);
+      border-color: rgba(102, 126, 234, 0.4);
+    }
+
+    .team-avatar {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: 'JetBrains Mono', monospace;
+      font-weight: 700;
+      font-size: 0.7rem;
+      color: white;
+      flex-shrink: 0;
+    }
+
+    .team-avatar img {
+      width: 100%;
+      height: 100%;
+      border-radius: 50%;
+      object-fit: cover;
+    }
+
+    .team-info { display: flex; flex-direction: column; }
+    .team-name { font-size: 0.8rem; font-weight: 600; color: rgba(255,255,255,0.9); }
+    .team-role { font-size: 0.65rem; color: rgba(255,255,255,0.35); }
+
+    .team-badge {
+      background: rgba(102, 126, 234, 0.2);
+      color: rgba(102, 126, 234, 0.9);
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.65rem;
+      font-weight: 600;
+      padding: 0.15rem 0.4rem;
+      border-radius: 4px;
+      margin-left: auto;
+    }
+
+    .team-card-all {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.75rem;
+      font-weight: 600;
+      color: rgba(255,255,255,0.5);
+      padding: 0.5rem 1rem;
+      border-radius: 8px;
+      cursor: pointer;
+      border: 1px solid rgba(255,255,255,0.06);
+      background: rgba(255,255,255,0.03);
+      transition: all 0.15s ease;
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+    }
+
+    .team-card-all:hover { background: rgba(255,255,255,0.08); color: rgba(255,255,255,0.8); }
+    .team-card-all.active { background: rgba(102, 126, 234, 0.15); border-color: rgba(102, 126, 234, 0.4); color: rgba(255,255,255,0.9); }
+
+    /* ── Task Board ─────────────────────────────────── */
+
+    .main-content {
+      padding: 1.5rem 2rem 2rem;
+    }
+
+    .task-board {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 1rem;
+      margin-bottom: 2rem;
+    }
+
+    .task-column {
+      min-height: 200px;
+    }
+
+    .col-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 0.75rem;
+      padding: 0 0.25rem;
+    }
+
+    .col-header-left {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .col-title {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.7rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: rgba(255, 255, 255, 0.5);
+    }
+
+    .col-count {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.65rem;
+      font-weight: 600;
+      color: rgba(255, 255, 255, 0.3);
+      background: rgba(255, 255, 255, 0.06);
+      padding: 0.1rem 0.4rem;
+      border-radius: 4px;
+    }
+
+    .col-add-btn {
+      background: none;
+      border: none;
+      color: rgba(255, 255, 255, 0.3);
+      cursor: pointer;
+      font-size: 0.8rem;
+      padding: 0.2rem 0.4rem;
+      border-radius: 4px;
+      transition: all 0.15s ease;
+    }
+
+    .col-add-btn:hover {
+      color: rgba(102, 126, 234, 0.9);
+      background: rgba(102, 126, 234, 0.1);
+    }
+
+    .col-body {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+
+    /* ── Task Card ──────────────────────────────────── */
+
+    .task-card {
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid rgba(255, 255, 255, 0.04);
+      border-radius: 8px;
+      padding: 0.75rem;
+      transition: all 0.15s ease;
+    }
+
+    .task-card:hover {
+      background: rgba(255, 255, 255, 0.06);
+      border-color: rgba(255, 255, 255, 0.1);
+    }
+
+    .task-card.done {
+      opacity: 0.45;
+    }
+
+    .task-card-top {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 0.5rem;
+      margin-bottom: 0.5rem;
+    }
+
+    .task-title {
+      font-size: 0.82rem;
+      font-weight: 500;
+      color: rgba(255, 255, 255, 0.9);
+      line-height: 1.3;
+      flex: 1;
+    }
+
+    .task-card.done .task-title {
+      text-decoration: line-through;
+      color: rgba(255, 255, 255, 0.4);
+    }
+
+    .priority-badge {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.55rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      padding: 0.15rem 0.4rem;
+      border-radius: 4px;
+      flex-shrink: 0;
+    }
+
+    .priority-urgent { background: rgba(248, 113, 113, 0.15); color: #f87171; }
+    .priority-high   { background: rgba(251, 191, 36, 0.15);  color: #fbbf24; }
+    .priority-medium { background: rgba(129, 140, 248, 0.15); color: #818cf8; }
+    .priority-low    { background: rgba(255, 255, 255, 0.06); color: rgba(255, 255, 255, 0.3); }
+
+    .task-meta {
+      display: flex;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      font-size: 0.7rem;
+      color: rgba(255, 255, 255, 0.35);
+    }
+
+    .task-meta i { font-size: 0.6rem; margin-right: 0.15rem; }
+
+    .task-project-tag {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.6rem;
+      background: rgba(102, 126, 234, 0.1);
+      color: rgba(102, 126, 234, 0.7);
+      padding: 0.1rem 0.35rem;
+      border-radius: 3px;
+    }
+
+    .task-actions {
+      display: flex;
+      align-items: center;
+      gap: 0.25rem;
+      margin-top: 0.5rem;
+      padding-top: 0.4rem;
+      border-top: 1px solid rgba(255, 255, 255, 0.04);
+    }
+
+    .task-actions button {
+      background: none;
+      border: 1px solid rgba(255, 255, 255, 0.06);
+      color: rgba(255, 255, 255, 0.3);
+      cursor: pointer;
+      font-size: 0.65rem;
+      padding: 0.2rem 0.4rem;
+      border-radius: 4px;
+      transition: all 0.15s ease;
+    }
+
+    .task-actions button:hover {
+      background: rgba(255, 255, 255, 0.08);
+      color: rgba(255, 255, 255, 0.7);
+      border-color: rgba(255, 255, 255, 0.15);
+    }
+
+    .task-actions .btn-delete:hover {
+      background: rgba(248, 113, 113, 0.1);
+      color: #f87171;
+      border-color: rgba(248, 113, 113, 0.3);
+    }
+
+    .task-actions .spacer { flex: 1; }
+
+    /* ── Inline Forms ──────────────────────────────── */
+
+    .inline-form {
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 8px;
+      padding: 0.75rem;
+      display: none;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+
+    .inline-form.visible { display: flex; }
+
+    .inline-form input,
+    .inline-form select {
+      background: rgba(255, 255, 255, 0.06);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 6px;
+      padding: 0.45rem 0.6rem;
+      color: rgba(255, 255, 255, 0.9);
+      font-family: 'Inter', sans-serif;
+      font-size: 0.8rem;
+      outline: none;
+      transition: border-color 0.15s ease;
+    }
+
+    .inline-form input:focus,
+    .inline-form select:focus {
+      border-color: rgba(102, 126, 234, 0.5);
+    }
+
+    .inline-form input::placeholder { color: rgba(255, 255, 255, 0.2); }
+    .inline-form select option { background: #1a1a2e; color: #fff; }
+
+    .inline-form-row {
+      display: flex;
+      gap: 0.4rem;
+    }
+
+    .inline-form-row > * { flex: 1; }
+
+    .btn-primary {
+      background: rgba(102, 126, 234, 0.2);
+      border: 1px solid rgba(102, 126, 234, 0.3);
+      color: rgba(102, 126, 234, 0.95);
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.72rem;
+      font-weight: 600;
+      padding: 0.45rem 0.75rem;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+
+    .btn-primary:hover {
+      background: rgba(102, 126, 234, 0.3);
+      border-color: rgba(102, 126, 234, 0.5);
+    }
+
+    .btn-cancel {
+      background: none;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      color: rgba(255, 255, 255, 0.4);
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.72rem;
+      font-weight: 600;
+      padding: 0.45rem 0.75rem;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+
+    .btn-cancel:hover { background: rgba(255,255,255,0.06); color: rgba(255,255,255,0.6); }
+
+    /* ── Projects ───────────────────────────────────── */
+
+    .projects-grid {
+      display: flex;
+      gap: 0.75rem;
+      flex-wrap: wrap;
+    }
+
+    .project-card {
+      background: rgba(255, 255, 255, 0.04);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border: 1px solid rgba(255, 255, 255, 0.06);
+      border-radius: 10px;
+      padding: 1rem;
+      min-width: 200px;
+      max-width: 260px;
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+
+    .project-card:hover {
+      background: rgba(255, 255, 255, 0.07);
+      border-color: rgba(255, 255, 255, 0.12);
+    }
+
+    .project-card.active {
+      background: rgba(102, 126, 234, 0.1);
+      border-color: rgba(102, 126, 234, 0.3);
+    }
+
+    .project-name {
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: rgba(255, 255, 255, 0.9);
+      margin-bottom: 0.3rem;
+    }
+
+    .project-desc {
+      font-size: 0.7rem;
+      color: rgba(255, 255, 255, 0.3);
+      margin-bottom: 0.5rem;
+      line-height: 1.4;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+
+    .project-stats {
+      display: flex;
+      gap: 0.75rem;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.65rem;
+    }
+
+    .project-stat { color: rgba(255, 255, 255, 0.3); }
+    .project-stat span { color: rgba(255, 255, 255, 0.6); font-weight: 600; }
+
+    .project-add-form {
+      display: none;
+      align-items: center;
+      gap: 0.5rem;
+      flex-shrink: 0;
+    }
+
+    .project-add-form.visible { display: flex; }
+
+    .project-add-form input {
+      background: rgba(255, 255, 255, 0.06);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 6px;
+      padding: 0.45rem 0.6rem;
+      color: rgba(255, 255, 255, 0.9);
+      font-family: 'Inter', sans-serif;
+      font-size: 0.8rem;
+      outline: none;
+      width: 180px;
+    }
+
+    .project-add-form input:focus { border-color: rgba(102, 126, 234, 0.5); }
+    .project-add-form input::placeholder { color: rgba(255, 255, 255, 0.2); }
+
+    /* ── Active Filter Indicator ────────────────────── */
+
+    .active-filters {
+      display: none;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.5rem 0;
+      margin-bottom: 0.5rem;
+    }
+
+    .active-filters.visible { display: flex; }
+
+    .filter-tag {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.65rem;
+      background: rgba(102, 126, 234, 0.15);
+      color: rgba(102, 126, 234, 0.8);
+      padding: 0.2rem 0.5rem;
+      border-radius: 4px;
+      display: flex;
+      align-items: center;
+      gap: 0.3rem;
+    }
+
+    .filter-tag button {
+      background: none;
+      border: none;
+      color: rgba(102, 126, 234, 0.5);
+      cursor: pointer;
+      font-size: 0.7rem;
+      padding: 0;
+      line-height: 1;
+    }
+
+    .filter-tag button:hover { color: rgba(102, 126, 234, 1); }
+
+    /* ── Empty State ────────────────────────────────── */
+
+    .empty-col {
+      text-align: center;
+      padding: 2rem 1rem;
+      color: rgba(255, 255, 255, 0.15);
+      font-size: 0.75rem;
+      font-style: italic;
+    }
+
+    /* ── Responsive ─────────────────────────────────── */
+
+    @media (max-width: 900px) {
+      .task-board {
+        grid-template-columns: 1fr;
+      }
+      .team-strip { padding: 0 1rem; }
+      .main-content { padding: 1rem; }
+      .container { padding: 0 1rem; }
+    }
+  </style>
+</head>
+<body class="has-sidebar cmd-mode">
+  {% include "admin/partials/sidebar.html" %}
+
+  <!-- Header -->
+  <div class="top-bar">
+    <div class="container">
+      <div class="header">
+        <h1>Team &amp; Tasks</h1>
+      </div>
+    </div>
+
+    <!-- Team Members Strip -->
+    <div class="team-strip">
+      <div class="team-card-all active" onclick="clearFilters()">All</div>
+      <div id="team-cards"></div>
+    </div>
+  </div>
+
+  <!-- Main Content -->
+  <div class="main-content">
+
+    <!-- Active Filters -->
+    <div class="active-filters" id="active-filters"></div>
+
+    <!-- Task Board -->
+    <div class="section-title">Task Board</div>
+    <div class="task-board">
+      <!-- To Do -->
+      <div class="task-column">
+        <div class="col-header">
+          <div class="col-header-left">
+            <span class="col-title">To Do</span>
+            <span class="col-count" id="count-todo">0</span>
+          </div>
+          <button class="col-add-btn" onclick="toggleAddForm()" title="Add task">
+            <i class="fas fa-plus"></i> Add
+          </button>
+        </div>
+        <div class="inline-form" id="add-task-form">
+          <input type="text" id="task-title" placeholder="Task title...">
+          <div class="inline-form-row">
+            <select id="task-assignee">
+              <option value="">Assignee</option>
+            </select>
+            <select id="task-priority">
+              <option value="medium">Medium</option>
+              <option value="urgent">Urgent</option>
+              <option value="high">High</option>
+              <option value="low">Low</option>
+            </select>
+          </div>
+          <div class="inline-form-row">
+            <select id="task-project">
+              <option value="">No project</option>
+            </select>
+            <input type="date" id="task-due">
+          </div>
+          <div class="inline-form-row" style="justify-content: flex-end;">
+            <button class="btn-cancel" onclick="toggleAddForm()">Cancel</button>
+            <button class="btn-primary" onclick="addTask()">Add Task</button>
+          </div>
+        </div>
+        <div class="col-body" id="col-todo"></div>
+      </div>
+
+      <!-- In Progress -->
+      <div class="task-column">
+        <div class="col-header">
+          <div class="col-header-left">
+            <span class="col-title">In Progress</span>
+            <span class="col-count" id="count-inprogress">0</span>
+          </div>
+        </div>
+        <div class="col-body" id="col-inprogress"></div>
+      </div>
+
+      <!-- Done -->
+      <div class="task-column">
+        <div class="col-header">
+          <div class="col-header-left">
+            <span class="col-title">Done</span>
+            <span class="col-count" id="count-done">0</span>
+          </div>
+        </div>
+        <div class="col-body" id="col-done"></div>
+      </div>
+    </div>
+
+    <!-- Projects -->
+    <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 0.75rem;">
+      <div class="section-title" style="margin-bottom: 0;">Projects</div>
+      <button class="col-add-btn" onclick="toggleProjectForm()" title="New project">
+        <i class="fas fa-plus"></i> New
+      </button>
+    </div>
+    <div class="projects-grid" id="projects-grid">
+      <div class="project-add-form" id="project-add-form">
+        <input type="text" id="project-name" placeholder="Project name...">
+        <button class="btn-primary" onclick="addProject()">Add</button>
+        <button class="btn-cancel" onclick="toggleProjectForm()"><i class="fas fa-times"></i></button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const CSRF = '{{ csrf_token }}';
+    let tasks = JSON.parse('{{ tasks_json|safe }}');
+    let team = JSON.parse('{{ team_json|safe }}');
+    let projects = JSON.parse('{{ projects_json|safe }}');
+
+    let filterUser = null;
+    let filterProject = null;
+
+    const avatarColors = [
+      '#667eea', '#764ba2', '#f093fb', '#4facfe', '#43e97b',
+      '#fa709a', '#fee140', '#a18cd1', '#fbc2eb', '#30cfd0'
+    ];
+
+    function getAvatarColor(id) {
+      return avatarColors[(id || 0) % avatarColors.length];
+    }
+
+    function getInitials(name) {
+      if (!name) return '?';
+      const parts = name.trim().split(/\s+/);
+      if (parts.length === 1) return parts[0][0].toUpperCase();
+      return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+    }
+
+    // ── Render Team Cards ──────────────────────────────
+
+    function renderTeam() {
+      const container = document.getElementById('team-cards');
+      container.innerHTML = '';
+      const strip = container.parentElement;
+
+      team.forEach(member => {
+        const openCount = tasks.filter(t => t.assigned_to === member.id && t.status !== 'done').length;
+
+        const card = document.createElement('div');
+        card.className = 'team-card' + (filterUser === member.id ? ' active' : '');
+        card.setAttribute('data-filter-user', member.id);
+        card.onclick = () => filterByUser(member.id);
+
+        const avatarHtml = member.avatar
+          ? `<img src="${member.avatar}" alt="${member.name}">`
+          : getInitials(member.name);
+
+        card.innerHTML = `
+          <div class="team-avatar" style="background: ${getAvatarColor(member.id)}">
+            ${avatarHtml}
+          </div>
+          <div class="team-info">
+            <span class="team-name">${escapeHtml(member.name)}</span>
+            <span class="team-role">${escapeHtml(member.role || '')}</span>
+          </div>
+          ${openCount > 0 ? `<span class="team-badge">${openCount}</span>` : ''}
+        `;
+        strip.appendChild(card);
+      });
+
+      // Update "All" button state
+      const allBtn = document.querySelector('.team-card-all');
+      if (filterUser === null) {
+        allBtn.classList.add('active');
+      } else {
+        allBtn.classList.remove('active');
+      }
+    }
+
+    // ── Render Tasks ───────────────────────────────────
+
+    function renderTasks() {
+      const columns = { todo: [], inprogress: [], done: [] };
+
+      const filtered = tasks.filter(t => {
+        if (filterUser !== null && t.assigned_to !== filterUser) return false;
+        if (filterProject !== null && t.project !== filterProject) return false;
+        return true;
+      });
+
+      filtered.forEach(t => {
+        const status = t.status || 'todo';
+        if (columns[status]) columns[status].push(t);
+      });
+
+      ['todo', 'inprogress', 'done'].forEach(status => {
+        const col = document.getElementById('col-' + status);
+        const count = document.getElementById('count-' + status);
+        count.textContent = columns[status].length;
+
+        if (columns[status].length === 0) {
+          col.innerHTML = '<div class="empty-col">No tasks</div>';
+          return;
+        }
+
+        col.innerHTML = columns[status].map(t => {
+          const priorityClass = 'priority-' + (t.priority || 'medium');
+          const doneClass = status === 'done' ? ' done' : '';
+          const member = team.find(m => m.id === t.assigned_to);
+          const project = projects.find(p => p.id === t.project);
+
+          const canLeft = status === 'inprogress' || status === 'done';
+          const canRight = status === 'todo' || status === 'inprogress';
+          const leftStatus = status === 'done' ? 'inprogress' : 'todo';
+          const rightStatus = status === 'todo' ? 'inprogress' : 'done';
+
+          return `
+            <div class="task-card${doneClass}">
+              <div class="task-card-top">
+                <span class="task-title">${escapeHtml(t.title)}</span>
+                <span class="priority-badge ${priorityClass}">${t.priority || 'medium'}</span>
+              </div>
+              <div class="task-meta">
+                ${member ? `<span><i class="fas fa-user"></i> ${escapeHtml(member.name)}</span>` : ''}
+                ${project ? `<span class="task-project-tag">${escapeHtml(project.name)}</span>` : ''}
+                ${t.due_date ? `<span><i class="fas fa-calendar"></i> ${t.due_date}</span>` : ''}
+              </div>
+              <div class="task-actions">
+                ${canLeft ? `<button onclick="moveTask(${t.id}, '${leftStatus}')" title="Move left"><i class="fas fa-arrow-left"></i></button>` : ''}
+                ${canRight ? `<button onclick="moveTask(${t.id}, '${rightStatus}')" title="Move right"><i class="fas fa-arrow-right"></i></button>` : ''}
+                <span class="spacer"></span>
+                <button class="btn-delete" onclick="deleteTask(${t.id})" title="Delete"><i class="fas fa-times"></i></button>
+              </div>
+            </div>
+          `;
+        }).join('');
+      });
+
+      renderActiveFilters();
+    }
+
+    // ── Render Projects ────────────────────────────────
+
+    function renderProjects() {
+      const grid = document.getElementById('projects-grid');
+      const form = document.getElementById('project-add-form');
+
+      // Keep the form, remove everything else
+      const existingCards = grid.querySelectorAll('.project-card');
+      existingCards.forEach(c => c.remove());
+
+      projects.forEach(p => {
+        const openCount = tasks.filter(t => t.project === p.id && t.status !== 'done').length;
+        const doneCount = tasks.filter(t => t.project === p.id && t.status === 'done').length;
+
+        const card = document.createElement('div');
+        card.className = 'project-card' + (filterProject === p.id ? ' active' : '');
+        card.onclick = () => filterByProject(p.id);
+        card.innerHTML = `
+          <div class="project-name">${escapeHtml(p.name)}</div>
+          ${p.description ? `<div class="project-desc">${escapeHtml(p.description)}</div>` : ''}
+          <div class="project-stats">
+            <span class="project-stat"><span>${openCount}</span> open</span>
+            <span class="project-stat"><span>${doneCount}</span> done</span>
+          </div>
+        `;
+        grid.insertBefore(card, form);
+      });
+
+      // Populate project select in task form
+      const sel = document.getElementById('task-project');
+      sel.innerHTML = '<option value="">No project</option>' +
+        projects.map(p => `<option value="${p.id}">${escapeHtml(p.name)}</option>`).join('');
+    }
+
+    // ── Render Active Filters ──────────────────────────
+
+    function renderActiveFilters() {
+      const el = document.getElementById('active-filters');
+      const tags = [];
+
+      if (filterUser !== null) {
+        const member = team.find(m => m.id === filterUser);
+        if (member) {
+          tags.push(`<span class="filter-tag"><i class="fas fa-user"></i> ${escapeHtml(member.name)} <button onclick="filterUser=null;renderAll();">&times;</button></span>`);
+        }
+      }
+
+      if (filterProject !== null) {
+        const project = projects.find(p => p.id === filterProject);
+        if (project) {
+          tags.push(`<span class="filter-tag"><i class="fas fa-folder"></i> ${escapeHtml(project.name)} <button onclick="filterProject=null;renderAll();">&times;</button></span>`);
+        }
+      }
+
+      if (tags.length > 0) {
+        el.className = 'active-filters visible';
+        el.innerHTML = tags.join('') + `<button class="btn-cancel" style="font-size:0.65rem;padding:0.2rem 0.5rem;" onclick="clearFilters()">Clear all</button>`;
+      } else {
+        el.className = 'active-filters';
+        el.innerHTML = '';
+      }
+    }
+
+    // ── Populate Assignee Select ───────────────────────
+
+    function populateAssigneeSelect() {
+      const sel = document.getElementById('task-assignee');
+      sel.innerHTML = '<option value="">Assignee</option>' +
+        team.map(m => `<option value="${m.id}">${escapeHtml(m.name)}</option>`).join('');
+    }
+
+    // ── Render All ─────────────────────────────────────
+
+    function renderAll() {
+      renderTeam();
+      renderTasks();
+      renderProjects();
+    }
+
+    // ── Filters ────────────────────────────────────────
+
+    function filterByUser(userId) {
+      filterUser = filterUser === userId ? null : userId;
+      renderAll();
+    }
+
+    function filterByProject(projectId) {
+      filterProject = filterProject === projectId ? null : projectId;
+      renderAll();
+    }
+
+    function clearFilters() {
+      filterUser = null;
+      filterProject = null;
+      renderAll();
+    }
+
+    // ── Toggle Forms ───────────────────────────────────
+
+    function toggleAddForm() {
+      const form = document.getElementById('add-task-form');
+      form.classList.toggle('visible');
+      if (form.classList.contains('visible')) {
+        document.getElementById('task-title').focus();
+      }
+    }
+
+    function toggleProjectForm() {
+      const form = document.getElementById('project-add-form');
+      form.classList.toggle('visible');
+      if (form.classList.contains('visible')) {
+        document.getElementById('project-name').focus();
+      }
+    }
+
+    // ── API Helpers ────────────────────────────────────
+
+    async function apiPost(data) {
+      const body = new URLSearchParams(data);
+      body.append('csrfmiddlewaretoken', CSRF);
+      const res = await fetch(window.location.href, {
+        method: 'POST',
+        headers: { 'X-CSRFToken': CSRF },
+        body: body
+      });
+      return res.json();
+    }
+
+    // ── CRUD Operations ────────────────────────────────
+
+    async function addTask() {
+      const title = document.getElementById('task-title').value.trim();
+      if (!title) return;
+
+      const data = {
+        action: 'task_add',
+        title: title,
+        assigned_to: document.getElementById('task-assignee').value,
+        priority: document.getElementById('task-priority').value,
+        project: document.getElementById('task-project').value,
+        due_date: document.getElementById('task-due').value
+      };
+
+      try {
+        const result = await apiPost(data);
+        if (result.task) {
+          tasks.push(result.task);
+          renderAll();
+          document.getElementById('task-title').value = '';
+          document.getElementById('task-due').value = '';
+          document.getElementById('task-priority').value = 'medium';
+          toggleAddForm();
+        }
+      } catch (err) {
+        console.error('Failed to add task:', err);
+      }
+    }
+
+    async function moveTask(id, newStatus) {
+      try {
+        const result = await apiPost({ action: 'task_move', task_id: id, status: newStatus });
+        if (result.success) {
+          const task = tasks.find(t => t.id === id);
+          if (task) task.status = newStatus;
+          renderAll();
+        }
+      } catch (err) {
+        console.error('Failed to move task:', err);
+      }
+    }
+
+    async function deleteTask(id) {
+      try {
+        const result = await apiPost({ action: 'task_delete', task_id: id });
+        if (result.success) {
+          tasks = tasks.filter(t => t.id !== id);
+          renderAll();
+        }
+      } catch (err) {
+        console.error('Failed to delete task:', err);
+      }
+    }
+
+    async function addProject() {
+      const name = document.getElementById('project-name').value.trim();
+      if (!name) return;
+
+      try {
+        const result = await apiPost({ action: 'project_add', name: name });
+        if (result.project) {
+          projects.push(result.project);
+          renderAll();
+          document.getElementById('project-name').value = '';
+          toggleProjectForm();
+        }
+      } catch (err) {
+        console.error('Failed to add project:', err);
+      }
+    }
+
+    // ── Utility ────────────────────────────────────────
+
+    function escapeHtml(str) {
+      if (!str) return '';
+      const div = document.createElement('div');
+      div.textContent = str;
+      return div.innerHTML;
+    }
+
+    // ── Init ───────────────────────────────────────────
+
+    populateAssigneeSelect();
+    renderAll();
+  </script>
+</body>
+</html>

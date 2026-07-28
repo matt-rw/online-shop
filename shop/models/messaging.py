@@ -229,6 +229,9 @@ class Task(models.Model):
     title = models.CharField(max_length=300)
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default="todo")
     priority = models.CharField(max_length=20, choices=PRIORITY_CHOICES, default="medium")
+    project = models.ForeignKey(
+        "Project", null=True, blank=True, on_delete=models.SET_NULL, related_name="tasks"
+    )
     assigned_to = models.ForeignKey(
         User, null=True, blank=True, on_delete=models.SET_NULL, related_name="assigned_tasks"
     )
@@ -244,6 +247,27 @@ class Task(models.Model):
 
     def __str__(self):
         return self.title
+
+
+class Project(models.Model):
+    """Projects group related tasks together."""
+    STATUS_CHOICES = [
+        ("active", "Active"),
+        ("completed", "Completed"),
+        ("archived", "Archived"),
+    ]
+
+    name = models.CharField(max_length=200)
+    description = models.TextField(blank=True)
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default="active")
+    created_by = models.ForeignKey(User, null=True, blank=True, on_delete=models.SET_NULL)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["-created_at"]
+
+    def __str__(self):
+        return self.name
 
 
 class CalendarEvent(models.Model):
