@@ -23,6 +23,11 @@ handler404 = custom_404
 handler500 = custom_500
 
 urlpatterns = [
+    path("sitemap.xml", shop_views.sitemap_xml, name="sitemap"),
+    path("robots.txt", lambda r: __import__('django.http', fromlist=['HttpResponse']).HttpResponse(
+        "User-agent: *\nAllow: /\nDisallow: /bp-manage/\nDisallow: /bp-djadmin/\nDisallow: /accounts/\n\nSitemap: https://www.blueprnt.store/sitemap.xml\n",
+        content_type="text/plain"
+    ), name="robots"),
     path("", home_views.home_page, name="home"),
     path("bp-djadmin/", admin.site.urls),
     path("bp-manage/", admin_views.admin_home, name="admin_home"),

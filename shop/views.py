@@ -3,7 +3,7 @@ import logging
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.core.mail import send_mail
-from django.http import JsonResponse
+from django.http import HttpResponse, JsonResponse
 from django.shortcuts import redirect, render
 from django.urls import reverse
 from django.utils.http import url_has_allowed_host_and_scheme
@@ -1313,3 +1313,63 @@ def set_currency(request):
     )
 
     return response
+
+
+@cache_page(60 * 60)  # Cache for 1 hour
+def sitemap_xml(request):
+    """Dynamic XML sitemap for search engines."""
+    from django.utils import timezone
+    from .models import Product
+    from .models.bundle import Bundle
+
+    base = "https://www.blueprnt.store"
+
+    urls = []
+
+    # Static pages
+    static_pages = [
+        {"loc": "/", "priority": "1.0", "changefreq": "daily"},
+        {"loc": "/shop/", "priority": "0.9", "changefreq": "daily"},
+        {"loc": "/shop/about/", "priority": "0.7", "changefreq": "monthly"},
+        {"loc": "/shop/lookbook/", "priority": "0.6", "changefreq": "monthly"},
+        {"loc": "/shop/contact/", "priority": "0.5", "changefreq": "yearly"},
+        {"loc": "/shop/privacy/", "priority": "0.3", "changefreq": "yearly"},
+        {"loc": "/shop/terms/", "priority": "0.3", "changefreq": "yearly"},
+    ]
+    for page in static_pages:
+        urls.append(
+            f'  <url>\n'
+            f'    <loc>{base}{page["loc"]}</loc>\n'
+            f'    <changefreq>{page["changefreq"]}</changefreq>\n'
+            f'    <priority>{page["priority"]}</priority>\n'
+            f'  </url>'
+        )
+
+    # Products
+    for product in Product.objects.filter(is_active=True).exclude(slug__startswith="test-"):
+        lastmod = product.updated_at.strftime("%Y-%m-%d") if product.updated_at else ""
+        urls.append(
+            f'  <url>\n'
+            f'    <loc>{base}/shop/products/{product.slug}/</loc>\n'
+            f'    {"<lastmod>" + lastmod + "</lastmod>" if lastmod else ""}\n'
+            f'    <changefreq>weekly</changefreq>\n'
+            f'    <priority>0.8</priority>\n'
+            f'  </url>'
+        )
+
+    # Bundles
+    for bundle in Bundle.objects.filter(is_active=True):
+        urls.append(
+            f'  <url>\n'
+            f'    <loc>{base}/shop/bundles/{bundle.slug}/</loc>\n'
+            f'    <changefreq>weekly</changefreq>\n'
+            f'    <priority>0.7</priority>\n'
+            f'  </url>'
+        )
+
+    xml = '<?xml version="1.0" encoding="UTF-8"?>\n'
+    xml += '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n'
+    xml += '\n'.join(urls)
+    xml += '\n</urlset>'
+
+    return HttpResponse(xml, content_type="application/xml")
