@@ -624,10 +624,19 @@
     .cmd-cal-day.empty { visibility: hidden; }
     .cmd-cal-day.today {
       color: #fff;
-      background: #667eea;
-      border-radius: 50%;
       font-weight: 800;
-      box-shadow: 0 0 12px rgba(102,126,234,0.4);
+      position: relative;
+    }
+    .cmd-cal-day.today::after {
+      content: '';
+      position: absolute;
+      bottom: 2px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 14px;
+      height: 2px;
+      background: #667eea;
+      border-radius: 1px;
     }
     .cmd-cal-day.has-events {
       color: rgba(255,255,255,0.7);
@@ -2882,10 +2891,15 @@
               html += '<span class="cmd-cal-evt-dot ' + (ev.type || 'note') + '"></span>';
             });
             html += '</div>';
-            html += '<div class="cmd-cal-tooltip">';
+            html += '<div class="cmd-cal-tooltip" onclick="event.stopPropagation();">';
             events.forEach(function(ev) {
-              html += '<div>' + ev.text;
-              if (ev.id) html += ' <span onclick="event.stopPropagation(); calDeleteEvent(' + ev.id + ')" style="color: #f87171; cursor: pointer; margin-left: 0.25rem;">×</span>';
+              html += '<div style="display: flex; align-items: center; gap: 0.375rem; padding: 0.125rem 0;">';
+              html += '<span class="cmd-cal-evt-dot ' + (ev.type || 'note') + '" style="display: inline-block; width: 5px; height: 5px; border-radius: 50%; flex-shrink: 0;"></span>';
+              html += '<span style="flex: 1;">' + ev.text + '</span>';
+              if (ev.id) {
+                html += '<span onclick="calEditEvent(' + ev.id + ',\'' + ev.text.replace(/'/g, "\\'") + '\')" style="color: #818cf8; cursor: pointer; font-size: 0.5rem;">edit</span>';
+                html += '<span onclick="calDeleteEvent(' + ev.id + ')" style="color: #f87171; cursor: pointer; font-size: 0.625rem;">×</span>';
+              }
               html += '</div>';
             });
             html += '</div>';
@@ -2941,9 +2955,13 @@
           body: body.toString()
         }).then(function(r) { return r.json(); })
         .then(function(d) {
-          if (d.success) fetchMonth(curYear, curMonth);
+          if (d.success) {
+            fetchMonth(curYear, curMonth);
+          } else {
+            console.error('Calendar add failed:', d.error);
+          }
           calCancelEvent();
-        });
+        }).catch(function(err) { console.error('Calendar fetch error:', err); calCancelEvent(); });
       };
       window.calCancelEvent = function() {
         document.getElementById('cmdCalEventInput').style.display = 'none';
@@ -2951,7 +2969,6 @@
       };
 
       window.calDeleteEvent = function(eventId) {
-        if (!confirm('Delete this event?')) return;
         var body = new URLSearchParams();
         body.append('action', 'calendar_delete_event');
         body.append('event_id', eventId);
@@ -2963,6 +2980,36 @@
         .then(function(d) {
           if (d.success) fetchMonth(curYear, curMonth);
         });
+      };
+
+      window.calEditEvent = function(eventId, currentTitle) {
+        var inputDiv = document.getElementById('cmdCalEventInput');
+        var inputEl = document.getElementById('cmdCalEventText');
+        inputDiv.style.display = 'block';
+        inputEl.value = currentTitle;
+        inputEl.focus();
+        inputEl.select();
+        // Override submit to update instead of create
+        pendingEventDate = null;
+        var origSubmit = window.calSubmitEvent;
+        window.calSubmitEvent = function() {
+          var newTitle = inputEl.value.trim();
+          if (!newTitle) return;
+          var body = new URLSearchParams();
+          body.append('action', 'calendar_update_event');
+          body.append('event_id', eventId);
+          body.append('title', newTitle);
+          fetch(window.location.pathname, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded', 'X-CSRFToken': csrfToken },
+            body: body.toString()
+          }).then(function(r) { return r.json(); })
+          .then(function(d) {
+            if (d.success) fetchMonth(curYear, curMonth);
+            calCancelEvent();
+            window.calSubmitEvent = origSubmit;
+          });
+        };
       };
 
       // Initial render

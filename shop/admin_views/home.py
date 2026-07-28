@@ -42,15 +42,11 @@ def admin_home(request):
     """
     # Calendar AJAX handlers
     if request.method == "POST" and request.POST.get("action") == "calendar_add_event":
-        import json as json_mod
         try:
-            data = json_mod.loads(request.body) if request.content_type == "application/json" else None
-            if not data:
-                data = {"date": request.POST.get("date"), "title": request.POST.get("title"), "event_type": request.POST.get("event_type", "note")}
             event = CalendarEvent.objects.create(
-                date=data["date"],
-                title=data["title"],
-                event_type=data.get("event_type", "note"),
+                date=request.POST.get("date"),
+                title=request.POST.get("title", ""),
+                event_type=request.POST.get("event_type", "note"),
                 created_by=request.user,
             )
             return JsonResponse({"success": True, "id": event.id})
@@ -61,6 +57,22 @@ def admin_home(request):
         try:
             CalendarEvent.objects.filter(id=request.POST.get("event_id")).delete()
             return JsonResponse({"success": True})
+        except Exception as e:
+            return JsonResponse({"success": False, "error": str(e)})
+
+    if request.method == "POST" and request.POST.get("action") == "calendar_update_event":
+        try:
+            event = CalendarEvent.objects.get(id=request.POST.get("event_id"))
+            title = request.POST.get("title")
+            if title:
+                event.title = title
+            event_type = request.POST.get("event_type")
+            if event_type:
+                event.event_type = event_type
+            event.save()
+            return JsonResponse({"success": True})
+        except CalendarEvent.DoesNotExist:
+            return JsonResponse({"success": False, "error": "Event not found"})
         except Exception as e:
             return JsonResponse({"success": False, "error": str(e)})
 
