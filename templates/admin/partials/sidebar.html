@@ -103,9 +103,21 @@
           <span class="sidebar-item-icon"><i class="fa-solid fa-rotate-left"></i></span>
           <span>Returns & Exchanges</span>
         </a>
+      </div>
+    </div>
+
+    <!-- Team Section -->
+    <div class="sidebar-section" data-section="team">
+      <button class="sidebar-section-header" onclick="toggleSidebarSection('team')">
+        <span class="sidebar-section-icon"><i class="fa-solid fa-people-group"></i></span>
+        <span class="sidebar-section-text">Team</span>
+        <span class="sidebar-section-chevron">▶</span>
+        <span class="sidebar-tooltip">Team</span>
+      </button>
+      <div class="sidebar-section-items">
         <a href="{% url 'admin_team' %}" class="sidebar-item" data-page="team">
-          <span class="sidebar-item-icon"><i class="fa-solid fa-people-group"></i></span>
-          <span>Team</span>
+          <span class="sidebar-item-icon"><i class="fa-solid fa-clipboard-list"></i></span>
+          <span>Tasks & Projects</span>
         </a>
       </div>
     </div>
