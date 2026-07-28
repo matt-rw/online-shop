@@ -450,19 +450,195 @@
     }
 
     /* Command Center — body & content overrides */
-    body.cmd-mode { background: #0f0f1a; }
-    body.cmd-mode .main-content { position: relative; }
-    body.cmd-mode .main-content::before {
-      content: '';
+    body.cmd-mode { background: #0a0a14; }
+
+    /* Particle canvas background */
+    #cmdParticles {
       position: fixed;
       inset: 0;
-      background-image:
-        linear-gradient(rgba(102, 126, 234, 0.03) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(102, 126, 234, 0.03) 1px, transparent 1px);
-      background-size: 40px 40px;
-      pointer-events: none;
       z-index: 0;
+      pointer-events: none;
     }
+
+    /* Scan-line effect on panels */
+    @keyframes scanLine {
+      0% { top: -2px; opacity: 0; }
+      10% { opacity: 1; }
+      90% { opacity: 1; }
+      100% { top: 100%; opacity: 0; }
+    }
+    .cmd-panel::before, .cmd-stat-card::before {
+      content: '';
+      position: absolute;
+      left: 0; right: 0;
+      top: -2px;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, rgba(129,140,248,0.6), transparent);
+      opacity: 0;
+      pointer-events: none;
+      z-index: 5;
+    }
+    body.cmd-mode .cmd-panel::before, body.cmd-mode .cmd-stat-card::before {
+      animation: scanLine 2s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+    }
+    .cmd-stat-card:nth-child(2)::before { animation-delay: 0.15s !important; }
+    .cmd-stat-card:nth-child(3)::before { animation-delay: 0.3s !important; }
+    .cmd-stat-card:nth-child(4)::before { animation-delay: 0.45s !important; }
+    .cmd-stat-card:nth-child(5)::before { animation-delay: 0.6s !important; }
+    .cmd-stat-card:nth-child(6)::before { animation-delay: 0.75s !important; }
+
+    /* Pulsing accent lines */
+    @keyframes glowPulse {
+      0%, 100% { opacity: 0.3; }
+      50% { opacity: 0.8; }
+    }
+    .cmd-glow-line {
+      height: 1px;
+      background: linear-gradient(90deg, transparent, rgba(129,140,248,0.4), transparent);
+      margin: 1.5rem 0;
+      animation: glowPulse 4s ease-in-out infinite;
+      position: relative;
+      z-index: 1;
+    }
+
+    /* Radar ping for status dots */
+    @keyframes radarPing {
+      0% { transform: scale(1); opacity: 0.8; }
+      100% { transform: scale(3); opacity: 0; }
+    }
+    .cmd-status-dot { position: relative; }
+    .cmd-status-dot.green::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      border-radius: 50%;
+      background: #34d399;
+      animation: radarPing 2.5s ease-out infinite;
+    }
+    .cmd-status-dot.yellow::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      border-radius: 50%;
+      background: #fbbf24;
+      animation: radarPing 1.5s ease-out infinite;
+    }
+    .cmd-status-dot.red::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      border-radius: 50%;
+      background: #f87171;
+      animation: radarPing 1s ease-out infinite;
+    }
+
+    /* Count-up values — tabular numbers */
+    .cmd-panel-value, .cmd-stat-value, .cmd-alert-count, .cmd-order-total {
+      font-variant-numeric: tabular-nums;
+    }
+
+    /* SVG line chart */
+    .cmd-chart-svg { width: 100%; height: 180px; }
+    .cmd-chart-line {
+      fill: none;
+      stroke: #818cf8;
+      stroke-width: 2;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+      filter: drop-shadow(0 0 6px rgba(129,140,248,0.4));
+    }
+    .cmd-chart-area {
+      fill: url(#chartGradient);
+      opacity: 0.3;
+    }
+    @keyframes drawLine {
+      to { stroke-dashoffset: 0; }
+    }
+    .cmd-chart-dot {
+      fill: #818cf8;
+      filter: drop-shadow(0 0 4px rgba(129,140,248,0.6));
+      opacity: 0;
+      animation: dotAppear 0.3s forwards;
+    }
+    @keyframes dotAppear {
+      to { opacity: 1; }
+    }
+    .cmd-chart-dot:hover {
+      r: 5;
+      filter: drop-shadow(0 0 8px rgba(129,140,248,0.8));
+    }
+    .cmd-chart-label-bottom {
+      fill: rgba(255,255,255,0.25);
+      font-size: 10px;
+      font-family: 'Inter', sans-serif;
+      font-weight: 500;
+      text-anchor: middle;
+    }
+    .cmd-chart-tooltip {
+      fill: rgba(255,255,255,0.7);
+      font-size: 10px;
+      font-family: 'Inter', sans-serif;
+      font-weight: 600;
+      text-anchor: middle;
+      opacity: 0;
+      transition: opacity 0.2s;
+    }
+    .cmd-chart-dot:hover + .cmd-chart-tooltip,
+    .cmd-chart-dot:hover ~ .cmd-chart-tooltip { opacity: 1; }
+
+    /* Input glow focus */
+    @keyframes inputGlow {
+      0%, 100% { box-shadow: 0 0 8px rgba(129,140,248,0.2), 0 0 2px rgba(129,140,248,0.1); }
+      50% { box-shadow: 0 0 16px rgba(129,140,248,0.4), 0 0 4px rgba(129,140,248,0.2); }
+    }
+    body.cmd-mode #quickSubject:focus,
+    body.cmd-mode #quickContent:focus,
+    body.cmd-mode #testRecipient:focus {
+      animation: inputGlow 2s ease-in-out infinite;
+    }
+
+    /* Radar sweep for visitor map */
+    @keyframes radarSweep {
+      from { transform: rotate(0deg); }
+      to { transform: rotate(360deg); }
+    }
+    .cmd-map-radar {
+      position: absolute;
+      top: 50%; left: 50%;
+      width: 120px; height: 120px;
+      margin: -60px 0 0 -60px;
+      border-radius: 50%;
+      pointer-events: none;
+      opacity: 0.15;
+    }
+    .cmd-map-radar::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      border-radius: 50%;
+      border: 1px solid rgba(129,140,248,0.2);
+    }
+    .cmd-map-radar::after {
+      content: '';
+      position: absolute;
+      top: 0; left: 50%;
+      width: 50%; height: 50%;
+      transform-origin: bottom left;
+      animation: radarSweep 4s linear infinite;
+      background: conic-gradient(from 0deg, transparent, rgba(129,140,248,0.3));
+      border-radius: 0 100% 0 0;
+    }
+
+    /* Feed stagger */
+    .cmd-feed-item:nth-child(1) { animation-delay: 0s; }
+    .cmd-feed-item:nth-child(2) { animation-delay: 0.08s; }
+    .cmd-feed-item:nth-child(3) { animation-delay: 0.16s; }
+    .cmd-feed-item:nth-child(4) { animation-delay: 0.24s; }
+    .cmd-feed-item:nth-child(5) { animation-delay: 0.32s; }
+    .cmd-feed-item:nth-child(6) { animation-delay: 0.4s; }
+    .cmd-feed-item:nth-child(7) { animation-delay: 0.48s; }
+    .cmd-feed-item:nth-child(8) { animation-delay: 0.56s; }
+    body.cmd-mode .main-content { position: relative; }
 
     /* Quick Actions Bar */
     .cmd-actions-bar {
@@ -647,6 +823,176 @@
     }
     @media (max-width: 480px) {
       .cmd-secondary-stats { grid-template-columns: 1fr; }
+    }
+
+    /* System Status Bar */
+    .cmd-status-bar {
+      display: flex;
+      align-items: center;
+      gap: 1.5rem;
+      padding: 0.625rem 1.25rem;
+      background: rgba(255,255,255,0.02);
+      border: 1px solid rgba(255,255,255,0.04);
+      border-radius: 10px;
+      margin-bottom: 1.5rem;
+      position: relative;
+      z-index: 1;
+      overflow-x: auto;
+    }
+    .cmd-status-item {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      white-space: nowrap;
+      font-size: 0.6875rem;
+      font-weight: 500;
+      color: rgba(255,255,255,0.35);
+    }
+    .cmd-status-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+    .cmd-status-dot.green { background: #34d399; box-shadow: 0 0 6px rgba(52,211,153,0.5); }
+    .cmd-status-dot.yellow { background: #fbbf24; box-shadow: 0 0 6px rgba(251,191,36,0.5); }
+    .cmd-status-dot.red { background: #f87171; box-shadow: 0 0 6px rgba(248,113,113,0.5); }
+    .cmd-status-value { color: rgba(255,255,255,0.6); font-weight: 600; font-variant-numeric: tabular-nums; }
+
+    /* Activity Feed */
+    .cmd-feed-panel { padding: 1.25rem; max-height: 340px; overflow: hidden; position: relative; }
+    .cmd-feed-panel::after {
+      content: '';
+      position: absolute;
+      bottom: 0; left: 0; right: 0; height: 40px;
+      background: linear-gradient(transparent, rgba(15,15,26,0.95));
+      pointer-events: none;
+    }
+    .cmd-feed-list { display: flex; flex-direction: column; gap: 0; }
+    .cmd-feed-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 0.75rem;
+      padding: 0.625rem 0;
+      border-bottom: 1px solid rgba(255,255,255,0.03);
+      font-size: 0.8125rem;
+      animation: feedSlideIn 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    @keyframes feedSlideIn {
+      from { opacity: 0; transform: translateY(-8px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .cmd-feed-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      flex-shrink: 0;
+      margin-top: 0.375rem;
+    }
+    .cmd-feed-dot.order { background: #34d399; box-shadow: 0 0 8px rgba(52,211,153,0.4); }
+    .cmd-feed-dot.signup { background: #818cf8; box-shadow: 0 0 8px rgba(129,140,248,0.4); }
+    .cmd-feed-dot.message { background: #fbbf24; box-shadow: 0 0 8px rgba(251,191,36,0.4); }
+    .cmd-feed-dot.view { background: rgba(255,255,255,0.2); }
+    .cmd-feed-text { color: rgba(255,255,255,0.5); flex: 1; line-height: 1.4; }
+    .cmd-feed-text strong { color: rgba(255,255,255,0.8); font-weight: 600; }
+    .cmd-feed-time { color: rgba(255,255,255,0.2); font-size: 0.6875rem; flex-shrink: 0; font-variant-numeric: tabular-nums; }
+
+    /* Revenue Chart */
+    .cmd-chart-panel { padding: 1.25rem; }
+    .cmd-chart-container { position: relative; height: 180px; display: flex; align-items: flex-end; gap: 0; padding-top: 1rem; }
+    .cmd-chart-bar-wrap {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.375rem;
+      height: 100%;
+      justify-content: flex-end;
+    }
+    .cmd-chart-bar {
+      width: 100%;
+      max-width: 32px;
+      border-radius: 4px 4px 0 0;
+      background: linear-gradient(180deg, rgba(129,140,248,0.6) 0%, rgba(102,126,234,0.2) 100%);
+      transition: all 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+      position: relative;
+      min-height: 2px;
+    }
+    .cmd-chart-bar:hover {
+      background: linear-gradient(180deg, rgba(129,140,248,0.9) 0%, rgba(102,126,234,0.4) 100%);
+      box-shadow: 0 0 12px rgba(129,140,248,0.3);
+    }
+    .cmd-chart-bar-value {
+      position: absolute;
+      top: -1.25rem;
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: 0.625rem;
+      color: rgba(255,255,255,0.5);
+      font-weight: 600;
+      font-variant-numeric: tabular-nums;
+      opacity: 0;
+      transition: opacity 0.2s;
+      white-space: nowrap;
+    }
+    .cmd-chart-bar:hover .cmd-chart-bar-value { opacity: 1; }
+    .cmd-chart-label {
+      font-size: 0.625rem;
+      color: rgba(255,255,255,0.25);
+      font-weight: 500;
+      text-transform: uppercase;
+    }
+
+    /* Visitor Map */
+    .cmd-map-panel { padding: 1.25rem; }
+    .cmd-map-globe {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      margin-top: 0.75rem;
+    }
+    .cmd-map-location {
+      display: flex;
+      align-items: center;
+      gap: 0.375rem;
+      padding: 0.375rem 0.75rem;
+      background: rgba(255,255,255,0.03);
+      border: 1px solid rgba(255,255,255,0.04);
+      border-radius: 6px;
+      font-size: 0.75rem;
+      color: rgba(255,255,255,0.4);
+      transition: all 0.2s;
+    }
+    .cmd-map-location:hover {
+      background: rgba(255,255,255,0.06);
+      color: rgba(255,255,255,0.7);
+    }
+    .cmd-map-location .flag { font-size: 0.875rem; }
+    .cmd-map-pulse {
+      width: 6px; height: 6px; border-radius: 50%;
+      background: #34d399;
+      box-shadow: 0 0 6px rgba(52,211,153,0.5);
+      animation: pulse 2s ease-in-out infinite;
+    }
+    @keyframes pulse {
+      0%, 100% { opacity: 0.4; transform: scale(1); }
+      50% { opacity: 1; transform: scale(1.3); }
+    }
+
+    /* Three-column layout for feed/chart/map */
+    .cmd-three-col {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 1rem;
+      margin-bottom: 1.5rem;
+      position: relative;
+      z-index: 1;
+    }
+    @media (max-width: 1024px) {
+      .cmd-three-col { grid-template-columns: 1fr 1fr; }
+    }
+    @media (max-width: 768px) {
+      .cmd-three-col { grid-template-columns: 1fr; }
     }
 
     .section-header {
@@ -1116,6 +1462,7 @@
   </style>
 </head>
 <body>
+  <canvas id="cmdParticles"></canvas>
   {% include "admin/partials/sidebar.html" %}
   <div class="top-bar" id="cmdHero">
     <div class="container">
@@ -1127,7 +1474,7 @@
         </div>
         <div style="display: flex; gap: 0.5rem; align-items: center;">
           <button class="hero-toggle" onclick="toggleHeroMode()" id="heroToggleBtn">Classic View</button>
-          <a href="/" class="view-site-btn" style="border: none;">
+          <a href="/" target="_blank" class="view-site-btn" style="border: none;">
             <span><i class="fa-solid fa-arrow-up-right-from-square" style="font-size: 0.7rem;"></i></span>
             <span>Site</span>
           </a>
@@ -1217,7 +1564,7 @@
             <span><i class="fa-solid fa-gear" style="font-size: 0.8rem;"></i></span>
           </button>
           <button class="hero-toggle" onclick="toggleHeroMode()" style="background: rgba(255,255,255,0.15); border-color: rgba(255,255,255,0.2); color: rgba(255,255,255,0.7);">Command Center</button>
-          <a href="/" class="view-site-btn">
+          <a href="/" target="_blank" class="view-site-btn">
             <span><i class="fa-solid fa-arrow-up-right-from-square" style="font-size: 0.7rem;"></i></span>
             <span>View Site</span>
           </a>
@@ -1335,6 +1682,63 @@
           <div class="cmd-panel-label">Page Views (24h)</div>
           <div class="cmd-stat-value">{{ stats.page_views_24h }}</div>
         </div>
+      </div>
+
+      <div class="cmd-glow-line"></div>
+
+      <!-- System Status Bar -->
+      <div class="cmd-status-bar">
+        <div class="cmd-status-item">
+          <span class="cmd-status-dot {% if stats.homepage_avg_response_ms <= 300 %}green{% elif stats.homepage_avg_response_ms <= 800 %}yellow{% else %}red{% endif %}"></span>
+          <span>Response</span>
+          <span class="cmd-status-value">{{ stats.homepage_avg_response_ms }}ms</span>
+        </div>
+        <div class="cmd-status-item">
+          <span class="cmd-status-dot green"></span>
+          <span>Server</span>
+          <span class="cmd-status-value">Online</span>
+        </div>
+        <div class="cmd-status-item">
+          <span class="cmd-status-dot {% if stats.active_sessions > 0 %}green{% else %}yellow{% endif %}"></span>
+          <span>Sessions</span>
+          <span class="cmd-status-value">{{ stats.active_sessions }} active</span>
+        </div>
+        <div class="cmd-status-item">
+          <span class="cmd-status-dot {% if stats.out_of_stock == 0 %}green{% else %}red{% endif %}"></span>
+          <span>Inventory</span>
+          <span class="cmd-status-value">{% if stats.out_of_stock > 0 %}{{ stats.out_of_stock }} OOS{% else %}All stocked{% endif %}</span>
+        </div>
+        <div class="cmd-status-item">
+          <span class="cmd-status-dot {% if stats.unread_messages == 0 %}green{% else %}yellow{% endif %}"></span>
+          <span>Inbox</span>
+          <span class="cmd-status-value">{% if stats.unread_messages > 0 %}{{ stats.unread_messages }} unread{% else %}Clear{% endif %}</span>
+        </div>
+      </div>
+
+      <div class="cmd-glow-line"></div>
+
+      <!-- Activity Feed / Revenue Chart / Visitor Map -->
+      <div class="cmd-three-col">
+
+        <!-- Activity Feed -->
+        <div class="cmd-panel cmd-feed-panel">
+          <div class="cmd-panel-label">Live Activity</div>
+          <div class="cmd-feed-list" id="cmdActivityFeed"></div>
+        </div>
+
+        <!-- Revenue Chart -->
+        <div class="cmd-panel cmd-chart-panel">
+          <div class="cmd-panel-label">Revenue — Last 7 Days</div>
+          <div class="cmd-chart-container" id="cmdRevenueChart"></div>
+        </div>
+
+        <!-- Visitor Map -->
+        <div class="cmd-panel cmd-map-panel" style="position: relative; overflow: hidden;">
+          <div class="cmd-map-radar"></div>
+          <div class="cmd-panel-label" style="position: relative; z-index: 1;">Visitor Locations</div>
+          <div class="cmd-map-globe" id="cmdVisitorMap" style="position: relative; z-index: 1;"></div>
+        </div>
+
       </div>
 
     </div>
@@ -1894,6 +2298,260 @@
         else if (diff < 86400) el.textContent = Math.floor(diff / 3600) + 'h ago';
         else el.textContent = Math.floor(diff / 86400) + 'd ago';
       });
+    })();
+
+    // ========== PARTICLE CANVAS BACKGROUND ==========
+    (function() {
+      var canvas = document.getElementById('cmdParticles');
+      if (!canvas || !document.body.classList.contains('cmd-mode')) {
+        if (canvas) canvas.style.display = 'none';
+        return;
+      }
+      var ctx = canvas.getContext('2d');
+      var particles = [];
+      var PARTICLE_COUNT = 50;
+      var CONNECT_DIST = 120;
+
+      function resize() {
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+      }
+      resize();
+      window.addEventListener('resize', resize);
+
+      for (var i = 0; i < PARTICLE_COUNT; i++) {
+        particles.push({
+          x: Math.random() * canvas.width,
+          y: Math.random() * canvas.height,
+          vx: (Math.random() - 0.5) * 0.3,
+          vy: (Math.random() - 0.5) * 0.3,
+          r: Math.random() * 1.5 + 0.5,
+        });
+      }
+
+      function draw() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        // Draw connections
+        for (var i = 0; i < particles.length; i++) {
+          for (var j = i + 1; j < particles.length; j++) {
+            var dx = particles[i].x - particles[j].x;
+            var dy = particles[i].y - particles[j].y;
+            var dist = Math.sqrt(dx * dx + dy * dy);
+            if (dist < CONNECT_DIST) {
+              ctx.beginPath();
+              ctx.moveTo(particles[i].x, particles[i].y);
+              ctx.lineTo(particles[j].x, particles[j].y);
+              ctx.strokeStyle = 'rgba(129,140,248,' + (0.04 * (1 - dist / CONNECT_DIST)) + ')';
+              ctx.lineWidth = 0.5;
+              ctx.stroke();
+            }
+          }
+        }
+        // Draw particles
+        for (var k = 0; k < particles.length; k++) {
+          var p = particles[k];
+          ctx.beginPath();
+          ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+          ctx.fillStyle = 'rgba(129,140,248,0.15)';
+          ctx.fill();
+          // Move
+          p.x += p.vx;
+          p.y += p.vy;
+          if (p.x < 0 || p.x > canvas.width) p.vx *= -1;
+          if (p.y < 0 || p.y > canvas.height) p.vy *= -1;
+        }
+        requestAnimationFrame(draw);
+      }
+      draw();
+
+      // Hide canvas when switching to classic mode
+      var origToggle = window.toggleHeroMode;
+      window.toggleHeroMode = function() {
+        origToggle();
+        canvas.style.display = document.body.classList.contains('cmd-mode') ? '' : 'none';
+      };
+    })();
+
+    // ========== COUNT-UP ANIMATION ==========
+    (function() {
+      if (!document.body.classList.contains('cmd-mode')) return;
+      function countUp(el, target, prefix, suffix, decimals) {
+        var start = 0;
+        var duration = 1500;
+        var startTime = null;
+        function ease(t) { return t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2; }
+        function step(ts) {
+          if (!startTime) startTime = ts;
+          var progress = Math.min((ts - startTime) / duration, 1);
+          var current = start + (target - start) * ease(progress);
+          el.textContent = (prefix || '') + (decimals ? current.toFixed(decimals) : Math.round(current).toLocaleString()) + (suffix || '');
+          if (progress < 1) requestAnimationFrame(step);
+        }
+        requestAnimationFrame(step);
+      }
+      // Hero panels
+      document.querySelectorAll('.cmd-panel-value').forEach(function(el) {
+        var text = el.textContent.trim();
+        var match = text.match(/^\$?([\d,.]+)(%?)$/);
+        if (match) {
+          var num = parseFloat(match[1].replace(/,/g, ''));
+          var prefix = text.startsWith('$') ? '$' : '';
+          var suffix = match[2] || '';
+          var dec = text.includes('.') ? 2 : 0;
+          countUp(el, num, prefix, suffix, dec);
+        }
+      });
+      // Secondary stat cards
+      document.querySelectorAll('.cmd-stat-value').forEach(function(el) {
+        var text = el.textContent.trim();
+        var match = text.match(/^\$?([\d,.]+)(%?)$/);
+        if (match) {
+          var num = parseFloat(match[1].replace(/,/g, ''));
+          var prefix = text.startsWith('$') ? '$' : '';
+          var suffix = match[2] || '';
+          var dec = text.includes('.') ? 2 : 0;
+          el.style.animationDelay = (Math.random() * 0.3) + 's';
+          countUp(el, num, prefix, suffix, dec);
+        }
+      });
+      // Alert counts
+      document.querySelectorAll('.cmd-alert-count').forEach(function(el) {
+        var num = parseInt(el.textContent);
+        if (!isNaN(num)) countUp(el, num, '', '', 0);
+      });
+    })();
+
+    // ========== SVG LINE CHART ==========
+    (function() {
+      var data = {{ revenue_chart_json|safe }};
+      var container = document.getElementById('cmdRevenueChart');
+      if (!container) return;
+      var max = Math.max.apply(null, data.map(function(d) { return d.value; })) || 1;
+      var W = 280, H = 160, PAD_TOP = 20, PAD_BOTTOM = 25, PAD_X = 20;
+      var chartH = H - PAD_TOP - PAD_BOTTOM;
+      var stepX = (W - PAD_X * 2) / (data.length - 1 || 1);
+
+      var points = data.map(function(d, i) {
+        var x = PAD_X + i * stepX;
+        var y = PAD_TOP + chartH - (d.value / max) * chartH;
+        return { x: x, y: y, value: d.value, label: d.label };
+      });
+
+      var linePoints = points.map(function(p) { return p.x + ',' + p.y; }).join(' ');
+      var areaPoints = linePoints + ' ' + points[points.length - 1].x + ',' + (H - PAD_BOTTOM) + ' ' + points[0].x + ',' + (H - PAD_BOTTOM);
+
+      var svg = '<svg class="cmd-chart-svg" viewBox="0 0 ' + W + ' ' + H + '" preserveAspectRatio="none">';
+      svg += '<defs><linearGradient id="chartGradient" x1="0" y1="0" x2="0" y2="1">';
+      svg += '<stop offset="0%" stop-color="rgba(129,140,248,0.4)"/>';
+      svg += '<stop offset="100%" stop-color="rgba(129,140,248,0)"/>';
+      svg += '</linearGradient></defs>';
+      // Area fill
+      svg += '<polygon class="cmd-chart-area" points="' + areaPoints + '"/>';
+      // Line
+      var totalLen = 0;
+      for (var i = 1; i < points.length; i++) {
+        var dx = points[i].x - points[i-1].x;
+        var dy = points[i].y - points[i-1].y;
+        totalLen += Math.sqrt(dx * dx + dy * dy);
+      }
+      svg += '<polyline class="cmd-chart-line" points="' + linePoints + '" stroke-dasharray="' + totalLen + '" stroke-dashoffset="' + totalLen + '" style="animation: drawLine 1.5s cubic-bezier(0.4,0,0.2,1) forwards;"/>';
+      // Dots and labels
+      points.forEach(function(p, idx) {
+        svg += '<circle class="cmd-chart-dot" cx="' + p.x + '" cy="' + p.y + '" r="3" style="animation-delay: ' + (0.8 + idx * 0.1) + 's;"/>';
+        svg += '<text class="cmd-chart-tooltip" x="' + p.x + '" y="' + (p.y - 10) + '">$' + p.value.toFixed(0) + '</text>';
+        svg += '<text class="cmd-chart-label-bottom" x="' + p.x + '" y="' + (H - 5) + '">' + p.label + '</text>';
+      });
+      svg += '</svg>';
+
+      container.innerHTML = svg;
+      // Remove the old bar chart styles for this container
+      container.classList.remove('cmd-chart-container');
+      container.style.height = 'auto';
+      container.style.display = 'block';
+      container.style.padding = '0';
+    })();
+
+    // Activity Feed
+    (function() {
+      var feed = {{ activity_feed_json|safe }};
+      var container = document.getElementById('cmdActivityFeed');
+      if (!container || !feed.length) {
+        if (container) container.innerHTML = '<div style="text-align: center; padding: 2rem; color: rgba(255,255,255,0.2); font-size: 0.8125rem;">No recent activity</div>';
+        return;
+      }
+      function timeAgo(iso) {
+        var diff = Math.floor((new Date() - new Date(iso)) / 1000);
+        if (diff < 60) return 'now';
+        if (diff < 3600) return Math.floor(diff / 60) + 'm';
+        if (diff < 86400) return Math.floor(diff / 3600) + 'h';
+        return Math.floor(diff / 86400) + 'd';
+      }
+      container.innerHTML = feed.map(function(e) {
+        return '<div class="cmd-feed-item">'
+          + '<span class="cmd-feed-dot ' + e.type + '"></span>'
+          + '<span class="cmd-feed-text">' + e.text + '</span>'
+          + '<span class="cmd-feed-time">' + timeAgo(e.time) + '</span>'
+          + '</div>';
+      }).join('');
+    })();
+
+    // Revenue Chart
+    (function() {
+      var data = {{ revenue_chart_json|safe }};
+      var container = document.getElementById('cmdRevenueChart');
+      if (!container) return;
+      var max = Math.max.apply(null, data.map(function(d) { return d.value; })) || 1;
+      container.innerHTML = data.map(function(d) {
+        var pct = Math.max(1, (d.value / max) * 100);
+        return '<div class="cmd-chart-bar-wrap">'
+          + '<div class="cmd-chart-bar" style="height: ' + pct + '%;">'
+          + '<span class="cmd-chart-bar-value">$' + d.value.toFixed(0) + '</span>'
+          + '</div>'
+          + '<span class="cmd-chart-label">' + d.label + '</span>'
+          + '</div>';
+      }).join('');
+      // Animate bars in
+      setTimeout(function() {
+        container.querySelectorAll('.cmd-chart-bar').forEach(function(bar) {
+          bar.style.opacity = '1';
+        });
+      }, 100);
+    })();
+
+    // Visitor Map
+    (function() {
+      var locations = {{ visitor_locations_json|safe }};
+      var container = document.getElementById('cmdVisitorMap');
+      if (!container) return;
+      if (!locations.length) {
+        container.innerHTML = '<div style="text-align: center; padding: 1.5rem; color: rgba(255,255,255,0.2); font-size: 0.8125rem;">No visitor data yet</div>';
+        return;
+      }
+      // Count by country
+      var counts = {};
+      locations.forEach(function(l) {
+        var key = l.country_name || l.country || 'Unknown';
+        var city = l.city || '';
+        if (!counts[key]) counts[key] = { count: 0, cities: new Set(), code: l.country };
+        counts[key].count++;
+        if (city) counts[key].cities.add(city);
+      });
+      // Country code to flag emoji
+      function flag(code) {
+        if (!code || code.length !== 2) return '🌍';
+        return String.fromCodePoint(...[...code.toUpperCase()].map(c => 0x1F1E6 + c.charCodeAt(0) - 65));
+      }
+      var sorted = Object.entries(counts).sort(function(a, b) { return b[1].count - a[1].count; });
+      container.innerHTML = sorted.map(function(entry) {
+        var name = entry[0];
+        var data = entry[1];
+        var cities = Array.from(data.cities).slice(0, 2).join(', ');
+        return '<div class="cmd-map-location">'
+          + '<span class="cmd-map-pulse"></span>'
+          + '<span class="flag">' + flag(data.code) + '</span>'
+          + '<span>' + name + (cities ? ' · ' + cities : '') + '</span>'
+          + '</div>';
+      }).join('');
     })();
 
     // Bubble nav — radial child positioning

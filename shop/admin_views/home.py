@@ -402,6 +402,51 @@ def admin_home(request):
     }
 
     recent_orders = Order.objects.select_related('user').order_by('-created_at')[:5]
+
+    # Revenue chart data — last 7 days
+    import json as json_mod
+    revenue_chart = []
+    for i in range(6, -1, -1):
+        day_start = (now - timedelta(days=i)).replace(hour=0, minute=0, second=0, microsecond=0)
+        day_end = day_start + timedelta(days=1)
+        day_rev = Order.objects.filter(
+            created_at__gte=day_start, created_at__lt=day_end
+        ).aggregate(total=Sum("total"))["total"] or Decimal("0")
+        revenue_chart.append({
+            "label": day_start.strftime("%a"),
+            "value": float(day_rev),
+        })
+
+    # Activity feed — recent events (orders, signups, messages)
+    activity_feed = []
+    for order in Order.objects.order_by('-created_at')[:8]:
+        activity_feed.append({
+            "type": "order",
+            "text": f"New order {order.order_number} — ${order.total:.2f}",
+            "time": order.created_at.isoformat(),
+        })
+    for sub in EmailSubscription.objects.order_by('-subscribed_at')[:5]:
+        activity_feed.append({
+            "type": "signup",
+            "text": f"New subscriber: {sub.email}",
+            "time": sub.subscribed_at.isoformat(),
+        })
+    for msg in ContactMessage.objects.filter(status="new").order_by('-created_at')[:3]:
+        activity_feed.append({
+            "type": "message",
+            "text": f"Message from {msg.name}: {msg.subject[:40]}",
+            "time": msg.created_at.isoformat(),
+        })
+    activity_feed.sort(key=lambda x: x["time"], reverse=True)
+    activity_feed = activity_feed[:12]
+
+    # Visitor locations — top countries/cities from recent sessions
+    visitor_locations = list(
+        VisitorSession.objects.filter(
+            country__isnull=False
+        ).exclude(country="").values('country', 'city').order_by('-last_seen')[:20]
+    )
+
     drafts = QuickMessage.objects.filter(status="draft").order_by("-updated_at")[:5]
 
     load_draft_id = request.GET.get("load_draft")
@@ -419,6 +464,9 @@ def admin_home(request):
         "stats": stats,
         "cst_time": timezone.now().astimezone(pytz.timezone("America/Chicago")),
         "recent_orders": recent_orders,
+        "revenue_chart_json": json_mod.dumps(revenue_chart),
+        "activity_feed_json": json_mod.dumps(activity_feed),
+        "visitor_locations_json": json_mod.dumps(visitor_locations),
         "drafts": drafts,
         "load_draft": load_draft,
         "default_test_email": site_settings.default_test_email,
