@@ -217,12 +217,32 @@ class VisitorTrackingMiddleware:
         ua_lower = user_agent.lower()
 
         bot_indicators = [
-            "bot", "crawl", "spider", "scrape", "curl", "wget", "python",
-            "java", "perl", "ruby", "go-http", "node-fetch", "axios",
-            "httpie", "postman", "insomnia", "scanner", "probe", "masscan",
-            "nmap", "zgrab", "nikto", "sqlmap", "wpscan", "nuclei", "httpx"
+            # Generic bot patterns
+            "bot", "crawl", "spider", "scrape", "slurp",
+            # HTTP clients & tools
+            "curl", "wget", "python", "java/", "perl", "ruby",
+            "go-http", "node-fetch", "axios", "httpie", "http-client",
+            "postman", "insomnia", "undici", "got/", "request/",
+            # Headless browsers & automation
+            "headless", "phantom", "selenium", "puppeteer", "playwright",
+            "chromium-render", "prerender",
+            # Security scanners
+            "scanner", "probe", "masscan", "nmap", "zgrab", "nikto",
+            "sqlmap", "wpscan", "nuclei", "httpx", "dirbuster", "gobuster",
+            # SEO & monitoring tools
+            "semrush", "ahrefs", "mj12bot", "dotbot", "yandex", "baidu",
+            "sogou", "exabot", "facebookexternalhit", "twitterbot",
+            "linkedinbot", "whatsapp", "telegrambot", "discordbot",
+            "applebot", "duckduck", "ia_archiver", "archive.org",
+            # Feed readers & misc
+            "feedfetcher", "feedly", "rss", "libwww", "lwp-",
+            "mechanize", "winhttp", "cfnetwork",
         ]
         if any(indicator in ua_lower for indicator in bot_indicators):
+            return "bot"
+
+        # Empty or missing user agent
+        if not user_agent.strip():
             return "bot"
 
         if path:

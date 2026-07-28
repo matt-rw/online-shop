@@ -444,12 +444,13 @@ def admin_home(request):
     revenue_today = Order.objects.filter(created_at__gte=today_start).aggregate(total=Sum("total"))["total"] or Decimal("0")
     revenue_yesterday = Order.objects.filter(created_at__gte=yesterday_start, created_at__lt=today_start).aggregate(total=Sum("total"))["total"] or Decimal("0")
 
-    # Calculate active sessions and visitors
-    active_sessions = VisitorSession.objects.filter(last_seen__gte=now - timedelta(hours=1)).count()
-    total_visitors = VisitorSession.objects.count()
+    # Calculate active sessions and visitors (exclude bots)
+    _no_bots = ~models.Q(device_type="bot")
+    active_sessions = VisitorSession.objects.filter(last_seen__gte=now - timedelta(hours=1)).filter(_no_bots).count()
+    total_visitors = VisitorSession.objects.filter(_no_bots).count()
 
-    # Calculate conversion rate
-    total_sessions = VisitorSession.objects.count()
+    # Calculate conversion rate (exclude bots)
+    total_sessions = VisitorSession.objects.filter(_no_bots).count()
     conversion_rate = (total_orders / total_sessions * 100) if total_sessions > 0 else 0
 
     stats = {
@@ -478,17 +479,17 @@ def admin_home(request):
         # Averages
         "avg_daily_orders": round(total_orders / max((now - Order.objects.order_by('created_at').first().created_at).days, 1), 1) if total_orders > 0 else 0,
         "avg_order_value": round(float(total_revenue) / max(total_orders, 1), 2),
-        "avg_daily_visitors": round(VisitorSession.objects.filter(last_seen__gte=last_30d).count() / 30, 1),
+        "avg_daily_visitors": round(VisitorSession.objects.filter(last_seen__gte=last_30d).filter(_no_bots).count() / 30, 1),
         "email_campaigns": EmailCampaign.objects.count(),
         "sms_campaigns": SMSCampaign.objects.count(),
         "active_campaigns": Campaign.objects.filter(status="active").count(),
-        "total_page_views": PageView.objects.count(),
-        "page_views_24h": PageView.objects.filter(viewed_at__gte=last_24h).count(),
+        "total_page_views": PageView.objects.exclude(device_type="bot").count(),
+        "page_views_24h": PageView.objects.filter(viewed_at__gte=last_24h).exclude(device_type="bot").count(),
         "total_visitors": total_visitors,
         "active_sessions": active_sessions,
         "conversion_rate": round(conversion_rate, 2),
         "homepage_avg_response_ms": round(
-            PageView.objects.filter(path="/", viewed_at__gte=last_24h)
+            PageView.objects.filter(path="/", viewed_at__gte=last_24h).exclude(device_type="bot")
             .aggregate(avg=Avg("response_time_ms"))["avg"] or 0
         ),
     }
@@ -627,7 +628,7 @@ def admin_home(request):
 
     # Conversion funnel
     from shop.models.cart import Cart
-    funnel_visitors = VisitorSession.objects.filter(last_seen__gte=last_30d).count() or 1
+    funnel_visitors = VisitorSession.objects.filter(last_seen__gte=last_30d).filter(_no_bots).count() or 1
     funnel_carts = Cart.objects.filter(created_at__gte=last_30d).count()
     funnel_orders = orders_30d
     funnel_data = {
@@ -674,7 +675,7 @@ def admin_home(request):
             "text": f"Message from {msg.name}: {msg.subject[:40]}",
             "time": msg.created_at.isoformat(),
         })
-    for pv in PageView.objects.filter(viewed_at__gte=last_24h).exclude(path__startswith="/bp-manage").order_by('-viewed_at')[:5]:
+    for pv in PageView.objects.filter(viewed_at__gte=last_24h).exclude(path__startswith="/bp-manage").exclude(device_type="bot").order_by('-viewed_at')[:5]:
         activity_feed.append({
             "type": "view",
             "text": f"Page view: {pv.path}",
@@ -683,11 +684,11 @@ def admin_home(request):
     activity_feed.sort(key=lambda x: x["time"], reverse=True)
     activity_feed = activity_feed[:15]
 
-    # Visitor locations — top countries/cities with counts and duration
+    # Visitor locations — top countries/cities with counts and duration (no bots)
     visitor_sessions_raw = list(
         VisitorSession.objects.filter(
             country__isnull=False
-        ).exclude(country="").values(
+        ).exclude(country="").exclude(device_type="bot").values(
             'country', 'country_name', 'city', 'first_seen', 'last_seen'
         ).order_by('-last_seen')[:30]
     )
