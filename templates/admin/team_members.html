@@ -10,421 +10,132 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
   <style>
     {% include "admin/partials/sidebar_styles.html" %}
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: 'JetBrains Mono', monospace; background: #0a0a14; color: rgba(255,255,255,0.85); min-height: 100vh; -webkit-font-smoothing: antialiased; }
 
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-    }
+    .top-bar { background: linear-gradient(160deg, #0f0f1a 0%, #1a1035 100%); padding: 1.25rem 0; position: relative; overflow: hidden; }
+    .top-bar::before { content: ''; position: absolute; inset: 0; background-image: linear-gradient(rgba(102,126,234,0.04) 1px, transparent 1px), linear-gradient(90deg, rgba(102,126,234,0.04) 1px, transparent 1px); background-size: 40px 40px; pointer-events: none; }
+    .container { max-width: 100%; padding: 0 2rem; position: relative; z-index: 1; }
+    .header { display: flex; align-items: center; justify-content: space-between; }
+    .header h1 { color: white; font-size: 1.5rem; font-weight: 700; letter-spacing: -0.03em; }
+    .back-link { font-size: 0.6875rem; color: #818cf8; text-decoration: none; }
+    .back-link:hover { color: #a5b4fc; }
 
-    body {
-      font-family: 'Inter', sans-serif;
-      background: #0a0a14;
-      color: rgba(255, 255, 255, 0.85);
-      min-height: 100vh;
-      -webkit-font-smoothing: antialiased;
-      -moz-osx-font-smoothing: grayscale;
-    }
+    .main-content { padding: 2rem; }
 
-    /* ── Header ─────────────────────────────────────── */
-
-    .top-bar {
-      background: linear-gradient(160deg, #0f0f1a 0%, #1a1035 100%);
-      padding: 1.5rem 0 1.5rem;
-      position: relative;
-      overflow: hidden;
-    }
-
-    .top-bar::before {
-      content: '';
-      position: absolute;
-      inset: 0;
-      background-image:
-        linear-gradient(rgba(102, 126, 234, 0.04) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(102, 126, 234, 0.04) 1px, transparent 1px);
-      background-size: 40px 40px;
-      pointer-events: none;
-    }
-
-    .top-bar::after {
-      content: '';
-      position: absolute;
-      top: -50%; left: -20%; width: 60%; height: 200%;
-      background: radial-gradient(ellipse, rgba(102, 126, 234, 0.08) 0%, transparent 60%);
-      pointer-events: none;
-    }
-
-    .container {
-      max-width: 100%;
-      padding: 0 2rem;
-      position: relative;
-      z-index: 1;
-    }
-
-    .header {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-    }
-
-    .header h1 {
-      color: white;
-      font-size: 1.75rem;
-      font-weight: 700;
-      letter-spacing: -0.03em;
-      font-family: 'JetBrains Mono', monospace;
-    }
-
-    .back-link {
-      font-family: 'JetBrains Mono', monospace;
-      font-size: 0.75rem;
-      color: rgba(102, 126, 234, 0.9);
-      text-decoration: none;
-      transition: color 0.15s ease;
-    }
-
-    .back-link:hover {
-      color: rgba(102, 126, 234, 1);
-    }
-
-    /* ── Main Layout ────────────────────────────────── */
-
-    .main-content {
-      padding: 1.5rem 2rem 2rem;
-    }
-
-    .layout-grid {
-      display: grid;
-      grid-template-columns: 1fr 380px;
-      gap: 1.5rem;
-      align-items: start;
-    }
-
-    /* ── Section Title ──────────────────────────────── */
-
-    .section-title {
-      font-family: 'JetBrains Mono', monospace;
-      font-size: 0.7rem;
-      font-weight: 600;
-      text-transform: uppercase;
-      letter-spacing: 0.12em;
-      color: rgba(255, 255, 255, 0.35);
-      margin-bottom: 0.75rem;
-    }
-
-    /* ── Glass Panel ────────────────────────────────── */
-
-    .glass-panel {
-      background: rgba(255, 255, 255, 0.04);
-      backdrop-filter: blur(20px);
-      -webkit-backdrop-filter: blur(20px);
-      border: 1px solid rgba(255, 255, 255, 0.06);
-      border-radius: 12px;
-      padding: 1.25rem;
-    }
-
-    /* ── Member Cards ───────────────────────────────── */
-
-    .members-list {
-      display: flex;
-      flex-direction: column;
-      gap: 1rem;
-    }
+    /* Team Grid — showcase first */
+    .team-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 1.25rem; margin-bottom: 2rem; }
 
     .member-card {
-      display: grid;
-      grid-template-columns: auto 1fr auto;
-      gap: 1rem;
-      align-items: start;
-      padding: 1.25rem;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.06);
+      border-radius: 14px;
+      padding: 1.5rem;
+      text-align: center;
+      transition: all 0.3s cubic-bezier(0.4,0,0.2,1);
+      position: relative;
     }
+    .member-card:hover { background: rgba(255,255,255,0.06); border-color: rgba(255,255,255,0.1); }
 
     .member-avatar {
-      width: 56px;
-      height: 56px;
-      border-radius: 50%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-family: 'JetBrains Mono', monospace;
-      font-weight: 700;
-      font-size: 1rem;
-      color: white;
-      flex-shrink: 0;
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-      overflow: hidden;
+      width: 72px; height: 72px; border-radius: 50%;
+      margin: 0 auto 1rem;
+      display: flex; align-items: center; justify-content: center;
+      font-weight: 800; font-size: 1.25rem; color: #fff;
+      background: linear-gradient(135deg, #667eea, #764ba2);
+      overflow: hidden; cursor: pointer; position: relative;
+      transition: transform 0.2s;
     }
-
-    .member-avatar img {
-      width: 100%;
-      height: 100%;
-      border-radius: 50%;
-      object-fit: cover;
+    .member-avatar:hover { transform: scale(1.05); }
+    .member-avatar img { width: 100%; height: 100%; object-fit: cover; }
+    .member-avatar-overlay {
+      position: absolute; inset: 0; background: rgba(0,0,0,0.5);
+      display: none; align-items: center; justify-content: center;
+      border-radius: 50%; font-size: 0.75rem; color: #fff;
     }
+    .member-avatar:hover .member-avatar-overlay { display: flex; }
 
-    .member-details {
-      display: flex;
-      flex-direction: column;
-      gap: 0.5rem;
-      min-width: 0;
+    .member-name { font-size: 1rem; font-weight: 700; color: #fff; margin-bottom: 0.25rem; }
+    .member-role { font-size: 0.6875rem; color: rgba(255,255,255,0.35); text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 0.75rem; }
+    .member-email { font-size: 0.6875rem; color: rgba(255,255,255,0.3); margin-bottom: 0.5rem; font-family: 'Inter', sans-serif; }
+    .member-username { font-size: 0.5625rem; color: rgba(255,255,255,0.15); }
+    .member-tasks { display: inline-flex; align-items: center; gap: 0.25rem; font-size: 0.625rem; color: #818cf8; background: rgba(129,140,248,0.1); padding: 0.25rem 0.5rem; border-radius: 4px; margin-top: 0.75rem; }
+
+    .member-edit-btn {
+      position: absolute; top: 0.75rem; right: 0.75rem;
+      background: none; border: none; color: rgba(255,255,255,0.15);
+      cursor: pointer; font-size: 0.75rem; transition: color 0.2s;
     }
+    .member-edit-btn:hover { color: #818cf8; }
 
-    .member-field {
-      display: flex;
-      flex-direction: column;
-      gap: 0.15rem;
+    /* Edit panel — slides down inside card */
+    .member-edit-panel {
+      display: none; text-align: left; margin-top: 1rem; padding-top: 1rem;
+      border-top: 1px solid rgba(255,255,255,0.06);
     }
-
-    .member-field-row {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 0.75rem;
+    .member-edit-panel.open { display: block; }
+    .edit-row { display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem; margin-bottom: 0.5rem; }
+    .edit-field { display: flex; flex-direction: column; gap: 0.125rem; }
+    .edit-label { font-size: 0.5rem; color: rgba(255,255,255,0.25); text-transform: uppercase; letter-spacing: 0.1em; }
+    .edit-input {
+      background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 6px; padding: 0.375rem 0.5rem; color: #fff;
+      font-family: 'JetBrains Mono', monospace; font-size: 0.6875rem; outline: none;
+      width: 100%; transition: border-color 0.15s;
     }
-
-    .field-label {
-      font-family: 'JetBrains Mono', monospace;
-      font-size: 0.6rem;
-      font-weight: 600;
-      text-transform: uppercase;
-      letter-spacing: 0.1em;
-      color: rgba(255, 255, 255, 0.3);
+    .edit-input:focus { border-color: rgba(129,140,248,0.4); }
+    .edit-input[readonly] { opacity: 0.4; }
+    .edit-select {
+      background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 6px; padding: 0.375rem 0.5rem; color: #fff;
+      font-family: 'JetBrains Mono', monospace; font-size: 0.6875rem; outline: none; width: 100%;
     }
+    .edit-select option { background: #1a1a2e; }
+    .edit-actions { display: flex; gap: 0.5rem; margin-top: 0.75rem; }
+    .btn-sm { font-family: 'JetBrains Mono', monospace; font-size: 0.5625rem; font-weight: 600; padding: 0.375rem 0.75rem; border-radius: 6px; border: none; cursor: pointer; transition: all 0.15s; }
+    .btn-purple { background: #667eea; color: #fff; }
+    .btn-purple:hover { background: #5a6fe0; }
+    .btn-ghost { background: none; border: 1px solid rgba(255,255,255,0.08); color: rgba(255,255,255,0.4); }
+    .btn-ghost:hover { border-color: rgba(255,255,255,0.15); color: rgba(255,255,255,0.6); }
+    .btn-danger { background: none; border: 1px solid rgba(248,113,113,0.2); color: #f87171; }
+    .btn-danger:hover { background: rgba(248,113,113,0.1); }
 
-    .field-input {
-      background: rgba(255, 255, 255, 0.06);
-      border: 1px solid rgba(255, 255, 255, 0.08);
-      border-radius: 6px;
-      padding: 0.4rem 0.6rem;
-      color: rgba(255, 255, 255, 0.9);
-      font-family: 'Inter', sans-serif;
-      font-size: 0.8rem;
-      transition: border-color 0.15s ease;
-      width: 100%;
+    /* Add Member Card */
+    .add-card {
+      background: rgba(255,255,255,0.02);
+      border: 1px dashed rgba(255,255,255,0.1);
+      border-radius: 14px;
+      padding: 1.5rem;
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      min-height: 200px; cursor: pointer; transition: all 0.2s;
     }
+    .add-card:hover { background: rgba(255,255,255,0.04); border-color: rgba(255,255,255,0.15); }
+    .add-card i { font-size: 1.5rem; color: rgba(255,255,255,0.15); margin-bottom: 0.75rem; }
+    .add-card span { font-size: 0.75rem; color: rgba(255,255,255,0.25); }
 
-    .field-input:focus {
-      outline: none;
-      border-color: rgba(102, 126, 234, 0.5);
+    /* Add Member Modal */
+    .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.6); backdrop-filter: blur(4px); z-index: 1000; display: none; align-items: center; justify-content: center; }
+    .modal-overlay.open { display: flex; }
+    .modal-box {
+      background: #14142a; border: 1px solid rgba(255,255,255,0.08); border-radius: 14px;
+      padding: 1.5rem; width: 400px; max-width: 90vw;
     }
-
-    .field-input[readonly] {
-      opacity: 0.5;
-      cursor: default;
+    .modal-title { font-size: 0.875rem; font-weight: 700; color: #fff; margin-bottom: 1rem; }
+    .modal-tabs { display: flex; gap: 0; margin-bottom: 1rem; border-bottom: 1px solid rgba(255,255,255,0.06); }
+    .modal-tab {
+      font-size: 0.625rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.08em;
+      color: rgba(255,255,255,0.3); padding: 0.5rem 0.75rem; cursor: pointer;
+      border: none; background: none; border-bottom: 2px solid transparent; margin-bottom: -1px;
     }
-
-    .field-select {
-      background: rgba(255, 255, 255, 0.06);
-      border: 1px solid rgba(255, 255, 255, 0.08);
-      border-radius: 6px;
-      padding: 0.4rem 0.6rem;
-      color: rgba(255, 255, 255, 0.9);
-      font-family: 'Inter', sans-serif;
-      font-size: 0.8rem;
-      transition: border-color 0.15s ease;
-      width: 100%;
-      appearance: none;
-      -webkit-appearance: none;
-      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='rgba(255,255,255,0.4)'/%3E%3C/svg%3E");
-      background-repeat: no-repeat;
-      background-position: right 0.6rem center;
-      padding-right: 1.8rem;
-    }
-
-    .field-select:focus {
-      outline: none;
-      border-color: rgba(102, 126, 234, 0.5);
-    }
-
-    .field-select option {
-      background: #1a1a2e;
-      color: rgba(255, 255, 255, 0.9);
-    }
-
-    .field-static {
-      font-size: 0.8rem;
-      color: rgba(255, 255, 255, 0.45);
-      font-family: 'JetBrains Mono', monospace;
-      padding: 0.4rem 0;
-    }
-
-    .task-count-badge {
-      display: inline-flex;
-      align-items: center;
-      gap: 0.35rem;
-      background: rgba(102, 126, 234, 0.15);
-      color: rgba(102, 126, 234, 0.9);
-      font-family: 'JetBrains Mono', monospace;
-      font-size: 0.65rem;
-      font-weight: 600;
-      padding: 0.2rem 0.5rem;
-      border-radius: 4px;
-      width: fit-content;
-    }
-
-    .member-actions {
-      display: flex;
-      flex-direction: column;
-      gap: 0.4rem;
-      flex-shrink: 0;
-    }
-
-    .btn {
-      font-family: 'JetBrains Mono', monospace;
-      font-size: 0.65rem;
-      font-weight: 600;
-      padding: 0.4rem 0.75rem;
-      border-radius: 6px;
-      border: 1px solid transparent;
-      cursor: pointer;
-      transition: all 0.15s ease;
-      text-align: center;
-      white-space: nowrap;
-    }
-
-    .btn-save {
-      background: rgba(102, 126, 234, 0.2);
-      border-color: rgba(102, 126, 234, 0.3);
-      color: rgba(102, 126, 234, 0.9);
-    }
-
-    .btn-save:hover {
-      background: rgba(102, 126, 234, 0.35);
-      border-color: rgba(102, 126, 234, 0.5);
-    }
-
-    .btn-upload {
-      background: rgba(255, 255, 255, 0.06);
-      border-color: rgba(255, 255, 255, 0.1);
-      color: rgba(255, 255, 255, 0.6);
-    }
-
-    .btn-upload:hover {
-      background: rgba(255, 255, 255, 0.1);
-      color: rgba(255, 255, 255, 0.8);
-    }
-
-    .btn-remove {
-      background: rgba(239, 68, 68, 0.1);
-      border-color: rgba(239, 68, 68, 0.2);
-      color: rgba(239, 68, 68, 0.7);
-    }
-
-    .btn-remove:hover {
-      background: rgba(239, 68, 68, 0.2);
-      border-color: rgba(239, 68, 68, 0.4);
-      color: rgba(239, 68, 68, 0.9);
-    }
-
-    .btn-create {
-      background: linear-gradient(135deg, rgba(102, 126, 234, 0.3), rgba(118, 75, 162, 0.3));
-      border-color: rgba(102, 126, 234, 0.4);
-      color: white;
-      width: 100%;
-      padding: 0.55rem 0.75rem;
-      font-size: 0.7rem;
-    }
-
-    .btn-create:hover {
-      background: linear-gradient(135deg, rgba(102, 126, 234, 0.45), rgba(118, 75, 162, 0.45));
-      border-color: rgba(102, 126, 234, 0.6);
-    }
-
-    /* ── Add Panel ──────────────────────────────────── */
-
-    .add-panel {
-      position: sticky;
-      top: 1.5rem;
-    }
-
-    .add-tabs {
-      display: flex;
-      gap: 0;
-      margin-bottom: 1rem;
-      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-    }
-
-    .add-tab {
-      font-family: 'JetBrains Mono', monospace;
-      font-size: 0.65rem;
-      font-weight: 600;
-      text-transform: uppercase;
-      letter-spacing: 0.08em;
-      color: rgba(255, 255, 255, 0.35);
-      padding: 0.5rem 0.75rem;
-      cursor: pointer;
-      border: none;
-      background: none;
-      border-bottom: 2px solid transparent;
-      transition: all 0.15s ease;
-      margin-bottom: -1px;
-    }
-
-    .add-tab:hover {
-      color: rgba(255, 255, 255, 0.6);
-    }
-
-    .add-tab.active {
-      color: rgba(102, 126, 234, 0.9);
-      border-bottom-color: rgba(102, 126, 234, 0.7);
-    }
-
-    .tab-content {
-      display: none;
-    }
-
-    .tab-content.active {
-      display: block;
-    }
-
-    .form-group {
-      display: flex;
-      flex-direction: column;
-      gap: 0.15rem;
-      margin-bottom: 0.65rem;
-    }
-
-    .form-group:last-of-type {
-      margin-bottom: 1rem;
-    }
-
-    .empty-state {
-      text-align: center;
-      padding: 2rem;
-      color: rgba(255, 255, 255, 0.3);
-      font-size: 0.85rem;
-    }
-
-    .empty-state i {
-      font-size: 1.5rem;
-      margin-bottom: 0.5rem;
-      display: block;
-      opacity: 0.5;
-    }
-
-    /* ── Responsive ─────────────────────────────────── */
-
-    @media (max-width: 1024px) {
-      .layout-grid {
-        grid-template-columns: 1fr;
-      }
-
-      .add-panel {
-        position: static;
-      }
-    }
+    .modal-tab.active { color: #818cf8; border-bottom-color: #818cf8; }
+    .modal-tab-content { display: none; }
+    .modal-tab-content.active { display: block; }
+    .modal-field { margin-bottom: 0.625rem; }
+    .modal-footer { display: flex; justify-content: flex-end; gap: 0.5rem; margin-top: 1rem; padding-top: 0.75rem; border-top: 1px solid rgba(255,255,255,0.04); }
 
     @media (max-width: 768px) {
-      .member-card {
-        grid-template-columns: 1fr;
-      }
-
-      .member-avatar {
-        margin: 0 auto;
-      }
-
-      .member-field-row {
-        grid-template-columns: 1fr;
-      }
+      .team-grid { grid-template-columns: 1fr; }
+      .edit-row { grid-template-columns: 1fr; }
     }
   </style>
 </head>
@@ -435,274 +146,240 @@
     <div class="container">
       <div class="header">
         <h1>Team Members</h1>
-        <a href="{% url 'admin_team' %}" class="back-link">&larr; Back to Tasks</a>
+        <a href="{% url 'admin_team' %}" class="back-link">← Tasks & Projects</a>
       </div>
     </div>
   </div>
 
   <div class="main-content">
-    <div class="layout-grid">
+    <div class="team-grid">
+      {% for member in members %}
+      <div class="member-card" id="card-{{ member.id }}">
+        <button class="member-edit-btn" onclick="toggleEdit({{ member.id }})"><i class="fa-solid fa-pen"></i></button>
 
-      <!-- ── Current Members ──────────────────────────── -->
-      <div>
-        <div class="section-title">Current Members</div>
-        <div class="members-list">
-          {% for member in members %}
-          <div class="glass-panel member-card" data-member-id="{{ member.id }}">
-            <div class="member-avatar" style="{% if not member.avatar %}background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);{% endif %}">
-              {% if member.avatar %}
-                <img src="{{ member.avatar.url }}" alt="{{ member.display_name }}">
-              {% else %}
-                {{ member.display_name|make_list|first|upper }}{% with parts=member.display_name|cut:" " %}{% endwith %}
-              {% endif %}
-            </div>
-
-            <div class="member-details">
-              <div class="member-field-row">
-                <div class="member-field">
-                  <span class="field-label">Display Name</span>
-                  <input type="text" class="field-input" name="display_name" value="{{ member.display_name }}">
-                </div>
-                <div class="member-field">
-                  <span class="field-label">Role</span>
-                  <select class="field-select" name="role">
-                    <option value="admin" {% if member.role == 'admin' %}selected{% endif %}>Admin</option>
-                    <option value="manager" {% if member.role == 'manager' %}selected{% endif %}>Manager</option>
-                    <option value="editor" {% if member.role == 'editor' %}selected{% endif %}>Editor</option>
-                    <option value="viewer" {% if member.role == 'viewer' %}selected{% endif %}>Viewer</option>
-                  </select>
-                </div>
-              </div>
-              <div class="member-field-row">
-                <div class="member-field">
-                  <span class="field-label">Email</span>
-                  <input type="email" class="field-input" name="email" value="{{ member.user.email }}">
-                </div>
-                <div class="member-field">
-                  <span class="field-label">Username</span>
-                  <input type="text" class="field-input" name="username" value="{{ member.user.username }}" readonly>
-                </div>
-              </div>
-              <div class="task-count-badge">
-                <i class="fas fa-tasks"></i> {{ member.task_count }} open task{{ member.task_count|pluralize }}
-              </div>
-            </div>
-
-            <div class="member-actions">
-              <button class="btn btn-save" onclick="saveMember({{ member.id }})">Save</button>
-              <button class="btn btn-upload" onclick="triggerAvatarUpload({{ member.id }})">Upload Avatar</button>
-              <button class="btn btn-remove" onclick="removeMember({{ member.id }}, '{{ member.display_name|escapejs }}')">Remove</button>
-              <input type="file" class="avatar-input" data-member-id="{{ member.id }}" accept="image/*" style="display: none;" onchange="uploadAvatar({{ member.id }})">
-            </div>
-          </div>
-          {% empty %}
-          <div class="glass-panel empty-state">
-            <i class="fas fa-users"></i>
-            No team members yet. Add one to get started.
-          </div>
-          {% endfor %}
+        <div class="member-avatar" onclick="document.getElementById('avatar-{{ member.id }}').click()">
+          {% if member.avatar %}
+          <img src="{{ member.avatar.url }}" alt="{{ member.display_name }}">
+          {% else %}
+          {{ member.display_name|make_list|first|upper }}
+          {% endif %}
+          <div class="member-avatar-overlay"><i class="fa-solid fa-camera"></i></div>
+          <input type="file" id="avatar-{{ member.id }}" accept="image/*" style="display:none;" onchange="uploadAvatar({{ member.id }}, this)">
         </div>
-      </div>
 
-      <!-- ── Add Team Member ──────────────────────────── -->
-      <div class="add-panel">
-        <div class="section-title">Add Team Member</div>
-        <div class="glass-panel">
-          <div class="add-tabs">
-            <button class="add-tab active" onclick="switchTab('create')">Create New</button>
-            <button class="add-tab" onclick="switchTab('existing')">Add Existing</button>
+        <div class="member-name">{{ member.display_name }}</div>
+        <div class="member-role">{{ member.get_role_display }}</div>
+        <div class="member-email">{{ member.user.email }}</div>
+        <div class="member-username">@{{ member.user.username }}</div>
+        {% if member.task_count %}
+        <div class="member-tasks"><i class="fa-solid fa-clipboard-list"></i> {{ member.task_count }} task{{ member.task_count|pluralize }}</div>
+        {% endif %}
+
+        <!-- Edit Panel (hidden by default) -->
+        <div class="member-edit-panel" id="edit-{{ member.id }}">
+          <div class="edit-row">
+            <div class="edit-field">
+              <span class="edit-label">Display Name</span>
+              <input type="text" class="edit-input" id="name-{{ member.id }}" value="{{ member.display_name }}">
+            </div>
+            <div class="edit-field">
+              <span class="edit-label">Role</span>
+              <select class="edit-select" id="role-{{ member.id }}">
+                <option value="founder" {% if member.role == 'founder' %}selected{% endif %}>Founder</option>
+                <option value="cofounder" {% if member.role == 'cofounder' %}selected{% endif %}>Co-Founder</option>
+                <option value="designer" {% if member.role == 'designer' %}selected{% endif %}>Designer</option>
+                <option value="developer" {% if member.role == 'developer' %}selected{% endif %}>Developer</option>
+                <option value="marketing" {% if member.role == 'marketing' %}selected{% endif %}>Marketing</option>
+                <option value="operations" {% if member.role == 'operations' %}selected{% endif %}>Operations</option>
+                <option value="other" {% if member.role == 'other' %}selected{% endif %}>Other</option>
+              </select>
+            </div>
           </div>
-
-          <!-- Create New User -->
-          <div class="tab-content active" id="tab-create">
-            <div class="form-group">
-              <span class="field-label">Username</span>
-              <input type="text" class="field-input" id="new-username" placeholder="username">
+          <div class="edit-row">
+            <div class="edit-field">
+              <span class="edit-label">Email</span>
+              <input type="email" class="edit-input" id="email-{{ member.id }}" value="{{ member.user.email }}">
             </div>
-            <div class="form-group">
-              <span class="field-label">Email</span>
-              <input type="email" class="field-input" id="new-email" placeholder="user@example.com">
+            <div class="edit-field">
+              <span class="edit-label">Username</span>
+              <input type="text" class="edit-input" value="{{ member.user.username }}" readonly>
             </div>
-            <div class="form-group">
-              <span class="field-label">First Name</span>
-              <input type="text" class="field-input" id="new-first-name" placeholder="First name">
-            </div>
-            <div class="form-group">
-              <span class="field-label">Password</span>
-              <input type="password" class="field-input" id="new-password" placeholder="Password">
-            </div>
-            <div class="form-group">
-              <span class="field-label">Display Name</span>
-              <input type="text" class="field-input" id="new-display-name" placeholder="Display name">
-            </div>
-            <div class="form-group">
-              <span class="field-label">Role</span>
-              <select class="field-select" id="new-role">
-                <option value="admin">Admin</option>
-                <option value="manager">Manager</option>
-                <option value="editor" selected>Editor</option>
-                <option value="viewer">Viewer</option>
-              </select>
-            </div>
-            <button class="btn btn-create" onclick="createUser()">Create &amp; Add</button>
           </div>
-
-          <!-- Add Existing Staff User -->
-          <div class="tab-content" id="tab-existing">
-            <div class="form-group">
-              <span class="field-label">Staff User</span>
-              <select class="field-select" id="existing-user">
-                <option value="">Select a user...</option>
-                {% for user in available_staff %}
-                <option value="{{ user.id }}">{{ user.username }} ({{ user.email }})</option>
-                {% empty %}
-                <option value="" disabled>No available staff users</option>
-                {% endfor %}
-              </select>
-            </div>
-            <div class="form-group">
-              <span class="field-label">Display Name</span>
-              <input type="text" class="field-input" id="existing-display-name" placeholder="Display name">
-            </div>
-            <div class="form-group">
-              <span class="field-label">Role</span>
-              <select class="field-select" id="existing-role">
-                <option value="admin">Admin</option>
-                <option value="manager">Manager</option>
-                <option value="editor" selected>Editor</option>
-                <option value="viewer">Viewer</option>
-              </select>
-            </div>
-            <button class="btn btn-create" onclick="addExisting()">Add</button>
+          <div class="edit-actions">
+            <button class="btn-sm btn-purple" onclick="saveMember({{ member.id }})">Save</button>
+            <button class="btn-sm btn-ghost" onclick="toggleEdit({{ member.id }})">Cancel</button>
+            <button class="btn-sm btn-danger" onclick="removeMember({{ member.id }}, '{{ member.display_name|escapejs }}')" style="margin-left: auto;">Remove</button>
           </div>
         </div>
       </div>
+      {% endfor %}
 
+      <!-- Add Member Card -->
+      <div class="add-card" onclick="openAddModal()">
+        <i class="fa-solid fa-user-plus"></i>
+        <span>Add Team Member</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Add Member Modal -->
+  <div class="modal-overlay" id="addModal" onclick="if(event.target===this)closeAddModal()">
+    <div class="modal-box">
+      <div class="modal-title">Add Team Member</div>
+      <div class="modal-tabs">
+        <button class="modal-tab active" onclick="switchTab('create')">Create New</button>
+        <button class="modal-tab" onclick="switchTab('existing')">Add Existing</button>
+      </div>
+
+      <div class="modal-tab-content active" id="tab-create">
+        <div class="modal-field"><span class="edit-label">Username</span><input type="text" class="edit-input" id="new-username" placeholder="username"></div>
+        <div class="modal-field"><span class="edit-label">Email</span><input type="email" class="edit-input" id="new-email" placeholder="email@example.com"></div>
+        <div class="modal-field"><span class="edit-label">First Name</span><input type="text" class="edit-input" id="new-firstname" placeholder="First name"></div>
+        <div class="modal-field"><span class="edit-label">Password</span><input type="password" class="edit-input" id="new-password" placeholder="Password"></div>
+        <div class="edit-row">
+          <div class="modal-field"><span class="edit-label">Display Name</span><input type="text" class="edit-input" id="new-displayname" placeholder="Display name"></div>
+          <div class="modal-field">
+            <span class="edit-label">Role</span>
+            <select class="edit-select" id="new-role">
+              <option value="founder">Founder</option>
+              <option value="cofounder">Co-Founder</option>
+              <option value="designer">Designer</option>
+              <option value="developer">Developer</option>
+              <option value="marketing">Marketing</option>
+              <option value="operations">Operations</option>
+              <option value="other" selected>Other</option>
+            </select>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button class="btn-sm btn-ghost" onclick="closeAddModal()">Cancel</button>
+          <button class="btn-sm btn-purple" onclick="createUser()">Create & Add</button>
+        </div>
+      </div>
+
+      <div class="modal-tab-content" id="tab-existing">
+        <div class="modal-field">
+          <span class="edit-label">Staff User</span>
+          <select class="edit-select" id="existing-user">
+            <option value="">Select a user...</option>
+            {% for user in available_staff %}
+            <option value="{{ user.id }}">{{ user.first_name|default:user.username }} ({{ user.email }})</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="edit-row">
+          <div class="modal-field"><span class="edit-label">Display Name</span><input type="text" class="edit-input" id="existing-displayname" placeholder="Display name"></div>
+          <div class="modal-field">
+            <span class="edit-label">Role</span>
+            <select class="edit-select" id="existing-role">
+              <option value="founder">Founder</option>
+              <option value="cofounder">Co-Founder</option>
+              <option value="designer">Designer</option>
+              <option value="developer">Developer</option>
+              <option value="marketing">Marketing</option>
+              <option value="operations">Operations</option>
+              <option value="other" selected>Other</option>
+            </select>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button class="btn-sm btn-ghost" onclick="closeAddModal()">Cancel</button>
+          <button class="btn-sm btn-purple" onclick="addExisting()">Add</button>
+        </div>
+      </div>
     </div>
   </div>
 
   <script>
-    const CSRF_TOKEN = '{{ csrf_token }}';
+    var csrfToken = '{{ csrf_token }}';
 
-    function postAction(body) {
-      return fetch(window.location.href, {
+    function post(data) {
+      var body = new URLSearchParams();
+      Object.keys(data).forEach(function(k) { body.append(k, data[k]); });
+      return fetch(window.location.pathname, {
         method: 'POST',
-        headers: {
-          'X-CSRFToken': CSRF_TOKEN,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(body),
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded', 'X-CSRFToken': csrfToken },
+        body: body.toString()
+      }).then(function(r) { return r.json(); });
+    }
+
+    function toggleEdit(id) {
+      var panel = document.getElementById('edit-' + id);
+      panel.classList.toggle('open');
+    }
+
+    function saveMember(id) {
+      post({
+        action: 'update_member',
+        member_id: id,
+        display_name: document.getElementById('name-' + id).value,
+        role: document.getElementById('role-' + id).value,
+        email: document.getElementById('email-' + id).value,
+      }).then(function(d) {
+        if (d.success) window.location.reload();
+        else alert(d.error || 'Failed');
       });
     }
 
-    function switchTab(tab) {
-      document.querySelectorAll('.add-tab').forEach(t => t.classList.remove('active'));
-      document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
-      document.getElementById('tab-' + tab).classList.add('active');
-      document.querySelector('.add-tab[onclick*="' + tab + '"]').classList.add('active');
-    }
-
-    function saveMember(memberId) {
-      const card = document.querySelector('[data-member-id="' + memberId + '"]');
-      const displayName = card.querySelector('[name="display_name"]').value;
-      const role = card.querySelector('[name="role"]').value;
-      const email = card.querySelector('[name="email"]').value;
-
-      postAction({
-        action: 'update_member',
-        member_id: memberId,
-        display_name: displayName,
-        role: role,
-        email: email,
-      }).then(res => {
-        if (res.ok) window.location.reload();
-        else res.json().then(d => alert(d.error || 'Failed to update member.'));
-      }).catch(() => alert('Network error.'));
-    }
-
-    function triggerAvatarUpload(memberId) {
-      document.querySelector('.avatar-input[data-member-id="' + memberId + '"]').click();
-    }
-
-    function uploadAvatar(memberId) {
-      const input = document.querySelector('.avatar-input[data-member-id="' + memberId + '"]');
-      if (!input.files.length) return;
-
-      const formData = new FormData();
-      formData.append('action', 'upload_avatar');
-      formData.append('member_id', memberId);
-      formData.append('avatar', input.files[0]);
-
-      fetch(window.location.href, {
+    function uploadAvatar(id, input) {
+      if (!input.files[0]) return;
+      var form = new FormData();
+      form.append('action', 'upload_avatar');
+      form.append('member_id', id);
+      form.append('avatar', input.files[0]);
+      fetch(window.location.pathname, {
         method: 'POST',
-        headers: {
-          'X-CSRFToken': CSRF_TOKEN,
-        },
-        body: formData,
-      }).then(res => {
-        if (res.ok) window.location.reload();
-        else res.json().then(d => alert(d.error || 'Failed to upload avatar.'));
-      }).catch(() => alert('Network error.'));
+        headers: { 'X-CSRFToken': csrfToken },
+        body: form
+      }).then(function(r) { return r.json(); }).then(function(d) {
+        if (d.success) window.location.reload();
+      });
     }
 
-    function removeMember(memberId, name) {
-      if (!confirm('Remove ' + name + ' from the team? This will deactivate their membership.')) return;
+    function removeMember(id, name) {
+      if (!confirm('Remove ' + name + ' from the team?')) return;
+      post({ action: 'remove_member', member_id: id }).then(function(d) {
+        if (d.success) window.location.reload();
+      });
+    }
 
-      postAction({
-        action: 'remove_member',
-        member_id: memberId,
-      }).then(res => {
-        if (res.ok) window.location.reload();
-        else res.json().then(d => alert(d.error || 'Failed to remove member.'));
-      }).catch(() => alert('Network error.'));
+    function openAddModal() { document.getElementById('addModal').classList.add('open'); }
+    function closeAddModal() { document.getElementById('addModal').classList.remove('open'); }
+
+    function switchTab(tab) {
+      document.querySelectorAll('.modal-tab').forEach(function(t) { t.classList.remove('active'); });
+      document.querySelectorAll('.modal-tab-content').forEach(function(t) { t.classList.remove('active'); });
+      document.querySelector('.modal-tab-content#tab-' + tab).classList.add('active');
+      event.target.classList.add('active');
     }
 
     function createUser() {
-      const username = document.getElementById('new-username').value.trim();
-      const email = document.getElementById('new-email').value.trim();
-      const firstName = document.getElementById('new-first-name').value.trim();
-      const password = document.getElementById('new-password').value;
-      const displayName = document.getElementById('new-display-name').value.trim();
-      const role = document.getElementById('new-role').value;
-
-      if (!username || !password) {
-        alert('Username and password are required.');
-        return;
-      }
-
-      postAction({
+      post({
         action: 'create_user',
-        username: username,
-        email: email,
-        first_name: firstName,
-        password: password,
-        display_name: displayName || firstName || username,
-        role: role,
-      }).then(res => {
-        if (res.ok) window.location.reload();
-        else res.json().then(d => alert(d.error || 'Failed to create user.'));
-      }).catch(() => alert('Network error.'));
+        username: document.getElementById('new-username').value,
+        email: document.getElementById('new-email').value,
+        first_name: document.getElementById('new-firstname').value,
+        password: document.getElementById('new-password').value,
+        display_name: document.getElementById('new-displayname').value,
+        role: document.getElementById('new-role').value,
+      }).then(function(d) {
+        if (d.success) window.location.reload();
+        else alert(d.error || 'Failed');
+      });
     }
 
     function addExisting() {
-      const userId = document.getElementById('existing-user').value;
-      const displayName = document.getElementById('existing-display-name').value.trim();
-      const role = document.getElementById('existing-role').value;
-
-      if (!userId) {
-        alert('Please select a user.');
-        return;
-      }
-
-      postAction({
+      var userId = document.getElementById('existing-user').value;
+      if (!userId) { alert('Select a user'); return; }
+      post({
         action: 'add_existing',
         user_id: userId,
-        display_name: displayName,
-        role: role,
-      }).then(res => {
-        if (res.ok) window.location.reload();
-        else res.json().then(d => alert(d.error || 'Failed to add member.'));
-      }).catch(() => alert('Network error.'));
+        display_name: document.getElementById('existing-displayname').value,
+        role: document.getElementById('existing-role').value,
+      }).then(function(d) {
+        if (d.success) window.location.reload();
+        else alert(d.error || 'Failed');
+      });
     }
   </script>
 </body>
