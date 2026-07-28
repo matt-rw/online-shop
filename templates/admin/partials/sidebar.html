@@ -5,13 +5,12 @@
     <div class="sidebar-brand-icon">BP</div>
     <span class="sidebar-brand-text">Blueprint Admin</span>
   </div>
-  <a href="{% url 'admin_home' %}" class="sidebar-section-header sidebar-home-link" data-page="home" style="text-decoration: none;">
-    <span class="sidebar-section-icon"><i class="fa-solid fa-house"></i></span>
-    <span class="sidebar-section-text sidebar-home-text">Dashboard</span>
-  </a>
-
   <!-- Navigation -->
   <div class="sidebar-nav">
+    <a href="{% url 'admin_home' %}" class="sidebar-section-header sidebar-home-link" data-page="home" style="text-decoration: none;">
+      <span class="sidebar-section-icon"><i class="fa-solid fa-house"></i></span>
+      <span class="sidebar-section-text sidebar-home-text">Dashboard</span>
+    </a>
     <!-- Products Section -->
     <div class="sidebar-section" data-section="products">
       <button class="sidebar-section-header" onclick="toggleSidebarSection('products')">
