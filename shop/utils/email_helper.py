@@ -35,6 +35,22 @@ def send_email(
     """
     from shop.models import EmailLog
 
+    # Append unsubscribe footer to HTML body
+    import base64
+    unsub_token = base64.urlsafe_b64encode(email_address.encode()).decode()
+    unsub_url = f"https://www.blueprnt.store/shop/unsubscribe/?t={unsub_token}"
+    unsub_footer = (
+        '<div style="margin-top: 24px; padding-top: 12px; border-top: 1px solid #eee; text-align: center;">'
+        f'<p style="font-size: 9px; color: #ccc; margin: 0;"><a href="{unsub_url}" style="color: #ccc; text-decoration: underline;">Unsubscribe</a></p>'
+        '</div>'
+    )
+    if '</div>' in html_body:
+        # Insert before the last closing div (inside the wrapper)
+        last_div = html_body.rfind('</div>')
+        html_body = html_body[:last_div] + unsub_footer + html_body[last_div:]
+    else:
+        html_body += unsub_footer
+
     # Auto-generate text body from HTML if not provided
     if not text_body:
         text_body = strip_tags(html_body)

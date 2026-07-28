@@ -96,6 +96,35 @@ def subscribe(request):
     return render(request, "home/home_page.html", {"form": form})
 
 
+def unsubscribe(request):
+    """Handle email unsubscribe requests."""
+    import base64
+    from django.utils import timezone as tz
+
+    token = request.GET.get("t", "")
+    email = None
+    try:
+        email = base64.urlsafe_b64decode(token).decode("utf-8")
+    except Exception:
+        pass
+
+    if request.method == "POST":
+        email = request.POST.get("email", "").strip()
+
+    if email:
+        try:
+            sub = EmailSubscription.objects.get(email=email)
+            if sub.is_active:
+                sub.is_active = False
+                sub.unsubscribed_at = tz.now()
+                sub.save()
+                logger.info(f"Unsubscribed: {email}")
+        except EmailSubscription.DoesNotExist:
+            pass
+
+    return render(request, "shop/unsubscribe.html", {"email": email, "done": bool(email)})
+
+
 @ratelimit(key="ip", rate="5/h", method="POST")
 def subscribe_sms(request):
     """Handle SMS subscription sign-ups"""

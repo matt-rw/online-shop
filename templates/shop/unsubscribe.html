@@ -1,0 +1,27 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Unsubscribe — Blueprint Apparel{% endblock %}
+{% block meta_description %}Unsubscribe from Blueprint Apparel emails.{% endblock %}
+
+{% block content %}
+<section style="background: #fff; min-height: 60vh; display: flex; align-items: center; justify-content: center;">
+  <div style="max-width: 400px; text-align: center; padding: 4rem 2rem;">
+    {% if done %}
+      <p style="font-family: 'Inter', sans-serif; font-size: 0.55rem; font-weight: 500; letter-spacing: 0.3em; text-transform: uppercase; color: #ccc; margin: 0 0 2rem;">Blueprint Apparel</p>
+      <h1 style="font-family: 'Inter', sans-serif; font-size: 1.5rem; font-weight: 700; color: #000; margin: 0 0 1rem;">You've been unsubscribed.</h1>
+      <p style="font-family: 'Inter', sans-serif; font-size: 0.95rem; color: #666; line-height: 1.7; margin: 0 0 2rem;">{{ email }} has been removed from our mailing list. You won't receive any more marketing emails from us.</p>
+      <a href="{% url 'shop:shop' %}" style="font-family: 'Inter', sans-serif; font-size: 0.7rem; font-weight: 600; letter-spacing: 0.15em; text-transform: uppercase; color: #000; text-decoration: none; padding: 13px 36px; border: 1px solid #000; display: inline-block;">Continue Shopping</a>
+    {% else %}
+      <p style="font-family: 'Inter', sans-serif; font-size: 0.55rem; font-weight: 500; letter-spacing: 0.3em; text-transform: uppercase; color: #ccc; margin: 0 0 2rem;">Blueprint Apparel</p>
+      <h1 style="font-family: 'Inter', sans-serif; font-size: 1.5rem; font-weight: 700; color: #000; margin: 0 0 1rem;">Unsubscribe</h1>
+      <p style="font-family: 'Inter', sans-serif; font-size: 0.95rem; color: #666; line-height: 1.7; margin: 0 0 2rem;">Enter your email to unsubscribe from our mailing list.</p>
+      <form method="POST" action="{% url 'shop:unsubscribe' %}">
+        {% csrf_token %}
+        <input type="email" name="email" placeholder="Email address" required style="width: 100%; padding: 12px 0; font-family: 'Inter', sans-serif; font-size: 0.95rem; border: none; border-bottom: 1.5px solid #ddd; outline: none; color: #000; background: transparent; margin-bottom: 1.5rem; text-align: center;" />
+        <button type="submit" style="font-family: 'Inter', sans-serif; font-size: 0.7rem; font-weight: 600; letter-spacing: 0.15em; text-transform: uppercase; border: none; background: #000; color: #fff; padding: 13px 36px; cursor: pointer;">Unsubscribe</button>
+      </form>
+    {% endif %}
+  </div>
+</section>
+{% endblock %}

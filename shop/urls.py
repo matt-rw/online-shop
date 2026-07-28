@@ -34,6 +34,7 @@ urlpatterns = [
     path("account/orders/<str:order_number>/", views.order_detail, name="order_detail"),
     # Email subscription
     path("subscribe/", views.subscribe, name="subscribe"),
+    path("unsubscribe/", views.unsubscribe, name="unsubscribe"),
     # SMS subscription
     path("subscribe/sms/", views.subscribe_sms, name="subscribe_sms"),
     # Currency selection
