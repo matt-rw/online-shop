@@ -613,15 +613,31 @@ def admin_home(request):
         ).aggregate(total=Sum("total"))["total"] or Decimal("0")
         prev_week_chart.append(float(prev_rev))
 
-    # Top selling products
+    # Product performance
     from shop.models.cart import OrderItem
-    top_products = list(
-        OrderItem.objects.filter(variant__isnull=False).values(
-            name=F('variant__product__name')
-        ).annotate(
-            units=Sum('quantity')
-        ).order_by('-units')[:5]
-    )
+    product_perf = []
+    for prod in Product.objects.filter(is_active=True).exclude(slug__startswith="test-"):
+        total_sold = OrderItem.objects.filter(
+            variant__product=prod
+        ).aggregate(units=Sum('quantity'))['units'] or 0
+        total_stock = sum(v.stock_quantity for v in prod.variants.filter(is_active=True))
+        # Weekly avg (based on product age)
+        days_active = max((now - prod.created_at).days, 1) if prod.created_at else 1
+        weeks_active = max(days_active / 7, 1)
+        avg_per_week = round(total_sold / weeks_active, 1)
+        # Profit margin
+        margin = 0
+        if prod.base_price and prod.base_cost and prod.base_price > 0:
+            margin = round(float((prod.base_price - prod.base_cost) / prod.base_price * 100), 0)
+        product_perf.append({
+            "name": prod.name,
+            "sold": total_sold,
+            "stock": total_stock,
+            "margin": margin,
+            "avg_week": avg_per_week,
+            "price": float(prod.base_price),
+        })
+    product_perf.sort(key=lambda x: x["sold"], reverse=True)
 
     # Subscriber sparkline — last 7 days
     sub_sparkline = []
@@ -750,7 +766,7 @@ def admin_home(request):
         "active_cart_count": len(carts_data),
         "abandoned_cart_count": abandoned_cart_count,
         "abandoned_cart_value": float(abandoned_cart_value),
-        "top_products_json": json_mod.dumps(top_products),
+        "product_perf_json": json_mod.dumps(product_perf),
         "sub_sparkline_json": json_mod.dumps(sub_sparkline),
         "funnel_json": json_mod.dumps(funnel_data),
         "last_order_time": last_order_time,

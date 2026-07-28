@@ -1047,11 +1047,39 @@
       font-family: 'JetBrains Mono', monospace !important;
       font-size: 0.75rem !important;
     }
-    body.cmd-mode .quick-send-widget { font-family: 'JetBrains Mono', monospace; font-size: 0.75rem; }
+    body.cmd-mode .quick-send-widget { font-family: 'JetBrains Mono', monospace; font-size: 0.6875rem; }
     body.cmd-mode .quick-send-widget button,
     body.cmd-mode .quick-send-widget label,
     body.cmd-mode .quick-send-widget span,
-    body.cmd-mode .quick-send-widget input { font-family: 'JetBrains Mono', monospace; }
+    body.cmd-mode .quick-send-widget input,
+    body.cmd-mode .quick-send-widget textarea,
+    body.cmd-mode .quick-send-widget select,
+    body.cmd-mode .quick-send-widget p { font-family: 'JetBrains Mono', monospace; font-size: 0.6875rem; }
+    body.cmd-mode .quick-send-widget .btn-primary {
+      background: #667eea !important;
+      color: #fff !important;
+      border: none !important;
+      box-shadow: 0 0 12px rgba(102,126,234,0.3);
+      font-size: 0.625rem !important;
+      padding: 0.5rem 1rem !important;
+    }
+    body.cmd-mode .quick-send-widget .btn-secondary {
+      background: rgba(255,255,255,0.06) !important;
+      border: 1px solid rgba(255,255,255,0.1) !important;
+      color: rgba(255,255,255,0.5) !important;
+      font-size: 0.625rem !important;
+      padding: 0.5rem 0.75rem !important;
+    }
+    body.cmd-mode .quick-send-widget button[onclick*="setMessageType"],
+    body.cmd-mode .quick-send-widget button[onclick*="toggleTestMode"] {
+      background: rgba(255,255,255,0.06) !important;
+      border: 1px solid rgba(255,255,255,0.08) !important;
+      color: rgba(255,255,255,0.5) !important;
+      font-size: 0.625rem !important;
+    }
+    body.cmd-mode .quick-send-widget div[style*="background: #f1f5f9"] {
+      background: rgba(255,255,255,0.04) !important;
+    }
     body.cmd-mode #quickSubject:focus,
     body.cmd-mode #quickContent:focus {
       border-color: rgba(129,140,248,0.4) !important;
@@ -1903,7 +1931,7 @@
       </div>
 
       <!-- Row 3: Orders + Active Carts + Averages -->
-      <div class="cmd-three-col" style="margin-bottom: 1rem;">
+      <div style="display: grid; grid-template-columns: 1fr 1fr 1.3fr; gap: 1rem; margin-bottom: 1rem; position: relative; z-index: 1;">
         <!-- Recent Orders -->
         <div class="cmd-panel" style="padding: 1rem; position: relative; z-index: 1;">
           <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
@@ -1943,46 +1971,58 @@
 
         <!-- Averages & Key Metrics -->
         <div class="cmd-panel" style="padding: 1rem; position: relative; z-index: 1;">
-          <div class="cmd-panel-label">Averages</div>
-          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; margin-top: 0.75rem;">
+          <div class="cmd-panel-label">Key Metrics</div>
+          <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 0.75rem; margin-top: 0.75rem;">
             <div>
-              <div style="font-size: 1.125rem; font-weight: 800; color: #fff;">{{ stats.avg_daily_orders }}</div>
+              <div style="font-size: 1.25rem; font-weight: 800; color: #fff;">{{ stats.avg_daily_orders }}</div>
               <div style="font-size: 0.5rem; color: rgba(255,255,255,0.25); text-transform: uppercase; letter-spacing: 0.1em;">Orders/Day</div>
             </div>
             <div>
-              <div style="font-size: 1.125rem; font-weight: 800; color: #34d399;">${{ stats.avg_order_value|floatformat:0 }}</div>
+              <div style="font-size: 1.25rem; font-weight: 800; color: #34d399;">${{ stats.avg_order_value|floatformat:0 }}</div>
               <div style="font-size: 0.5rem; color: rgba(255,255,255,0.25); text-transform: uppercase; letter-spacing: 0.1em;">Avg Order</div>
             </div>
             <div>
-              <div style="font-size: 1.125rem; font-weight: 800; color: #818cf8;">{{ stats.avg_daily_visitors }}</div>
+              <div style="font-size: 1.25rem; font-weight: 800; color: #818cf8;">{{ stats.avg_daily_visitors }}</div>
               <div style="font-size: 0.5rem; color: rgba(255,255,255,0.25); text-transform: uppercase; letter-spacing: 0.1em;">Visitors/Day</div>
             </div>
             <div>
-              <div style="font-size: 1.125rem; font-weight: 800; color: #fbbf24;">{{ stats.conversion_rate }}%</div>
+              <div style="font-size: 1.25rem; font-weight: 800; color: #fbbf24;">{{ stats.conversion_rate }}%</div>
               <div style="font-size: 0.5rem; color: rgba(255,255,255,0.25); text-transform: uppercase; letter-spacing: 0.1em;">Conversion</div>
             </div>
+            <div>
+              <div style="font-size: 1.25rem; font-weight: 800; color: #fff;">${{ stats.total_revenue|floatformat:0 }}</div>
+              <div style="font-size: 0.5rem; color: rgba(255,255,255,0.25); text-transform: uppercase; letter-spacing: 0.1em;">Total Rev</div>
+            </div>
+            <div>
+              <div style="font-size: 1.25rem; font-weight: 800; color: #fff;">{{ stats.total_orders }}</div>
+              <div style="font-size: 0.5rem; color: rgba(255,255,255,0.25); text-transform: uppercase; letter-spacing: 0.1em;">Total Orders</div>
+            </div>
           </div>
-          <div style="margin-top: 0.75rem; padding-top: 0.75rem; border-top: 1px solid rgba(255,255,255,0.04);">
-            <div style="display: flex; justify-content: space-between; font-size: 0.625rem; margin-bottom: 0.375rem;">
-              <span style="color: rgba(255,255,255,0.3);">Revenue</span>
-              <span style="color: #fff; font-weight: 700;">${{ stats.total_revenue|floatformat:0 }}</span>
+          <div style="margin-top: 0.75rem; padding-top: 0.75rem; border-top: 1px solid rgba(255,255,255,0.04); display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 0.5rem; font-size: 0.625rem;">
+            <div>
+              <span style="color: rgba(255,255,255,0.3);">30d Rev</span>
+              <div style="color: #fff; font-weight: 700; margin-top: 0.125rem;">${{ stats.revenue_30d|floatformat:0 }}</div>
             </div>
-            <div style="display: flex; justify-content: space-between; font-size: 0.625rem; margin-bottom: 0.375rem;">
-              <span style="color: rgba(255,255,255,0.3);">Subscribers</span>
-              <span style="color: #fff; font-weight: 700;">{{ stats.total_email_subs }}<span class="cmd-sparkline" id="cmdSubSparkline"></span></span>
+            <div>
+              <span style="color: rgba(255,255,255,0.3);">Subs</span>
+              <div style="color: #fff; font-weight: 700; margin-top: 0.125rem;">{{ stats.total_email_subs }}<span class="cmd-sparkline" id="cmdSubSparkline"></span></div>
             </div>
-            <div style="display: flex; justify-content: space-between; font-size: 0.625rem;">
+            <div>
               <span style="color: rgba(255,255,255,0.3);">Products</span>
-              <span style="color: #fff; font-weight: 700;">{{ stats.active_products }}</span>
+              <div style="color: #fff; font-weight: 700; margin-top: 0.125rem;">{{ stats.active_products }}</div>
             </div>
           </div>
         </div>
       </div>
 
-      <!-- Row 4: Funnel + Top Products + Status -->
+      <!-- Row 4: Product Performance + Funnel + Status -->
       <div class="cmd-three-col" style="margin-bottom: 1rem;">
+        <!-- Product Performance -->
+        <div class="cmd-panel" style="padding: 1rem; position: relative; z-index: 1;">
+          <div class="cmd-panel-label">Product Performance</div>
+          <div id="cmdProductPerf" style="margin-top: 0.5rem;"></div>
+        </div>
         <div class="cmd-funnel" id="cmdFunnel" style="margin-bottom: 0;"></div>
-        <div class="cmd-top-products" id="cmdTopProducts" style="margin-bottom: 0;"></div>
         <div class="cmd-status-bar" style="flex-direction: column; align-items: stretch; gap: 0.5rem; padding: 0.75rem; border-radius: 14px; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.06);">
           <div class="cmd-panel-label" style="margin-bottom: 0.25rem;">System</div>
           <div class="cmd-status-item">
@@ -2800,22 +2840,26 @@
         + '<div class="cmd-funnel-step"><div class="cmd-funnel-step-value">' + data.orders.toLocaleString() + '</div><div class="cmd-funnel-step-label">Orders</div><div class="cmd-funnel-rate">' + data.order_rate + '%</div></div>';
     })();
 
-    // ========== TOP PRODUCTS ==========
+    // ========== PRODUCT PERFORMANCE ==========
     (function() {
-      var data = {{ top_products_json|safe }};
-      var el = document.getElementById('cmdTopProducts');
-      if (!el || !data.length) { if (el) el.style.display = 'none'; return; }
-      var maxUnits = data[0].units || 1;
-      el.innerHTML = data.map(function(p, i) {
-        var pct = Math.round((p.units / maxUnits) * 100);
-        return '<div class="cmd-top-product">'
-          + '<span class="cmd-top-product-rank">#' + (i + 1) + '</span>'
-          + '<div class="cmd-top-product-info">'
-          + '<div class="cmd-top-product-name">' + p.name + '</div>'
-          + '<div class="cmd-top-product-units">' + p.units + ' sold</div>'
-          + '<div class="cmd-top-product-bar" style="width: ' + pct + '%;"></div>'
-          + '</div></div>';
-      }).join('');
+      var data = {{ product_perf_json|safe }};
+      var el = document.getElementById('cmdProductPerf');
+      if (!el || !data.length) { if (el) el.innerHTML = '<div style="color: rgba(255,255,255,0.15); font-size: 0.6875rem; text-align: center; padding: 1rem;">No products</div>'; return; }
+      // Header
+      var html = '<div style="display: grid; grid-template-columns: 2fr 0.7fr 0.7fr 0.7fr 0.7fr; gap: 0.375rem; font-size: 0.5rem; color: rgba(255,255,255,0.2); text-transform: uppercase; letter-spacing: 0.1em; padding-bottom: 0.375rem; border-bottom: 1px solid rgba(255,255,255,0.04);">'
+        + '<span>Product</span><span style="text-align: right;">Sold</span><span style="text-align: right;">Stock</span><span style="text-align: right;">Margin</span><span style="text-align: right;">/Week</span></div>';
+      data.forEach(function(p) {
+        var stockColor = p.stock === 0 ? '#f87171' : p.stock <= 10 ? '#fbbf24' : 'rgba(255,255,255,0.5)';
+        var marginColor = p.margin >= 50 ? '#34d399' : p.margin >= 30 ? '#fbbf24' : '#f87171';
+        html += '<div style="display: grid; grid-template-columns: 2fr 0.7fr 0.7fr 0.7fr 0.7fr; gap: 0.375rem; padding: 0.375rem 0; border-bottom: 1px solid rgba(255,255,255,0.02); font-size: 0.625rem; align-items: center;">'
+          + '<span style="color: rgba(255,255,255,0.6); overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">' + p.name + '</span>'
+          + '<span style="text-align: right; color: #fff; font-weight: 700;">' + p.sold + '</span>'
+          + '<span style="text-align: right; color: ' + stockColor + ';">' + p.stock + '</span>'
+          + '<span style="text-align: right; color: ' + marginColor + ';">' + p.margin + '%</span>'
+          + '<span style="text-align: right; color: rgba(255,255,255,0.35);">' + p.avg_week + '</span>'
+          + '</div>';
+      });
+      el.innerHTML = html;
     })();
 
     // ========== SUBSCRIBER SPARKLINE ==========
