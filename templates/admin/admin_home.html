@@ -3120,9 +3120,15 @@
       }
 
       function fetchMonth(year, month) {
-        fetch(window.location.pathname + '?action=calendar_month&year=' + year + '&month=' + month)
-        .then(function(r) { return r.json(); })
+        fetch(window.location.pathname + '?action=calendar_month&year=' + year + '&month=' + month, {
+          credentials: 'same-origin'
+        })
+        .then(function(r) {
+          if (!r.ok) { console.error('Calendar HTTP error:', r.status); return null; }
+          return r.json();
+        })
         .then(function(data) {
+          if (!data) return;
           if (!data.error) {
             calData = data;
             curYear = year;
