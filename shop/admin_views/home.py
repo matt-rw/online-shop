@@ -26,7 +26,7 @@ from shop.models import (
 )
 from shop.models.analytics import PageView, VisitorSession
 from shop.models.cart import Order
-from shop.models.messaging import ContactMessage, QuickMessage
+from shop.models.messaging import CalendarEvent, ContactMessage, QuickMessage
 from shop.models.product import ProductVariant
 from shop.models.settings import QuickLink, SiteSettings
 
@@ -40,6 +40,93 @@ def admin_home(request):
     Central admin dashboard with quick access to all admin tools.
     Only accessible to admin/staff users.
     """
+    # Calendar AJAX handlers
+    if request.method == "POST" and request.POST.get("action") == "calendar_add_event":
+        import json as json_mod
+        try:
+            data = json_mod.loads(request.body) if request.content_type == "application/json" else None
+            if not data:
+                data = {"date": request.POST.get("date"), "title": request.POST.get("title"), "event_type": request.POST.get("event_type", "note")}
+            event = CalendarEvent.objects.create(
+                date=data["date"],
+                title=data["title"],
+                event_type=data.get("event_type", "note"),
+                created_by=request.user,
+            )
+            return JsonResponse({"success": True, "id": event.id})
+        except Exception as e:
+            return JsonResponse({"success": False, "error": str(e)})
+
+    if request.method == "POST" and request.POST.get("action") == "calendar_delete_event":
+        try:
+            CalendarEvent.objects.filter(id=request.POST.get("event_id")).delete()
+            return JsonResponse({"success": True})
+        except Exception as e:
+            return JsonResponse({"success": False, "error": str(e)})
+
+    if request.GET.get("action") == "calendar_month":
+        import json as json_mod
+        import calendar as cal_mod
+        try:
+            year = int(request.GET.get("year", now.year))
+            month = int(request.GET.get("month", now.month))
+            first_day, days_in_month = cal_mod.monthrange(year, month)
+            m_start = timezone.datetime(year, month, 1, tzinfo=timezone.utc)
+            m_end = (m_start + timedelta(days=32)).replace(day=1)
+
+            from django.db.models.functions import TruncDate
+            # Orders per day
+            o_by_day = dict(
+                Order.objects.filter(created_at__gte=m_start, created_at__lt=m_end)
+                .annotate(day=TruncDate("created_at")).values("day")
+                .annotate(count=Count("id")).values_list("day", "count")
+            )
+            r_by_day = dict(
+                Order.objects.filter(created_at__gte=m_start, created_at__lt=m_end)
+                .annotate(day=TruncDate("created_at")).values("day")
+                .annotate(rev=Sum("total")).values_list("day", "rev")
+            )
+            # Scheduled messages
+            s_msgs = list(QuickMessage.objects.filter(
+                status="scheduled", scheduled_for__gte=m_start, scheduled_for__lt=m_end
+            ).values("subject", "message_type", "scheduled_for"))
+            # Custom events
+            custom_events = list(CalendarEvent.objects.filter(
+                date__gte=m_start.date(), date__lt=m_end.date()
+            ).values("id", "date", "title", "event_type"))
+
+            cal_data = {
+                "year": year, "month": month,
+                "monthName": m_start.strftime("%B"),
+                "firstDayOfWeek": first_day,
+                "daysInMonth": days_in_month,
+                "today": now.day if year == now.year and month == now.month else 0,
+                "days": {}, "revenue": {}, "maxRevenue": 0,
+            }
+            max_rev = 0
+            for d in range(1, days_in_month + 1):
+                d_date = m_start.date().replace(day=d)
+                events = []
+                oc = o_by_day.get(d_date, 0)
+                dr = r_by_day.get(d_date, 0)
+                if oc:
+                    events.append({"type": "order", "text": f"{oc} order{'s' if oc > 1 else ''} · ${float(dr):.0f}"})
+                for msg in s_msgs:
+                    if msg["scheduled_for"].date() == d_date:
+                        events.append({"type": "scheduled", "text": f"{msg['message_type'].upper()}: {msg['subject'][:30]}"})
+                for ce in custom_events:
+                    if ce["date"] == d_date:
+                        events.append({"type": ce["event_type"], "text": ce["title"], "id": ce["id"]})
+                if events:
+                    cal_data["days"][str(d)] = events
+                cal_data["revenue"][str(d)] = float(dr) if dr else 0
+                if dr and float(dr) > max_rev:
+                    max_rev = float(dr)
+            cal_data["maxRevenue"] = max_rev
+            return JsonResponse(cal_data)
+        except Exception as e:
+            return JsonResponse({"error": str(e)})
+
     # Handle image upload for quick messages
     if request.method == "POST" and request.POST.get("action") == "upload_message_image":
         import base64
@@ -448,6 +535,11 @@ def admin_home(request):
         "today": now.day,
         "days": {},
     }
+    # Custom calendar events
+    custom_events = list(CalendarEvent.objects.filter(
+        date__gte=month_start.date(), date__lt=next_month.date()
+    ).values("id", "date", "title", "event_type"))
+
     for day_num in range(1, cal_days_in_month + 1):
         day_date = month_start.replace(day=day_num).date()
         events = []
@@ -458,6 +550,9 @@ def admin_home(request):
         for msg in scheduled_msgs:
             if msg["scheduled_for"].date() == day_date:
                 events.append({"type": "scheduled", "text": f"{msg['message_type'].upper()}: {msg['subject'][:30]}"})
+        for ce in custom_events:
+            if ce["date"] == day_date:
+                events.append({"type": ce["event_type"], "text": ce["title"], "id": ce["id"]})
         if events:
             calendar_data["days"][str(day_num)] = events
 

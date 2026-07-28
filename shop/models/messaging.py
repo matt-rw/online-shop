@@ -184,3 +184,28 @@ class QuickMessage(models.Model):
         if self.recipient_count == 0:
             return 0
         return round((self.sent_count / self.recipient_count) * 100, 1)
+
+
+class CalendarEvent(models.Model):
+    """Custom calendar events for the admin dashboard."""
+    EVENT_TYPES = [
+        ("note", "Note"),
+        ("shoot", "Photo Shoot"),
+        ("design", "Design"),
+        ("sample", "Sample"),
+        ("launch", "Launch"),
+        ("deadline", "Deadline"),
+        ("other", "Other"),
+    ]
+
+    date = models.DateField(db_index=True)
+    title = models.CharField(max_length=200)
+    event_type = models.CharField(max_length=20, choices=EVENT_TYPES, default="note")
+    created_by = models.ForeignKey(User, null=True, blank=True, on_delete=models.SET_NULL)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["date", "created_at"]
+
+    def __str__(self):
+        return f"{self.date} — {self.title}"

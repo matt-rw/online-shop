@@ -712,6 +712,12 @@
     .cmd-cal-evt-dot.order { background: #34d399; }
     .cmd-cal-evt-dot.scheduled { background: #818cf8; }
     .cmd-cal-evt-dot.launch { background: #fbbf24; }
+    .cmd-cal-evt-dot.note { background: #94a3b8; }
+    .cmd-cal-evt-dot.shoot { background: #f472b6; }
+    .cmd-cal-evt-dot.design { background: #a78bfa; }
+    .cmd-cal-evt-dot.sample { background: #fb923c; }
+    .cmd-cal-evt-dot.deadline { background: #f87171; }
+    .cmd-cal-evt-dot.other { background: #64748b; }
 
     /* Calendar tooltip */
     .cmd-cal-tooltip {
@@ -1877,7 +1883,11 @@
 
         <!-- Calendar -->
         <div class="cmd-panel" style="padding: 1rem;">
-          <div class="cmd-panel-label" id="cmdCalendarTitle"></div>
+          <div style="display: flex; justify-content: space-between; align-items: center;">
+            <button onclick="calNavMonth(-1)" style="background: none; border: none; color: rgba(255,255,255,0.3); cursor: pointer; font-size: 0.875rem; padding: 0.25rem 0.5rem; font-family: 'JetBrains Mono', monospace;" onmouseenter="this.style.color='#818cf8'" onmouseleave="this.style.color='rgba(255,255,255,0.3)'">◀</button>
+            <div class="cmd-panel-label" id="cmdCalendarTitle" style="margin-bottom: 0;"></div>
+            <button onclick="calNavMonth(1)" style="background: none; border: none; color: rgba(255,255,255,0.3); cursor: pointer; font-size: 0.875rem; padding: 0.25rem 0.5rem; font-family: 'JetBrains Mono', monospace;" onmouseenter="this.style.color='#818cf8'" onmouseleave="this.style.color='rgba(255,255,255,0.3)'">▶</button>
+          </div>
           <div class="cmd-calendar" id="cmdCalendar"></div>
         </div>
       </div>
@@ -2801,58 +2811,120 @@
 
     // ========== CALENDAR ==========
     (function() {
-      var cal = {{ calendar_json|safe }};
+      var calData = {{ calendar_json|safe }};
       var container = document.getElementById('cmdCalendar');
       var titleEl = document.getElementById('cmdCalendarTitle');
-      if (!container || !cal) return;
+      if (!container) return;
 
-      titleEl.textContent = cal.monthName + ' ' + cal.year;
-      var html = '';
-      // Day headers (Mon-Sun)
-      var headers = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
-      headers.forEach(function(h) {
-        html += '<div class="cmd-cal-header">' + h + '</div>';
-      });
-      // Empty cells for offset (firstDayOfWeek: 0=Mon)
-      for (var e = 0; e < cal.firstDayOfWeek; e++) {
-        html += '<div class="cmd-cal-day empty"></div>';
-      }
-      // Day cells
-      for (var d = 1; d <= cal.daysInMonth; d++) {
-        var events = cal.days[String(d)] || [];
-        var isToday = d === cal.today;
-        var dayRev = (cal.revenue && cal.revenue[String(d)]) || 0;
-        var heatLevel = 0;
-        if (cal.maxRevenue > 0 && dayRev > 0) {
-          var ratio = dayRev / cal.maxRevenue;
-          if (ratio > 0.75) heatLevel = 4;
-          else if (ratio > 0.5) heatLevel = 3;
-          else if (ratio > 0.25) heatLevel = 2;
-          else heatLevel = 1;
-        }
-        var classes = 'cmd-cal-day';
-        if (isToday) classes += ' today';
-        if (events.length) classes += ' has-events';
-        if (heatLevel > 0) classes += ' heat-' + heatLevel;
+      var curYear = calData.year;
+      var curMonth = calData.month;
+      var csrfToken = '{{ csrf_token }}';
 
-        html += '<div class="' + classes + '">';
-        html += '<span>' + d + '</span>';
-        if (events.length) {
-          html += '<div class="cmd-cal-dot-row">';
-          events.forEach(function(ev) {
-            html += '<span class="cmd-cal-evt-dot ' + ev.type + '"></span>';
-          });
-          html += '</div>';
-          // Tooltip
-          html += '<div class="cmd-cal-tooltip">';
-          events.forEach(function(ev) {
-            html += '<div>' + ev.text + '</div>';
-          });
+      function renderCal(cal) {
+        titleEl.textContent = cal.monthName + ' ' + cal.year;
+        var html = '';
+        var headers = ['Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa', 'Su'];
+        headers.forEach(function(h) {
+          html += '<div class="cmd-cal-header">' + h + '</div>';
+        });
+        for (var e = 0; e < cal.firstDayOfWeek; e++) {
+          html += '<div class="cmd-cal-day empty"></div>';
+        }
+        for (var d = 1; d <= cal.daysInMonth; d++) {
+          var events = cal.days[String(d)] || [];
+          var isToday = d === cal.today;
+          var dayRev = (cal.revenue && cal.revenue[String(d)]) || 0;
+          var heatLevel = 0;
+          if (cal.maxRevenue > 0 && dayRev > 0) {
+            var ratio = dayRev / cal.maxRevenue;
+            if (ratio > 0.75) heatLevel = 4;
+            else if (ratio > 0.5) heatLevel = 3;
+            else if (ratio > 0.25) heatLevel = 2;
+            else heatLevel = 1;
+          }
+          var classes = 'cmd-cal-day';
+          if (isToday) classes += ' today';
+          if (events.length) classes += ' has-events';
+          if (heatLevel > 0) classes += ' heat-' + heatLevel;
+
+          html += '<div class="' + classes + '" onclick="calClickDay(' + cal.year + ',' + cal.month + ',' + d + ')">';
+          html += '<span>' + d + '</span>';
+          if (events.length) {
+            html += '<div class="cmd-cal-dot-row">';
+            events.forEach(function(ev) {
+              html += '<span class="cmd-cal-evt-dot ' + (ev.type || 'note') + '"></span>';
+            });
+            html += '</div>';
+            html += '<div class="cmd-cal-tooltip">';
+            events.forEach(function(ev) {
+              html += '<div>' + ev.text;
+              if (ev.id) html += ' <span onclick="event.stopPropagation(); calDeleteEvent(' + ev.id + ')" style="color: #f87171; cursor: pointer; margin-left: 0.25rem;">×</span>';
+              html += '</div>';
+            });
+            html += '</div>';
+          }
           html += '</div>';
         }
-        html += '</div>';
+        container.innerHTML = html;
       }
-      container.innerHTML = html;
+
+      function fetchMonth(year, month) {
+        fetch(window.location.pathname + '?action=calendar_month&year=' + year + '&month=' + month)
+        .then(function(r) { return r.json(); })
+        .then(function(data) {
+          if (!data.error) {
+            calData = data;
+            curYear = year;
+            curMonth = month;
+            renderCal(data);
+          }
+        });
+      }
+
+      window.calNavMonth = function(dir) {
+        var m = curMonth + dir;
+        var y = curYear;
+        if (m > 12) { m = 1; y++; }
+        if (m < 1) { m = 12; y--; }
+        fetchMonth(y, m);
+      };
+
+      window.calClickDay = function(year, month, day) {
+        var title = prompt('Add event for ' + month + '/' + day + '/' + year + ':');
+        if (!title || !title.trim()) return;
+        var dateStr = year + '-' + String(month).padStart(2, '0') + '-' + String(day).padStart(2, '0');
+        var body = new URLSearchParams();
+        body.append('action', 'calendar_add_event');
+        body.append('date', dateStr);
+        body.append('title', title.trim());
+        body.append('event_type', 'note');
+        fetch(window.location.pathname, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/x-www-form-urlencoded', 'X-CSRFToken': csrfToken },
+          body: body.toString()
+        }).then(function(r) { return r.json(); })
+        .then(function(d) {
+          if (d.success) fetchMonth(curYear, curMonth);
+        });
+      };
+
+      window.calDeleteEvent = function(eventId) {
+        if (!confirm('Delete this event?')) return;
+        var body = new URLSearchParams();
+        body.append('action', 'calendar_delete_event');
+        body.append('event_id', eventId);
+        fetch(window.location.pathname, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/x-www-form-urlencoded', 'X-CSRFToken': csrfToken },
+          body: body.toString()
+        }).then(function(r) { return r.json(); })
+        .then(function(d) {
+          if (d.success) fetchMonth(curYear, curMonth);
+        });
+      };
+
+      // Initial render
+      renderCal(calData);
     })();
 
     // Activity Feed
