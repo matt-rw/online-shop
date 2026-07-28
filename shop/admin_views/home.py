@@ -440,6 +440,9 @@ def admin_home(request):
     orders_today = Order.objects.filter(created_at__gte=today_start).count()
     orders_yesterday = Order.objects.filter(created_at__gte=yesterday_start, created_at__lt=today_start).count()
     total_revenue = Order.objects.aggregate(total=Sum("total"))["total"] or Decimal("0")
+    last_7d = now - timedelta(days=7)
+    revenue_7d = Order.objects.filter(created_at__gte=last_7d).aggregate(total=Sum("total"))["total"] or Decimal("0")
+    orders_7d = Order.objects.filter(created_at__gte=last_7d).count()
     revenue_30d = Order.objects.filter(created_at__gte=last_30d).aggregate(total=Sum("total"))["total"] or Decimal("0")
     revenue_today = Order.objects.filter(created_at__gte=today_start).aggregate(total=Sum("total"))["total"] or Decimal("0")
     revenue_yesterday = Order.objects.filter(created_at__gte=yesterday_start, created_at__lt=today_start).aggregate(total=Sum("total"))["total"] or Decimal("0")
@@ -466,7 +469,9 @@ def admin_home(request):
         "low_stock_items": ProductVariant.objects.exclude(product__slug="test-checkout-item").filter(stock_quantity__lte=10, stock_quantity__gt=0).count(),
         "out_of_stock": ProductVariant.objects.exclude(product__slug="test-checkout-item").filter(stock_quantity=0).count(),
         "total_orders": total_orders,
+        "orders_7d": orders_7d,
         "orders_30d": orders_30d,
+        "revenue_7d": float(revenue_7d),
         "orders_today": orders_today,
         "orders_yesterday": orders_yesterday,
         "total_revenue": float(total_revenue),

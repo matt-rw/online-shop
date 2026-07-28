@@ -477,45 +477,10 @@
       font-family: 'JetBrains Mono', monospace;
     }
 
-    /* Particle canvas background */
-    #cmdParticles {
-      position: fixed;
-      inset: 0;
-      z-index: 0;
-      pointer-events: none;
-    }
-
-    /* Scan-line effect on panels */
-    @keyframes scanLine {
-      0% { top: -2px; opacity: 0; }
-      10% { opacity: 1; }
-      90% { opacity: 1; }
-      100% { top: 100%; opacity: 0; }
-    }
-    .cmd-panel::before, .cmd-stat-card::before {
-      content: '';
-      position: absolute;
-      left: 0; right: 0;
-      top: -2px;
-      height: 1px;
-      background: linear-gradient(90deg, transparent, rgba(129,140,248,0.6), transparent);
-      opacity: 0;
-      pointer-events: none;
-      z-index: 5;
-    }
-    body.cmd-mode .cmd-panel::before, body.cmd-mode .cmd-stat-card::before {
-      animation: scanLine 2s cubic-bezier(0.4, 0, 0.2, 1) forwards;
-    }
-    .cmd-stat-card:nth-child(2)::before { animation-delay: 0.15s !important; }
-    .cmd-stat-card:nth-child(3)::before { animation-delay: 0.3s !important; }
-    .cmd-stat-card:nth-child(4)::before { animation-delay: 0.45s !important; }
-    .cmd-stat-card:nth-child(5)::before { animation-delay: 0.6s !important; }
-    .cmd-stat-card:nth-child(6)::before { animation-delay: 0.75s !important; }
-
     /* Pulsing accent lines */
     @keyframes glowPulse {
-      0%, 100% { opacity: 0.3; }
-      50% { opacity: 0.8; }
+      0%, 100% { opacity: 0.15; }
+      50% { opacity: 0.4; }
     }
     .cmd-glow-line {
       height: 1px;
@@ -538,7 +503,8 @@
       inset: 0;
       border-radius: 50%;
       background: #34d399;
-      animation: radarPing 2.5s ease-out infinite;
+      animation: radarPing 3s ease-out infinite;
+      opacity: 0.4;
     }
     .cmd-status-dot.yellow::after {
       content: '';
@@ -546,7 +512,8 @@
       inset: 0;
       border-radius: 50%;
       background: #fbbf24;
-      animation: radarPing 1.5s ease-out infinite;
+      animation: radarPing 2s ease-out infinite;
+      opacity: 0.4;
     }
     .cmd-status-dot.red::after {
       content: '';
@@ -554,7 +521,8 @@
       inset: 0;
       border-radius: 50%;
       background: #f87171;
-      animation: radarPing 1s ease-out infinite;
+      animation: radarPing 1.5s ease-out infinite;
+      opacity: 0.4;
     }
 
     /* Count-up values — tabular numbers */
@@ -622,37 +590,6 @@
       animation: inputGlow 2s ease-in-out infinite;
     }
 
-    /* Radar sweep for visitor map */
-    @keyframes radarSweep {
-      from { transform: rotate(0deg); }
-      to { transform: rotate(360deg); }
-    }
-    .cmd-map-radar {
-      position: absolute;
-      top: 50%; left: 50%;
-      width: 120px; height: 120px;
-      margin: -60px 0 0 -60px;
-      border-radius: 50%;
-      pointer-events: none;
-      opacity: 0.15;
-    }
-    .cmd-map-radar::before {
-      content: '';
-      position: absolute;
-      inset: 0;
-      border-radius: 50%;
-      border: 1px solid rgba(129,140,248,0.2);
-    }
-    .cmd-map-radar::after {
-      content: '';
-      position: absolute;
-      top: 0; left: 50%;
-      width: 50%; height: 50%;
-      transform-origin: bottom left;
-      animation: radarSweep 4s linear infinite;
-      background: conic-gradient(from 0deg, transparent, rgba(129,140,248,0.3));
-      border-radius: 0 100% 0 0;
-    }
 
     /* Calendar */
     .cmd-calendar {
@@ -1273,6 +1210,29 @@
       .cmd-three-col { grid-template-columns: 1fr; }
     }
 
+    /* Command Center Mobile */
+    @media (max-width: 768px) {
+      body.cmd-mode .container { padding: 0 1rem; }
+      body.cmd-mode .main-content { padding: 1rem; }
+      .cmd-stats { grid-template-columns: 1fr !important; gap: 0.75rem; }
+      .cmd-alerts { grid-template-columns: 1fr !important; }
+      .cmd-panel-value { font-size: 1.75rem !important; }
+      .cmd-actions-bar { overflow-x: auto; flex-wrap: nowrap; -webkit-overflow-scrolling: touch; scrollbar-width: none; }
+      .cmd-actions-bar::-webkit-scrollbar { display: none; }
+      .cmd-action-btn { flex-shrink: 0; }
+      .cmd-two-col, .cmd-row2, .cmd-row3 { grid-template-columns: 1fr !important; }
+      .cmd-secondary-stats { grid-template-columns: repeat(2, 1fr) !important; }
+      .cmd-funnel { flex-wrap: wrap; }
+      .cmd-funnel-step { min-width: 0; }
+      .cmd-status-bar { flex-wrap: wrap; }
+      .cmd-order-customer { display: none; }
+      .cmd-cal-day { min-height: 36px; }
+    }
+    @media (max-width: 480px) {
+      .cmd-secondary-stats { grid-template-columns: 1fr !important; }
+      .cmd-stats { margin-top: 1rem; }
+    }
+
     .section-header {
       margin: 3rem 0 2rem 0;
       position: relative;
@@ -1740,7 +1700,7 @@
   </style>
 </head>
 <body>
-  <canvas id="cmdParticles"></canvas>
+  <!-- canvas removed for cleaner look -->
   {% include "admin/partials/sidebar.html" %}
   <div class="top-bar" id="cmdHero">
     <div class="container">
@@ -1762,12 +1722,20 @@
         </div>
       </div>
 
+      <!-- Time range toggle -->
+      <div style="display: flex; gap: 0.25rem; margin-bottom: 1rem; background: rgba(255,255,255,0.04); border-radius: 8px; padding: 0.25rem; width: fit-content;">
+        <button class="cmd-range-btn active" onclick="setHeroRange('today')" data-range="today" style="padding: 0.375rem 0.75rem; border: none; border-radius: 6px; font-family: 'JetBrains Mono', monospace; font-size: 0.5625rem; font-weight: 600; cursor: pointer; transition: all 0.2s; background: rgba(255,255,255,0.1); color: #fff;">Today</button>
+        <button class="cmd-range-btn" onclick="setHeroRange('7d')" data-range="7d" style="padding: 0.375rem 0.75rem; border: none; border-radius: 6px; font-family: 'JetBrains Mono', monospace; font-size: 0.5625rem; font-weight: 600; cursor: pointer; transition: all 0.2s; background: transparent; color: rgba(255,255,255,0.35);">7 Days</button>
+        <button class="cmd-range-btn" onclick="setHeroRange('30d')" data-range="30d" style="padding: 0.375rem 0.75rem; border: none; border-radius: 6px; font-family: 'JetBrains Mono', monospace; font-size: 0.5625rem; font-weight: 600; cursor: pointer; transition: all 0.2s; background: transparent; color: rgba(255,255,255,0.35);">30 Days</button>
+        <button class="cmd-range-btn" onclick="setHeroRange('all')" data-range="all" style="padding: 0.375rem 0.75rem; border: none; border-radius: 6px; font-family: 'JetBrains Mono', monospace; font-size: 0.5625rem; font-weight: 600; cursor: pointer; transition: all 0.2s; background: transparent; color: rgba(255,255,255,0.35);">All Time</button>
+      </div>
+
       <!-- Command center panels -->
       <div class="cmd-stats" id="cmdStats">
         <div class="cmd-panel">
-          <div class="cmd-panel-label">Revenue Today</div>
-          <div class="cmd-panel-value glow">${{ stats.revenue_today|floatformat:2 }}</div>
-          <div class="cmd-panel-sub">
+          <div class="cmd-panel-label" id="cmdRevLabel">Revenue Today</div>
+          <div class="cmd-panel-value glow" id="cmdRevValue">${{ stats.revenue_today|floatformat:2 }}</div>
+          <div class="cmd-panel-sub" id="cmdRevSub">
             {% if stats.revenue_today > stats.revenue_yesterday %}
               <span class="up">▲</span> up from ${{ stats.revenue_yesterday|floatformat:2 }} yesterday
             {% elif stats.revenue_today < stats.revenue_yesterday %}
@@ -1778,9 +1746,9 @@
           </div>
         </div>
         <div class="cmd-panel">
-          <div class="cmd-panel-label">Orders Today</div>
-          <div class="cmd-panel-value">{{ stats.orders_today }}</div>
-          <div class="cmd-panel-sub">
+          <div class="cmd-panel-label" id="cmdOrdLabel">Orders Today</div>
+          <div class="cmd-panel-value" id="cmdOrdValue">{{ stats.orders_today }}</div>
+          <div class="cmd-panel-sub" id="cmdOrdSub">
             {% if stats.orders_today > stats.orders_yesterday %}
               <span class="up">▲</span> {{ stats.orders_yesterday }} yesterday
             {% elif stats.orders_today < stats.orders_yesterday %}
@@ -1903,7 +1871,7 @@
       </div>
 
       <!-- Row 2: Activity Feed (wide) + Visitors (narrow) + Calendar -->
-      <div style="display: grid; grid-template-columns: 1.4fr 0.8fr 1fr; gap: 1rem; margin-bottom: 1rem; position: relative; z-index: 1;">
+      <div class="cmd-row2" style="display: grid; grid-template-columns: 1.5fr 1fr; gap: 1rem; margin-bottom: 1rem; position: relative; z-index: 1;">
         <!-- Activity Feed -->
         <div class="cmd-panel cmd-feed-panel" style="max-height: 340px;">
           <div class="cmd-panel-label">Live Activity</div>
@@ -1912,26 +1880,16 @@
 
         <!-- Visitors (compact) -->
         <div class="cmd-panel" style="padding: 1rem; position: relative; overflow: hidden;">
-          <div class="cmd-map-radar" style="width: 80px; height: 80px; margin: -40px 0 0 -40px;"></div>
           <div style="position: relative; z-index: 1;">
             <div class="cmd-panel-label">Visitors · <span style="color: #34d399;">{{ stats.active_sessions }}</span> now</div>
             <div class="cmd-map-globe" id="cmdVisitorMap" style="margin-top: 0.5rem;"></div>
           </div>
         </div>
 
-        <!-- Calendar -->
-        <div class="cmd-panel" style="padding: 0.75rem;">
-          <div style="display: flex; justify-content: space-between; align-items: center;">
-            <button onclick="calNavMonth(-1)" style="background: none; border: none; color: rgba(255,255,255,0.3); cursor: pointer; font-size: 0.75rem; padding: 0.125rem 0.375rem; font-family: 'JetBrains Mono', monospace;" onmouseenter="this.style.color='#818cf8'" onmouseleave="this.style.color='rgba(255,255,255,0.3)'">◀</button>
-            <div class="cmd-panel-label" id="cmdCalendarTitle" style="margin-bottom: 0; font-size: 0.5625rem;"></div>
-            <button onclick="calNavMonth(1)" style="background: none; border: none; color: rgba(255,255,255,0.3); cursor: pointer; font-size: 0.75rem; padding: 0.125rem 0.375rem; font-family: 'JetBrains Mono', monospace;" onmouseenter="this.style.color='#818cf8'" onmouseleave="this.style.color='rgba(255,255,255,0.3)'">▶</button>
-          </div>
-          <div class="cmd-calendar" id="cmdCalendar"></div>
-        </div>
       </div>
 
       <!-- Row 3: Orders + Active Carts + Averages -->
-      <div style="display: grid; grid-template-columns: 1fr 1fr 1.3fr; gap: 1rem; margin-bottom: 1rem; position: relative; z-index: 1;">
+      <div class="cmd-row3" style="display: grid; grid-template-columns: 1fr 1fr 1.3fr; gap: 1rem; margin-bottom: 1rem; position: relative; z-index: 1;">
         <!-- Recent Orders -->
         <div class="cmd-panel" style="padding: 1rem; position: relative; z-index: 1;">
           <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
@@ -1960,7 +1918,7 @@
           <div style="display: flex; justify-content: space-between; align-items: center;">
             <div class="cmd-panel-label" style="margin-bottom: 0;">Active Carts · <span style="color: #fbbf24;">{{ active_cart_count }}</span></div>
             {% if abandoned_cart_count > 0 %}
-            <div style="font-size: 0.5625rem; color: #f87171;">{{ abandoned_cart_count }} abandoned · ${{ abandoned_cart_value|floatformat:0 }}</div>
+            <a href="{% url 'admin_email_swipe' %}" style="font-size: 0.5625rem; color: #f87171; text-decoration: none; font-family: 'JetBrains Mono', monospace;">{{ abandoned_cart_count }} abandoned · ${{ abandoned_cart_value|floatformat:0 }} · <span style="color: #818cf8;">Send Recovery →</span></a>
             {% endif %}
           </div>
           <div id="cmdActiveCarts" style="margin-top: 0.5rem;"></div>
@@ -2055,14 +2013,33 @@
         </div>
       </div>
 
-      <!-- Row 5: Notes + Quick Send -->
-      <div class="cmd-two-col">
-        <div class="cmd-panel" style="padding: 1rem; position: relative; z-index: 1;">
-          <div class="cmd-panel-label">Quick Notes</div>
-          <textarea id="cmdNotes" placeholder="Shoots, samples, deadlines..." style="width: 100%; height: 80px; margin-top: 0.5rem; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.06); border-radius: 8px; color: rgba(255,255,255,0.7); font-family: 'JetBrains Mono', monospace; font-size: 0.6875rem; padding: 0.625rem; resize: none; outline: none; line-height: 1.6; transition: border-color 0.2s;" onfocus="this.style.borderColor='rgba(129,140,248,0.3)'" onblur="this.style.borderColor='rgba(255,255,255,0.06)'; saveCmdNotes()"></textarea>
+      <!-- Row 5: Calendar + Notes -->
+      <div class="cmd-two-col" style="margin-bottom: 1rem;">
+        <!-- Calendar (bigger) -->
+        <div class="cmd-panel" style="padding: 1.25rem;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem;">
+            <button onclick="calNavMonth(-1)" style="background: none; border: none; color: rgba(255,255,255,0.3); cursor: pointer; font-size: 1rem; padding: 0.25rem 0.5rem; font-family: 'JetBrains Mono', monospace;" onmouseenter="this.style.color='#818cf8'" onmouseleave="this.style.color='rgba(255,255,255,0.3)'">◀</button>
+            <div class="cmd-panel-label" id="cmdCalendarTitle" style="margin-bottom: 0; font-size: 0.6875rem;"></div>
+            <button onclick="calNavMonth(1)" style="background: none; border: none; color: rgba(255,255,255,0.3); cursor: pointer; font-size: 1rem; padding: 0.25rem 0.5rem; font-family: 'JetBrains Mono', monospace;" onmouseenter="this.style.color='#818cf8'" onmouseleave="this.style.color='rgba(255,255,255,0.3)'">▶</button>
+          </div>
+          <div class="cmd-calendar" id="cmdCalendar" style="gap: 3px;"></div>
+          <div style="display: flex; gap: 1rem; margin-top: 0.75rem; font-size: 0.5rem; color: rgba(255,255,255,0.2);">
+            <span><span class="cmd-cal-evt-dot order" style="display: inline-block; width: 6px; height: 6px; border-radius: 50; vertical-align: middle; margin-right: 0.25rem;"></span>Orders</span>
+            <span><span class="cmd-cal-evt-dot scheduled" style="display: inline-block; width: 6px; height: 6px; border-radius: 50%; vertical-align: middle; margin-right: 0.25rem;"></span>Scheduled</span>
+            <span><span class="cmd-cal-evt-dot deadline" style="display: inline-block; width: 6px; height: 6px; border-radius: 50%; vertical-align: middle; margin-right: 0.25rem;"></span>Deadline</span>
+            <span><span class="cmd-cal-evt-dot note" style="display: inline-block; width: 6px; height: 6px; border-radius: 50%; vertical-align: middle; margin-right: 0.25rem;"></span>Note</span>
+          </div>
         </div>
-        <div id="cmdQuickSendSlot"></div>
+
+        <!-- Notes -->
+        <div class="cmd-panel" style="padding: 1.25rem; position: relative; z-index: 1;">
+          <div class="cmd-panel-label">Quick Notes</div>
+          <textarea id="cmdNotes" placeholder="Shoots, samples, deadlines..." style="width: 100%; height: 200px; margin-top: 0.5rem; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.06); border-radius: 8px; color: rgba(255,255,255,0.7); font-family: 'JetBrains Mono', monospace; font-size: 0.6875rem; padding: 0.75rem; resize: none; outline: none; line-height: 1.6; transition: border-color 0.2s;" onfocus="this.style.borderColor='rgba(129,140,248,0.3)'" onblur="this.style.borderColor='rgba(255,255,255,0.06)'; saveCmdNotes()"></textarea>
+        </div>
       </div>
+
+      <!-- Quick Send (hidden in cmd mode, visible in classic) -->
+      <div id="cmdQuickSendSlot" style="display: none;"></div>
 
     </div>
 
@@ -2590,17 +2567,12 @@
         } else {
           document.body.classList.remove('cmd-mode');
         }
-        // Move Quick Send widget to appropriate slot
+        // Move Quick Send widget to classic slot (hidden in command mode)
         var qs = document.getElementById('quickSendWidget');
         if (qs) {
-          var slot = m === 'command'
-            ? document.getElementById('cmdQuickSendSlot')
-            : document.getElementById('classicQuickSendSlot');
+          var slot = document.getElementById('classicQuickSendSlot');
           if (slot) slot.appendChild(qs);
-          // Expand in command mode, collapse in classic
-          if (m === 'command') {
-            qs.classList.remove('collapsed');
-          }
+          qs.style.display = m === 'command' ? 'none' : '';
         }
       }
 
@@ -2623,77 +2595,33 @@
       });
     })();
 
-    // ========== PARTICLE CANVAS BACKGROUND ==========
-    (function() {
-      var canvas = document.getElementById('cmdParticles');
-      if (!canvas || !document.body.classList.contains('cmd-mode')) {
-        if (canvas) canvas.style.display = 'none';
-        return;
-      }
-      var ctx = canvas.getContext('2d');
-      var particles = [];
-      var PARTICLE_COUNT = 50;
-      var CONNECT_DIST = 120;
-
-      function resize() {
-        canvas.width = window.innerWidth;
-        canvas.height = window.innerHeight;
-      }
-      resize();
-      window.addEventListener('resize', resize);
-
-      for (var i = 0; i < PARTICLE_COUNT; i++) {
-        particles.push({
-          x: Math.random() * canvas.width,
-          y: Math.random() * canvas.height,
-          vx: (Math.random() - 0.5) * 0.3,
-          vy: (Math.random() - 0.5) * 0.3,
-          r: Math.random() * 1.5 + 0.5,
-        });
-      }
-
-      function draw() {
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-        // Draw connections
-        for (var i = 0; i < particles.length; i++) {
-          for (var j = i + 1; j < particles.length; j++) {
-            var dx = particles[i].x - particles[j].x;
-            var dy = particles[i].y - particles[j].y;
-            var dist = Math.sqrt(dx * dx + dy * dy);
-            if (dist < CONNECT_DIST) {
-              ctx.beginPath();
-              ctx.moveTo(particles[i].x, particles[i].y);
-              ctx.lineTo(particles[j].x, particles[j].y);
-              ctx.strokeStyle = 'rgba(129,140,248,' + (0.04 * (1 - dist / CONNECT_DIST)) + ')';
-              ctx.lineWidth = 0.5;
-              ctx.stroke();
-            }
-          }
+    // ========== TIME RANGE TOGGLE ==========
+    var heroRangeData = {
+      today: { rev: {{ stats.revenue_today }}, revLabel: 'Revenue Today', ord: {{ stats.orders_today }}, ordLabel: 'Orders Today', sub: 'vs ${{ stats.revenue_yesterday|floatformat:2 }} yesterday' },
+      '7d': { rev: {{ stats.revenue_7d }}, revLabel: 'Revenue 7 Days', ord: {{ stats.orders_7d }}, ordLabel: 'Orders 7 Days', sub: '' },
+      '30d': { rev: {{ stats.revenue_30d }}, revLabel: 'Revenue 30 Days', ord: {{ stats.orders_30d }}, ordLabel: 'Orders 30 Days', sub: '' },
+      all: { rev: {{ stats.total_revenue }}, revLabel: 'Total Revenue', ord: {{ stats.total_orders }}, ordLabel: 'Total Orders', sub: '' },
+    };
+    function setHeroRange(range) {
+      var d = heroRangeData[range];
+      if (!d) return;
+      document.getElementById('cmdRevLabel').textContent = d.revLabel;
+      document.getElementById('cmdRevValue').textContent = '$' + d.rev.toFixed(2);
+      document.getElementById('cmdRevSub').innerHTML = d.sub ? '<span class="neutral">' + d.sub + '</span>' : '';
+      document.getElementById('cmdOrdLabel').textContent = d.ordLabel;
+      document.getElementById('cmdOrdValue').textContent = d.ord;
+      document.getElementById('cmdOrdSub').innerHTML = '';
+      // Update button styles
+      document.querySelectorAll('.cmd-range-btn').forEach(function(btn) {
+        if (btn.dataset.range === range) {
+          btn.style.background = 'rgba(255,255,255,0.1)';
+          btn.style.color = '#fff';
+        } else {
+          btn.style.background = 'transparent';
+          btn.style.color = 'rgba(255,255,255,0.35)';
         }
-        // Draw particles
-        for (var k = 0; k < particles.length; k++) {
-          var p = particles[k];
-          ctx.beginPath();
-          ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
-          ctx.fillStyle = 'rgba(129,140,248,0.15)';
-          ctx.fill();
-          // Move
-          p.x += p.vx;
-          p.y += p.vy;
-          if (p.x < 0 || p.x > canvas.width) p.vx *= -1;
-          if (p.y < 0 || p.y > canvas.height) p.vy *= -1;
-        }
-        requestAnimationFrame(draw);
-      }
-      draw();
-
-      // Hide canvas when switching to classic mode
-      var origToggle = window.toggleHeroMode;
-      window.toggleHeroMode = function() {
-        origToggle();
-        canvas.style.display = document.body.classList.contains('cmd-mode') ? '' : 'none';
-      };
-    })();
+      });
+    }
 
     // ========== COUNT-UP ANIMATION ==========
     (function() {
@@ -2849,7 +2777,7 @@
       var html = '<div style="display: grid; grid-template-columns: 2fr 0.7fr 0.7fr 0.7fr 0.7fr; gap: 0.375rem; font-size: 0.5rem; color: rgba(255,255,255,0.2); text-transform: uppercase; letter-spacing: 0.1em; padding-bottom: 0.375rem; border-bottom: 1px solid rgba(255,255,255,0.04);">'
         + '<span>Product</span><span style="text-align: right;">Sold</span><span style="text-align: right;">Stock</span><span style="text-align: right;">Margin</span><span style="text-align: right;">/Week</span></div>';
       data.forEach(function(p) {
-        var stockColor = p.stock === 0 ? '#f87171' : p.stock <= 10 ? '#fbbf24' : 'rgba(255,255,255,0.5)';
+        var stockColor = p.stock === 0 ? '#f87171' : p.stock <= 10 ? '#fbbf24' : 'rgba(255,255,255,0.4)';
         var marginColor = p.margin >= 50 ? '#34d399' : p.margin >= 30 ? '#fbbf24' : '#f87171';
         html += '<div style="display: grid; grid-template-columns: 2fr 0.7fr 0.7fr 0.7fr 0.7fr; gap: 0.375rem; padding: 0.375rem 0; border-bottom: 1px solid rgba(255,255,255,0.02); font-size: 0.625rem; align-items: center;">'
           + '<span style="color: rgba(255,255,255,0.6); overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">' + p.name + '</span>'
