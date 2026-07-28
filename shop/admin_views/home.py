@@ -403,6 +403,64 @@ def admin_home(request):
 
     recent_orders = Order.objects.select_related('user').order_by('-created_at')[:5]
 
+    # Calendar data — current month orders + scheduled messages
+    import calendar as cal_mod
+    cal_year = now.year
+    cal_month = now.month
+    cal_first_day, cal_days_in_month = cal_mod.monthrange(cal_year, cal_month)
+    month_start = now.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+    next_month = (month_start + timedelta(days=32)).replace(day=1)
+
+    # Orders per day this month
+    from django.db.models import Count
+    from django.db.models.functions import TruncDate
+    orders_by_day = dict(
+        Order.objects.filter(created_at__gte=month_start, created_at__lt=next_month)
+        .annotate(day=TruncDate("created_at"))
+        .values("day")
+        .annotate(count=Count("id"), rev=Sum("total"))
+        .values_list("day", "count")
+    )
+
+    # Revenue per day this month
+    rev_by_day = dict(
+        Order.objects.filter(created_at__gte=month_start, created_at__lt=next_month)
+        .annotate(day=TruncDate("created_at"))
+        .values("day")
+        .annotate(rev=Sum("total"))
+        .values_list("day", "rev")
+    )
+
+    # Scheduled messages
+    scheduled_msgs = list(
+        QuickMessage.objects.filter(
+            status="scheduled", scheduled_for__gte=month_start, scheduled_for__lt=next_month
+        ).values("subject", "message_type", "scheduled_for")
+    )
+
+    # Build calendar events
+    calendar_data = {
+        "year": cal_year,
+        "month": cal_month,
+        "monthName": now.strftime("%B"),
+        "firstDayOfWeek": cal_first_day,  # 0=Monday
+        "daysInMonth": cal_days_in_month,
+        "today": now.day,
+        "days": {},
+    }
+    for day_num in range(1, cal_days_in_month + 1):
+        day_date = month_start.replace(day=day_num).date()
+        events = []
+        order_count = orders_by_day.get(day_date, 0)
+        day_rev = rev_by_day.get(day_date, 0)
+        if order_count:
+            events.append({"type": "order", "text": f"{order_count} order{'s' if order_count > 1 else ''} · ${float(day_rev):.0f}"})
+        for msg in scheduled_msgs:
+            if msg["scheduled_for"].date() == day_date:
+                events.append({"type": "scheduled", "text": f"{msg['message_type'].upper()}: {msg['subject'][:30]}"})
+        if events:
+            calendar_data["days"][str(day_num)] = events
+
     # Revenue chart data — last 7 days
     import json as json_mod
     revenue_chart = []
@@ -467,6 +525,7 @@ def admin_home(request):
         "revenue_chart_json": json_mod.dumps(revenue_chart),
         "activity_feed_json": json_mod.dumps(activity_feed),
         "visitor_locations_json": json_mod.dumps(visitor_locations),
+        "calendar_json": json_mod.dumps(calendar_data),
         "drafts": drafts,
         "load_draft": load_draft,
         "default_test_email": site_settings.default_test_email,
