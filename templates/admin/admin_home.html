@@ -871,6 +871,21 @@
       .cmd-funnel { flex-wrap: wrap; }
     }
 
+    /* Active Carts */
+    .cmd-cart-row {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      padding: 0.5rem 0;
+      border-bottom: 1px solid rgba(255,255,255,0.03);
+      font-size: 0.6875rem;
+    }
+    .cmd-cart-row:last-child { border-bottom: none; }
+    .cmd-cart-user { color: rgba(255,255,255,0.5); min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 140px; }
+    .cmd-cart-items { flex: 1; color: rgba(255,255,255,0.3); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .cmd-cart-total { color: #fbbf24; font-weight: 700; flex-shrink: 0; }
+    .cmd-cart-time { color: rgba(255,255,255,0.15); font-size: 0.5625rem; flex-shrink: 0; }
+
     /* Feed stagger */
     .cmd-feed-item:nth-child(1) { animation-delay: 0s; }
     .cmd-feed-item:nth-child(2) { animation-delay: 0.08s; }
@@ -1031,7 +1046,14 @@
       background: rgba(255,255,255,0.04) !important;
       border-color: rgba(255,255,255,0.08) !important;
       color: #fff !important;
+      font-family: 'JetBrains Mono', monospace !important;
+      font-size: 0.75rem !important;
     }
+    body.cmd-mode .quick-send-widget { font-family: 'JetBrains Mono', monospace; font-size: 0.75rem; }
+    body.cmd-mode .quick-send-widget button,
+    body.cmd-mode .quick-send-widget label,
+    body.cmd-mode .quick-send-widget span,
+    body.cmd-mode .quick-send-widget input { font-family: 'JetBrains Mono', monospace; }
     body.cmd-mode #quickSubject:focus,
     body.cmd-mode #quickContent:focus {
       border-color: rgba(129,140,248,0.4) !important;
@@ -1860,95 +1882,107 @@
         </a>
       </div>
 
-      <!-- Three-Column: Activity Feed + Visitors + Calendar -->
-      <div class="cmd-three-col">
-        <!-- Activity Feed (primary) -->
-        <div class="cmd-panel cmd-feed-panel" style="max-height: 300px;">
+      <!-- Row 2: Activity Feed (wide) + Visitors (narrow) + Calendar -->
+      <div style="display: grid; grid-template-columns: 1.4fr 0.8fr 1fr; gap: 1rem; margin-bottom: 1rem; position: relative; z-index: 1;">
+        <!-- Activity Feed -->
+        <div class="cmd-panel cmd-feed-panel" style="max-height: 340px;">
           <div class="cmd-panel-label">Live Activity</div>
           <div class="cmd-feed-list" id="cmdActivityFeed"></div>
         </div>
 
-        <!-- Visitor Locations (promoted) -->
-        <div class="cmd-panel" style="position: relative; overflow: hidden; padding: 1.25rem;">
-          <div class="cmd-map-radar"></div>
+        <!-- Visitors (compact) -->
+        <div class="cmd-panel" style="padding: 1rem; position: relative; overflow: hidden;">
+          <div class="cmd-map-radar" style="width: 80px; height: 80px; margin: -40px 0 0 -40px;"></div>
           <div style="position: relative; z-index: 1;">
-            <div class="cmd-panel-label">Active Visitors · {{ stats.active_sessions }} online</div>
-            <div style="display: flex; gap: 1.5rem; margin: 0.75rem 0; font-size: 0.6875rem;">
-              <span style="color: rgba(255,255,255,0.3);"><span style="color: #34d399; font-weight: 700;">{{ stats.page_views_24h }}</span> views today</span>
-              <span style="color: rgba(255,255,255,0.3);"><span style="color: #818cf8; font-weight: 700;">{{ stats.total_visitors }}</span> total</span>
-            </div>
-            <div class="cmd-map-globe" id="cmdVisitorMap"></div>
+            <div class="cmd-panel-label">Visitors · <span style="color: #34d399;">{{ stats.active_sessions }}</span> now</div>
+            <div class="cmd-map-globe" id="cmdVisitorMap" style="margin-top: 0.5rem;"></div>
           </div>
         </div>
 
         <!-- Calendar -->
-        <div class="cmd-panel" style="padding: 1rem;">
+        <div class="cmd-panel" style="padding: 0.75rem;">
           <div style="display: flex; justify-content: space-between; align-items: center;">
-            <button onclick="calNavMonth(-1)" style="background: none; border: none; color: rgba(255,255,255,0.3); cursor: pointer; font-size: 0.875rem; padding: 0.25rem 0.5rem; font-family: 'JetBrains Mono', monospace;" onmouseenter="this.style.color='#818cf8'" onmouseleave="this.style.color='rgba(255,255,255,0.3)'">◀</button>
-            <div class="cmd-panel-label" id="cmdCalendarTitle" style="margin-bottom: 0;"></div>
-            <button onclick="calNavMonth(1)" style="background: none; border: none; color: rgba(255,255,255,0.3); cursor: pointer; font-size: 0.875rem; padding: 0.25rem 0.5rem; font-family: 'JetBrains Mono', monospace;" onmouseenter="this.style.color='#818cf8'" onmouseleave="this.style.color='rgba(255,255,255,0.3)'">▶</button>
+            <button onclick="calNavMonth(-1)" style="background: none; border: none; color: rgba(255,255,255,0.3); cursor: pointer; font-size: 0.75rem; padding: 0.125rem 0.375rem; font-family: 'JetBrains Mono', monospace;" onmouseenter="this.style.color='#818cf8'" onmouseleave="this.style.color='rgba(255,255,255,0.3)'">◀</button>
+            <div class="cmd-panel-label" id="cmdCalendarTitle" style="margin-bottom: 0; font-size: 0.5625rem;"></div>
+            <button onclick="calNavMonth(1)" style="background: none; border: none; color: rgba(255,255,255,0.3); cursor: pointer; font-size: 0.75rem; padding: 0.125rem 0.375rem; font-family: 'JetBrains Mono', monospace;" onmouseenter="this.style.color='#818cf8'" onmouseleave="this.style.color='rgba(255,255,255,0.3)'">▶</button>
           </div>
           <div class="cmd-calendar" id="cmdCalendar"></div>
         </div>
       </div>
 
-      <!-- Recent Orders (full-width slim) -->
-      <div class="cmd-panel cmd-orders-panel" style="position: relative; z-index: 1; margin-bottom: 1.5rem;">
-        <div style="display: flex; justify-content: space-between; align-items: center;">
-          <div class="cmd-panel-label" style="margin-bottom: 0;">Recent Orders</div>
-          <a href="{% url 'admin_orders' %}" style="font-size: 0.625rem; color: rgba(255,255,255,0.3); text-decoration: none; font-family: 'JetBrains Mono', monospace; letter-spacing: 0.05em;">VIEW ALL →</a>
+      <!-- Row 3: Orders (compact) + Revenue Chart -->
+      <div class="cmd-two-col" style="margin-bottom: 1rem;">
+        <div class="cmd-panel" style="padding: 1rem; position: relative; z-index: 1;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
+            <div class="cmd-panel-label" style="margin-bottom: 0;">Recent Orders</div>
+            <a href="{% url 'admin_orders' %}" style="font-size: 0.5625rem; color: rgba(255,255,255,0.25); text-decoration: none; font-family: 'JetBrains Mono', monospace;">ALL →</a>
+          </div>
+          {% for order in recent_orders %}
+          <a href="{% url 'admin_orders' %}" class="cmd-order-row" style="padding: 0.5rem 0;">
+            <div class="cmd-order-main">
+              <span class="cmd-order-number" style="font-size: 0.6875rem;">{{ order.order_number }}</span>
+              <span class="cmd-order-customer" style="font-size: 0.625rem;">{{ order.email|default:"—"|truncatechars:20 }}</span>
+            </div>
+            <div class="cmd-order-right" style="gap: 0.5rem;">
+              <span class="cmd-order-total" style="font-size: 0.6875rem;">${{ order.total|floatformat:0 }}</span>
+              <span class="cmd-order-status status-{{ order.status|lower }}" style="font-size: 0.5rem; padding: 0.125rem 0.375rem;">{{ order.get_status_display }}</span>
+              <span class="cmd-order-time" data-created="{{ order.created_at|date:'c' }}" style="font-size: 0.5625rem;"></span>
+            </div>
+          </a>
+          {% empty %}
+          <div style="text-align: center; padding: 1rem; color: rgba(255,255,255,0.15); font-size: 0.6875rem;">No orders yet</div>
+          {% endfor %}
         </div>
-        {% for order in recent_orders %}
-        <a href="{% url 'admin_orders' %}" class="cmd-order-row">
-          <div class="cmd-order-main">
-            <span class="cmd-order-number">{{ order.order_number }}</span>
-            <span class="cmd-order-customer">{{ order.email|default:order.customer_name|default:"—" }}</span>
-          </div>
-          <div class="cmd-order-right">
-            <span class="cmd-order-total">${{ order.total|floatformat:2 }}</span>
-            <span class="cmd-order-status status-{{ order.status|lower }}">{{ order.get_status_display }}</span>
-            <span class="cmd-order-time" data-created="{{ order.created_at|date:'c' }}"></span>
-          </div>
-        </a>
-        {% empty %}
-        <div style="text-align: center; padding: 1.5rem; color: rgba(255,255,255,0.2); font-size: 0.75rem;">No orders yet</div>
-        {% endfor %}
+
+        <div class="cmd-panel cmd-chart-panel">
+          <div class="cmd-panel-label">Revenue — 7 Days</div>
+          <div class="cmd-chart-container" id="cmdRevenueChart"></div>
+        </div>
       </div>
 
-      <div class="cmd-glow-line"></div>
+      <!-- Active Carts -->
+      {% if active_cart_count > 0 %}
+      <div class="cmd-panel" style="padding: 1rem; margin-bottom: 1rem; position: relative; z-index: 1;">
+        <div class="cmd-panel-label">Active Carts · <span style="color: #fbbf24;">{{ active_cart_count }}</span> with items</div>
+        <div id="cmdActiveCarts" style="margin-top: 0.5rem;"></div>
+      </div>
+      {% endif %}
 
-      <!-- Secondary Metrics -->
-      <div class="cmd-secondary-stats">
+      <!-- Row 4: Metrics + Funnel + Top Products -->
+      <div class="cmd-secondary-stats" style="margin-bottom: 1rem;">
         <div class="cmd-stat-card">
           <div class="cmd-panel-label">Total Revenue</div>
           <div class="cmd-stat-value">${{ stats.total_revenue|floatformat:2 }}</div>
         </div>
         <div class="cmd-stat-card">
-          <div class="cmd-panel-label">30-Day Revenue</div>
+          <div class="cmd-panel-label">30d Revenue</div>
           <div class="cmd-stat-value">${{ stats.revenue_30d|floatformat:2 }}</div>
         </div>
         <div class="cmd-stat-card">
-          <div class="cmd-panel-label">Total Orders</div>
+          <div class="cmd-panel-label">Orders</div>
           <div class="cmd-stat-value">{{ stats.total_orders }}</div>
         </div>
         <div class="cmd-stat-card">
-          <div class="cmd-panel-label">Conversion Rate</div>
+          <div class="cmd-panel-label">Conversion</div>
           <div class="cmd-stat-value">{{ stats.conversion_rate }}%</div>
         </div>
         <div class="cmd-stat-card">
-          <div class="cmd-panel-label">Email Subscribers</div>
+          <div class="cmd-panel-label">Subscribers</div>
           <div class="cmd-stat-value">{{ stats.total_email_subs }}<span class="cmd-sparkline" id="cmdSubSparkline"></span></div>
         </div>
         <div class="cmd-stat-card">
-          <div class="cmd-panel-label">Page Views (24h)</div>
+          <div class="cmd-panel-label">Views (24h)</div>
           <div class="cmd-stat-value">{{ stats.page_views_24h }}</div>
         </div>
       </div>
 
-      <div class="cmd-glow-line"></div>
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1rem; position: relative; z-index: 1;">
+        <div class="cmd-funnel" id="cmdFunnel" style="margin-bottom: 0;"></div>
+        <div class="cmd-top-products" id="cmdTopProducts" style="margin-bottom: 0;"></div>
+      </div>
 
-      <!-- System Status Bar -->
-      <div class="cmd-status-bar">
+      <!-- Row 5: Status Bar -->
+      <div class="cmd-status-bar" style="margin-bottom: 1rem;">
         <div class="cmd-status-item">
           <span class="cmd-status-dot {% if stats.homepage_avg_response_ms <= 300 %}green{% elif stats.homepage_avg_response_ms <= 800 %}yellow{% else %}red{% endif %}"></span>
           <span>Response</span>
@@ -1962,17 +1996,17 @@
         <div class="cmd-status-item">
           <span class="cmd-status-dot {% if stats.active_sessions > 0 %}green{% else %}yellow{% endif %}"></span>
           <span>Sessions</span>
-          <span class="cmd-status-value">{{ stats.active_sessions }} active</span>
+          <span class="cmd-status-value">{{ stats.active_sessions }}</span>
         </div>
         <div class="cmd-status-item">
           <span class="cmd-status-dot {% if stats.out_of_stock == 0 %}green{% else %}red{% endif %}"></span>
-          <span>Inventory</span>
-          <span class="cmd-status-value">{% if stats.out_of_stock > 0 %}{{ stats.out_of_stock }} OOS{% else %}All stocked{% endif %}</span>
+          <span>Stock</span>
+          <span class="cmd-status-value">{% if stats.out_of_stock > 0 %}{{ stats.out_of_stock }} OOS{% else %}OK{% endif %}</span>
         </div>
         <div class="cmd-status-item">
           <span class="cmd-status-dot {% if stats.unread_messages == 0 %}green{% else %}yellow{% endif %}"></span>
           <span>Inbox</span>
-          <span class="cmd-status-value">{% if stats.unread_messages > 0 %}{{ stats.unread_messages }} unread{% else %}Clear{% endif %}</span>
+          <span class="cmd-status-value">{% if stats.unread_messages > 0 %}{{ stats.unread_messages }}{% else %}Clear{% endif %}</span>
         </div>
         {% if last_order_time %}
         <div class="cmd-status-item">
@@ -1983,36 +2017,12 @@
         {% endif %}
       </div>
 
-      <div class="cmd-glow-line"></div>
-
-      <!-- Conversion Funnel -->
-      <div class="cmd-funnel" id="cmdFunnel"></div>
-
-      <!-- Top Products -->
-      <div class="cmd-top-products" id="cmdTopProducts"></div>
-
-      <!-- Revenue Chart / Notes -->
+      <!-- Row 6: Notes + Quick Send -->
       <div class="cmd-two-col">
-
-        <!-- Revenue Chart -->
-        <div class="cmd-panel cmd-chart-panel">
-          <div class="cmd-panel-label">Revenue — Last 7 Days</div>
-          <div class="cmd-chart-container" id="cmdRevenueChart"></div>
-        </div>
-
-        <!-- Quick Notes -->
-        <div class="cmd-panel" style="padding: 1.25rem; position: relative; z-index: 1;">
+        <div class="cmd-panel" style="padding: 1rem; position: relative; z-index: 1;">
           <div class="cmd-panel-label">Quick Notes</div>
-          <textarea id="cmdNotes" placeholder="Type notes here..." style="width: 100%; height: 140px; margin-top: 0.75rem; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.06); border-radius: 8px; color: rgba(255,255,255,0.7); font-family: 'JetBrains Mono', monospace; font-size: 0.75rem; padding: 0.75rem; resize: none; outline: none; line-height: 1.6; transition: border-color 0.2s;" onfocus="this.style.borderColor='rgba(129,140,248,0.3)'" onblur="this.style.borderColor='rgba(255,255,255,0.06)'; saveCmdNotes()"></textarea>
-          <div style="font-size: 0.5625rem; color: rgba(255,255,255,0.15); margin-top: 0.375rem;">Auto-saves on blur</div>
+          <textarea id="cmdNotes" placeholder="Type notes here..." style="width: 100%; height: 100px; margin-top: 0.5rem; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.06); border-radius: 8px; color: rgba(255,255,255,0.7); font-family: 'JetBrains Mono', monospace; font-size: 0.6875rem; padding: 0.625rem; resize: none; outline: none; line-height: 1.6; transition: border-color 0.2s;" onfocus="this.style.borderColor='rgba(129,140,248,0.3)'" onblur="this.style.borderColor='rgba(255,255,255,0.06)'; saveCmdNotes()"></textarea>
         </div>
-
-      </div>
-
-      <div class="cmd-glow-line"></div>
-
-      <!-- Quick Send -->
-      <div style="max-width: 600px; position: relative; z-index: 1;">
         <div id="cmdQuickSendSlot"></div>
       </div>
 
@@ -2755,6 +2765,30 @@
       container.style.padding = '0';
     })();
 
+    // ========== ACTIVE CARTS ==========
+    (function() {
+      var carts = {{ carts_json|safe }};
+      var el = document.getElementById('cmdActiveCarts');
+      if (!el || !carts.length) return;
+      function timeAgo(iso) {
+        var diff = Math.floor((new Date() - new Date(iso)) / 1000);
+        if (diff < 60) return 'now';
+        if (diff < 3600) return Math.floor(diff / 60) + 'm';
+        if (diff < 86400) return Math.floor(diff / 3600) + 'h';
+        return Math.floor(diff / 86400) + 'd';
+      }
+      el.innerHTML = carts.map(function(c) {
+        var itemNames = c.items.map(function(i) { return i.name + (i.qty > 1 ? ' ×' + i.qty : ''); }).join(', ');
+        if (c.item_count > 3) itemNames += ' +' + (c.item_count - 3) + ' more';
+        return '<div class="cmd-cart-row">'
+          + '<span class="cmd-cart-user">' + c.user + '</span>'
+          + '<span class="cmd-cart-items">' + itemNames + '</span>'
+          + '<span class="cmd-cart-total">$' + c.total.toFixed(0) + '</span>'
+          + '<span class="cmd-cart-time">' + timeAgo(c.updated) + '</span>'
+          + '</div>';
+      }).join('');
+    })();
+
     // ========== CONVERSION FUNNEL ==========
     (function() {
       var data = {{ funnel_json|safe }};
@@ -2980,32 +3014,38 @@
       var container = document.getElementById('cmdVisitorMap');
       if (!container) return;
       if (!locations.length) {
-        container.innerHTML = '<div style="text-align: center; padding: 1.5rem; color: rgba(255,255,255,0.2); font-size: 0.8125rem;">No visitor data yet</div>';
+        container.innerHTML = '<div style="text-align: center; padding: 1rem; color: rgba(255,255,255,0.15); font-size: 0.6875rem;">No visitor data yet</div>';
         return;
       }
-      // Count by country
       var counts = {};
       locations.forEach(function(l) {
         var key = l.country_name || l.country || 'Unknown';
         var city = l.city || '';
-        if (!counts[key]) counts[key] = { count: 0, cities: new Set(), code: l.country };
+        if (!counts[key]) counts[key] = { count: 0, cities: new Set(), code: l.country, totalMins: 0 };
         counts[key].count++;
+        counts[key].totalMins += l.duration_mins || 0;
         if (city) counts[key].cities.add(city);
       });
-      // Country code to flag emoji
       function flag(code) {
         if (!code || code.length !== 2) return '🌍';
-        return String.fromCodePoint(...[...code.toUpperCase()].map(c => 0x1F1E6 + c.charCodeAt(0) - 65));
+        return String.fromCodePoint(...[...code.toUpperCase()].map(function(c) { return 0x1F1E6 + c.charCodeAt(0) - 65; }));
+      }
+      function fmtDur(mins) {
+        if (mins < 1) return '<1m';
+        if (mins < 60) return mins + 'm';
+        return Math.floor(mins / 60) + 'h ' + (mins % 60) + 'm';
       }
       var sorted = Object.entries(counts).sort(function(a, b) { return b[1].count - a[1].count; });
-      container.innerHTML = sorted.map(function(entry) {
+      container.innerHTML = sorted.slice(0, 8).map(function(entry) {
         var name = entry[0];
         var data = entry[1];
-        var cities = Array.from(data.cities).slice(0, 2).join(', ');
-        return '<div class="cmd-map-location">'
+        var avgMins = Math.round(data.totalMins / data.count);
+        return '<div class="cmd-map-location" style="font-size: 0.625rem;">'
           + '<span class="cmd-map-pulse"></span>'
           + '<span class="flag">' + flag(data.code) + '</span>'
-          + '<span>' + name + (cities ? ' · ' + cities : '') + '</span>'
+          + '<span>' + name + '</span>'
+          + '<span style="color: rgba(255,255,255,0.15);">' + data.count + '×</span>'
+          + '<span style="color: rgba(255,255,255,0.15);">~' + fmtDur(avgMins) + '</span>'
           + '</div>';
       }).join('');
     })();

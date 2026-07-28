@@ -491,6 +491,29 @@ def admin_home(request):
 
     recent_orders = Order.objects.select_related('user').order_by('-created_at')[:5]
 
+    # Active carts with items
+    from shop.models.cart import Cart, CartItem
+    active_carts = Cart.objects.filter(
+        is_active=True
+    ).prefetch_related('items__variant__product').order_by('-updated_at')[:10]
+
+    carts_data = []
+    for cart in active_carts:
+        items = list(cart.items.select_related('variant__product').all())
+        if not items:
+            continue
+        cart_total = sum(
+            (item.variant.price if item.variant else 0) * item.quantity for item in items
+        )
+        carts_data.append({
+            "id": cart.id,
+            "user": cart.user.email if cart.user else "Anonymous",
+            "items": [{"name": item.variant.product.name if item.variant else "?", "qty": item.quantity} for item in items[:3]],
+            "item_count": len(items),
+            "total": float(cart_total),
+            "updated": cart.updated_at.isoformat(),
+        })
+
     # Calendar data — current month orders + scheduled messages
     import calendar as cal_mod
     cal_year = now.year
@@ -656,12 +679,24 @@ def admin_home(request):
     activity_feed.sort(key=lambda x: x["time"], reverse=True)
     activity_feed = activity_feed[:15]
 
-    # Visitor locations — top countries/cities with counts
-    visitor_locations = list(
+    # Visitor locations — top countries/cities with counts and duration
+    visitor_sessions_raw = list(
         VisitorSession.objects.filter(
             country__isnull=False
-        ).exclude(country="").values('country', 'country_name', 'city').order_by('-last_seen')[:30]
+        ).exclude(country="").values(
+            'country', 'country_name', 'city', 'first_seen', 'last_seen'
+        ).order_by('-last_seen')[:30]
     )
+    # Convert datetimes for JSON
+    visitor_locations = []
+    for v in visitor_sessions_raw:
+        visitor_locations.append({
+            "country": v["country"],
+            "country_name": v["country_name"],
+            "city": v["city"],
+            "duration_mins": round((v["last_seen"] - v["first_seen"]).total_seconds() / 60),
+            "last_seen": v["last_seen"].isoformat(),
+        })
 
     drafts = QuickMessage.objects.filter(status="draft").order_by("-updated_at")[:5]
 
@@ -685,6 +720,8 @@ def admin_home(request):
         "activity_feed_json": json_mod.dumps(activity_feed),
         "visitor_locations_json": json_mod.dumps(visitor_locations),
         "calendar_json": json_mod.dumps(calendar_data),
+        "carts_json": json_mod.dumps(carts_data),
+        "active_cart_count": len(carts_data),
         "top_products_json": json_mod.dumps(top_products),
         "sub_sparkline_json": json_mod.dumps(sub_sparkline),
         "funnel_json": json_mod.dumps(funnel_data),
