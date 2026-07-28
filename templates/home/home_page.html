@@ -271,19 +271,13 @@
         </div>
         {% endif %}
         <div style="padding: 2rem 2.5rem 2.5rem;">
-          <form id="modal-smart-form" method="POST" onsubmit="return handleModalSmartSubmit(event)">
+          <form id="modal-smart-form" method="POST" action="{% url 'shop:subscribe' %}">
             {% csrf_token %}
+            <input type="hidden" name="next" value="/">
             <div style="margin-bottom: 0.875rem;">
-              <input type="text" id="modal-contact-input" name="contact" placeholder="Email or phone" required autocomplete="off" oninput="updateModalInputType(this)"
+              <input type="email" name="email" placeholder="Email address" required autocomplete="email"
                      style="width: 100%; padding: 13px 0; font-family: 'Inter', sans-serif; font-size: 0.95rem; border: none; border-bottom: 1.5px solid #ddd; outline: none; transition: border-color 0.2s; color: #000; background: transparent; box-sizing: border-box;"
                      onfocus="this.style.borderColor='#000'" onblur="this.style.borderColor='#ddd'" />
-              <input type="hidden" id="modal-email-field" name="email" value="">
-              <input type="hidden" id="modal-phone-field" name="phone_number" value="">
-              <p id="modal-input-hint" style="font-size: 0.75rem; color: #dc2626; margin-top: 0.5rem; display: none;"></p>
-            </div>
-            <div id="modal-sms-disclaimer" style="display: none; font-size: 0.65rem; color: #999; line-height: 1.6; margin-bottom: 1rem;">
-              By entering your phone number, you consent to receive recurring automated marketing texts from Blueprint Apparel. Msg frequency varies. Msg &amp; data rates may apply. Reply STOP to unsubscribe. Reply HELP for help.
-              <a href="{% url 'shop:privacy' %}" style="color: inherit; text-decoration: underline;">Privacy</a> &amp; <a href="{% url 'shop:terms' %}" style="color: inherit; text-decoration: underline;">Terms</a>.
             </div>
             <button type="submit" style="width: 100%; padding: 13px; font-family: 'Inter', sans-serif; font-size: 0.75rem; font-weight: 600; letter-spacing: 0.15em; text-transform: uppercase; border: none; background: #000; color: #fff; cursor: pointer; transition: background 0.2s;" onmouseenter="this.style.background='#222'" onmouseleave="this.style.background='#000'">
               Subscribe
@@ -528,55 +522,7 @@
           }
       });
 
-      // Smart form detection
-      function isValidEmail(v) { return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v.trim()); }
-      function isValidPhone(v) {
-          var t = v.trim(), d = t.replace(/\D/g, '');
-          if (!/^[\d\s\+\-\(\)\.]+$/.test(t)) return false;
-          return d.length === 10 || (d.length === 11 && d[0] === '1');
-      }
-      function detectInputType(v) {
-          if (isValidEmail(v)) return 'email';
-          if (isValidPhone(v)) return 'phone';
-          return 'unknown';
-      }
-      function looksLikePhone(v) {
-          var t = v.trim();
-          return t && /^[\d\s\+\-\(\)\.]+$/.test(t) && t.replace(/\D/g, '').length > 0;
-      }
-
-      function updateModalInputType(input) {
-          var hint = document.getElementById('modal-input-hint');
-          var disclaimer = document.getElementById('modal-sms-disclaimer');
-          hint.style.display = 'none';
-          disclaimer.style.display = looksLikePhone(input.value) ? 'block' : 'none';
-      }
-
-      function handleModalSmartSubmit(event) {
-          event.preventDefault();
-          var input = document.getElementById('modal-contact-input');
-          var type = detectInputType(input.value);
-          var form = event.target;
-          var hint = document.getElementById('modal-input-hint');
-          if (type === 'unknown') {
-              hint.textContent = 'Please enter a valid email or 10-digit phone number';
-              hint.style.display = 'block';
-              input.style.borderColor = '#ef4444';
-              return false;
-          }
-          input.style.borderColor = '#ddd';
-          hint.style.display = 'none';
-          if (type === 'email') {
-              document.getElementById('modal-email-field').value = input.value.trim();
-              document.getElementById('modal-phone-field').value = '';
-              form.action = "{% url 'shop:subscribe' %}";
-          } else {
-              document.getElementById('modal-phone-field').value = input.value.trim();
-              document.getElementById('modal-email-field').value = '';
-              form.action = "{% url 'shop:subscribe_sms' %}";
-          }
-          form.submit();
-          return false;
+      // Modal signup - no custom JS needed, standard form submit to subscribe endpoint
       }
 
       // Modal

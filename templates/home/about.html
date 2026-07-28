@@ -108,21 +108,14 @@
 
     <div class="about-bottom-left" style="flex: 1; display: flex; flex-direction: column; justify-content: center; padding: 5rem 4rem;">
       <p style="font-family: 'Inter', sans-serif; font-size: clamp(1.25rem, 2vw, 1.75rem); font-weight: 700; color: #fff; margin: 0 0 2rem; -webkit-font-smoothing: antialiased;">Stay in the loop.</p>
-      <form id="about-smart-form" method="POST" onsubmit="return handleAboutSmartSubmit(event)" style="max-width: 320px;">
+      <form method="POST" action="{% url 'shop:subscribe' %}" style="max-width: 320px;">
         {% csrf_token %}
         <input type="hidden" name="next" value="{% url 'shop:about' %}">
         <div style="display: flex; margin-bottom: 0.75rem;">
-          <input type="text" id="about-contact-input" name="contact" placeholder="Email or phone" required oninput="updateAboutInputType(this)"
+          <input type="email" name="email" placeholder="Email address" required autocomplete="email"
                  style="flex: 1; padding: 12px 0; font-family: 'Inter', sans-serif; font-size: 0.85rem; border: none; border-bottom: 1.5px solid rgba(255,255,255,0.2); outline: none; transition: border-color 0.2s; color: #fff; background: transparent;"
                  onfocus="this.style.borderColor='#fff'" onblur="this.style.borderColor='rgba(255,255,255,0.2)'" />
-          <input type="hidden" id="about-email-field" name="email" value="">
-          <input type="hidden" id="about-phone-field" name="phone_number" value="">
           <button type="submit" style="padding: 12px 16px; font-family: 'Inter', sans-serif; font-size: 0.65rem; font-weight: 600; letter-spacing: 0.15em; text-transform: uppercase; border: none; border-bottom: 1.5px solid #fff; background: none; color: #fff; cursor: pointer;">Join</button>
-        </div>
-        <p id="about-input-hint" style="font-size: 0.7rem; color: #dc2626; margin: 0.5rem 0 0; display: none;"></p>
-        <div id="about-sms-disclaimer" style="display: none; font-size: 0.6rem; color: rgba(255,255,255,0.3); line-height: 1.6; margin-top: 0.5rem;">
-          By entering your phone number, you consent to receive recurring automated marketing texts. Msg frequency varies. Msg &amp; data rates may apply. Reply STOP to unsubscribe.
-          <a href="{% url 'shop:privacy' %}" style="color: inherit; text-decoration: underline;">Privacy</a> &amp; <a href="{% url 'shop:terms' %}" style="color: inherit; text-decoration: underline;">Terms</a>.
         </div>
       </form>
     </div>
@@ -139,19 +132,4 @@
 {% endblock %}
 
 {% block extra_js %}
-<script>
-  function isValidEmail(v) { return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v.trim()); }
-  function isValidPhone(v) { var t = v.trim(), d = t.replace(/\D/g, ''); if (!/^[\d\s\+\-\(\)\.]+$/.test(t)) return false; return d.length === 10 || (d.length === 11 && d[0] === '1'); }
-  function detectInputType(v) { if (isValidEmail(v)) return 'email'; if (isValidPhone(v)) return 'phone'; return 'unknown'; }
-  function looksLikePhone(v) { var t = v.trim(); return t && /^[\d\s\+\-\(\)\.]+$/.test(t) && t.replace(/\D/g, '').length > 0; }
-  function updateAboutInputType(input) { document.getElementById('about-input-hint').style.display = 'none'; document.getElementById('about-sms-disclaimer').style.display = looksLikePhone(input.value) ? 'block' : 'none'; }
-  function handleAboutSmartSubmit(event) {
-    event.preventDefault(); var input = document.getElementById('about-contact-input'), type = detectInputType(input.value), form = event.target, hint = document.getElementById('about-input-hint');
-    if (type === 'unknown') { hint.textContent = 'Please enter a valid email or 10-digit phone number'; hint.style.display = 'block'; return false; }
-    hint.style.display = 'none';
-    if (type === 'email') { document.getElementById('about-email-field').value = input.value.trim(); document.getElementById('about-phone-field').value = ''; form.action = "{% url 'shop:subscribe' %}"; }
-    else { document.getElementById('about-phone-field').value = input.value.trim(); document.getElementById('about-email-field').value = ''; form.action = "{% url 'shop:subscribe_sms' %}"; }
-    form.submit(); return false;
-  }
-</script>
 {% endblock %}
