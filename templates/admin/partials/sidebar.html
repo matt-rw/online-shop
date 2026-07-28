@@ -268,8 +268,16 @@
     const sidebar = document.getElementById('adminSidebar');
     if (!sidebar) return;
 
+    var isCollapsing = !sidebar.classList.contains('collapsed');
     sidebar.classList.toggle('collapsed');
     document.body.classList.toggle('sidebar-collapsed');
+
+    // Close all sections when collapsing so they're fresh on next open
+    if (isCollapsing) {
+      document.querySelectorAll('.sidebar-section.expanded').forEach(function(s) {
+        s.classList.remove('expanded');
+      });
+    }
 
     // Save state to localStorage
     localStorage.setItem(SIDEBAR_STATE_KEY, sidebar.classList.contains('collapsed'));
