@@ -221,9 +221,127 @@ def team_dashboard(request):
 
     context = {
         "team_members": team_members,
+        "projects": projects,
         "tasks_json": json.dumps(tasks_data),
         "projects_json": json.dumps(projects_data),
         "team_json": json.dumps(team_data),
         "staff_users": staff_users,
     }
     return render(request, "admin/team_dashboard.html", context)
+
+
+@staff_member_required
+def team_members_page(request):
+    """Team members management — create users, edit profiles, manage access."""
+
+    if request.method == "POST":
+        action = request.POST.get("action")
+
+        if action == "create_user":
+            try:
+                username = request.POST.get("username", "").strip()
+                email = request.POST.get("email", "").strip()
+                first_name = request.POST.get("first_name", "").strip()
+                password = request.POST.get("password", "").strip()
+                display_name = request.POST.get("display_name", "").strip() or first_name or username
+                role = request.POST.get("role", "other")
+
+                if not username or not email:
+                    return JsonResponse({"success": False, "error": "Username and email required"})
+                if User.objects.filter(username=username).exists():
+                    return JsonResponse({"success": False, "error": "Username already exists"})
+                if User.objects.filter(email=email).exists():
+                    return JsonResponse({"success": False, "error": "Email already exists"})
+
+                user = User.objects.create_user(
+                    username=username,
+                    email=email,
+                    password=password or "changeme123",
+                    first_name=first_name,
+                    is_staff=True,
+                )
+                TeamMember.objects.create(
+                    user=user,
+                    display_name=display_name,
+                    role=role,
+                )
+                return JsonResponse({"success": True, "id": user.id})
+            except Exception as e:
+                return JsonResponse({"success": False, "error": str(e)})
+
+        elif action == "add_existing":
+            try:
+                user = get_object_or_404(User, id=request.POST.get("user_id"))
+                display_name = request.POST.get("display_name", "").strip() or user.first_name or user.username
+                role = request.POST.get("role", "other")
+                member, created = TeamMember.objects.get_or_create(
+                    user=user,
+                    defaults={"display_name": display_name, "role": role}
+                )
+                if not created:
+                    return JsonResponse({"success": False, "error": "Already a team member"})
+                return JsonResponse({"success": True, "id": member.id})
+            except Exception as e:
+                return JsonResponse({"success": False, "error": str(e)})
+
+        elif action == "update_member":
+            try:
+                member = get_object_or_404(TeamMember, id=request.POST.get("member_id"))
+                user = member.user
+                # Update user fields
+                email = request.POST.get("email", "").strip()
+                if email and email != user.email:
+                    if User.objects.filter(email=email).exclude(id=user.id).exists():
+                        return JsonResponse({"success": False, "error": "Email already in use"})
+                    user.email = email
+                first_name = request.POST.get("first_name", "").strip()
+                if first_name:
+                    user.first_name = first_name
+                user.save()
+                # Update team member fields
+                display_name = request.POST.get("display_name", "").strip()
+                if display_name:
+                    member.display_name = display_name
+                role = request.POST.get("role")
+                if role:
+                    member.role = role
+                member.save()
+                return JsonResponse({"success": True})
+            except Exception as e:
+                return JsonResponse({"success": False, "error": str(e)})
+
+        elif action == "upload_avatar":
+            try:
+                member = get_object_or_404(TeamMember, id=request.POST.get("member_id"))
+                if "avatar" in request.FILES:
+                    member.avatar = request.FILES["avatar"]
+                    member.save()
+                return JsonResponse({"success": True, "url": member.avatar.url if member.avatar else None})
+            except Exception as e:
+                return JsonResponse({"success": False, "error": str(e)})
+
+        elif action == "remove_member":
+            try:
+                member = get_object_or_404(TeamMember, id=request.POST.get("member_id"))
+                member.is_active = False
+                member.save()
+                return JsonResponse({"success": True})
+            except Exception as e:
+                return JsonResponse({"success": False, "error": str(e)})
+
+    # GET
+    members = TeamMember.objects.filter(is_active=True).select_related("user").annotate(
+        task_count=Count(
+            "user__assigned_tasks",
+            filter=Q(user__assigned_tasks__status__in=["todo", "in_progress"]),
+        ),
+    )
+    # Staff users not yet team members
+    existing_team_user_ids = TeamMember.objects.filter(is_active=True).values_list("user_id", flat=True)
+    available_staff = User.objects.filter(is_staff=True).exclude(id__in=existing_team_user_ids)
+
+    context = {
+        "members": members,
+        "available_staff": available_staff,
+    }
+    return render(request, "admin/team_members.html", context)

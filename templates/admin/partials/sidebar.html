@@ -120,6 +120,10 @@
           <span class="sidebar-item-icon"><i class="fa-solid fa-clipboard-list"></i></span>
           <span>Tasks & Projects</span>
         </a>
+        <a href="{% url 'admin_team_members' %}" class="sidebar-item" data-page="team_members">
+          <span class="sidebar-item-icon"><i class="fa-solid fa-user-gear"></i></span>
+          <span>Members</span>
+        </a>
       </div>
     </div>
 
@@ -352,7 +356,8 @@
       '/bp-manage/orders': 'orders',
       '/bp-manage/users': 'customers',
       '/bp-manage/returns': 'returns',
-      '/bp-manage/team': 'team',
+      '/bp-manage/team$': 'team',
+      '/bp-manage/team/members': 'team_members',
       '/bp-manage/finance': 'finance',
       '/bp-manage/test-center': 'test_center',
       '/bp-manage/homepage': 'homepage',

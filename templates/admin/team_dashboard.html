@@ -588,7 +588,7 @@
   <div class="top-bar">
     <div class="container">
       <div class="header">
-        <h1>Team &amp; Tasks</h1>
+        <h1>Tasks &amp; Projects</h1>
       </div>
     </div>
 
@@ -596,32 +596,12 @@
     <div class="team-strip">
       <div class="team-card-all active" onclick="clearFilters()">All</div>
       <div id="team-cards"></div>
-      <div class="team-card" onclick="document.getElementById('addMemberForm').style.display = document.getElementById('addMemberForm').style.display === 'flex' ? 'none' : 'flex'" style="border: 1px dashed rgba(255,255,255,0.15); cursor: pointer; min-width: auto; padding: 0.75rem 1rem;">
-        <div class="team-avatar" style="background: rgba(255,255,255,0.05); width: 24px; height: 24px; font-size: 0.75rem; color: rgba(255,255,255,0.3);">+</div>
+      <a href="{% url 'admin_team_members' %}" class="team-card" style="border: 1px dashed rgba(255,255,255,0.15); cursor: pointer; min-width: auto; padding: 0.75rem 1rem; text-decoration: none;">
+        <div class="team-avatar" style="background: rgba(255,255,255,0.05); width: 24px; height: 24px; font-size: 0.625rem; color: rgba(255,255,255,0.3);"><i class="fa-solid fa-gear"></i></div>
         <div class="team-info">
-          <span class="team-name" style="font-size: 0.625rem; color: rgba(255,255,255,0.3);">Add Member</span>
+          <span class="team-name" style="font-size: 0.625rem; color: rgba(255,255,255,0.3);">Manage</span>
         </div>
-      </div>
-    </div>
-    <!-- Add Member Form -->
-    <div id="addMemberForm" style="display: none; gap: 0.5rem; padding: 0.75rem 2rem; background: rgba(255,255,255,0.02); border-bottom: 1px solid rgba(255,255,255,0.04); align-items: center; flex-wrap: wrap;">
-      <select id="addMemberUser" style="background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); border-radius: 6px; color: rgba(255,255,255,0.6); font-family: 'JetBrains Mono', monospace; font-size: 0.6875rem; padding: 0.5rem; outline: none;">
-        <option value="">Select staff user...</option>
-        {% for user in staff_users %}
-        <option value="{{ user.id }}">{{ user.first_name|default:user.username }} ({{ user.email }})</option>
-        {% endfor %}
-      </select>
-      <input type="text" id="addMemberName" placeholder="Display name" style="background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); border-radius: 6px; color: #fff; font-family: 'JetBrains Mono', monospace; font-size: 0.6875rem; padding: 0.5rem; outline: none; width: 140px;" />
-      <select id="addMemberRole" style="background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); border-radius: 6px; color: rgba(255,255,255,0.6); font-family: 'JetBrains Mono', monospace; font-size: 0.6875rem; padding: 0.5rem; outline: none;">
-        <option value="founder">Founder</option>
-        <option value="cofounder">Co-Founder</option>
-        <option value="designer">Designer</option>
-        <option value="developer">Developer</option>
-        <option value="marketing">Marketing</option>
-        <option value="operations">Operations</option>
-        <option value="other">Other</option>
-      </select>
-      <button onclick="addTeamMember()" style="background: #667eea; border: none; color: #fff; border-radius: 6px; padding: 0.5rem 1rem; font-size: 0.625rem; font-family: 'JetBrains Mono', monospace; cursor: pointer; font-weight: 600;">Add</button>
+      </a>
     </div>
   </div>
 
