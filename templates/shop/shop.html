@@ -3,6 +3,9 @@
 {% load currency_tags %}
 
 {% block title %}{% if selected_category %}{{ selected_category.name }} — {% endif %}Shop — Blueprint Apparel{% endblock %}
+{% block meta_description %}{% if selected_category %}Shop {{ selected_category.name }} from Blueprint Apparel.{% else %}Shop the Blueprint Apparel Foundation collection — premium heavyweight streetwear. Free shipping on all U.S. orders.{% endif %}{% endblock %}
+{% block og_title %}{% if selected_category %}{{ selected_category.name }} — {% endif %}Shop Blueprint Apparel{% endblock %}
+{% block og_description %}Premium streetwear designed in Chicago. Heavyweight cotton, considered graphics, neutral tones. Free shipping.{% endblock %}
 
 {% block extra_css %}
 <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">

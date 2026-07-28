@@ -3,6 +3,11 @@
 {% load static %}
 {% load currency_tags %}
 
+{% block title %}Blueprint Apparel — Premium Streetwear from Chicago{% endblock %}
+{% block meta_description %}Blueprint Apparel — premium streetwear rooted in Chicago basketball and Korean heritage. Shop the Foundation collection. Free shipping on all U.S. orders.{% endblock %}
+{% block og_title %}Blueprint Apparel — Premium Streetwear{% endblock %}
+{% block og_description %}Streetwear rooted in Chicago and Korean heritage. Designed with intention, built to last. Shop Foundation.{% endblock %}
+
 {% block extra_css %}
   <link rel="preload" href="{% static 'images/font.webp' %}?v=2" as="image" type="image/webp">
 
@@ -456,6 +461,23 @@
 {% endblock %}
 
 {% block extra_js %}
+  <!-- Organization Structured Data -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Organization",
+    "name": "Blueprint Apparel",
+    "url": "https://www.blueprnt.store",
+    "logo": "https://www.blueprnt.store{% static 'images/logo.png' %}",
+    "description": "Premium streetwear rooted in Chicago and Korean heritage.",
+    "foundingDate": "2025",
+    "foundingLocation": "Chicago, IL",
+    "sameAs": [
+      "{{ site_settings.instagram_url|default:'' }}"
+    ]
+  }
+  </script>
+
   {{ slideshow_settings|json_script:"slideshow-settings" }}
   <script>
       const slideshowSettings = JSON.parse(document.getElementById('slideshow-settings').textContent);

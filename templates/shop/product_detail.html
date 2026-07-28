@@ -3,6 +3,14 @@
 {% load currency_tags %}
 
 {% block title %}{{ product.name }} — Blueprint Apparel{% endblock %}
+{% block meta_description %}{{ product.name }} by Blueprint Apparel. {{ product.description|truncatewords:25 }} Starting at ${{ product.base_price }}. Free shipping.{% endblock %}
+{% block og_type %}product{% endblock %}
+{% block og_title %}{{ product.name }} — Blueprint Apparel{% endblock %}
+{% block og_description %}{{ product.description|truncatewords:20|default:"Premium streetwear from Blueprint Apparel." }}{% endblock %}
+{% block og_image %}{% if product.images %}{{ product.images.0 }}{% endif %}{% endblock %}
+{% block twitter_title %}{{ product.name }} — Blueprint Apparel{% endblock %}
+{% block twitter_description %}{{ product.description|truncatewords:20|default:"Premium streetwear from Blueprint Apparel." }}{% endblock %}
+{% block twitter_image %}{% if product.images %}{{ product.images.0 }}{% endif %}{% endblock %}
 
 {% block extra_css %}
 <style>
@@ -430,5 +438,27 @@
     var val = parseInt(input.value);
     if (val > 1) { input.value = val - 1; document.getElementById('form-quantity').value = val - 1; if (window.updateExpressCheckoutAmount) updateExpressCheckoutAmount(); }
   }
+</script>
+
+<!-- Product Structured Data -->
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Product",
+  "name": "{{ product.name|escapejs }}",
+  "description": "{{ product.description|escapejs|truncatewords:50 }}",
+  "brand": {
+    "@type": "Brand",
+    "name": "Blueprint Apparel"
+  },
+  {% if product.images %}"image": "{{ product.images.0 }}",{% endif %}
+  "offers": {
+    "@type": "Offer",
+    "price": "{{ product.base_price }}",
+    "priceCurrency": "USD",
+    "availability": "{% if total_stock > 0 %}https://schema.org/InStock{% else %}https://schema.org/OutOfStock{% endif %}",
+    "url": "https://www.blueprnt.store{% url 'shop:product_detail' slug=product.slug %}"
+  }
+}
 </script>
 {% endblock %}

@@ -6,10 +6,25 @@
     <meta charset="UTF-8" />
     <meta name="viewport"
           content="width=device-width, initial-scale=1.0, maximum-scale=5.0" />
-    <title>
+    <title>{% block title %}Blueprint Apparel — Premium Streetwear from Chicago{% endblock %}</title>
 
-      {% block title %}Blueprint Apparel{% endblock %}
-    </title>
+    <!-- SEO Meta -->
+    <meta name="description" content="{% block meta_description %}Blueprint Apparel — premium streetwear rooted in Chicago and Korean heritage. Designed with intention, built to last. Shop the Foundation collection.{% endblock %}">
+    <link rel="canonical" href="{% block canonical %}https://www.blueprnt.store{{ request.path }}{% endblock %}">
+
+    <!-- Open Graph -->
+    <meta property="og:type" content="{% block og_type %}website{% endblock %}">
+    <meta property="og:site_name" content="Blueprint Apparel">
+    <meta property="og:title" content="{% block og_title %}Blueprint Apparel — Premium Streetwear{% endblock %}">
+    <meta property="og:description" content="{% block og_description %}Premium streetwear rooted in Chicago and Korean heritage. Designed with intention, built to last.{% endblock %}">
+    <meta property="og:image" content="{% block og_image %}https://www.blueprnt.store{% static 'images/logo.png' %}{% endblock %}">
+    <meta property="og:url" content="https://www.blueprnt.store{{ request.path }}">
+
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="{% block twitter_title %}Blueprint Apparel{% endblock %}">
+    <meta name="twitter:description" content="{% block twitter_description %}Premium streetwear from Chicago. Korean heritage. Built to last.{% endblock %}">
+    <meta name="twitter:image" content="{% block twitter_image %}https://www.blueprnt.store{% static 'images/logo.png' %}{% endblock %}">
 
     <!-- Favicon -->
     <link rel="icon" href="{% static 'images/blueprint-black.svg' %}" type="image/svg+xml" />
