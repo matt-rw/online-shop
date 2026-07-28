@@ -475,6 +475,10 @@ def admin_home(request):
         "unread_messages": ContactMessage.objects.filter(status="new").count(),
         "new_subs_today": EmailSubscription.objects.filter(subscribed_at__gte=today_start).count()
             + SMSSubscription.objects.filter(subscribed_at__gte=today_start).count(),
+        # Averages
+        "avg_daily_orders": round(total_orders / max((now - Order.objects.order_by('created_at').first().created_at).days, 1), 1) if total_orders > 0 else 0,
+        "avg_order_value": round(float(total_revenue) / max(total_orders, 1), 2),
+        "avg_daily_visitors": round(VisitorSession.objects.filter(last_seen__gte=last_30d).count() / 30, 1),
         "email_campaigns": EmailCampaign.objects.count(),
         "sms_campaigns": SMSCampaign.objects.count(),
         "active_campaigns": Campaign.objects.filter(status="active").count(),
