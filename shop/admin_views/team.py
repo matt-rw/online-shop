@@ -155,7 +155,16 @@ def team_dashboard(request):
 
         return JsonResponse({"success": False, "error": "Unknown action"})
 
-    # --- GET: build context ---
+    # --- GET: auto-create TeamMember for any staff user who doesn't have one ---
+    for staff_user in User.objects.filter(is_staff=True):
+        TeamMember.objects.get_or_create(
+            user=staff_user,
+            defaults={
+                "display_name": staff_user.first_name or staff_user.username,
+                "role": "other",
+            }
+        )
+
     team_members = TeamMember.objects.filter(is_active=True).annotate(
         task_count=Count(
             "user__assigned_tasks",
@@ -329,7 +338,16 @@ def team_members_page(request):
             except Exception as e:
                 return JsonResponse({"success": False, "error": str(e)})
 
-    # GET
+    # GET — auto-create TeamMember for any staff user who doesn't have one
+    for staff_user in User.objects.filter(is_staff=True):
+        TeamMember.objects.get_or_create(
+            user=staff_user,
+            defaults={
+                "display_name": staff_user.first_name or staff_user.username,
+                "role": "other",
+            }
+        )
+
     members = TeamMember.objects.filter(is_active=True).select_related("user").annotate(
         task_count=Count(
             "user__assigned_tasks",
