@@ -51,8 +51,7 @@
     }
 
     .container {
-      max-width: 1400px;
-      margin: 0 auto;
+      max-width: 100%;
       padding: 0 2rem;
       position: relative;
       z-index: 1;
@@ -203,8 +202,7 @@
 
     .main-content {
       padding: 2rem;
-      max-width: 1400px;
-      margin: 0 auto;
+      max-width: 100%;
     }
 
     /* Classic stat boxes (shown when command center is off) */
@@ -1931,7 +1929,12 @@
 
         <!-- Active Carts -->
         <div class="cmd-panel" style="padding: 1rem; position: relative; z-index: 1;">
-          <div class="cmd-panel-label">Active Carts · <span style="color: #fbbf24;">{{ active_cart_count }}</span></div>
+          <div style="display: flex; justify-content: space-between; align-items: center;">
+            <div class="cmd-panel-label" style="margin-bottom: 0;">Active Carts · <span style="color: #fbbf24;">{{ active_cart_count }}</span></div>
+            {% if abandoned_cart_count > 0 %}
+            <div style="font-size: 0.5625rem; color: #f87171;">{{ abandoned_cart_count }} abandoned · ${{ abandoned_cart_value|floatformat:0 }}</div>
+            {% endif %}
+          </div>
           <div id="cmdActiveCarts" style="margin-top: 0.5rem;"></div>
           {% if active_cart_count == 0 %}
           <div style="text-align: center; padding: 1rem; color: rgba(255,255,255,0.15); font-size: 0.6875rem;">No active carts</div>
@@ -2775,11 +2778,11 @@
       el.innerHTML = carts.map(function(c) {
         var itemNames = c.items.map(function(i) { return i.name + (i.qty > 1 ? ' ×' + i.qty : ''); }).join(', ');
         if (c.item_count > 3) itemNames += ' +' + (c.item_count - 3) + ' more';
-        return '<div class="cmd-cart-row">'
+        return '<div class="cmd-cart-row"' + (c.abandoned ? ' style="opacity: 0.6;"' : '') + '>'
           + '<span class="cmd-cart-user">' + c.user + '</span>'
           + '<span class="cmd-cart-items">' + itemNames + '</span>'
           + '<span class="cmd-cart-total">$' + c.total.toFixed(0) + '</span>'
-          + '<span class="cmd-cart-time">' + timeAgo(c.updated) + '</span>'
+          + '<span class="cmd-cart-time">' + timeAgo(c.updated) + (c.abandoned ? ' <span style="color: #f87171; font-size: 0.5rem;">ABANDONED</span>' : '') + '</span>'
           + '</div>';
       }).join('');
     })();

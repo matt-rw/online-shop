@@ -496,13 +496,15 @@ def admin_home(request):
 
     recent_orders = Order.objects.select_related('user').order_by('-created_at')[:5]
 
-    # Active carts with items
+    # Active carts with items (only carts that have items)
     from shop.models.cart import Cart, CartItem
     active_carts = Cart.objects.filter(
-        is_active=True
-    ).prefetch_related('items__variant__product').order_by('-updated_at')[:10]
+        is_active=True, items__isnull=False
+    ).distinct().prefetch_related('items__variant__product').order_by('-updated_at')[:10]
 
     carts_data = []
+    abandoned_cart_count = 0
+    abandoned_cart_value = Decimal("0")
     for cart in active_carts:
         items = list(cart.items.select_related('variant__product').all())
         if not items:
@@ -510,6 +512,10 @@ def admin_home(request):
         cart_total = sum(
             (item.variant.price if item.variant else 0) * item.quantity for item in items
         )
+        is_abandoned = cart.updated_at < now - timedelta(hours=1)
+        if is_abandoned:
+            abandoned_cart_count += 1
+            abandoned_cart_value += cart_total
         carts_data.append({
             "id": cart.id,
             "user": cart.user.email if cart.user else "Anonymous",
@@ -517,6 +523,7 @@ def admin_home(request):
             "item_count": len(items),
             "total": float(cart_total),
             "updated": cart.updated_at.isoformat(),
+            "abandoned": is_abandoned,
         })
 
     # Calendar data — current month orders + scheduled messages
@@ -741,6 +748,8 @@ def admin_home(request):
         "calendar_json": json_mod.dumps(calendar_data),
         "carts_json": json_mod.dumps(carts_data),
         "active_cart_count": len(carts_data),
+        "abandoned_cart_count": abandoned_cart_count,
+        "abandoned_cart_value": float(abandoned_cart_value),
         "top_products_json": json_mod.dumps(top_products),
         "sub_sparkline_json": json_mod.dumps(sub_sparkline),
         "funnel_json": json_mod.dumps(funnel_data),
