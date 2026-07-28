@@ -205,13 +205,34 @@ def trigger_auto_send(trigger_type, subscription, context=None):
             logger.info(f"No active template found for trigger: {trigger_type}")
             return False, None
 
+        # Create a QuickMessage for tracking in the messages dashboard
+        from shop.models.messaging import QuickMessage
+        from django.utils import timezone
+        qm = QuickMessage.objects.create(
+            message_type="email",
+            subject=f"[Auto] {template.subject}",
+            content=template.html_body or template.text_body or "",
+            status="sent",
+            recipient_count=1,
+            sent_count=1,
+            sent_at=timezone.now(),
+        )
+
         # Send the message
-        return send_from_template(
+        success, log = send_from_template(
             email_address=subscription.email,
             template=template,
             context=context,
             subscription=subscription,
         )
+
+        if not success:
+            qm.status = "partial"
+            qm.sent_count = 0
+            qm.failed_count = 1
+            qm.save()
+
+        return success, log
 
     except Exception as e:
         logger.error(f"Error in auto-send for trigger {trigger_type}: {str(e)}")

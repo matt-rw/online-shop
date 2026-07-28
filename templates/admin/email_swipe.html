@@ -478,6 +478,15 @@ function setMode(mode) {
   allTemplates.forEach(function(t) { folders[t.folder || 'general'] = true; });
   var el = document.getElementById('filters');
   if (!el) return;
+  // Add "automatic" filter first
+  var hasAuto = allTemplates.some(function(t) { return t.auto_trigger && t.auto_trigger !== 'manual'; });
+  if (hasAuto) {
+    var autoBtn = document.createElement('button');
+    autoBtn.className = 'filter-btn';
+    autoBtn.textContent = '⚡ Automatic';
+    autoBtn.onclick = function() { filterCategory('__auto__'); };
+    el.appendChild(autoBtn);
+  }
   Object.keys(folders).sort().forEach(function(f) {
     var btn = document.createElement('button');
     btn.className = 'filter-btn';
@@ -488,7 +497,11 @@ function setMode(mode) {
 })();
 
 function filterCategory(cat) {
-  filtered = cat === 'all' ? allTemplates.slice() : allTemplates.filter(function(t) { return t.folder === cat; });
+  if (cat === '__auto__') {
+    filtered = allTemplates.filter(function(t) { return t.auto_trigger && t.auto_trigger !== 'manual'; });
+  } else {
+    filtered = cat === 'all' ? allTemplates.slice() : allTemplates.filter(function(t) { return t.folder === cat; });
+  }
   idx = 0;
   document.querySelectorAll('.filter-btn').forEach(function(b) { b.classList.toggle('active', b.textContent.toLowerCase() === cat.toLowerCase() || (cat === 'all' && b.textContent === 'All')); });
   if (filtered.length) showCard();
@@ -500,7 +513,12 @@ function showCard() {
   var t = filtered[idx];
   document.getElementById('card-subject').value = t.subject;
   document.getElementById('card-body').innerHTML = t.body || '<p style="color:#bbb;">No body. Click to type.</p>';
-  document.getElementById('card-meta').textContent = (t.folder || t.type) + ' — used ' + t.times_used + 'x';
+  var meta = (t.folder || t.type) + ' — used ' + t.times_used + 'x';
+  if (t.auto_trigger && t.auto_trigger !== 'manual') {
+    var triggerLabels = { on_subscribe: '⚡ Auto: New Signup', on_order: '⚡ Auto: New Order', on_shipping: '⚡ Auto: Shipped', on_order_admin: '⚡ Auto: Order (Admin)', on_confirmation: '⚡ Auto: Confirmation' };
+    meta = (triggerLabels[t.auto_trigger] || '⚡ Auto: ' + t.auto_trigger) + ' — ' + meta;
+  }
+  document.getElementById('card-meta').textContent = meta;
   document.getElementById('counter').textContent = (idx + 1) + ' / ' + filtered.length;
   document.getElementById('prev-btn').disabled = idx === 0;
   document.getElementById('next-btn').disabled = idx === filtered.length - 1;

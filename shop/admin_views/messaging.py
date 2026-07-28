@@ -2785,6 +2785,7 @@ def email_swipe(request):
             "body": t.html_body or t.text_body or "",
             "type": t.template_type,
             "folder": t.folder,
+            "auto_trigger": t.auto_trigger,
             "times_used": t.times_used,
         }
         for t in templates
