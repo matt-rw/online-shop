@@ -684,24 +684,37 @@ def admin_home(request):
     activity_feed.sort(key=lambda x: x["time"], reverse=True)
     activity_feed = activity_feed[:15]
 
-    # Visitor locations — top countries/cities with counts and duration (no bots)
-    visitor_sessions_raw = list(
+    # Visitor locations — active now + last 7 days (no bots)
+    last_7d = now - timedelta(days=7)
+    active_visitor_sessions = list(
         VisitorSession.objects.filter(
-            country__isnull=False
+            country__isnull=False, last_seen__gte=now - timedelta(hours=1)
+        ).exclude(country="").exclude(device_type="bot").values(
+            'country', 'country_name', 'city', 'first_seen', 'last_seen'
+        ).order_by('-last_seen')[:15]
+    )
+    recent_visitor_sessions = list(
+        VisitorSession.objects.filter(
+            country__isnull=False, last_seen__gte=last_7d
         ).exclude(country="").exclude(device_type="bot").values(
             'country', 'country_name', 'city', 'first_seen', 'last_seen'
         ).order_by('-last_seen')[:30]
     )
     # Convert datetimes for JSON
-    visitor_locations = []
-    for v in visitor_sessions_raw:
-        visitor_locations.append({
-            "country": v["country"],
-            "country_name": v["country_name"],
-            "city": v["city"],
-            "duration_mins": round((v["last_seen"] - v["first_seen"]).total_seconds() / 60),
-            "last_seen": v["last_seen"].isoformat(),
-        })
+    def _serialize_visitors(sessions):
+        result = []
+        for v in sessions:
+            result.append({
+                "country": v["country"],
+                "country_name": v["country_name"],
+                "city": v["city"],
+                "duration_mins": round((v["last_seen"] - v["first_seen"]).total_seconds() / 60),
+                "last_seen": v["last_seen"].isoformat(),
+            })
+        return result
+
+    active_visitors_data = _serialize_visitors(active_visitor_sessions)
+    recent_visitors_data = _serialize_visitors(recent_visitor_sessions)
 
     drafts = QuickMessage.objects.filter(status="draft").order_by("-updated_at")[:5]
 
@@ -723,7 +736,8 @@ def admin_home(request):
         "revenue_chart_json": json_mod.dumps(revenue_chart),
         "prev_week_chart_json": json_mod.dumps(prev_week_chart),
         "activity_feed_json": json_mod.dumps(activity_feed),
-        "visitor_locations_json": json_mod.dumps(visitor_locations),
+        "active_visitors_json": json_mod.dumps(active_visitors_data),
+        "recent_visitors_json": json_mod.dumps(recent_visitors_data),
         "calendar_json": json_mod.dumps(calendar_data),
         "carts_json": json_mod.dumps(carts_data),
         "active_cart_count": len(carts_data),
