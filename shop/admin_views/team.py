@@ -117,6 +117,22 @@ def team_dashboard(request):
                 return JsonResponse({"success": False, "error": str(e)})
 
         # --- Team actions ---
+        elif action == "team_add":
+            try:
+                user = get_object_or_404(User, id=request.POST.get("user_id"))
+                member, created = TeamMember.objects.get_or_create(
+                    user=user,
+                    defaults={
+                        "display_name": request.POST.get("display_name", user.first_name or user.username),
+                        "role": request.POST.get("role", "other"),
+                    }
+                )
+                if not created:
+                    return JsonResponse({"success": False, "error": "Already a team member"})
+                return JsonResponse({"success": True, "id": member.id})
+            except Exception as e:
+                return JsonResponse({"success": False, "error": str(e)})
+
         elif action == "team_update":
             try:
                 member = get_object_or_404(TeamMember, id=request.POST.get("member_id"))
