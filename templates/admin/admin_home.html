@@ -2884,11 +2884,11 @@
       var el = document.getElementById('cmdFunnel');
       if (!el) return;
       el.innerHTML = ''
-        + '<div class="cmd-funnel-step"><div class="cmd-funnel-step-value">' + data.visitors.toLocaleString() + '</div><div class="cmd-funnel-step-label">Visitors (30d)</div></div>'
+        + '<div class="cmd-funnel-step"><div class="cmd-funnel-step-value">' + data.visitors.toLocaleString() + '</div><div class="cmd-funnel-step-label">Visitors · 30d</div></div>'
         + '<div class="cmd-funnel-arrow">→</div>'
-        + '<div class="cmd-funnel-step"><div class="cmd-funnel-step-value">' + data.carts.toLocaleString() + '</div><div class="cmd-funnel-step-label">Added to Cart</div></div>'
+        + '<div class="cmd-funnel-step"><div class="cmd-funnel-step-value">' + data.carts.toLocaleString() + '</div><div class="cmd-funnel-step-label">Added to Cart · 30d</div></div>'
         + '<div class="cmd-funnel-arrow">→</div>'
-        + '<div class="cmd-funnel-step"><div class="cmd-funnel-step-value">' + data.orders.toLocaleString() + '</div><div class="cmd-funnel-step-label">Purchased</div><div class="cmd-funnel-rate">' + data.order_rate + '%</div></div>';
+        + '<div class="cmd-funnel-step"><div class="cmd-funnel-step-value">' + data.orders.toLocaleString() + '</div><div class="cmd-funnel-step-label">Purchased · 30d</div><div class="cmd-funnel-rate">' + data.order_rate + '%</div></div>';
     })();
 
     // ========== PRODUCT PERFORMANCE ==========
