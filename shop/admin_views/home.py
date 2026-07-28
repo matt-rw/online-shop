@@ -2,7 +2,7 @@
 Admin home dashboard view.
 """
 
-from datetime import timedelta
+from datetime import datetime, timedelta
 from decimal import Decimal
 
 from django.contrib.admin.views.decorators import staff_member_required
@@ -71,7 +71,7 @@ def admin_home(request):
             year = int(request.GET.get("year", now.year))
             month = int(request.GET.get("month", now.month))
             first_day, days_in_month = cal_mod.monthrange(year, month)
-            m_start = timezone.datetime(year, month, 1, tzinfo=timezone.utc)
+            m_start = datetime(year, month, 1, tzinfo=timezone.utc)
             m_end = (m_start + timedelta(days=32)).replace(day=1)
 
             from django.db.models.functions import TruncDate
