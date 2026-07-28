@@ -25,23 +25,28 @@
     }
 
     .top-bar {
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-      padding: 2rem 0;
-      box-shadow: 0 4px 20px rgba(102, 126, 234, 0.15);
+      background: linear-gradient(160deg, #0f0f1a 0%, #1a1035 40%, #1e0a3c 100%);
+      padding: 1.5rem 0 2.5rem;
       position: relative;
       overflow: hidden;
     }
-
+    /* Subtle grid overlay */
     .top-bar::before {
       content: '';
       position: absolute;
-      top: 0;
-      left: 0;
-      right: 0;
-      bottom: 0;
-      background:
-        radial-gradient(circle at 20% 50%, rgba(255,255,255,0.1) 0%, transparent 50%),
-        radial-gradient(circle at 80% 80%, rgba(255,255,255,0.08) 0%, transparent 50%);
+      inset: 0;
+      background-image:
+        linear-gradient(rgba(102, 126, 234, 0.04) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(102, 126, 234, 0.04) 1px, transparent 1px);
+      background-size: 40px 40px;
+      pointer-events: none;
+    }
+    /* Ambient glow */
+    .top-bar::after {
+      content: '';
+      position: absolute;
+      top: -50%; left: -20%; width: 60%; height: 200%;
+      background: radial-gradient(ellipse, rgba(102, 126, 234, 0.08) 0%, transparent 60%);
       pointer-events: none;
     }
 
@@ -59,7 +64,6 @@
       font-weight: 800;
       margin-bottom: 0.5rem;
       letter-spacing: -0.03em;
-      text-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
     }
 
     .header p {
@@ -69,12 +73,141 @@
       letter-spacing: -0.01em;
     }
 
+    /* Command center stats grid */
+    .cmd-stats {
+      display: grid;
+      grid-template-columns: 1.4fr 1fr 1fr;
+      gap: 1rem;
+      margin-top: 1.75rem;
+    }
+    .cmd-panel {
+      background: rgba(255, 255, 255, 0.04);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border: 1px solid rgba(255, 255, 255, 0.06);
+      border-radius: 14px;
+      padding: 1.5rem;
+      position: relative;
+      overflow: hidden;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    .cmd-panel:hover {
+      background: rgba(255, 255, 255, 0.06);
+      border-color: rgba(255, 255, 255, 0.1);
+    }
+    .cmd-panel-label {
+      font-size: 0.625rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.15em;
+      color: rgba(255, 255, 255, 0.35);
+      margin-bottom: 0.75rem;
+    }
+    .cmd-panel-value {
+      font-size: 2.25rem;
+      font-weight: 800;
+      color: #fff;
+      letter-spacing: -0.03em;
+      line-height: 1;
+      margin-bottom: 0.5rem;
+    }
+    .cmd-panel-value.glow {
+      text-shadow: 0 0 20px rgba(102, 126, 234, 0.5), 0 0 40px rgba(102, 126, 234, 0.2);
+    }
+    .cmd-panel-sub {
+      font-size: 0.75rem;
+      color: rgba(255, 255, 255, 0.4);
+      font-weight: 500;
+    }
+    .cmd-panel-sub .up { color: #34d399; }
+    .cmd-panel-sub .down { color: #f87171; }
+    .cmd-panel-sub .neutral { color: rgba(255, 255, 255, 0.3); }
+
+    /* Attention items row */
+    .cmd-alerts {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1rem;
+      margin-top: 1rem;
+    }
+    .cmd-alert {
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid rgba(255, 255, 255, 0.05);
+      border-radius: 10px;
+      padding: 1rem 1.25rem;
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      text-decoration: none;
+    }
+    .cmd-alert:hover {
+      background: rgba(255, 255, 255, 0.06);
+      border-color: rgba(255, 255, 255, 0.1);
+    }
+    .cmd-alert-icon {
+      width: 36px;
+      height: 36px;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.875rem;
+      flex-shrink: 0;
+    }
+    .cmd-alert-icon.warn { background: rgba(251, 191, 36, 0.12); color: #fbbf24; }
+    .cmd-alert-icon.info { background: rgba(102, 126, 234, 0.12); color: #818cf8; }
+    .cmd-alert-icon.success { background: rgba(52, 211, 153, 0.12); color: #34d399; }
+    .cmd-alert-count {
+      font-size: 1.25rem;
+      font-weight: 700;
+      color: #fff;
+      line-height: 1;
+    }
+    .cmd-alert-label {
+      font-size: 0.6875rem;
+      color: rgba(255, 255, 255, 0.4);
+      font-weight: 500;
+    }
+
+    /* Mission clock */
+    .cmd-clock {
+      font-family: 'Inter', monospace;
+      font-size: 0.8125rem;
+      font-weight: 600;
+      color: rgba(255, 255, 255, 0.5);
+      letter-spacing: 0.06em;
+    }
+    .cmd-clock-time {
+      color: rgba(255, 255, 255, 0.8);
+      font-variant-numeric: tabular-nums;
+    }
+
+    /* Toggle between classic and command center */
+    .hero-toggle {
+      font-size: 0.6875rem;
+      font-weight: 500;
+      color: rgba(255, 255, 255, 0.3);
+      background: rgba(255, 255, 255, 0.06);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      padding: 0.375rem 0.75rem;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: all 0.2s;
+      font-family: inherit;
+    }
+    .hero-toggle:hover {
+      color: rgba(255, 255, 255, 0.6);
+      background: rgba(255, 255, 255, 0.1);
+    }
+
     .main-content {
       padding: 2rem;
       max-width: 1400px;
       margin: 0 auto;
     }
 
+    /* Classic stat boxes (shown when command center is off) */
     .quick-stats {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
@@ -100,9 +233,7 @@
     .stat-box::before {
       content: '';
       position: absolute;
-      top: 0;
-      left: 0;
-      right: 0;
+      top: 0; left: 0; right: 0;
       height: 4px;
       background: linear-gradient(90deg, #667eea, #764ba2);
       opacity: 0;
@@ -114,9 +245,7 @@
       box-shadow: 0 12px 28px rgba(0, 0, 0, 0.12);
     }
 
-    .stat-box:hover::before {
-      opacity: 1;
-    }
+    .stat-box:hover::before { opacity: 1; }
 
     .stat-box h4 {
       color: #64748b;
@@ -137,6 +266,387 @@
       letter-spacing: -0.02em;
       line-height: 1.2;
       white-space: nowrap;
+    }
+
+    @media (max-width: 768px) {
+      .cmd-stats { grid-template-columns: 1fr; }
+      .cmd-alerts { grid-template-columns: 1fr; }
+      .cmd-panel-value { font-size: 1.75rem; }
+    }
+
+    /* Bubble Navigation */
+    @keyframes breathe {
+      0%, 100% { box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08); }
+      50% { box-shadow: 0 6px 24px rgba(0, 0, 0, 0.11); }
+    }
+
+    .bubble-nav {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 2.5rem;
+      margin-bottom: 3rem;
+      padding: 2.5rem 1rem;
+    }
+    .bubble-cluster {
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      z-index: 1;
+      transition: z-index 0s 0.35s;
+    }
+    .bubble-cluster.expanded {
+      z-index: 100;
+      transition: z-index 0s 0s;
+    }
+    .bubble-main {
+      width: 96px;
+      height: 96px;
+      border-radius: 50%;
+      background: white;
+      border: 2px solid #e2e8f0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+      z-index: 2;
+      gap: 0.4rem;
+      position: relative;
+      animation: breathe 4s ease-in-out infinite;
+    }
+    .bubble-cluster:nth-child(2) .bubble-main { animation-delay: 0.6s; }
+    .bubble-cluster:nth-child(3) .bubble-main { animation-delay: 1.2s; }
+    .bubble-cluster:nth-child(4) .bubble-main { animation-delay: 1.8s; }
+    .bubble-cluster:nth-child(5) .bubble-main { animation-delay: 2.4s; }
+    .bubble-cluster:nth-child(6) .bubble-main { animation-delay: 3.0s; }
+
+    .bubble-main i {
+      font-size: 1.5rem;
+      color: #667eea;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    .bubble-label {
+      font-size: 0.6875rem;
+      font-weight: 600;
+      color: #64748b;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    .bubble-main:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 12px 28px rgba(0, 0, 0, 0.12);
+      border-color: rgba(102, 126, 234, 0.4);
+      animation: none;
+    }
+    .bubble-cluster.expanded .bubble-main {
+      transform: scale(1.08);
+      border-color: #667eea;
+      box-shadow:
+        0 8px 32px rgba(102, 126, 234, 0.25),
+        0 0 0 4px rgba(102, 126, 234, 0.08);
+      animation: none;
+    }
+    .bubble-cluster.expanded .bubble-main i { color: #764ba2; }
+    .bubble-cluster.expanded .bubble-label { color: #667eea; font-weight: 700; }
+
+    /* Radial glow behind expanded parent */
+    .bubble-cluster.expanded .bubble-main::after {
+      content: '';
+      position: absolute;
+      top: 50%; left: 50%;
+      width: 240px; height: 240px;
+      transform: translate(-50%, -50%);
+      background: radial-gradient(circle, rgba(102, 126, 234, 0.05) 0%, transparent 70%);
+      border-radius: 50%;
+      z-index: -1;
+      pointer-events: none;
+    }
+
+    .bubble-children {
+      position: absolute;
+      top: 50%; left: 50%;
+      width: 0; height: 0;
+      pointer-events: none;
+    }
+    .bubble-cluster.expanded .bubble-children {
+      pointer-events: auto;
+    }
+    .bubble-child {
+      position: absolute;
+      width: 64px;
+      height: 64px;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.92);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border: 2px solid rgba(226, 232, 240, 0.6);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-decoration: none;
+      gap: 0.2rem;
+      transform: translate(-50%, -50%) translate(0px, 0px) scale(0.3);
+      opacity: 0;
+      transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+      transition-delay: 0s;
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+    }
+    .bubble-cluster.expanded .bubble-child {
+      transform: translate(-50%, -50%) translate(var(--child-x), var(--child-y)) scale(1);
+      opacity: 1;
+    }
+    .bubble-cluster.expanded .bubble-child:nth-child(1) { transition-delay: 0.03s; }
+    .bubble-cluster.expanded .bubble-child:nth-child(2) { transition-delay: 0.07s; }
+    .bubble-cluster.expanded .bubble-child:nth-child(3) { transition-delay: 0.11s; }
+    .bubble-cluster.expanded .bubble-child:nth-child(4) { transition-delay: 0.15s; }
+    .bubble-cluster.expanded .bubble-child:nth-child(5) { transition-delay: 0.19s; }
+    .bubble-cluster.expanded .bubble-child:nth-child(6) { transition-delay: 0.23s; }
+
+    .bubble-child i {
+      font-size: 0.9375rem;
+      color: #64748b;
+      transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    .bubble-child span {
+      font-size: 0.5625rem;
+      font-weight: 600;
+      color: #64748b;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+      white-space: nowrap;
+    }
+    .bubble-child:hover {
+      transform: translate(-50%, -50%) translate(var(--child-x), var(--child-y)) scale(1.12);
+      border-color: #667eea;
+      box-shadow: 0 8px 24px rgba(102, 126, 234, 0.2);
+      background: white;
+    }
+    .bubble-child:hover i { color: #667eea; }
+    .bubble-child:hover span { color: #667eea; }
+
+    @media (max-width: 1024px) {
+      .bubble-nav { gap: 1.75rem; }
+    }
+    @media (max-width: 768px) {
+      .bubble-nav { gap: 1rem; padding: 1.5rem 0.5rem; flex-wrap: wrap; }
+      .bubble-main { width: 76px; height: 76px; }
+      .bubble-main i { font-size: 1.25rem; }
+      .bubble-label { font-size: 0.625rem; }
+      .bubble-child { width: 54px; height: 54px; }
+      .bubble-child i { font-size: 0.8125rem; }
+      .bubble-child span { font-size: 0.5rem; }
+    }
+    @media (max-width: 480px) {
+      .bubble-nav { gap: 0.5rem; padding: 1rem 0.25rem; }
+      .bubble-main { width: 64px; height: 64px; }
+      .bubble-child { width: 48px; height: 48px; }
+    }
+
+    /* Command Center — body & content overrides */
+    body.cmd-mode { background: #0f0f1a; }
+    body.cmd-mode .main-content { position: relative; }
+    body.cmd-mode .main-content::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image:
+        linear-gradient(rgba(102, 126, 234, 0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(102, 126, 234, 0.03) 1px, transparent 1px);
+      background-size: 40px 40px;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    /* Quick Actions Bar */
+    .cmd-actions-bar {
+      display: flex;
+      gap: 0.75rem;
+      margin-bottom: 1.5rem;
+      flex-wrap: wrap;
+      position: relative;
+      z-index: 1;
+    }
+    .cmd-action-btn {
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.06);
+      border-radius: 10px;
+      padding: 0.625rem 1rem;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      text-decoration: none;
+      color: rgba(255,255,255,0.5);
+      font-size: 0.75rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+      font-family: inherit;
+    }
+    .cmd-action-btn:hover {
+      background: rgba(255,255,255,0.08);
+      border-color: rgba(255,255,255,0.12);
+      color: rgba(255,255,255,0.8);
+    }
+    .cmd-action-btn i { font-size: 0.875rem; color: #818cf8; }
+
+    /* Two-column layout */
+    .cmd-two-col {
+      display: grid;
+      grid-template-columns: 1.5fr 1fr;
+      gap: 1.5rem;
+      margin-bottom: 1.5rem;
+      position: relative;
+      z-index: 1;
+    }
+
+    /* Orders panel */
+    .cmd-orders-panel { padding: 1.5rem; }
+    .cmd-order-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0.75rem 0;
+      border-bottom: 1px solid rgba(255,255,255,0.04);
+      text-decoration: none;
+      transition: all 0.15s;
+    }
+    .cmd-order-row:last-child { border-bottom: none; }
+    .cmd-order-row:hover {
+      background: rgba(255,255,255,0.02);
+      padding-left: 0.5rem;
+      padding-right: 0.5rem;
+      margin: 0 -0.5rem;
+      border-radius: 8px;
+    }
+    .cmd-order-main { display: flex; align-items: center; gap: 0.75rem; min-width: 0; }
+    .cmd-order-number { font-weight: 700; color: #fff; font-size: 0.8125rem; font-variant-numeric: tabular-nums; white-space: nowrap; }
+    .cmd-order-customer { color: rgba(255,255,255,0.3); font-size: 0.75rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .cmd-order-right { display: flex; align-items: center; gap: 0.75rem; flex-shrink: 0; }
+    .cmd-order-total { font-weight: 700; color: #34d399; font-size: 0.8125rem; font-variant-numeric: tabular-nums; }
+    .cmd-order-status {
+      font-size: 0.625rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      padding: 0.2rem 0.5rem;
+      border-radius: 4px;
+      white-space: nowrap;
+    }
+    .status-paid { background: rgba(52,211,153,0.12); color: #34d399; }
+    .status-shipped { background: rgba(129,140,248,0.12); color: #818cf8; }
+    .status-fulfilled, .status-hand_delivered { background: rgba(52,211,153,0.2); color: #34d399; }
+    .status-created, .status-awaiting_payment { background: rgba(251,191,36,0.12); color: #fbbf24; }
+    .status-canceled, .status-failed { background: rgba(248,113,113,0.12); color: #f87171; }
+    .status-refunded, .status-return_requested { background: rgba(248,113,113,0.08); color: #f87171; }
+    .cmd-order-time { color: rgba(255,255,255,0.2); font-size: 0.6875rem; font-variant-numeric: tabular-nums; }
+    .cmd-orders-viewall {
+      display: block;
+      text-align: center;
+      margin-top: 1rem;
+      padding: 0.625rem;
+      color: rgba(255,255,255,0.35);
+      text-decoration: none;
+      font-size: 0.75rem;
+      font-weight: 600;
+      letter-spacing: 0.05em;
+      border-top: 1px solid rgba(255,255,255,0.04);
+      transition: color 0.2s;
+    }
+    .cmd-orders-viewall:hover { color: #818cf8; }
+
+    /* Secondary stats grid */
+    .cmd-secondary-stats {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1rem;
+      position: relative;
+      z-index: 1;
+    }
+    .cmd-stat-card {
+      background: rgba(255,255,255,0.04);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border: 1px solid rgba(255,255,255,0.06);
+      border-radius: 14px;
+      padding: 1.25rem;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    .cmd-stat-card:hover {
+      background: rgba(255,255,255,0.06);
+      border-color: rgba(255,255,255,0.1);
+    }
+    .cmd-stat-value {
+      font-size: 1.5rem;
+      font-weight: 800;
+      color: #fff;
+      letter-spacing: -0.03em;
+      line-height: 1;
+      margin-top: 0.5rem;
+    }
+
+    /* Quick Send dark overrides */
+    body.cmd-mode .quick-send-widget {
+      background: rgba(255,255,255,0.04);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border: 1px solid rgba(255,255,255,0.06);
+      border-radius: 14px;
+    }
+    body.cmd-mode .quick-send-header { border-color: rgba(255,255,255,0.04); }
+    body.cmd-mode .quick-send-header:hover { background: rgba(255,255,255,0.03); }
+    body.cmd-mode .quick-send-header h3 { color: #fff !important; }
+    body.cmd-mode #quickSendSubtitle { color: rgba(255,255,255,0.3) !important; }
+    body.cmd-mode .quick-send-header a { color: #818cf8 !important; }
+    body.cmd-mode .quick-send-chevron i { color: rgba(255,255,255,0.4); }
+    body.cmd-mode #quickSubject,
+    body.cmd-mode #quickContent,
+    body.cmd-mode #testRecipient,
+    body.cmd-mode #scheduledFor {
+      background: rgba(255,255,255,0.04) !important;
+      border-color: rgba(255,255,255,0.08) !important;
+      color: #fff !important;
+    }
+    body.cmd-mode #quickSubject:focus,
+    body.cmd-mode #quickContent:focus {
+      border-color: rgba(129,140,248,0.4) !important;
+    }
+    body.cmd-mode #quickSubject::placeholder,
+    body.cmd-mode #quickContent::placeholder { color: rgba(255,255,255,0.25); }
+    body.cmd-mode #recipientCount { color: rgba(255,255,255,0.4) !important; }
+    body.cmd-mode #recipientCount strong { color: #818cf8 !important; }
+    body.cmd-mode #sendBtn {
+      box-shadow: 0 0 20px rgba(102,126,234,0.3), 0 4px 12px rgba(102,126,234,0.2);
+    }
+    body.cmd-mode #sendBtn:hover {
+      box-shadow: 0 0 30px rgba(102,126,234,0.5), 0 6px 20px rgba(102,126,234,0.3);
+    }
+    body.cmd-mode .btn-secondary {
+      background: rgba(255,255,255,0.06) !important;
+      border-color: rgba(255,255,255,0.1) !important;
+      color: rgba(255,255,255,0.6) !important;
+    }
+    body.cmd-mode #imageUploadRow button {
+      background: rgba(255,255,255,0.06) !important;
+      border-color: rgba(255,255,255,0.1) !important;
+      color: rgba(255,255,255,0.5) !important;
+    }
+    body.cmd-mode #scheduleToggle + span,
+    body.cmd-mode label[style*="color: #64748b"] { color: rgba(255,255,255,0.4) !important; }
+
+    @media (max-width: 768px) {
+      .cmd-two-col { grid-template-columns: 1fr; }
+      .cmd-secondary-stats { grid-template-columns: repeat(2, 1fr); }
+    }
+    @media (max-width: 480px) {
+      .cmd-secondary-stats { grid-template-columns: 1fr; }
     }
 
     .section-header {
@@ -607,24 +1117,112 @@
 </head>
 <body>
   {% include "admin/partials/sidebar.html" %}
-  <div class="top-bar">
+  <div class="top-bar" id="cmdHero">
+    <div class="container">
+      <!-- Top row: minimal nav + clock -->
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+        <div class="cmd-clock">
+          <span class="cmd-clock-time">{% timezone "America/Chicago" %}{{ cst_time|date:"g:i A" }}{% endtimezone %}</span>
+          · {% timezone "America/Chicago" %}{{ cst_time|date:"D, M j" }}{% endtimezone %}
+        </div>
+        <div style="display: flex; gap: 0.5rem; align-items: center;">
+          <button class="hero-toggle" onclick="toggleHeroMode()" id="heroToggleBtn">Classic View</button>
+          <a href="/" class="view-site-btn" style="border: none;">
+            <span><i class="fa-solid fa-arrow-up-right-from-square" style="font-size: 0.7rem;"></i></span>
+            <span>Site</span>
+          </a>
+          <a href="/accounts/logout/" class="view-site-btn" style="border: none;">
+            <span><i class="fa-solid fa-right-from-bracket" style="font-size: 0.7rem;"></i></span>
+          </a>
+        </div>
+      </div>
+
+      <!-- Command center panels -->
+      <div class="cmd-stats" id="cmdStats">
+        <div class="cmd-panel">
+          <div class="cmd-panel-label">Revenue Today</div>
+          <div class="cmd-panel-value glow">${{ stats.revenue_today|floatformat:2 }}</div>
+          <div class="cmd-panel-sub">
+            {% if stats.revenue_today > stats.revenue_yesterday %}
+              <span class="up">▲</span> up from ${{ stats.revenue_yesterday|floatformat:2 }} yesterday
+            {% elif stats.revenue_today < stats.revenue_yesterday %}
+              <span class="down">▼</span> down from ${{ stats.revenue_yesterday|floatformat:2 }} yesterday
+            {% else %}
+              <span class="neutral">—</span> same as yesterday
+            {% endif %}
+          </div>
+        </div>
+        <div class="cmd-panel">
+          <div class="cmd-panel-label">Orders Today</div>
+          <div class="cmd-panel-value">{{ stats.orders_today }}</div>
+          <div class="cmd-panel-sub">
+            {% if stats.orders_today > stats.orders_yesterday %}
+              <span class="up">▲</span> {{ stats.orders_yesterday }} yesterday
+            {% elif stats.orders_today < stats.orders_yesterday %}
+              <span class="down">▼</span> {{ stats.orders_yesterday }} yesterday
+            {% else %}
+              <span class="neutral">—</span> {{ stats.orders_yesterday }} yesterday
+            {% endif %}
+          </div>
+        </div>
+        <div class="cmd-panel">
+          <div class="cmd-panel-label">Active Now</div>
+          <div class="cmd-panel-value">{{ stats.active_sessions }}</div>
+          <div class="cmd-panel-sub">
+            <span class="neutral">{{ stats.page_views_24h }} views today</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Attention items -->
+      <div class="cmd-alerts" id="cmdAlerts">
+        <a href="{% url 'admin_products' %}" class="cmd-alert">
+          <div class="cmd-alert-icon {% if stats.low_stock_items > 0 or stats.out_of_stock > 0 %}warn{% else %}success{% endif %}">
+            <i class="fa-solid {% if stats.low_stock_items > 0 or stats.out_of_stock > 0 %}fa-triangle-exclamation{% else %}fa-check{% endif %}"></i>
+          </div>
+          <div>
+            <div class="cmd-alert-count">{{ stats.low_stock_items|add:stats.out_of_stock }}</div>
+            <div class="cmd-alert-label">Low / Out of Stock</div>
+          </div>
+        </a>
+        <a href="{% url 'admin_messages' %}" class="cmd-alert">
+          <div class="cmd-alert-icon {% if stats.unread_messages > 0 %}info{% else %}success{% endif %}">
+            <i class="fa-solid {% if stats.unread_messages > 0 %}fa-envelope{% else %}fa-check{% endif %}"></i>
+          </div>
+          <div>
+            <div class="cmd-alert-count">{{ stats.unread_messages }}</div>
+            <div class="cmd-alert-label">Unread Messages</div>
+          </div>
+        </a>
+        <a href="/bp-manage/subscribers/" class="cmd-alert">
+          <div class="cmd-alert-icon {% if stats.new_subs_today > 0 %}success{% else %}info{% endif %}">
+            <i class="fa-solid fa-user-plus"></i>
+          </div>
+          <div>
+            <div class="cmd-alert-count">{{ stats.new_subs_today }}</div>
+            <div class="cmd-alert-label">New Subscribers Today</div>
+          </div>
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <!-- Classic hero (hidden by default, togglable) -->
+  <div class="top-bar" id="classicHero" style="display: none; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
     <div class="container">
       <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
         <div></div>
         <div style="display: flex; gap: 0.75rem;">
           <button onclick="openWidgetCustomizer()" class="view-site-btn" style="border: none; cursor: pointer;">
-            <span>⚙️</span>
+            <span><i class="fa-solid fa-gear" style="font-size: 0.8rem;"></i></span>
           </button>
-          <button id="darkModeToggle" class="view-site-btn" style="border: none; cursor: pointer;">
-            <span id="sunIcon">☀️</span>
-            <span id="moonIcon" style="display: none;">🌙</span>
-          </button>
+          <button class="hero-toggle" onclick="toggleHeroMode()" style="background: rgba(255,255,255,0.15); border-color: rgba(255,255,255,0.2); color: rgba(255,255,255,0.7);">Command Center</button>
           <a href="/" class="view-site-btn">
-            <span>🏠</span>
+            <span><i class="fa-solid fa-arrow-up-right-from-square" style="font-size: 0.7rem;"></i></span>
             <span>View Site</span>
           </a>
           <a href="/accounts/logout/" class="view-site-btn">
-            <span>🚪</span>
+            <span><i class="fa-solid fa-right-from-bracket" style="font-size: 0.7rem;"></i></span>
             <span>Sign Out</span>
           </a>
         </div>
@@ -652,9 +1250,176 @@
   {% endif %}
 
   <div class="main-content">
+    <!-- ============ COMMAND CENTER CONTENT ============ -->
+    <div id="cmdContent">
+
+      <!-- Quick Actions Bar -->
+      <div class="cmd-actions-bar">
+        <a href="{% url 'admin_email_swipe' %}" class="cmd-action-btn">
+          <i class="fa-solid fa-envelope"></i>
+          <span>New Email</span>
+        </a>
+        <a href="{% url 'admin_product_wizard' %}" class="cmd-action-btn">
+          <i class="fa-solid fa-plus"></i>
+          <span>New Product</span>
+        </a>
+        <a href="{% url 'admin_orders' %}" class="cmd-action-btn">
+          <i class="fa-solid fa-receipt"></i>
+          <span>Orders</span>
+        </a>
+        <a href="{% url 'admin_messages' %}" class="cmd-action-btn">
+          <i class="fa-solid fa-comment"></i>
+          <span>Messages</span>
+        </a>
+        <a href="/" target="_blank" class="cmd-action-btn">
+          <i class="fa-solid fa-arrow-up-right-from-square"></i>
+          <span>View Site</span>
+        </a>
+      </div>
+
+      <!-- Two-Column: Orders + Quick Send -->
+      <div class="cmd-two-col">
+        <!-- Recent Orders -->
+        <div class="cmd-panel cmd-orders-panel">
+          <div class="cmd-panel-label">Recent Orders</div>
+          {% for order in recent_orders %}
+          <a href="{% url 'admin_orders' %}" class="cmd-order-row">
+            <div class="cmd-order-main">
+              <span class="cmd-order-number">{{ order.order_number }}</span>
+              <span class="cmd-order-customer">{{ order.email|default:order.customer_name|default:"—" }}</span>
+            </div>
+            <div class="cmd-order-right">
+              <span class="cmd-order-total">${{ order.total|floatformat:2 }}</span>
+              <span class="cmd-order-status status-{{ order.status|lower }}">{{ order.get_status_display }}</span>
+              <span class="cmd-order-time" data-created="{{ order.created_at|date:'c' }}"></span>
+            </div>
+          </a>
+          {% empty %}
+          <div style="text-align: center; padding: 2.5rem 1rem;">
+            <i class="fa-solid fa-inbox" style="font-size: 1.5rem; color: rgba(255,255,255,0.1); margin-bottom: 0.75rem; display: block;"></i>
+            <p style="color: rgba(255,255,255,0.2); font-size: 0.8125rem; margin: 0;">No orders yet</p>
+          </div>
+          {% endfor %}
+          {% if recent_orders %}
+          <a href="{% url 'admin_orders' %}" class="cmd-orders-viewall">View All Orders →</a>
+          {% endif %}
+        </div>
+
+        <!-- Quick Send slot (widget moves here via JS) -->
+        <div id="cmdQuickSendSlot"></div>
+      </div>
+
+      <!-- Secondary Metrics -->
+      <div class="cmd-secondary-stats">
+        <div class="cmd-stat-card">
+          <div class="cmd-panel-label">Total Revenue</div>
+          <div class="cmd-stat-value">${{ stats.total_revenue|floatformat:2 }}</div>
+        </div>
+        <div class="cmd-stat-card">
+          <div class="cmd-panel-label">30-Day Revenue</div>
+          <div class="cmd-stat-value">${{ stats.revenue_30d|floatformat:2 }}</div>
+        </div>
+        <div class="cmd-stat-card">
+          <div class="cmd-panel-label">Total Orders</div>
+          <div class="cmd-stat-value">{{ stats.total_orders }}</div>
+        </div>
+        <div class="cmd-stat-card">
+          <div class="cmd-panel-label">Conversion Rate</div>
+          <div class="cmd-stat-value">{{ stats.conversion_rate }}%</div>
+        </div>
+        <div class="cmd-stat-card">
+          <div class="cmd-panel-label">Email Subscribers</div>
+          <div class="cmd-stat-value">{{ stats.total_email_subs }}</div>
+        </div>
+        <div class="cmd-stat-card">
+          <div class="cmd-panel-label">Page Views (24h)</div>
+          <div class="cmd-stat-value">{{ stats.page_views_24h }}</div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- ============ CLASSIC CONTENT ============ -->
+    <div id="classicContent">
+
     <!-- Quick Stats - Dynamically populated by JavaScript -->
     <div class="quick-stats" id="quickStats">
       <!-- Widgets will be loaded here -->
+    </div>
+
+    <!-- Bubble Navigation (hidden - using sidebar nav instead) -->
+    <div class="bubble-nav" id="bubbleNav" style="display: none;">
+      <div class="bubble-cluster" data-section="products">
+        <div class="bubble-main" onmouseenter="expandCluster(this)" onclick="expandCluster(this)">
+          <i class="fa-solid fa-bag-shopping"></i>
+          <span class="bubble-label">Products</span>
+        </div>
+        <div class="bubble-children">
+          <a href="{% url 'admin_products' %}" class="bubble-child"><i class="fa-solid fa-box"></i><span>Products</span></a>
+          <a href="{% url 'admin_bundles' %}" class="bubble-child"><i class="fa-solid fa-boxes-stacked"></i><span>Bundles</span></a>
+          <a href="{% url 'admin_categories' %}" class="bubble-child"><i class="fa-solid fa-folder"></i><span>Categories</span></a>
+          <a href="{% url 'admin_attributes' %}" class="bubble-child"><i class="fa-solid fa-swatchbook"></i><span>Attributes</span></a>
+          <a href="{% url 'promotions_dashboard' %}" class="bubble-child"><i class="fa-solid fa-tag"></i><span>Promos</span></a>
+          <a href="{% url 'admin_shipments' %}" class="bubble-child"><i class="fa-solid fa-truck"></i><span>Shipments</span></a>
+        </div>
+      </div>
+      <div class="bubble-cluster" data-section="marketing">
+        <div class="bubble-main" onmouseenter="expandCluster(this)" onclick="expandCluster(this)">
+          <i class="fa-solid fa-bullhorn"></i>
+          <span class="bubble-label">Marketing</span>
+        </div>
+        <div class="bubble-children">
+          <a href="{% url 'admin_campaigns_list' %}" class="bubble-child"><i class="fa-solid fa-crosshairs"></i><span>Campaigns</span></a>
+          <a href="{% url 'admin_messages' %}" class="bubble-child"><i class="fa-solid fa-comment"></i><span>Messages</span></a>
+          <a href="{% url 'admin_email_swipe' %}" class="bubble-child"><i class="fa-solid fa-envelope"></i><span>Swipe</span></a>
+          <a href="/bp-manage/subscribers/" class="bubble-child"><i class="fa-solid fa-users"></i><span>Subscribers</span></a>
+          <a href="/bp-manage/email/templates/" class="bubble-child"><i class="fa-solid fa-file-lines"></i><span>Templates</span></a>
+          <a href="{% url 'admin_visitors' %}" class="bubble-child"><i class="fa-solid fa-eye"></i><span>Visitors</span></a>
+        </div>
+      </div>
+      <div class="bubble-cluster" data-section="orders">
+        <div class="bubble-main" onmouseenter="expandCluster(this)" onclick="expandCluster(this)">
+          <i class="fa-solid fa-boxes-stacked"></i>
+          <span class="bubble-label">Orders</span>
+        </div>
+        <div class="bubble-children">
+          <a href="{% url 'admin_orders' %}" class="bubble-child"><i class="fa-solid fa-receipt"></i><span>Orders</span></a>
+          <a href="{% url 'admin_users' %}" class="bubble-child"><i class="fa-solid fa-users"></i><span>Customers</span></a>
+          <a href="{% url 'admin_returns' %}" class="bubble-child"><i class="fa-solid fa-rotate-left"></i><span>Returns</span></a>
+        </div>
+      </div>
+      <div class="bubble-cluster" data-section="finances">
+        <div class="bubble-main" onmouseenter="expandCluster(this)" onclick="expandCluster(this)">
+          <i class="fa-solid fa-chart-line"></i>
+          <span class="bubble-label">Finances</span>
+        </div>
+        <div class="bubble-children">
+          <a href="{% url 'admin_finance' %}" class="bubble-child"><i class="fa-solid fa-dollar-sign"></i><span>Finances</span></a>
+          <a href="{% url 'admin_test_center' %}" class="bubble-child"><i class="fa-solid fa-vial"></i><span>Test Center</span></a>
+        </div>
+      </div>
+      <div class="bubble-cluster" data-section="website">
+        <div class="bubble-main" onmouseenter="expandCluster(this)" onclick="expandCluster(this)">
+          <i class="fa-solid fa-palette"></i>
+          <span class="bubble-label">Website</span>
+        </div>
+        <div class="bubble-children">
+          <a href="/bp-manage/homepage/" class="bubble-child"><i class="fa-solid fa-house"></i><span>Homepage</span></a>
+          <a href="{% url 'admin_lookbook' %}" class="bubble-child"><i class="fa-solid fa-book-open"></i><span>Lookbook</span></a>
+          <a href="{% url 'admin_about_settings' %}" class="bubble-child"><i class="fa-solid fa-circle-info"></i><span>About</span></a>
+        </div>
+      </div>
+      <div class="bubble-cluster" data-section="settings">
+        <div class="bubble-main" onmouseenter="expandCluster(this)" onclick="expandCluster(this)">
+          <i class="fa-solid fa-gear"></i>
+          <span class="bubble-label">Settings</span>
+        </div>
+        <div class="bubble-children">
+          <a href="/bp-manage/security/" class="bubble-child"><i class="fa-solid fa-shield-halved"></i><span>Security</span></a>
+          <a href="{% url 'admin_warehouse_settings' %}" class="bubble-child"><i class="fa-solid fa-warehouse"></i><span>Warehouse</span></a>
+          <a href="{% url 'admin_bug_reports' %}" class="bubble-child"><i class="fa-solid fa-bug"></i><span>Bugs</span></a>
+        </div>
+      </div>
     </div>
 
     <!-- Quick Send Widget -->
@@ -998,7 +1763,13 @@
         <span>+ Add Links</span>
       </a>
     </div>
-  </div>
+
+    </div><!-- end #classicContent -->
+
+    <!-- Classic Quick Send slot (widget moves here via JS) -->
+    <div id="classicQuickSendSlot"></div>
+
+  </div><!-- end .main-content -->
 
   <!-- Widget Customizer Modal -->
   <div id="widgetCustomizerModal" class="modal-overlay" onclick="closeWidgetCustomizer()">
@@ -1070,6 +1841,111 @@
       </div>
     </div>
   </div>
+
+  <script>
+    // Hero mode toggle (command center vs classic)
+    (function() {
+      var KEY = 'adminHeroMode';
+      var mode = localStorage.getItem(KEY) || 'command';
+
+      function applyMode(m) {
+        mode = m;
+        localStorage.setItem(KEY, m);
+        // Hero
+        document.getElementById('cmdHero').style.display = m === 'command' ? '' : 'none';
+        document.getElementById('classicHero').style.display = m === 'classic' ? '' : 'none';
+        // Content
+        document.getElementById('cmdContent').style.display = m === 'command' ? '' : 'none';
+        document.getElementById('classicContent').style.display = m === 'classic' ? '' : 'none';
+        // Body class for dark overrides
+        if (m === 'command') {
+          document.body.classList.add('cmd-mode');
+        } else {
+          document.body.classList.remove('cmd-mode');
+        }
+        // Move Quick Send widget to appropriate slot
+        var qs = document.getElementById('quickSendWidget');
+        if (qs) {
+          var slot = m === 'command'
+            ? document.getElementById('cmdQuickSendSlot')
+            : document.getElementById('classicQuickSendSlot');
+          if (slot) slot.appendChild(qs);
+          // Expand in command mode, collapse in classic
+          if (m === 'command') {
+            qs.classList.remove('collapsed');
+          }
+        }
+      }
+
+      window.toggleHeroMode = function() {
+        applyMode(mode === 'command' ? 'classic' : 'command');
+      };
+
+      // Apply on load
+      applyMode(mode);
+
+      // Time-ago for order timestamps
+      document.querySelectorAll('.cmd-order-time[data-created]').forEach(function(el) {
+        var created = new Date(el.dataset.created);
+        var now = new Date();
+        var diff = Math.floor((now - created) / 1000);
+        if (diff < 60) el.textContent = 'just now';
+        else if (diff < 3600) el.textContent = Math.floor(diff / 60) + 'm ago';
+        else if (diff < 86400) el.textContent = Math.floor(diff / 3600) + 'h ago';
+        else el.textContent = Math.floor(diff / 86400) + 'd ago';
+      });
+    })();
+
+    // Bubble nav — radial child positioning
+    (function() {
+      var RADIUS_DESKTOP = 88;
+      var RADIUS_MOBILE = 68;
+
+      function getRadius() {
+        return window.innerWidth <= 768 ? RADIUS_MOBILE : RADIUS_DESKTOP;
+      }
+
+      function positionChildren(cluster) {
+        var children = cluster.querySelectorAll('.bubble-child');
+        var count = children.length;
+        var radius = getRadius();
+        var totalArc = Math.min(240, 60 * count);
+        var startAngle = 90 - totalArc / 2;
+
+        children.forEach(function(child, i) {
+          var angle = startAngle + (count > 1 ? (totalArc / (count - 1)) * i : 0);
+          var rad = angle * (Math.PI / 180);
+          child.style.setProperty('--child-x', (Math.cos(rad) * radius) + 'px');
+          child.style.setProperty('--child-y', (Math.sin(rad) * radius) + 'px');
+        });
+      }
+
+      document.querySelectorAll('.bubble-cluster').forEach(positionChildren);
+      window.addEventListener('resize', function() {
+        document.querySelectorAll('.bubble-cluster').forEach(positionChildren);
+      });
+
+      function collapseAll() {
+        document.querySelectorAll('.bubble-cluster.expanded').forEach(function(c) {
+          c.classList.remove('expanded');
+        });
+      }
+
+      window.expandCluster = function(el) {
+        var cluster = el.closest('.bubble-cluster');
+        var wasExpanded = cluster.classList.contains('expanded');
+        collapseAll();
+        if (!wasExpanded) cluster.classList.add('expanded');
+      };
+
+      document.addEventListener('click', function(e) {
+        if (!e.target.closest('.bubble-cluster')) collapseAll();
+      });
+      document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') collapseAll();
+      });
+    })();
+  </script>
 
   <script>
     // Modal Functions

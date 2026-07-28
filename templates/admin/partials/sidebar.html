@@ -1,14 +1,11 @@
 <!-- Admin Sidebar Navigation -->
 <nav class="admin-sidebar" id="adminSidebar">
-  <!-- Brand/Logo with Toggle -->
-  <div class="sidebar-header">
-    <a href="{% url 'admin_home' %}" class="sidebar-brand">
+  <!-- Brand/Logo - tap to collapse/expand, double-click to go home -->
+  <div class="sidebar-header" onclick="toggleSidebar()" ondblclick="window.location.href='{% url 'admin_home' %}'" style="cursor: pointer;" title="Tap to collapse, double-tap for home">
+    <div class="sidebar-brand">
       <div class="sidebar-brand-icon">BP</div>
       <span class="sidebar-brand-text">Blueprint Admin</span>
-    </a>
-    <button class="sidebar-toggle" onclick="toggleSidebar()" title="Toggle sidebar">
-      <i class="fa-solid fa-chevron-left"></i>
-    </button>
+    </div>
   </div>
 
   <!-- Navigation -->
@@ -16,34 +13,34 @@
     <!-- Products Section -->
     <div class="sidebar-section" data-section="products">
       <button class="sidebar-section-header" onclick="toggleSidebarSection('products')">
-        <span class="sidebar-section-icon">🛍️</span>
+        <span class="sidebar-section-icon"><i class="fa-solid fa-bag-shopping"></i></span>
         <span class="sidebar-section-text">Products</span>
         <span class="sidebar-section-chevron">▶</span>
         <span class="sidebar-tooltip">Products</span>
       </button>
       <div class="sidebar-section-items">
         <a href="{% url 'admin_products' %}" class="sidebar-item" data-page="products">
-          <span class="sidebar-item-icon">📦</span>
+          <span class="sidebar-item-icon"><i class="fa-solid fa-box"></i></span>
           <span>Manage Products</span>
         </a>
         <a href="{% url 'admin_bundles' %}" class="sidebar-item" data-page="bundles">
-          <span class="sidebar-item-icon">🎁</span>
+          <span class="sidebar-item-icon"><i class="fa-solid fa-boxes-stacked"></i></span>
           <span>Bundles</span>
         </a>
         <a href="{% url 'admin_categories' %}" class="sidebar-item" data-page="categories">
-          <span class="sidebar-item-icon">📁</span>
+          <span class="sidebar-item-icon"><i class="fa-solid fa-folder"></i></span>
           <span>Categories</span>
         </a>
         <a href="{% url 'admin_attributes' %}" class="sidebar-item" data-page="attributes">
-          <span class="sidebar-item-icon">🎨</span>
+          <span class="sidebar-item-icon"><i class="fa-solid fa-swatchbook"></i></span>
           <span>Attributes</span>
         </a>
         <a href="{% url 'promotions_dashboard' %}" class="sidebar-item" data-page="promotions">
-          <span class="sidebar-item-icon">🏷️</span>
+          <span class="sidebar-item-icon"><i class="fa-solid fa-tag"></i></span>
           <span>Promotions</span>
         </a>
         <a href="{% url 'admin_shipments' %}" class="sidebar-item" data-page="shipments">
-          <span class="sidebar-item-icon">🚚</span>
+          <span class="sidebar-item-icon"><i class="fa-solid fa-truck"></i></span>
           <span>Shipments</span>
         </a>
       </div>
@@ -52,34 +49,34 @@
     <!-- Marketing Section -->
     <div class="sidebar-section" data-section="marketing">
       <button class="sidebar-section-header" onclick="toggleSidebarSection('marketing')">
-        <span class="sidebar-section-icon">📨</span>
+        <span class="sidebar-section-icon"><i class="fa-solid fa-bullhorn"></i></span>
         <span class="sidebar-section-text">Marketing</span>
         <span class="sidebar-section-chevron">▶</span>
         <span class="sidebar-tooltip">Marketing</span>
       </button>
       <div class="sidebar-section-items">
         <a href="{% url 'admin_campaigns_list' %}" class="sidebar-item" data-page="campaigns">
-          <span class="sidebar-item-icon">🎯</span>
+          <span class="sidebar-item-icon"><i class="fa-solid fa-crosshairs"></i></span>
           <span>Campaigns</span>
         </a>
         <a href="{% url 'admin_messages' %}" class="sidebar-item" data-page="messages">
-          <span class="sidebar-item-icon">💬</span>
+          <span class="sidebar-item-icon"><i class="fa-solid fa-comment"></i></span>
           <span>Messages</span>
         </a>
         <a href="{% url 'admin_ab_testing' %}" class="sidebar-item" data-page="ab_testing">
-          <span class="sidebar-item-icon">🧪</span>
+          <span class="sidebar-item-icon"><i class="fa-solid fa-flask"></i></span>
           <span>A/B Testing</span>
         </a>
         <a href="/bp-manage/subscribers/" class="sidebar-item" data-page="subscribers">
-          <span class="sidebar-item-icon">👥</span>
+          <span class="sidebar-item-icon"><i class="fa-solid fa-users"></i></span>
           <span>Subscribers</span>
         </a>
         <a href="/bp-manage/email/templates/" class="sidebar-item" data-page="templates">
-          <span class="sidebar-item-icon">📝</span>
+          <span class="sidebar-item-icon"><i class="fa-solid fa-file-lines"></i></span>
           <span>Templates</span>
         </a>
         <a href="{% url 'admin_visitors' %}" class="sidebar-item" data-page="visitors">
-          <span class="sidebar-item-icon">👁️</span>
+          <span class="sidebar-item-icon"><i class="fa-solid fa-eye"></i></span>
           <span>Visitors</span>
         </a>
       </div>
@@ -88,22 +85,22 @@
     <!-- Orders & Fulfillment Section -->
     <div class="sidebar-section" data-section="orders">
       <button class="sidebar-section-header" onclick="toggleSidebarSection('orders')">
-        <span class="sidebar-section-icon">📦</span>
+        <span class="sidebar-section-icon"><i class="fa-solid fa-boxes-stacked"></i></span>
         <span class="sidebar-section-text">Orders</span>
         <span class="sidebar-section-chevron">▶</span>
         <span class="sidebar-tooltip">Orders & Fulfillment</span>
       </button>
       <div class="sidebar-section-items">
         <a href="{% url 'admin_orders' %}" class="sidebar-item" data-page="orders">
-          <span class="sidebar-item-icon">📦</span>
+          <span class="sidebar-item-icon"><i class="fa-solid fa-receipt"></i></span>
           <span>Orders</span>
         </a>
         <a href="{% url 'admin_users' %}" class="sidebar-item" data-page="customers">
-          <span class="sidebar-item-icon">👥</span>
+          <span class="sidebar-item-icon"><i class="fa-solid fa-users"></i></span>
           <span>Customers</span>
         </a>
         <a href="{% url 'admin_returns' %}" class="sidebar-item" data-page="returns">
-          <span class="sidebar-item-icon">↩️</span>
+          <span class="sidebar-item-icon"><i class="fa-solid fa-rotate-left"></i></span>
           <span>Returns & Exchanges</span>
         </a>
       </div>
@@ -112,18 +109,18 @@
     <!-- Finances Section -->
     <div class="sidebar-section" data-section="finances">
       <button class="sidebar-section-header" onclick="toggleSidebarSection('finances')">
-        <span class="sidebar-section-icon">📈</span>
+        <span class="sidebar-section-icon"><i class="fa-solid fa-chart-line"></i></span>
         <span class="sidebar-section-text">Finances</span>
         <span class="sidebar-section-chevron">▶</span>
         <span class="sidebar-tooltip">Finances</span>
       </button>
       <div class="sidebar-section-items">
         <a href="{% url 'admin_finance' %}" class="sidebar-item" data-page="finance">
-          <span class="sidebar-item-icon">💰</span>
+          <span class="sidebar-item-icon"><i class="fa-solid fa-dollar-sign"></i></span>
           <span>Finances</span>
         </a>
         <a href="{% url 'admin_test_center' %}" class="sidebar-item" data-page="test_center">
-          <span class="sidebar-item-icon">🧪</span>
+          <span class="sidebar-item-icon"><i class="fa-solid fa-vial"></i></span>
           <span>Test Center</span>
         </a>
       </div>
@@ -132,22 +129,22 @@
     <!-- Website Customization Section -->
     <div class="sidebar-section" data-section="website">
       <button class="sidebar-section-header" onclick="toggleSidebarSection('website')">
-        <span class="sidebar-section-icon">🎨</span>
+        <span class="sidebar-section-icon"><i class="fa-solid fa-palette"></i></span>
         <span class="sidebar-section-text">Website</span>
         <span class="sidebar-section-chevron">▶</span>
         <span class="sidebar-tooltip">Website Customization</span>
       </button>
       <div class="sidebar-section-items">
         <a href="/bp-manage/homepage/" class="sidebar-item" data-page="homepage">
-          <span class="sidebar-item-icon">🏠</span>
+          <span class="sidebar-item-icon"><i class="fa-solid fa-house"></i></span>
           <span>Homepage</span>
         </a>
         <a href="{% url 'admin_lookbook' %}" class="sidebar-item" data-page="lookbook">
-          <span class="sidebar-item-icon">📖</span>
+          <span class="sidebar-item-icon"><i class="fa-solid fa-book-open"></i></span>
           <span>Lookbook</span>
         </a>
         <a href="{% url 'admin_about_settings' %}" class="sidebar-item" data-page="about">
-          <span class="sidebar-item-icon">ℹ️</span>
+          <span class="sidebar-item-icon"><i class="fa-solid fa-circle-info"></i></span>
           <span>About Page</span>
         </a>
       </div>
@@ -156,34 +153,34 @@
     <!-- Settings Section -->
     <div class="sidebar-section" data-section="settings">
       <button class="sidebar-section-header" onclick="toggleSidebarSection('settings')">
-        <span class="sidebar-section-icon">⚙️</span>
+        <span class="sidebar-section-icon"><i class="fa-solid fa-gear"></i></span>
         <span class="sidebar-section-text">Settings</span>
         <span class="sidebar-section-chevron">▶</span>
         <span class="sidebar-tooltip">Settings</span>
       </button>
       <div class="sidebar-section-items">
         <a href="/bp-manage/security/" class="sidebar-item" data-page="security">
-          <span class="sidebar-item-icon">🔒</span>
+          <span class="sidebar-item-icon"><i class="fa-solid fa-shield-halved"></i></span>
           <span>Security</span>
         </a>
         <a href="{% url 'admin_warehouse_settings' %}" class="sidebar-item" data-page="warehouse">
-          <span class="sidebar-item-icon">🏭</span>
+          <span class="sidebar-item-icon"><i class="fa-solid fa-warehouse"></i></span>
           <span>Warehouse</span>
         </a>
         <a href="{% url 'two_factor_setup' %}" class="sidebar-item" data-page="2fa">
-          <span class="sidebar-item-icon">🔐</span>
+          <span class="sidebar-item-icon"><i class="fa-solid fa-lock"></i></span>
           <span>2FA</span>
         </a>
         <a href="/bp-djadmin/" class="sidebar-item" data-page="django_admin">
-          <span class="sidebar-item-icon">⚡</span>
+          <span class="sidebar-item-icon"><i class="fa-solid fa-bolt"></i></span>
           <span>Django Admin</span>
         </a>
         <a href="{% url 'admin_bug_reports' %}" class="sidebar-item" data-page="bug_reports">
-          <span class="sidebar-item-icon">🐛</span>
+          <span class="sidebar-item-icon"><i class="fa-solid fa-bug"></i></span>
           <span>Bug Reports</span>
         </a>
         <a href="{% url 'admin_scheduled_reports' %}" class="sidebar-item" data-page="scheduled_reports">
-          <span class="sidebar-item-icon">📊</span>
+          <span class="sidebar-item-icon"><i class="fa-solid fa-chart-bar"></i></span>
           <span>Scheduled Reports</span>
         </a>
       </div>

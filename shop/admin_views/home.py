@@ -25,7 +25,7 @@ from shop.models import (
 )
 from shop.models.analytics import PageView, VisitorSession
 from shop.models.cart import Order
-from shop.models.messaging import QuickMessage
+from shop.models.messaging import ContactMessage, QuickMessage
 from shop.models.product import ProductVariant
 from shop.models.settings import QuickLink, SiteSettings
 
@@ -341,13 +341,20 @@ def admin_home(request):
 
     now = timezone.now()
     last_24h = now - timedelta(hours=24)
+    last_48h = now - timedelta(hours=48)
     last_30d = now - timedelta(days=30)
+    today_start = now.replace(hour=0, minute=0, second=0, microsecond=0)
+    yesterday_start = today_start - timedelta(days=1)
 
     # Calculate orders and revenue
     total_orders = Order.objects.count()
     orders_30d = Order.objects.filter(created_at__gte=last_30d).count()
+    orders_today = Order.objects.filter(created_at__gte=today_start).count()
+    orders_yesterday = Order.objects.filter(created_at__gte=yesterday_start, created_at__lt=today_start).count()
     total_revenue = Order.objects.aggregate(total=Sum("total"))["total"] or Decimal("0")
     revenue_30d = Order.objects.filter(created_at__gte=last_30d).aggregate(total=Sum("total"))["total"] or Decimal("0")
+    revenue_today = Order.objects.filter(created_at__gte=today_start).aggregate(total=Sum("total"))["total"] or Decimal("0")
+    revenue_yesterday = Order.objects.filter(created_at__gte=yesterday_start, created_at__lt=today_start).aggregate(total=Sum("total"))["total"] or Decimal("0")
 
     # Calculate active sessions and visitors
     active_sessions = VisitorSession.objects.filter(last_seen__gte=now - timedelta(hours=1)).count()
@@ -371,8 +378,15 @@ def admin_home(request):
         "out_of_stock": ProductVariant.objects.exclude(product__slug="test-checkout-item").filter(stock_quantity=0).count(),
         "total_orders": total_orders,
         "orders_30d": orders_30d,
+        "orders_today": orders_today,
+        "orders_yesterday": orders_yesterday,
         "total_revenue": float(total_revenue),
         "revenue_30d": float(revenue_30d),
+        "revenue_today": float(revenue_today),
+        "revenue_yesterday": float(revenue_yesterday),
+        "unread_messages": ContactMessage.objects.filter(status="new").count(),
+        "new_subs_today": EmailSubscription.objects.filter(subscribed_at__gte=today_start).count()
+            + SMSSubscription.objects.filter(subscribed_at__gte=today_start).count(),
         "email_campaigns": EmailCampaign.objects.count(),
         "sms_campaigns": SMSCampaign.objects.count(),
         "active_campaigns": Campaign.objects.filter(status="active").count(),
@@ -387,6 +401,7 @@ def admin_home(request):
         ),
     }
 
+    recent_orders = Order.objects.select_related('user').order_by('-created_at')[:5]
     drafts = QuickMessage.objects.filter(status="draft").order_by("-updated_at")[:5]
 
     load_draft_id = request.GET.get("load_draft")
@@ -403,6 +418,7 @@ def admin_home(request):
     context = {
         "stats": stats,
         "cst_time": timezone.now().astimezone(pytz.timezone("America/Chicago")),
+        "recent_orders": recent_orders,
         "drafts": drafts,
         "load_draft": load_draft,
         "default_test_email": site_settings.default_test_email,

@@ -70,8 +70,8 @@
 }
 
 .sidebar-brand-icon {
-  width: 32px;
-  height: 32px;
+  width: 28px;
+  height: 28px;
   background: rgba(255, 255, 255, 0.2);
   border-radius: 8px;
   display: flex;
@@ -97,47 +97,14 @@
 }
 
 .admin-sidebar.collapsed .sidebar-header {
-  flex-direction: column;
-  gap: 0.5rem;
-  padding: 0.75rem 0;
-  align-items: center;
+  justify-content: center;
+  padding: 0.75rem 1rem;
 }
 
 .admin-sidebar.collapsed .sidebar-brand {
   padding: 0;
   flex: 0;
-  width: 32px;
   justify-content: center;
-}
-
-/* Toggle Button */
-.sidebar-toggle {
-  width: 28px;
-  height: 28px;
-  background: rgba(255, 255, 255, 0.15);
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  border-radius: 6px;
-  color: white;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: all 0.2s;
-  font-size: 0.75rem;
-  flex-shrink: 0;
-}
-
-.sidebar-toggle:hover {
-  background: rgba(255, 255, 255, 0.25);
-}
-
-.sidebar-toggle i {
-  transition: transform 0.3s;
-}
-
-.admin-sidebar.collapsed .sidebar-toggle {
-  width: 32px;
-  height: 32px;
 }
 
 /* No transition class for initial page load */
@@ -147,10 +114,6 @@ body.no-transition .nav-links,
 body.no-transition .top-bar,
 body.no-transition .main-content {
   transition: none !important;
-}
-
-.admin-sidebar.collapsed .sidebar-toggle i {
-  transform: rotate(180deg);
 }
 
 /* Navigation */
@@ -308,14 +271,16 @@ body.no-transition .main-content {
 /* Body offset when sidebar is present */
 body.has-sidebar .nav-links,
 body.has-sidebar .top-bar,
-body.has-sidebar .main-content {
+body.has-sidebar .main-content,
+body.has-sidebar .container {
   margin-left: 240px;
   transition: margin-left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 body.has-sidebar.sidebar-collapsed .nav-links,
 body.has-sidebar.sidebar-collapsed .top-bar,
-body.has-sidebar.sidebar-collapsed .main-content {
+body.has-sidebar.sidebar-collapsed .main-content,
+body.has-sidebar.sidebar-collapsed .container {
   margin-left: 60px;
 }
 
@@ -346,13 +311,15 @@ body.has-sidebar.sidebar-collapsed .main-content {
 
   body.has-sidebar .nav-links,
   body.has-sidebar .top-bar,
-  body.has-sidebar .main-content {
+  body.has-sidebar .main-content,
+  body.has-sidebar .container {
     margin-left: 0;
   }
 
   body.has-sidebar.sidebar-collapsed .nav-links,
   body.has-sidebar.sidebar-collapsed .top-bar,
-  body.has-sidebar.sidebar-collapsed .main-content {
+  body.has-sidebar.sidebar-collapsed .main-content,
+  body.has-sidebar.sidebar-collapsed .container {
     margin-left: 0;
   }
 
