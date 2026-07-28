@@ -26,7 +26,7 @@ from shop.models import (
 )
 from shop.models.analytics import PageView, VisitorSession
 from shop.models.cart import Order
-from shop.models.messaging import CalendarEvent, ContactMessage, QuickMessage
+from shop.models.messaging import CalendarEvent, ContactMessage, QuickMessage, Task, TeamMember
 from shop.models.product import ProductVariant
 from shop.models.settings import QuickLink, SiteSettings
 
@@ -73,6 +73,49 @@ def admin_home(request):
             return JsonResponse({"success": True})
         except CalendarEvent.DoesNotExist:
             return JsonResponse({"success": False, "error": "Event not found"})
+        except Exception as e:
+            return JsonResponse({"success": False, "error": str(e)})
+
+    # Task AJAX handlers
+    if request.method == "POST" and request.POST.get("action") == "task_add":
+        try:
+            assigned_to = None
+            assigned_id = request.POST.get("assigned_to")
+            if assigned_id:
+                assigned_to = User.objects.filter(id=assigned_id).first()
+            task = Task.objects.create(
+                title=request.POST.get("title", ""),
+                priority=request.POST.get("priority", "medium"),
+                assigned_to=assigned_to,
+                due_date=request.POST.get("due_date") or None,
+                created_by=request.user,
+            )
+            return JsonResponse({"success": True, "id": task.id})
+        except Exception as e:
+            return JsonResponse({"success": False, "error": str(e)})
+
+    if request.method == "POST" and request.POST.get("action") == "task_update":
+        try:
+            task = Task.objects.get(id=request.POST.get("task_id"))
+            status = request.POST.get("status")
+            if status:
+                task.status = status
+                if status == "done":
+                    task.completed_at = timezone.now()
+                elif task.completed_at:
+                    task.completed_at = None
+            title = request.POST.get("title")
+            if title:
+                task.title = title
+            task.save()
+            return JsonResponse({"success": True})
+        except Task.DoesNotExist:
+            return JsonResponse({"success": False, "error": "Task not found"})
+
+    if request.method == "POST" and request.POST.get("action") == "task_delete":
+        try:
+            Task.objects.filter(id=request.POST.get("task_id")).delete()
+            return JsonResponse({"success": True})
         except Exception as e:
             return JsonResponse({"success": False, "error": str(e)})
 
@@ -513,6 +556,41 @@ def admin_home(request):
 
     recent_orders = Order.objects.select_related('user').order_by('-created_at')[:5]
 
+    # Team members
+    team_members = TeamMember.objects.filter(is_active=True).select_related('user')
+    team_data = []
+    for tm in team_members:
+        task_count = Task.objects.filter(assigned_to=tm.user, status__in=["todo", "in_progress"]).count()
+        team_data.append({
+            "id": tm.user.id,
+            "name": tm.display_name,
+            "role": tm.get_role_display(),
+            "avatar": tm.avatar.url if tm.avatar else None,
+            "tasks": task_count,
+        })
+
+    # Active tasks
+    active_tasks = list(
+        Task.objects.filter(status__in=["todo", "in_progress"])
+        .select_related("assigned_to", "created_by")
+        .order_by("due_date", "-priority", "-created_at")[:10]
+    )
+    tasks_data = []
+    for t in active_tasks:
+        assignee = None
+        if t.assigned_to:
+            tm = TeamMember.objects.filter(user=t.assigned_to).first()
+            assignee = tm.display_name if tm else t.assigned_to.first_name or t.assigned_to.username
+        tasks_data.append({
+            "id": t.id,
+            "title": t.title,
+            "status": t.status,
+            "priority": t.priority,
+            "assignee": assignee,
+            "due_date": t.due_date.isoformat() if t.due_date else None,
+            "created": t.created_at.isoformat(),
+        })
+
     # Active carts with items (only carts that have items)
     from shop.models.cart import Cart, CartItem
     active_carts = Cart.objects.filter(
@@ -781,6 +859,9 @@ def admin_home(request):
         "calendar_json": json_mod.dumps(calendar_data),
         "carts_json": json_mod.dumps(carts_data),
         "active_cart_count": len(carts_data),
+        "team_json": json_mod.dumps(team_data),
+        "tasks_json": json_mod.dumps(tasks_data),
+        "team_members": team_members,
         "abandoned_cart_count": abandoned_cart_count,
         "abandoned_cart_value": float(abandoned_cart_value),
         "product_perf_json": json_mod.dumps(product_perf),

@@ -684,7 +684,8 @@
       z-index: 20;
       box-shadow: 0 4px 16px rgba(0,0,0,0.4);
     }
-    .cmd-cal-day:hover .cmd-cal-tooltip { opacity: 1; }
+    .cmd-cal-day:hover .cmd-cal-tooltip { opacity: 1; pointer-events: auto; }
+    .cmd-cal-tooltip:hover { opacity: 1; pointer-events: auto; }
 
     /* Top Products Strip */
     .cmd-top-products {
@@ -831,6 +832,60 @@
     .cmd-cart-items { flex: 1; color: rgba(255,255,255,0.3); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
     .cmd-cart-total { color: #fbbf24; font-weight: 700; flex-shrink: 0; }
     .cmd-cart-time { color: rgba(255,255,255,0.15); font-size: 0.5625rem; flex-shrink: 0; }
+
+    /* Task rows */
+    .cmd-task-row {
+      display: flex;
+      align-items: center;
+      gap: 0.625rem;
+      padding: 0.5rem 0;
+      border-bottom: 1px solid rgba(255,255,255,0.03);
+      font-size: 0.6875rem;
+    }
+    .cmd-task-row:last-child { border-bottom: none; }
+    .cmd-task-check {
+      width: 14px; height: 14px; border-radius: 4px;
+      border: 1.5px solid rgba(255,255,255,0.15);
+      cursor: pointer; flex-shrink: 0;
+      display: flex; align-items: center; justify-content: center;
+      transition: all 0.2s; background: none;
+    }
+    .cmd-task-check:hover { border-color: #34d399; }
+    .cmd-task-check.done { background: #34d399; border-color: #34d399; }
+    .cmd-task-title { flex: 1; color: rgba(255,255,255,0.6); min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .cmd-task-assignee { font-size: 0.5625rem; color: rgba(255,255,255,0.25); flex-shrink: 0; }
+    .cmd-task-priority {
+      font-size: 0.5rem; font-weight: 700; text-transform: uppercase;
+      letter-spacing: 0.05em; flex-shrink: 0; padding: 0.125rem 0.375rem;
+      border-radius: 3px;
+    }
+    .cmd-task-priority.urgent { background: rgba(248,113,113,0.15); color: #f87171; }
+    .cmd-task-priority.high { background: rgba(251,191,36,0.15); color: #fbbf24; }
+    .cmd-task-priority.medium { background: rgba(129,140,248,0.1); color: #818cf8; }
+    .cmd-task-priority.low { background: rgba(255,255,255,0.05); color: rgba(255,255,255,0.3); }
+    .cmd-task-delete { color: rgba(255,255,255,0.1); cursor: pointer; font-size: 0.75rem; flex-shrink: 0; transition: color 0.2s; background: none; border: none; font-family: inherit; }
+    .cmd-task-delete:hover { color: #f87171; }
+
+    /* Team member rows */
+    .cmd-team-row {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      padding: 0.625rem 0;
+      border-bottom: 1px solid rgba(255,255,255,0.03);
+    }
+    .cmd-team-row:last-child { border-bottom: none; }
+    .cmd-team-avatar {
+      width: 28px; height: 28px; border-radius: 50%;
+      background: rgba(129,140,248,0.15);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 0.625rem; font-weight: 800; color: #818cf8;
+      flex-shrink: 0; overflow: hidden;
+    }
+    .cmd-team-avatar img { width: 100%; height: 100%; object-fit: cover; }
+    .cmd-team-name { font-size: 0.75rem; font-weight: 600; color: rgba(255,255,255,0.7); }
+    .cmd-team-role { font-size: 0.5625rem; color: rgba(255,255,255,0.25); }
+    .cmd-team-tasks { font-size: 0.5625rem; color: #818cf8; margin-left: auto; flex-shrink: 0; }
 
     /* Feed stagger */
     .cmd-feed-item:nth-child(1) { animation-delay: 0s; }
@@ -2001,7 +2056,42 @@
         </div>
       </div>
 
-      <!-- Row 4: Product Performance + Funnel + Status -->
+      <!-- Row 4: Tasks + Team -->
+      <div class="cmd-two-col" style="margin-bottom: 1rem;">
+        <!-- Upcoming Tasks -->
+        <div class="cmd-panel" style="padding: 1rem; position: relative; z-index: 1;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
+            <div class="cmd-panel-label" style="margin-bottom: 0;">Tasks</div>
+            <button onclick="document.getElementById('cmdTaskInput').style.display='flex'; document.getElementById('cmdTaskTitle').focus();" style="background: none; border: 1px solid rgba(255,255,255,0.08); color: rgba(255,255,255,0.4); border-radius: 6px; padding: 0.25rem 0.5rem; font-size: 0.5625rem; font-family: 'JetBrains Mono', monospace; cursor: pointer;">+ Add</button>
+          </div>
+          <!-- Add task inline -->
+          <div id="cmdTaskInput" style="display: none; gap: 0.375rem; margin-bottom: 0.5rem; flex-wrap: wrap;">
+            <input type="text" id="cmdTaskTitle" placeholder="Task title..." style="flex: 1; min-width: 120px; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.1); border-radius: 6px; color: #fff; font-family: 'JetBrains Mono', monospace; font-size: 0.625rem; padding: 0.375rem 0.5rem; outline: none;" onkeydown="if(event.key==='Enter')cmdAddTask();" />
+            <select id="cmdTaskAssignee" style="background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); border-radius: 6px; color: rgba(255,255,255,0.6); font-family: 'JetBrains Mono', monospace; font-size: 0.5625rem; padding: 0.375rem; outline: none;">
+              <option value="">Unassigned</option>
+              {% for tm in team_members %}
+              <option value="{{ tm.user.id }}">{{ tm.display_name }}</option>
+              {% endfor %}
+            </select>
+            <select id="cmdTaskPriority" style="background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); border-radius: 6px; color: rgba(255,255,255,0.6); font-family: 'JetBrains Mono', monospace; font-size: 0.5625rem; padding: 0.375rem; outline: none;">
+              <option value="low">Low</option>
+              <option value="medium" selected>Medium</option>
+              <option value="high">High</option>
+              <option value="urgent">Urgent</option>
+            </select>
+            <button onclick="cmdAddTask()" style="background: #667eea; border: none; color: #fff; border-radius: 6px; padding: 0.375rem 0.625rem; font-size: 0.5625rem; font-family: 'JetBrains Mono', monospace; cursor: pointer;">Add</button>
+          </div>
+          <div id="cmdTaskList"></div>
+        </div>
+
+        <!-- Team -->
+        <div class="cmd-panel" style="padding: 1rem; position: relative; z-index: 1;">
+          <div class="cmd-panel-label">Team</div>
+          <div id="cmdTeam" style="margin-top: 0.5rem;"></div>
+        </div>
+      </div>
+
+      <!-- Row 5: Product Performance + Funnel + Status -->
       <div class="cmd-three-col" style="margin-bottom: 1rem;">
         <!-- Product Performance -->
         <div class="cmd-panel" style="padding: 1rem; position: relative; z-index: 1;">
@@ -2833,6 +2923,113 @@
           else el.textContent = Math.floor(diff / 86400) + 'd ago';
         });
       }, 30000);
+    })();
+
+    // ========== TASKS ==========
+    (function() {
+      var tasks = {{ tasks_json|safe }};
+      var csrfToken = '{{ csrf_token }}';
+      var container = document.getElementById('cmdTaskList');
+      if (!container) return;
+
+      function renderTasks() {
+        if (!tasks.length) {
+          container.innerHTML = '<div style="text-align: center; padding: 1rem; color: rgba(255,255,255,0.15); font-size: 0.6875rem;">No tasks yet</div>';
+          return;
+        }
+        container.innerHTML = tasks.map(function(t) {
+          return '<div class="cmd-task-row">'
+            + '<button class="cmd-task-check' + (t.status === 'done' ? ' done' : '') + '" onclick="cmdToggleTask(' + t.id + ')">' + (t.status === 'done' ? '✓' : '') + '</button>'
+            + '<span class="cmd-task-title" style="' + (t.status === 'done' ? 'text-decoration: line-through; opacity: 0.4;' : '') + '">' + t.title + '</span>'
+            + (t.assignee ? '<span class="cmd-task-assignee">' + t.assignee + '</span>' : '')
+            + '<span class="cmd-task-priority ' + t.priority + '">' + t.priority + '</span>'
+            + (t.due_date ? '<span style="font-size: 0.5rem; color: rgba(255,255,255,0.2);">' + t.due_date + '</span>' : '')
+            + '<button class="cmd-task-delete" onclick="cmdDeleteTask(' + t.id + ')">×</button>'
+            + '</div>';
+        }).join('');
+      }
+      renderTasks();
+
+      window.cmdAddTask = function() {
+        var title = document.getElementById('cmdTaskTitle').value.trim();
+        if (!title) return;
+        var body = new URLSearchParams();
+        body.append('action', 'task_add');
+        body.append('title', title);
+        body.append('assigned_to', document.getElementById('cmdTaskAssignee').value);
+        body.append('priority', document.getElementById('cmdTaskPriority').value);
+        fetch(window.location.pathname, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/x-www-form-urlencoded', 'X-CSRFToken': csrfToken },
+          body: body.toString()
+        }).then(function(r) { return r.json(); }).then(function(d) {
+          if (d.success) {
+            var assigneeSelect = document.getElementById('cmdTaskAssignee');
+            var assigneeName = assigneeSelect.options[assigneeSelect.selectedIndex].text;
+            tasks.unshift({
+              id: d.id, title: title, status: 'todo',
+              priority: document.getElementById('cmdTaskPriority').value,
+              assignee: assigneeSelect.value ? assigneeName : null,
+            });
+            renderTasks();
+            document.getElementById('cmdTaskTitle').value = '';
+          }
+        });
+      };
+
+      window.cmdToggleTask = function(id) {
+        var task = tasks.find(function(t) { return t.id === id; });
+        if (!task) return;
+        var newStatus = task.status === 'done' ? 'todo' : 'done';
+        var body = new URLSearchParams();
+        body.append('action', 'task_update');
+        body.append('task_id', id);
+        body.append('status', newStatus);
+        fetch(window.location.pathname, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/x-www-form-urlencoded', 'X-CSRFToken': csrfToken },
+          body: body.toString()
+        }).then(function(r) { return r.json(); }).then(function(d) {
+          if (d.success) { task.status = newStatus; renderTasks(); }
+        });
+      };
+
+      window.cmdDeleteTask = function(id) {
+        var body = new URLSearchParams();
+        body.append('action', 'task_delete');
+        body.append('task_id', id);
+        fetch(window.location.pathname, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/x-www-form-urlencoded', 'X-CSRFToken': csrfToken },
+          body: body.toString()
+        }).then(function(r) { return r.json(); }).then(function(d) {
+          if (d.success) {
+            tasks = tasks.filter(function(t) { return t.id !== id; });
+            renderTasks();
+          }
+        });
+      };
+    })();
+
+    // ========== TEAM ==========
+    (function() {
+      var team = {{ team_json|safe }};
+      var container = document.getElementById('cmdTeam');
+      if (!container || !team.length) return;
+      container.innerHTML = team.map(function(m) {
+        var initials = m.name.split(' ').map(function(w) { return w[0]; }).join('').toUpperCase();
+        var avatarContent = m.avatar
+          ? '<img src="' + m.avatar + '" alt="' + m.name + '">'
+          : initials;
+        return '<div class="cmd-team-row">'
+          + '<div class="cmd-team-avatar">' + avatarContent + '</div>'
+          + '<div>'
+          + '<div class="cmd-team-name">' + m.name + '</div>'
+          + '<div class="cmd-team-role">' + m.role + '</div>'
+          + '</div>'
+          + (m.tasks > 0 ? '<span class="cmd-team-tasks">' + m.tasks + ' task' + (m.tasks > 1 ? 's' : '') + '</span>' : '<span class="cmd-team-tasks" style="color: rgba(255,255,255,0.1);">No tasks</span>')
+          + '</div>';
+      }).join('');
     })();
 
     // ========== QUICK NOTES ==========

@@ -186,6 +186,66 @@ class QuickMessage(models.Model):
         return round((self.sent_count / self.recipient_count) * 100, 1)
 
 
+class TeamMember(models.Model):
+    """Team members visible on the admin dashboard."""
+    ROLES = [
+        ("founder", "Founder"),
+        ("cofounder", "Co-Founder"),
+        ("designer", "Designer"),
+        ("developer", "Developer"),
+        ("marketing", "Marketing"),
+        ("operations", "Operations"),
+        ("other", "Other"),
+    ]
+
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name="team_profile")
+    display_name = models.CharField(max_length=100)
+    role = models.CharField(max_length=20, choices=ROLES, default="other")
+    avatar = models.ImageField(upload_to="team/avatars/", blank=True, null=True)
+    is_active = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["display_name"]
+
+    def __str__(self):
+        return self.display_name
+
+
+class Task(models.Model):
+    """Tasks for team management on the admin dashboard."""
+    STATUS_CHOICES = [
+        ("todo", "To Do"),
+        ("in_progress", "In Progress"),
+        ("done", "Done"),
+    ]
+    PRIORITY_CHOICES = [
+        ("low", "Low"),
+        ("medium", "Medium"),
+        ("high", "High"),
+        ("urgent", "Urgent"),
+    ]
+
+    title = models.CharField(max_length=300)
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default="todo")
+    priority = models.CharField(max_length=20, choices=PRIORITY_CHOICES, default="medium")
+    assigned_to = models.ForeignKey(
+        User, null=True, blank=True, on_delete=models.SET_NULL, related_name="assigned_tasks"
+    )
+    created_by = models.ForeignKey(
+        User, null=True, blank=True, on_delete=models.SET_NULL, related_name="created_tasks"
+    )
+    due_date = models.DateField(null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    completed_at = models.DateTimeField(null=True, blank=True)
+
+    class Meta:
+        ordering = ["-created_at"]
+
+    def __str__(self):
+        return self.title
+
+
 class CalendarEvent(models.Model):
     """Custom calendar events for the admin dashboard."""
     EVENT_TYPES = [

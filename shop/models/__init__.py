@@ -5,7 +5,7 @@ from .cart import *
 from .connection_log import ConnectionLog
 from .email import *
 from .finance import Expense, ExpenseCategory, Revenue
-from .messaging import CalendarEvent, ContactMessage, MessageFolder, QuickMessage
+from .messaging import CalendarEvent, ContactMessage, MessageFolder, QuickMessage, Task, TeamMember
 from .product import *
 from .profile import SavedAddress, UserProfile
 from .reporting import ScheduledReport, ScheduledReportLog
