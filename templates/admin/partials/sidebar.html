@@ -205,9 +205,12 @@
   </div>
 </nav>
 
+<!-- Mobile Overlay -->
+<div class="mobile-overlay" id="mobileOverlay" onclick="toggleMobileSidebar()"></div>
+
 <!-- Mobile Menu Button -->
-<button class="mobile-menu-btn" onclick="toggleMobileSidebar()">
-  <i class="fa-solid fa-bars"></i>
+<button class="mobile-menu-btn" id="mobileMenuBtn" onclick="toggleMobileSidebar()">
+  <i class="fa-solid fa-bars" id="mobileMenuIcon"></i>
 </button>
 
 <script>
@@ -292,12 +295,17 @@
       return;
     }
 
-    // Close other sections, toggle this one
+    // Toggle this section — close others simultaneously
     var wasExpanded = section.classList.contains('expanded');
-    document.querySelectorAll('.sidebar-section').forEach(function(s) {
-      s.classList.remove('expanded');
-    });
-    if (!wasExpanded) section.classList.add('expanded');
+    if (!wasExpanded) {
+      // Open this one first, then close others (no visible gap)
+      section.classList.add('expanded');
+      document.querySelectorAll('.sidebar-section').forEach(function(s) {
+        if (s !== section) s.classList.remove('expanded');
+      });
+    } else {
+      section.classList.remove('expanded');
+    }
 
     // Save section states to localStorage
     const sectionStates = {};
@@ -310,9 +318,16 @@
   // Toggle mobile sidebar
   window.toggleMobileSidebar = function() {
     const sidebar = document.getElementById('adminSidebar');
+    const overlay = document.getElementById('mobileOverlay');
+    const icon = document.getElementById('mobileMenuIcon');
     if (!sidebar) return;
 
+    var isOpen = sidebar.classList.contains('mobile-open');
     sidebar.classList.toggle('mobile-open');
+    if (overlay) overlay.classList.toggle('visible');
+    if (icon) {
+      icon.className = isOpen ? 'fa-solid fa-bars' : 'fa-solid fa-xmark';
+    }
   };
 
   // Highlight current page in sidebar
@@ -385,21 +400,9 @@
     item.addEventListener('click', function() {
       var sidebar = document.getElementById('adminSidebar');
       if (sidebar && sidebar.classList.contains('mobile-open')) {
-        sidebar.classList.remove('mobile-open');
+        toggleMobileSidebar();
       }
     });
-  });
-
-  // Close mobile sidebar when clicking outside
-  document.addEventListener('click', function(e) {
-    const sidebar = document.getElementById('adminSidebar');
-    const mobileBtn = document.querySelector('.mobile-menu-btn');
-
-    if (sidebar && sidebar.classList.contains('mobile-open')) {
-      if (!sidebar.contains(e.target) && !mobileBtn.contains(e.target)) {
-        sidebar.classList.remove('mobile-open');
-      }
-    }
   });
 
   // Initialize on DOM ready

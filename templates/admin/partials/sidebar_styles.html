@@ -339,10 +339,28 @@ body.cmd-mode .sidebar-item:hover {
 @media (max-width: 1024px) {
   .admin-sidebar {
     transform: translateX(-100%);
+    width: 260px;
+  }
+
+  .admin-sidebar.collapsed {
+    width: 260px;
   }
 
   .admin-sidebar.mobile-open {
     transform: translateX(0);
+    box-shadow: 4px 0 40px rgba(0,0,0,0.5);
+  }
+
+  /* Dark overlay behind sidebar */
+  .mobile-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.5);
+    z-index: 999;
+  }
+  .mobile-overlay.visible {
+    display: block;
   }
 
   body.has-sidebar .nav-links,
@@ -357,31 +375,46 @@ body.cmd-mode .sidebar-item:hover {
     margin-left: 0;
   }
 
+  /* Always show collapsed items text on mobile when open */
+  .admin-sidebar.mobile-open .sidebar-section-text,
+  .admin-sidebar.mobile-open .sidebar-brand-text,
+  .admin-sidebar.mobile-open .sidebar-home-text {
+    opacity: 1 !important;
+    width: auto !important;
+  }
+
   .mobile-menu-btn {
     display: flex !important;
   }
 }
 
-/* Mobile menu button (hidden by default) */
+/* Mobile menu button */
 .mobile-menu-btn {
   display: none;
   position: fixed;
-  top: 1rem;
-  left: 1rem;
-  z-index: 999;
-  width: 40px;
-  height: 40px;
-  background: linear-gradient(135deg, var(--sidebar-gradient-start) 0%, var(--sidebar-gradient-end) 100%);
-  border: none;
-  border-radius: 10px;
+  top: 0.75rem;
+  left: 0.75rem;
+  z-index: 998;
+  width: 36px;
+  height: 36px;
+  background: rgba(0,0,0,0.6);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 8px;
   color: white;
   cursor: pointer;
   align-items: center;
   justify-content: center;
-  font-size: 1.125rem;
-  box-shadow: 0 4px 12px var(--sidebar-shadow-color);
+  font-size: 0.875rem;
+  transition: all 0.2s;
+}
+
+body.cmd-mode .mobile-menu-btn {
+  background: rgba(15,15,26,0.8);
+  border-color: rgba(255,255,255,0.06);
 }
 
 .mobile-menu-btn:hover {
-  transform: scale(1.05);
+  background: rgba(0,0,0,0.8);
 }
