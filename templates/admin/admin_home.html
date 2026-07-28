@@ -2897,12 +2897,12 @@
       var el = document.getElementById('cmdProductPerf');
       if (!el || !data.length) { if (el) el.innerHTML = '<div style="color: rgba(255,255,255,0.15); font-size: 0.6875rem; text-align: center; padding: 1rem;">No products</div>'; return; }
       // Header
-      var html = '<div style="display: grid; grid-template-columns: 2fr 0.7fr 0.7fr 0.7fr 0.7fr; gap: 0.375rem; font-size: 0.5rem; color: rgba(255,255,255,0.2); text-transform: uppercase; letter-spacing: 0.1em; padding-bottom: 0.375rem; border-bottom: 1px solid rgba(255,255,255,0.04);">'
+      var html = '<div style="display: grid; grid-template-columns: 2fr 0.7fr 0.7fr 0.7fr 0.7fr; gap: 0.5rem; font-size: 0.5625rem; color: rgba(255,255,255,0.2); text-transform: uppercase; letter-spacing: 0.1em; padding-bottom: 0.5rem; border-bottom: 1px solid rgba(255,255,255,0.04);">'
         + '<span>Product</span><span style="text-align: right;">Sold</span><span style="text-align: right;">Stock</span><span style="text-align: right;">Margin</span><span style="text-align: right;">/Week</span></div>';
       data.forEach(function(p) {
         var stockColor = p.stock === 0 ? '#f87171' : p.stock <= 10 ? '#fbbf24' : 'rgba(255,255,255,0.4)';
         var marginColor = p.margin >= 50 ? '#34d399' : p.margin >= 30 ? '#fbbf24' : '#f87171';
-        html += '<div style="display: grid; grid-template-columns: 2fr 0.7fr 0.7fr 0.7fr 0.7fr; gap: 0.375rem; padding: 0.375rem 0; border-bottom: 1px solid rgba(255,255,255,0.02); font-size: 0.625rem; align-items: center;">'
+        html += '<div style="display: grid; grid-template-columns: 2fr 0.7fr 0.7fr 0.7fr 0.7fr; gap: 0.5rem; padding: 0.5rem 0; border-bottom: 1px solid rgba(255,255,255,0.02); font-size: 0.75rem; align-items: center;">'
           + '<span style="color: rgba(255,255,255,0.6); overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">' + p.name + '</span>'
           + '<span style="text-align: right; color: #fff; font-weight: 700;">' + p.sold + '</span>'
           + '<span style="text-align: right; color: ' + stockColor + ';">' + p.stock + '</span>'
