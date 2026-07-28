@@ -58,6 +58,13 @@ def subscribe(request):
                 if created:
                     logger.info(f"New email subscription: {sub.email}")
                     messages.success(request, "Thank you for subscribing!")
+
+                    # Trigger automatic welcome email (if configured)
+                    try:
+                        from shop.utils.email_helper import trigger_auto_send
+                        trigger_auto_send("on_subscribe", sub)
+                    except Exception as e:
+                        logger.error(f"Auto-send on_subscribe failed: {e}")
                 else:
                     if sub.is_active:
                         logger.info(f"Existing subscription attempt: {sub.email}")
@@ -71,16 +78,6 @@ def subscribe(request):
                         messages.success(
                             request, "Welcome back! You're now resubscribed."
                         )
-
-                # TODO: Send confirmation email when ready
-                # full_message = f"Thank you for subscribing to Blueprint Apparel!"
-                # send_mail(
-                #     subject='Welcome to Blueprint Apparel',
-                #     message=full_message,
-                #     from_email=settings.DEFAULT_FROM_EMAIL,
-                #     recipient_list=[sub.email],
-                #     fail_silently=False
-                # )
 
                 return redirect(redirect_url)
 
