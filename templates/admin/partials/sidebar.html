@@ -272,13 +272,26 @@
   // Toggle section expanded state
   window.toggleSidebarSection = function(sectionName) {
     const sidebar = document.getElementById('adminSidebar');
-    if (sidebar && sidebar.classList.contains('collapsed')) {
-      // If sidebar is collapsed, expand it first
-      toggleSidebar();
-    }
-
     const section = document.querySelector(`.sidebar-section[data-section="${sectionName}"]`);
     if (!section) return;
+
+    if (sidebar && sidebar.classList.contains('collapsed')) {
+      // Expand sidebar and open this section
+      toggleSidebar();
+      // Close all sections first, then open the clicked one after sidebar expands
+      setTimeout(function() {
+        document.querySelectorAll('.sidebar-section').forEach(function(s) {
+          if (s.dataset.section !== sectionName) s.classList.remove('expanded');
+        });
+        section.classList.add('expanded');
+        // Save
+        const states = JSON.parse(localStorage.getItem(SIDEBAR_SECTIONS_KEY) || '{}');
+        Object.keys(states).forEach(function(k) { states[k] = false; });
+        states[sectionName] = true;
+        localStorage.setItem(SIDEBAR_SECTIONS_KEY, JSON.stringify(states));
+      }, 50);
+      return;
+    }
 
     section.classList.toggle('expanded');
 
