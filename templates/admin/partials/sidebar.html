@@ -1,11 +1,9 @@
 <!-- Admin Sidebar Navigation -->
 <nav class="admin-sidebar" id="adminSidebar">
-  <!-- Brand/Logo - tap to collapse/expand, double-click to go home -->
-  <div class="sidebar-header" onclick="toggleSidebar()" ondblclick="window.location.href='{% url 'admin_home' %}'" style="cursor: pointer;" title="Tap to collapse, double-tap for home">
-    <div class="sidebar-brand">
-      <div class="sidebar-brand-icon">BP</div>
-      <span class="sidebar-brand-text">Blueprint Admin</span>
-    </div>
+  <!-- Brand/Logo - icon goes home, rest toggles collapse -->
+  <div class="sidebar-header" onclick="toggleSidebar()" style="cursor: pointer;" title="Toggle sidebar">
+    <a href="{% url 'admin_home' %}" class="sidebar-brand-icon" onclick="event.stopPropagation();" title="Dashboard" style="text-decoration: none; color: #fff;">BP</a>
+    <span class="sidebar-brand-text">Blueprint Admin</span>
   </div>
 
   <!-- Navigation -->
