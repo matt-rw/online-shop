@@ -152,14 +152,23 @@ def team_dashboard(request):
         project__status="archived"
     ).select_related("assigned_to", "created_by", "project")
 
+    # Build a user_id -> team_member_id lookup
+    user_to_team = {m.user_id: m.id for m in team_members}
+
     tasks_data = []
     for t in tasks:
+        assignee_name = ""
+        assignee_team_id = None
+        if t.assigned_to:
+            assignee_name = t.assigned_to.get_full_name() or t.assigned_to.username
+            assignee_team_id = user_to_team.get(t.assigned_to_id)
         tasks_data.append({
             "id": t.id,
             "title": t.title,
             "status": t.status,
             "priority": t.priority,
-            "assignee": t.assigned_to.get_full_name() or t.assigned_to.username if t.assigned_to else "",
+            "assignee": assignee_name,
+            "assigned_to": assignee_team_id,
             "due_date": t.due_date.isoformat() if t.due_date else None,
             "project_id": t.project_id,
             "created_by": t.created_by.get_full_name() or t.created_by.username if t.created_by else "",

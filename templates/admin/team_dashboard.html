@@ -715,7 +715,6 @@
     function renderTeam() {
       const container = document.getElementById('team-cards');
       container.innerHTML = '';
-      const strip = container.parentElement;
 
       team.forEach(member => {
         const openCount = tasks.filter(t => t.assigned_to === member.id && t.status !== 'done').length;
@@ -725,8 +724,8 @@
         card.setAttribute('data-filter-user', member.id);
         card.onclick = () => filterByUser(member.id);
 
-        const avatarHtml = member.avatar
-          ? `<img src="${member.avatar}" alt="${member.name}">`
+        const avatarHtml = member.avatar_url
+          ? `<img src="${member.avatar_url}" alt="${member.name}">`
           : getInitials(member.name);
 
         card.innerHTML = `
@@ -739,7 +738,7 @@
           </div>
           ${openCount > 0 ? `<span class="team-badge">${openCount}</span>` : ''}
         `;
-        strip.appendChild(card);
+        container.appendChild(card);
       });
 
       // Update "All" button state
