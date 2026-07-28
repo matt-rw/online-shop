@@ -7,7 +7,8 @@ from decimal import Decimal
 
 from django.contrib.admin.views.decorators import staff_member_required
 from django.contrib.auth import get_user_model
-from django.db.models import Avg, Sum
+from django.db import models
+from django.db.models import Avg, Count, F, Sum
 from django.http import JsonResponse
 from django.shortcuts import render
 from django.utils import timezone
@@ -412,7 +413,6 @@ def admin_home(request):
     next_month = (month_start + timedelta(days=32)).replace(day=1)
 
     # Orders per day this month
-    from django.db.models import Count
     from django.db.models.functions import TruncDate
     orders_by_day = dict(
         Order.objects.filter(created_at__gte=month_start, created_at__lt=next_month)
@@ -461,9 +461,10 @@ def admin_home(request):
         if events:
             calendar_data["days"][str(day_num)] = events
 
-    # Revenue chart data — last 7 days
+    # Revenue chart data — last 7 days + previous week for comparison
     import json as json_mod
     revenue_chart = []
+    prev_week_chart = []
     for i in range(6, -1, -1):
         day_start = (now - timedelta(days=i)).replace(hour=0, minute=0, second=0, microsecond=0)
         day_end = day_start + timedelta(days=1)
@@ -474,8 +475,64 @@ def admin_home(request):
             "label": day_start.strftime("%a"),
             "value": float(day_rev),
         })
+        # Previous week same day
+        prev_start = day_start - timedelta(days=7)
+        prev_end = prev_start + timedelta(days=1)
+        prev_rev = Order.objects.filter(
+            created_at__gte=prev_start, created_at__lt=prev_end
+        ).aggregate(total=Sum("total"))["total"] or Decimal("0")
+        prev_week_chart.append(float(prev_rev))
 
-    # Activity feed — recent events (orders, signups, messages)
+    # Top selling products
+    from shop.models.cart import OrderItem
+    top_products = list(
+        OrderItem.objects.filter(variant__isnull=False).values(
+            name=F('variant__product__name')
+        ).annotate(
+            units=Sum('quantity')
+        ).order_by('-units')[:5]
+    )
+
+    # Subscriber sparkline — last 7 days
+    sub_sparkline = []
+    for i in range(6, -1, -1):
+        day_start = (now - timedelta(days=i)).replace(hour=0, minute=0, second=0, microsecond=0)
+        day_end = day_start + timedelta(days=1)
+        count = EmailSubscription.objects.filter(
+            subscribed_at__gte=day_start, subscribed_at__lt=day_end
+        ).count()
+        sub_sparkline.append(count)
+
+    # Conversion funnel
+    from shop.models.cart import Cart
+    funnel_visitors = VisitorSession.objects.filter(last_seen__gte=last_30d).count() or 1
+    funnel_carts = Cart.objects.filter(created_at__gte=last_30d).count()
+    funnel_orders = orders_30d
+    funnel_data = {
+        "visitors": funnel_visitors,
+        "carts": funnel_carts,
+        "cart_rate": round(funnel_carts / funnel_visitors * 100, 1) if funnel_visitors else 0,
+        "orders": funnel_orders,
+        "order_rate": round(funnel_orders / funnel_visitors * 100, 1) if funnel_visitors else 0,
+    }
+
+    # Last order time
+    last_order = Order.objects.order_by('-created_at').first()
+    last_order_time = last_order.created_at.isoformat() if last_order else None
+
+    # Calendar revenue heatmap data
+    cal_rev_by_day = {}
+    max_day_rev = Decimal("0")
+    for day_num in range(1, cal_days_in_month + 1):
+        day_date = month_start.replace(day=day_num).date()
+        r = rev_by_day.get(day_date, Decimal("0"))
+        cal_rev_by_day[str(day_num)] = float(r)
+        if r > max_day_rev:
+            max_day_rev = r
+    calendar_data["revenue"] = cal_rev_by_day
+    calendar_data["maxRevenue"] = float(max_day_rev)
+
+    # Activity feed — recent events (orders, signups, messages, page views)
     activity_feed = []
     for order in Order.objects.order_by('-created_at')[:8]:
         activity_feed.append({
@@ -495,14 +552,20 @@ def admin_home(request):
             "text": f"Message from {msg.name}: {msg.subject[:40]}",
             "time": msg.created_at.isoformat(),
         })
+    for pv in PageView.objects.filter(viewed_at__gte=last_24h).exclude(path__startswith="/bp-manage").order_by('-viewed_at')[:5]:
+        activity_feed.append({
+            "type": "view",
+            "text": f"Page view: {pv.path}",
+            "time": pv.viewed_at.isoformat(),
+        })
     activity_feed.sort(key=lambda x: x["time"], reverse=True)
-    activity_feed = activity_feed[:12]
+    activity_feed = activity_feed[:15]
 
-    # Visitor locations — top countries/cities from recent sessions
+    # Visitor locations — top countries/cities with counts
     visitor_locations = list(
         VisitorSession.objects.filter(
             country__isnull=False
-        ).exclude(country="").values('country', 'city').order_by('-last_seen')[:20]
+        ).exclude(country="").values('country', 'country_name', 'city').order_by('-last_seen')[:30]
     )
 
     drafts = QuickMessage.objects.filter(status="draft").order_by("-updated_at")[:5]
@@ -523,9 +586,14 @@ def admin_home(request):
         "cst_time": timezone.now().astimezone(pytz.timezone("America/Chicago")),
         "recent_orders": recent_orders,
         "revenue_chart_json": json_mod.dumps(revenue_chart),
+        "prev_week_chart_json": json_mod.dumps(prev_week_chart),
         "activity_feed_json": json_mod.dumps(activity_feed),
         "visitor_locations_json": json_mod.dumps(visitor_locations),
         "calendar_json": json_mod.dumps(calendar_data),
+        "top_products_json": json_mod.dumps(top_products),
+        "sub_sparkline_json": json_mod.dumps(sub_sparkline),
+        "funnel_json": json_mod.dumps(funnel_data),
+        "last_order_time": last_order_time,
         "drafts": drafts,
         "load_draft": load_draft,
         "default_test_email": site_settings.default_test_email,

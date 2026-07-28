@@ -70,30 +70,22 @@
 }
 
 .sidebar-brand-icon {
-  width: 28px;
-  height: 28px;
-  background: rgba(255, 255, 255, 0.2);
-  border-radius: 8px;
+  width: 34px;
+  height: 34px;
+  background: linear-gradient(135deg, rgba(255,255,255,0.15) 0%, rgba(255,255,255,0.05) 100%);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 10px;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 1.125rem;
-  flex-shrink: 0;
-  font-weight: 700;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-}
-.admin-sidebar.collapsed .sidebar-brand-icon {
-  width: 34px;
-  height: 34px;
-  border-radius: 10px;
   font-size: 0.8125rem;
+  flex-shrink: 0;
   font-weight: 800;
   letter-spacing: -0.02em;
-  background: linear-gradient(135deg, rgba(255,255,255,0.15) 0%, rgba(255,255,255,0.05) 100%);
-  border: 1px solid rgba(255,255,255,0.1);
   box-shadow: 0 2px 8px rgba(0,0,0,0.15), inset 0 1px 0 rgba(255,255,255,0.1);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
-body.cmd-mode .admin-sidebar.collapsed .sidebar-brand-icon {
+body.cmd-mode .sidebar-brand-icon {
   background: linear-gradient(135deg, rgba(129,140,248,0.15) 0%, rgba(102,126,234,0.05) 100%);
   border-color: rgba(129,140,248,0.15);
   box-shadow: 0 2px 12px rgba(129,140,248,0.1), 0 0 20px rgba(129,140,248,0.05), inset 0 1px 0 rgba(255,255,255,0.06);
