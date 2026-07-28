@@ -292,11 +292,18 @@
       return;
     }
 
-    section.classList.toggle('expanded');
+    // Close other sections, toggle this one
+    var wasExpanded = section.classList.contains('expanded');
+    document.querySelectorAll('.sidebar-section').forEach(function(s) {
+      s.classList.remove('expanded');
+    });
+    if (!wasExpanded) section.classList.add('expanded');
 
     // Save section states to localStorage
-    const sectionStates = JSON.parse(localStorage.getItem(SIDEBAR_SECTIONS_KEY) || '{}');
-    sectionStates[sectionName] = section.classList.contains('expanded');
+    const sectionStates = {};
+    document.querySelectorAll('.sidebar-section').forEach(function(s) {
+      sectionStates[s.dataset.section] = s.classList.contains('expanded');
+    });
     localStorage.setItem(SIDEBAR_SECTIONS_KEY, JSON.stringify(sectionStates));
   };
 
