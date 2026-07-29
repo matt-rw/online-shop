@@ -410,44 +410,9 @@
     /* Start Count Panel */
     .start-count-panel {
       text-align: center;
-      padding: 3rem 2rem;
       background: #f8fafc;
       border-radius: 12px;
       border: 2px dashed #e2e8f0;
-    }
-
-    .start-count-panel i {
-      font-size: 3rem;
-      color: #cbd5e1;
-      margin-bottom: 1rem;
-    }
-
-    .start-count-panel p {
-      color: #64748b;
-      font-size: 0.9375rem;
-      margin-bottom: 1.5rem;
-    }
-
-    .start-count-input {
-      display: inline-flex;
-      gap: 0.75rem;
-      align-items: center;
-      margin-top: 0.5rem;
-    }
-
-    .start-count-input input {
-      padding: 0.625rem 1rem;
-      border: 1px solid #e2e8f0;
-      border-radius: 8px;
-      font-size: 0.875rem;
-      font-family: 'Inter', sans-serif;
-      width: 260px;
-    }
-
-    .start-count-input input:focus {
-      outline: none;
-      border-color: #667eea;
-      box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
     }
 
     /* Completed Counts */
@@ -703,15 +668,11 @@
 
       {% else %}
       <!-- No Active Count -->
-      <div class="start-count-panel" id="startCountPanel">
-        <i class="fa-solid fa-clipboard-list"></i>
-        <p>No active stock count. Start a new count to reconcile your physical inventory.</p>
-        <div class="start-count-input">
-          <input type="text" id="newCountName" placeholder="Count name, e.g. July 2026 Full Count">
-          <button class="btn btn-purple" onclick="startNewCount()">
-            <i class="fa-solid fa-play"></i> Start New Count
-          </button>
-        </div>
+      <div class="start-count-panel" id="startCountPanel" style="padding: 2rem;">
+        <p style="color: #64748b; font-size: 0.875rem; margin-bottom: 1rem;">No active count. Start one to compare your physical inventory against the system.</p>
+        <button class="btn btn-purple" onclick="startNewCount()" style="padding: 0.625rem 1.5rem; font-size: 0.8125rem;">
+          <i class="fa-solid fa-clipboard-check"></i> Start Stock Count
+        </button>
       </div>
       {% endif %}
 
@@ -1048,12 +1009,8 @@
     }
 
     async function startNewCount() {
-      const name = document.getElementById('newCountName').value.trim();
-      if (!name) {
-        showToast('Please enter a count name', 'error');
-        document.getElementById('newCountName').focus();
-        return;
-      }
+      const now = new Date();
+      const name = 'Stock Count — ' + now.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
 
       const formData = new FormData();
       formData.append('action', 'start_count');
