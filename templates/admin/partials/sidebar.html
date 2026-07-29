@@ -44,6 +44,10 @@
           <span class="sidebar-item-icon"><i class="fa-solid fa-truck"></i></span>
           <span>Shipments</span>
         </a>
+        <a href="{% url 'admin_inventory' %}" class="sidebar-item" data-page="inventory">
+          <span class="sidebar-item-icon"><i class="fa-solid fa-clipboard-check"></i></span>
+          <span>Inventory</span>
+        </a>
       </div>
     </div>
 
@@ -355,6 +359,7 @@
       '/bp-manage/attributes': 'attributes',
       '/bp-manage/promotions': 'promotions',
       '/bp-manage/shipments': 'shipments',
+      '/bp-manage/inventory': 'inventory',
       '/bp-manage/campaigns': 'campaigns',
       '/bp-manage/messages': 'messages',
       '/bp-manage/ab-testing': 'ab_testing',

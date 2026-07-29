@@ -1,0 +1,1181 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Inventory - Blueprint Apparel</title>
+  <link rel="icon" type="image/svg+xml" href="{% static 'admin-favicon.svg' %}">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <style>
+    {% include "admin/partials/sidebar_styles.html" %}
+    {% include "admin/partials/dark_mode_styles.html" %}
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background: #f1f5f9;
+      min-height: 100vh;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
+
+    .top-bar {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      padding: 2rem 0;
+      box-shadow: 0 4px 20px rgba(102, 126, 234, 0.15);
+      margin-bottom: 2rem;
+    }
+
+    .container {
+      max-width: 1600px;
+      margin: 0 auto;
+      padding: 0 2rem;
+    }
+
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1rem;
+    }
+
+    .header h1 {
+      color: white;
+      font-size: 2.5rem;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+    }
+
+    .header-actions {
+      display: flex;
+      gap: 0.75rem;
+    }
+
+    .btn-primary {
+      background: white;
+      color: #667eea;
+      padding: 0.875rem 1.75rem;
+      border-radius: 12px;
+      text-decoration: none;
+      font-weight: 700;
+      font-size: 1rem;
+      transition: all 0.3s;
+      border: none;
+      cursor: pointer;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .btn-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+    }
+
+    .main-content {
+      padding: 0 2rem 2rem 2rem;
+      max-width: 1600px;
+      margin: 0 auto;
+    }
+
+    .content-card {
+      background: white;
+      border: 1px solid #e2e8f0;
+      border-radius: 16px;
+      padding: 2rem;
+      box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
+      margin-bottom: 2rem;
+    }
+
+    .content-card h2 {
+      color: #0f172a;
+      font-size: 1.25rem;
+      font-weight: 600;
+      margin-bottom: 1.5rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .content-card h2 i {
+      color: #667eea;
+    }
+
+    .btn {
+      padding: 0.5rem 1rem;
+      border-radius: 8px;
+      font-size: 0.875rem;
+      font-weight: 500;
+      border: none;
+      cursor: pointer;
+      transition: all 0.2s;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-family: 'Inter', sans-serif;
+    }
+
+    .btn-sm {
+      padding: 0.375rem 0.75rem;
+      font-size: 0.8125rem;
+    }
+
+    .btn-secondary {
+      background: #f1f5f9;
+      color: #64748b;
+      border: 1px solid #e2e8f0;
+    }
+
+    .btn-secondary:hover {
+      background: #e2e8f0;
+    }
+
+    .btn-danger {
+      background: #fee2e2;
+      color: #991b1b;
+      border: 1px solid #fecaca;
+    }
+
+    .btn-danger:hover {
+      background: #fecaca;
+    }
+
+    .btn-success {
+      background: #d1fae5;
+      color: #065f46;
+      border: 1px solid #a7f3d0;
+    }
+
+    .btn-success:hover {
+      background: #a7f3d0;
+    }
+
+    .btn-purple {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      border: none;
+      box-shadow: 0 2px 8px rgba(102, 126, 234, 0.25);
+    }
+
+    .btn-purple:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(102, 126, 234, 0.35);
+    }
+
+    .form-group {
+      margin-bottom: 1.25rem;
+    }
+
+    .form-group label {
+      display: block;
+      font-weight: 600;
+      margin-bottom: 0.375rem;
+      color: #374151;
+      font-size: 0.8125rem;
+    }
+
+    .form-group input,
+    .form-group select,
+    .form-group textarea {
+      width: 100%;
+      padding: 0.625rem 0.875rem;
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+      font-size: 0.875rem;
+      font-family: 'Inter', sans-serif;
+      transition: border-color 0.2s;
+    }
+
+    .form-group input:focus,
+    .form-group select:focus,
+    .form-group textarea:focus {
+      outline: none;
+      border-color: #667eea;
+      box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+    }
+
+    /* Quick Adjust Panel */
+    .quick-adjust-panel {
+      display: none;
+    }
+
+    .quick-adjust-panel.visible {
+      display: block;
+    }
+
+    .variant-search-results {
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+      max-height: 240px;
+      overflow-y: auto;
+      margin-top: 0.5rem;
+      display: none;
+    }
+
+    .variant-search-results.visible {
+      display: block;
+    }
+
+    .variant-result-item {
+      padding: 0.75rem 1rem;
+      cursor: pointer;
+      border-bottom: 1px solid #f1f5f9;
+      transition: background 0.15s;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .variant-result-item:last-child {
+      border-bottom: none;
+    }
+
+    .variant-result-item:hover {
+      background: #f8fafc;
+    }
+
+    .variant-result-item.selected {
+      background: #ede9fe;
+      border-color: #c4b5fd;
+    }
+
+    .variant-result-item .variant-info {
+      flex: 1;
+    }
+
+    .variant-result-item .variant-name {
+      font-weight: 500;
+      color: #0f172a;
+      font-size: 0.875rem;
+    }
+
+    .variant-result-item .variant-detail {
+      font-size: 0.75rem;
+      color: #64748b;
+      margin-top: 0.125rem;
+    }
+
+    .variant-result-item .variant-stock {
+      font-weight: 600;
+      font-size: 0.875rem;
+      color: #667eea;
+      white-space: nowrap;
+      margin-left: 1rem;
+    }
+
+    .selected-variant-card {
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: 10px;
+      padding: 1.25rem;
+      margin-top: 1rem;
+      display: none;
+    }
+
+    .selected-variant-card.visible {
+      display: block;
+    }
+
+    .adjust-form-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1rem;
+      margin-top: 1rem;
+    }
+
+    .diff-display {
+      margin-top: 0.75rem;
+      padding: 0.625rem 1rem;
+      border-radius: 8px;
+      font-weight: 600;
+      font-size: 0.9375rem;
+      text-align: center;
+      display: none;
+    }
+
+    .diff-display.visible {
+      display: block;
+    }
+
+    .diff-display.positive {
+      background: #d1fae5;
+      color: #065f46;
+    }
+
+    .diff-display.negative {
+      background: #fee2e2;
+      color: #991b1b;
+    }
+
+    .diff-display.zero {
+      background: #f1f5f9;
+      color: #64748b;
+    }
+
+    /* Stock Count Table */
+    .count-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.875rem;
+    }
+
+    .count-table th {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      padding: 0.75rem;
+      text-align: left;
+      font-weight: 600;
+      color: white;
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .count-table th:first-child {
+      border-radius: 8px 0 0 0;
+    }
+
+    .count-table th:last-child {
+      border-radius: 0 8px 0 0;
+    }
+
+    .count-table td {
+      padding: 0.75rem;
+      border-bottom: 1px solid #e2e8f0;
+      vertical-align: middle;
+    }
+
+    .count-table tbody tr:hover {
+      background: #f8fafc;
+    }
+
+    .count-table input[type="number"] {
+      width: 80px;
+      padding: 0.375rem 0.5rem;
+      border: 1px solid #e2e8f0;
+      border-radius: 6px;
+      font-size: 0.8125rem;
+      font-family: 'Inter', sans-serif;
+      text-align: center;
+    }
+
+    .count-table input[type="number"]:focus {
+      outline: none;
+      border-color: #667eea;
+      box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+    }
+
+    .diff-cell {
+      font-weight: 600;
+      text-align: center;
+    }
+
+    .diff-cell.positive { color: #059669; }
+    .diff-cell.negative { color: #dc2626; }
+    .diff-cell.zero { color: #94a3b8; }
+
+    .count-meta {
+      display: flex;
+      align-items: center;
+      gap: 1.5rem;
+      margin-bottom: 1.5rem;
+      padding: 1rem;
+      background: #f8fafc;
+      border-radius: 10px;
+      border: 1px solid #e2e8f0;
+    }
+
+    .count-meta-item {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-size: 0.875rem;
+      color: #475569;
+    }
+
+    .count-meta-item i {
+      color: #667eea;
+    }
+
+    .count-meta-item strong {
+      color: #0f172a;
+    }
+
+    /* Start Count Panel */
+    .start-count-panel {
+      text-align: center;
+      padding: 3rem 2rem;
+      background: #f8fafc;
+      border-radius: 12px;
+      border: 2px dashed #e2e8f0;
+    }
+
+    .start-count-panel i {
+      font-size: 3rem;
+      color: #cbd5e1;
+      margin-bottom: 1rem;
+    }
+
+    .start-count-panel p {
+      color: #64748b;
+      font-size: 0.9375rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .start-count-input {
+      display: inline-flex;
+      gap: 0.75rem;
+      align-items: center;
+      margin-top: 0.5rem;
+    }
+
+    .start-count-input input {
+      padding: 0.625rem 1rem;
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+      font-size: 0.875rem;
+      font-family: 'Inter', sans-serif;
+      width: 260px;
+    }
+
+    .start-count-input input:focus {
+      outline: none;
+      border-color: #667eea;
+      box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+    }
+
+    /* Completed Counts */
+    .completed-counts-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.8125rem;
+      margin-top: 1.5rem;
+    }
+
+    .completed-counts-table th {
+      background: #f8fafc;
+      padding: 0.625rem 0.75rem;
+      text-align: left;
+      font-weight: 600;
+      color: #64748b;
+      border-bottom: 2px solid #e2e8f0;
+      font-size: 0.7rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .completed-counts-table td {
+      padding: 0.625rem 0.75rem;
+      border-bottom: 1px solid #f1f5f9;
+      color: #374151;
+    }
+
+    .completed-counts-table tbody tr:hover {
+      background: #f8fafc;
+    }
+
+    /* Audit Log */
+    .audit-table-wrapper {
+      max-height: 600px;
+      overflow-y: auto;
+      border: 1px solid #e2e8f0;
+      border-radius: 10px;
+    }
+
+    .audit-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.8125rem;
+    }
+
+    .audit-table th {
+      background: #f8fafc;
+      padding: 0.625rem 0.75rem;
+      text-align: left;
+      font-weight: 600;
+      color: #64748b;
+      border-bottom: 2px solid #e2e8f0;
+      font-size: 0.7rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      position: sticky;
+      top: 0;
+      z-index: 1;
+    }
+
+    .audit-table td {
+      padding: 0.625rem 0.75rem;
+      border-bottom: 1px solid #f1f5f9;
+      color: #374151;
+    }
+
+    .audit-table tbody tr:hover {
+      background: #f8fafc;
+    }
+
+    .audit-diff {
+      font-weight: 600;
+    }
+
+    .audit-diff.positive { color: #059669; }
+    .audit-diff.negative { color: #dc2626; }
+
+    .sku-badge {
+      background: #f1f5f9;
+      padding: 0.25rem 0.5rem;
+      border-radius: 4px;
+      font-size: 0.75rem;
+      font-family: monospace;
+      color: #475569;
+    }
+
+    .save-indicator {
+      font-size: 0.75rem;
+      margin-left: 0.5rem;
+      opacity: 0;
+      transition: opacity 0.3s;
+    }
+
+    .save-indicator.visible {
+      opacity: 1;
+    }
+
+    @keyframes fadeOut {
+      from { opacity: 1; }
+      to { opacity: 0; }
+    }
+  </style>
+  {% include "admin/partials/dark_mode_apply.html" %}
+</head>
+<body>
+  {% include "admin/partials/sidebar.html" %}
+
+  <div class="top-bar">
+    <div class="container">
+      <div class="header">
+        <h1>Inventory Management</h1>
+        <div class="header-actions">
+          <button class="btn-primary" onclick="toggleQuickAdjust()"><i class="fa-solid fa-sliders"></i> Quick Adjust</button>
+          <button class="btn-primary" onclick="scrollToCount()"><i class="fa-solid fa-clipboard-check"></i> Start Count</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="main-content">
+
+    <!-- Section 1: Quick Stock Adjustment -->
+    <div class="content-card quick-adjust-panel" id="quickAdjustPanel">
+      <h2><i class="fa-solid fa-sliders"></i> Quick Stock Adjustment</h2>
+
+      <div class="form-group">
+        <label>Search Variant</label>
+        <input type="text" id="variantSearch" placeholder="Search by product name, SKU, or attributes..." oninput="filterVariants(this.value)" autocomplete="off">
+        <div class="variant-search-results" id="variantSearchResults"></div>
+      </div>
+
+      <div class="selected-variant-card" id="selectedVariantCard">
+        <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 1rem;">
+          <div>
+            <div style="font-weight: 600; color: #0f172a; font-size: 1rem;" id="selectedVariantName"></div>
+            <div style="font-size: 0.8125rem; color: #64748b; margin-top: 0.25rem;">
+              <span class="sku-badge" id="selectedVariantSku"></span>
+              <span id="selectedVariantAttrs" style="margin-left: 0.5rem;"></span>
+            </div>
+          </div>
+          <button class="btn btn-sm btn-secondary" onclick="clearSelectedVariant()">
+            <i class="fa-solid fa-times"></i>
+          </button>
+        </div>
+
+        <div style="font-size: 0.8125rem; color: #64748b; margin-bottom: 0.25rem;">Current Stock</div>
+        <div style="font-size: 1.75rem; font-weight: 800; color: #667eea;" id="selectedVariantStock">0</div>
+
+        <div class="adjust-form-row">
+          <div class="form-group" style="margin-bottom: 0;">
+            <label>New Quantity</label>
+            <input type="number" id="adjustNewQty" min="0" placeholder="Enter new stock level" oninput="calculateDiff()">
+          </div>
+          <div class="form-group" style="margin-bottom: 0;">
+            <label>Reason</label>
+            <select id="adjustReason">
+              {% for value, label in adjustment_types %}
+              <option value="{{ value }}">{{ label }}</option>
+              {% endfor %}
+            </select>
+          </div>
+        </div>
+
+        <div class="form-group" style="margin-top: 1rem; margin-bottom: 0;">
+          <label>Notes (optional)</label>
+          <input type="text" id="adjustNotes" placeholder="Additional details...">
+        </div>
+
+        <div class="diff-display" id="adjustDiff"></div>
+
+        <div style="margin-top: 1.25rem; text-align: right;">
+          <button class="btn btn-purple" onclick="applyQuickAdjust()" id="applyAdjustBtn" disabled>
+            <i class="fa-solid fa-check"></i> Apply
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Section 2: Physical Stock Count -->
+    <div class="content-card" id="stockCountSection">
+      <h2><i class="fa-solid fa-clipboard-check"></i> Physical Stock Count</h2>
+
+      {% if active_count %}
+      <!-- Active Count -->
+      <div class="count-meta">
+        <div class="count-meta-item">
+          <i class="fa-solid fa-tag"></i>
+          <span>Count: <strong>{{ active_count.name }}</strong></span>
+        </div>
+        <div class="count-meta-item">
+          <i class="fa-solid fa-user"></i>
+          <span>Started by: <strong>{{ active_count.started_by }}</strong></span>
+        </div>
+        <div class="count-meta-item">
+          <i class="fa-solid fa-calendar"></i>
+          <span>{{ active_count.created_at|date:"M d, Y g:i A" }}</span>
+        </div>
+        <div style="margin-left: auto;">
+          <button class="btn btn-sm btn-danger" onclick="deleteCount({{ active_count.id }})">
+            <i class="fa-solid fa-trash"></i> Delete Count
+          </button>
+        </div>
+      </div>
+
+      <div style="overflow-x: auto;">
+        <table class="count-table">
+          <thead>
+            <tr>
+              <th>Product</th>
+              <th>SKU</th>
+              <th>Attributes</th>
+              <th style="text-align: center;">System Qty</th>
+              <th style="text-align: center;">Physical Qty</th>
+              <th style="text-align: center;">Difference</th>
+              <th style="text-align: center;">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for item in active_count_items %}
+            <tr id="count-row-{{ item.id }}">
+              <td style="font-weight: 500;">{{ item.variant.product.name }}</td>
+              <td><span class="sku-badge">{{ item.variant.sku }}</span></td>
+              <td style="font-size: 0.8125rem; color: #64748b;">
+                {% for attr in item.variant.attributes.all %}
+                  {{ attr.value }}{% if not forloop.last %}, {% endif %}
+                {% endfor %}
+              </td>
+              <td style="text-align: center; font-weight: 600;" id="system-qty-{{ item.id }}">{{ item.system_quantity }}</td>
+              <td style="text-align: center;">
+                <input type="number" id="physical-qty-{{ item.id }}" value="{{ item.physical_quantity|default_if_none:'' }}" min="0" oninput="calcCountDiff({{ item.id }}, {{ item.system_quantity }})" data-system="{{ item.system_quantity }}">
+              </td>
+              <td style="text-align: center;">
+                <span class="diff-cell zero" id="count-diff-{{ item.id }}">0</span>
+              </td>
+              <td style="text-align: center;">
+                <button class="btn btn-sm btn-success" onclick="saveCountItem({{ item.id }})">
+                  <i class="fa-solid fa-save"></i> Save
+                </button>
+                <span class="save-indicator" id="save-indicator-{{ item.id }}"></span>
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+
+      <div style="margin-top: 1.5rem; text-align: right;">
+        <button class="btn btn-purple" onclick="applyAllCorrections({{ active_count.id }})" style="padding: 0.75rem 1.5rem;">
+          <i class="fa-solid fa-check-double"></i> Apply All Corrections
+        </button>
+      </div>
+
+      {% else %}
+      <!-- No Active Count -->
+      <div class="start-count-panel" id="startCountPanel">
+        <i class="fa-solid fa-clipboard-list"></i>
+        <p>No active stock count. Start a new count to reconcile your physical inventory.</p>
+        <div class="start-count-input">
+          <input type="text" id="newCountName" placeholder="Count name, e.g. July 2026 Full Count">
+          <button class="btn btn-purple" onclick="startNewCount()">
+            <i class="fa-solid fa-play"></i> Start New Count
+          </button>
+        </div>
+      </div>
+      {% endif %}
+
+      <!-- Completed Counts -->
+      {% if completed_counts %}
+      <div style="margin-top: 2rem; padding-top: 1.5rem; border-top: 2px solid #e2e8f0;">
+        <h3 style="font-size: 1rem; font-weight: 600; color: #374151; margin-bottom: 1rem;">
+          <i class="fa-solid fa-history" style="color: #667eea;"></i> Completed Counts
+        </h3>
+        <table class="completed-counts-table">
+          <thead>
+            <tr>
+              <th>Name</th>
+              <th>Date</th>
+              <th>Started By</th>
+              <th>Total Items</th>
+              <th>Discrepancies</th>
+              <th>Total Difference</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for count in completed_counts %}
+            <tr>
+              <td style="font-weight: 500;">{{ count.name }}</td>
+              <td>{{ count.completed_at|date:"M d, Y" }}</td>
+              <td>{{ count.started_by }}</td>
+              <td style="text-align: center;">{{ count.total_items }}</td>
+              <td style="text-align: center;">
+                {% if count.discrepancies > 0 %}
+                <span style="color: #dc2626; font-weight: 600;">{{ count.discrepancies }}</span>
+                {% else %}
+                <span style="color: #94a3b8;">0</span>
+                {% endif %}
+              </td>
+              <td style="text-align: center;">
+                {% if count.total_difference > 0 %}
+                <span style="color: #059669; font-weight: 600;">+{{ count.total_difference }}</span>
+                {% elif count.total_difference < 0 %}
+                <span style="color: #dc2626; font-weight: 600;">{{ count.total_difference }}</span>
+                {% else %}
+                <span style="color: #94a3b8;">0</span>
+                {% endif %}
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      {% endif %}
+    </div>
+
+    <!-- Section 3: Audit Log -->
+    <div class="content-card">
+      <h2><i class="fa-solid fa-clock-rotate-left"></i> Audit Log</h2>
+
+      {% if recent_adjustments %}
+      <div class="audit-table-wrapper">
+        <table class="audit-table">
+          <thead>
+            <tr>
+              <th>Date</th>
+              <th>Product</th>
+              <th>SKU</th>
+              <th>Type</th>
+              <th style="text-align: center;">Previous</th>
+              <th style="text-align: center;">New</th>
+              <th style="text-align: center;">Diff</th>
+              <th>Reason</th>
+              <th>By</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for adj in recent_adjustments %}
+            <tr>
+              <td style="white-space: nowrap;">{{ adj.created_at|date:"M d, Y g:i A" }}</td>
+              <td style="font-weight: 500;">{{ adj.variant.product.name }}</td>
+              <td><span class="sku-badge">{{ adj.variant.sku }}</span></td>
+              <td>
+                <span style="font-size: 0.75rem; padding: 0.2rem 0.5rem; border-radius: 6px; background: #f1f5f9; color: #475569; font-weight: 500;">
+                  {{ adj.get_adjustment_type_display }}
+                </span>
+              </td>
+              <td style="text-align: center;">{{ adj.previous_quantity }}</td>
+              <td style="text-align: center;">{{ adj.new_quantity }}</td>
+              <td style="text-align: center;">
+                {% with diff=adj.new_quantity|add:"-"|add:adj.previous_quantity %}
+                {% if adj.new_quantity > adj.previous_quantity %}
+                <span class="audit-diff positive">+{{ adj.quantity_change }}</span>
+                {% elif adj.new_quantity < adj.previous_quantity %}
+                <span class="audit-diff negative">{{ adj.quantity_change }}</span>
+                {% else %}
+                <span class="audit-diff" style="color: #94a3b8;">0</span>
+                {% endif %}
+                {% endwith %}
+              </td>
+              <td style="font-size: 0.8125rem; color: #64748b; max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="{{ adj.reason }}">
+                {{ adj.reason|default:"--" }}
+              </td>
+              <td style="font-weight: 500;">{{ adj.adjusted_by }}</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      {% else %}
+      <div style="text-align: center; padding: 3rem 2rem; color: #64748b;">
+        <i class="fa-solid fa-clock-rotate-left" style="font-size: 3rem; opacity: 0.3; margin-bottom: 1rem; display: block;"></i>
+        <p>No stock adjustments recorded yet.</p>
+      </div>
+      {% endif %}
+    </div>
+
+  </div>
+
+  <script>
+    const csrfToken = '{{ csrf_token }}';
+    const variantsData = {{ variants_json|safe }};
+    let selectedVariant = null;
+
+    // ── Quick Adjust ──────────────────────────────────────────────
+
+    function toggleQuickAdjust() {
+      const panel = document.getElementById('quickAdjustPanel');
+      panel.classList.toggle('visible');
+      if (panel.classList.contains('visible')) {
+        panel.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        document.getElementById('variantSearch').focus();
+      }
+    }
+
+    function scrollToCount() {
+      const section = document.getElementById('stockCountSection');
+      section.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      // Focus the new count name input if no active count
+      const nameInput = document.getElementById('newCountName');
+      if (nameInput) {
+        setTimeout(() => nameInput.focus(), 400);
+      }
+    }
+
+    function filterVariants(query) {
+      const container = document.getElementById('variantSearchResults');
+      if (!query || query.length < 1) {
+        container.classList.remove('visible');
+        container.innerHTML = '';
+        return;
+      }
+
+      const q = query.toLowerCase();
+      const matches = variantsData.filter(v =>
+        v.product.toLowerCase().includes(q) ||
+        v.sku.toLowerCase().includes(q) ||
+        v.attrs.toLowerCase().includes(q)
+      ).slice(0, 20);
+
+      if (matches.length === 0) {
+        container.innerHTML = '<div style="padding: 1rem; text-align: center; color: #94a3b8; font-size: 0.875rem;">No matching variants found</div>';
+        container.classList.add('visible');
+        return;
+      }
+
+      container.innerHTML = matches.map(v => `
+        <div class="variant-result-item" onclick="selectVariant(${v.id})">
+          <div class="variant-info">
+            <div class="variant-name">${v.product}</div>
+            <div class="variant-detail">
+              <span class="sku-badge">${v.sku}</span>
+              ${v.attrs ? '<span style="margin-left: 0.5rem;">' + v.attrs + '</span>' : ''}
+            </div>
+          </div>
+          <div class="variant-stock">Stock: ${v.stock}</div>
+        </div>
+      `).join('');
+      container.classList.add('visible');
+    }
+
+    function selectVariant(id) {
+      const variant = variantsData.find(v => v.id === id);
+      if (!variant) return;
+
+      selectedVariant = variant;
+
+      document.getElementById('selectedVariantName').textContent = variant.product;
+      document.getElementById('selectedVariantSku').textContent = variant.sku;
+      document.getElementById('selectedVariantAttrs').textContent = variant.attrs || '';
+      document.getElementById('selectedVariantStock').textContent = variant.stock;
+      document.getElementById('adjustNewQty').value = '';
+      document.getElementById('adjustNotes').value = '';
+      document.getElementById('adjustDiff').classList.remove('visible');
+      document.getElementById('applyAdjustBtn').disabled = true;
+
+      document.getElementById('selectedVariantCard').classList.add('visible');
+      document.getElementById('variantSearchResults').classList.remove('visible');
+      document.getElementById('variantSearch').value = variant.product + ' - ' + variant.sku;
+
+      document.getElementById('adjustNewQty').focus();
+    }
+
+    function clearSelectedVariant() {
+      selectedVariant = null;
+      document.getElementById('selectedVariantCard').classList.remove('visible');
+      document.getElementById('variantSearch').value = '';
+      document.getElementById('variantSearch').focus();
+    }
+
+    function calculateDiff() {
+      if (!selectedVariant) return;
+
+      const newQty = document.getElementById('adjustNewQty').value;
+      const diffEl = document.getElementById('adjustDiff');
+      const btn = document.getElementById('applyAdjustBtn');
+
+      if (newQty === '' || isNaN(parseInt(newQty))) {
+        diffEl.classList.remove('visible');
+        btn.disabled = true;
+        return;
+      }
+
+      const diff = parseInt(newQty) - selectedVariant.stock;
+      diffEl.classList.add('visible');
+      diffEl.className = 'diff-display visible';
+
+      if (diff > 0) {
+        diffEl.classList.add('positive');
+        diffEl.textContent = '+' + diff + ' units';
+      } else if (diff < 0) {
+        diffEl.classList.add('negative');
+        diffEl.textContent = diff + ' units';
+      } else {
+        diffEl.classList.add('zero');
+        diffEl.textContent = 'No change';
+      }
+
+      btn.disabled = false;
+    }
+
+    async function applyQuickAdjust() {
+      if (!selectedVariant) return;
+
+      const newQty = parseInt(document.getElementById('adjustNewQty').value);
+      if (isNaN(newQty) || newQty < 0) {
+        showToast('Please enter a valid quantity', 'error');
+        return;
+      }
+
+      const reason = document.getElementById('adjustReason').value;
+      const notes = document.getElementById('adjustNotes').value;
+
+      const formData = new FormData();
+      formData.append('action', 'quick_adjust');
+      formData.append('variant_id', selectedVariant.id);
+      formData.append('new_quantity', newQty);
+      formData.append('reason', reason);
+      formData.append('notes', notes);
+      formData.append('csrfmiddlewaretoken', csrfToken);
+
+      try {
+        const response = await fetch(window.location.href, {
+          method: 'POST',
+          body: formData
+        });
+        const data = await response.json();
+
+        if (data.success) {
+          showToast('Stock updated successfully', 'success');
+          setTimeout(() => location.reload(), 800);
+        } else {
+          showToast(data.error || 'Error adjusting stock', 'error');
+        }
+      } catch (error) {
+        showToast('Error adjusting stock', 'error');
+      }
+    }
+
+    // ── Stock Count ───────────────────────────────────────────────
+
+    function calcCountDiff(itemId, systemQty) {
+      const physicalInput = document.getElementById('physical-qty-' + itemId);
+      const diffCell = document.getElementById('count-diff-' + itemId);
+      const val = physicalInput.value;
+
+      if (val === '' || isNaN(parseInt(val))) {
+        diffCell.textContent = '0';
+        diffCell.className = 'diff-cell zero';
+        return;
+      }
+
+      const diff = parseInt(val) - systemQty;
+      diffCell.className = 'diff-cell';
+
+      if (diff > 0) {
+        diffCell.classList.add('positive');
+        diffCell.textContent = '+' + diff;
+      } else if (diff < 0) {
+        diffCell.classList.add('negative');
+        diffCell.textContent = diff;
+      } else {
+        diffCell.classList.add('zero');
+        diffCell.textContent = '0';
+      }
+    }
+
+    async function saveCountItem(itemId) {
+      const physicalQty = document.getElementById('physical-qty-' + itemId).value;
+      if (physicalQty === '' || isNaN(parseInt(physicalQty))) {
+        showToast('Please enter a valid quantity', 'error');
+        return;
+      }
+
+      const formData = new FormData();
+      formData.append('action', 'save_count_item');
+      formData.append('item_id', itemId);
+      formData.append('physical_quantity', parseInt(physicalQty));
+      formData.append('csrfmiddlewaretoken', csrfToken);
+
+      try {
+        const response = await fetch(window.location.href, {
+          method: 'POST',
+          body: formData
+        });
+        const data = await response.json();
+
+        if (data.success) {
+          const indicator = document.getElementById('save-indicator-' + itemId);
+          indicator.innerHTML = '<i class="fa-solid fa-check" style="color: #059669;"></i> Saved';
+          indicator.classList.add('visible');
+          setTimeout(() => indicator.classList.remove('visible'), 2000);
+        } else {
+          showToast(data.error || 'Error saving count item', 'error');
+        }
+      } catch (error) {
+        showToast('Error saving count item', 'error');
+      }
+    }
+
+    async function startNewCount() {
+      const name = document.getElementById('newCountName').value.trim();
+      if (!name) {
+        showToast('Please enter a count name', 'error');
+        document.getElementById('newCountName').focus();
+        return;
+      }
+
+      const formData = new FormData();
+      formData.append('action', 'start_count');
+      formData.append('name', name);
+      formData.append('csrfmiddlewaretoken', csrfToken);
+
+      try {
+        const response = await fetch(window.location.href, {
+          method: 'POST',
+          body: formData
+        });
+        const data = await response.json();
+
+        if (data.success) {
+          showToast('Stock count started', 'success');
+          setTimeout(() => location.reload(), 800);
+        } else {
+          showToast(data.error || 'Error starting count', 'error');
+        }
+      } catch (error) {
+        showToast('Error starting count', 'error');
+      }
+    }
+
+    async function applyAllCorrections(countId) {
+      if (!confirm('Apply all non-zero differences as stock corrections? This cannot be undone.')) return;
+
+      const formData = new FormData();
+      formData.append('action', 'apply_count');
+      formData.append('count_id', countId);
+      formData.append('csrfmiddlewaretoken', csrfToken);
+
+      try {
+        const response = await fetch(window.location.href, {
+          method: 'POST',
+          body: formData
+        });
+        const data = await response.json();
+
+        if (data.success) {
+          showToast('All corrections applied successfully', 'success');
+          setTimeout(() => location.reload(), 800);
+        } else {
+          showToast(data.error || 'Error applying corrections', 'error');
+        }
+      } catch (error) {
+        showToast('Error applying corrections', 'error');
+      }
+    }
+
+    async function deleteCount(countId) {
+      if (!confirm('Delete this stock count? This cannot be undone.')) return;
+
+      const formData = new FormData();
+      formData.append('action', 'delete_count');
+      formData.append('count_id', countId);
+      formData.append('csrfmiddlewaretoken', csrfToken);
+
+      try {
+        const response = await fetch(window.location.href, {
+          method: 'POST',
+          body: formData
+        });
+        const data = await response.json();
+
+        if (data.success) {
+          showToast('Stock count deleted', 'success');
+          setTimeout(() => location.reload(), 800);
+        } else {
+          showToast(data.error || 'Error deleting count', 'error');
+        }
+      } catch (error) {
+        showToast('Error deleting count', 'error');
+      }
+    }
+
+    // ── Toast ─────────────────────────────────────────────────────
+
+    function showToast(message, type = 'info') {
+      const toast = document.createElement('div');
+      toast.style.cssText = `
+        position: fixed;
+        bottom: 20px;
+        right: 20px;
+        padding: 12px 20px;
+        border-radius: 8px;
+        color: white;
+        font-weight: 500;
+        font-size: 0.875rem;
+        font-family: 'Inter', sans-serif;
+        z-index: 10000;
+        max-width: 320px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+      `;
+
+      if (type === 'error') {
+        toast.style.background = 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)';
+      } else if (type === 'success') {
+        toast.style.background = 'linear-gradient(135deg, #10b981 0%, #059669 100%)';
+      } else {
+        toast.style.background = 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)';
+      }
+
+      toast.textContent = message;
+      document.body.appendChild(toast);
+
+      setTimeout(() => {
+        toast.style.animation = 'fadeOut 0.3s ease';
+        setTimeout(() => toast.remove(), 300);
+      }, 3000);
+    }
+
+    // ── Init: calculate diffs for existing count items ─────────
+    document.addEventListener('DOMContentLoaded', function() {
+      document.querySelectorAll('.count-table input[type="number"]').forEach(input => {
+        const itemId = input.id.replace('physical-qty-', '');
+        const systemQty = parseInt(input.dataset.system) || 0;
+        if (input.value !== '') {
+          calcCountDiff(parseInt(itemId), systemQty);
+        }
+      });
+    });
+  </script>
+</body>
+</html>

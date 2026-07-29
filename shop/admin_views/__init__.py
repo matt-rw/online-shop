@@ -72,6 +72,7 @@ from .analytics import (
 )
 from .reporting import scheduled_reports_dashboard
 from .team import team_dashboard, team_members_page
+from .stock import inventory_dashboard
 from .testing import (
     test_center,
     test_checkout,

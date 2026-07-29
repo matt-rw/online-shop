@@ -97,6 +97,7 @@ urlpatterns = [
     path("bp-manage/email/swipe/", admin_views.email_swipe, name="admin_email_swipe"),
     path("bp-manage/ab-testing/", admin_views.ab_testing_dashboard, name="admin_ab_testing"),
     path("bp-manage/scheduled-reports/", admin_views.scheduled_reports_dashboard, name="admin_scheduled_reports"),
+    path("bp-manage/inventory/", admin_views.inventory_dashboard, name="admin_inventory"),
     path("bp-manage/team/", admin_views.team_dashboard, name="admin_team"),
     path("bp-manage/team/members/", admin_views.team_members_page, name="admin_team_members"),
     path("bp-manage/bundles/", admin_views.bundles_dashboard, name="admin_bundles"),
