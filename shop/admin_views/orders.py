@@ -1277,10 +1277,10 @@ def add_manual_order(request):
                         sku = variant.sku or f"V-{variant.id}"
                         unit_cost = variant.cost
 
-                        # Optionally decrement stock
+                        # Optionally decrement stock with audit log
                         if decrement_stock and variant.stock_quantity >= quantity:
-                            variant.stock_quantity -= quantity
-                            variant.save(update_fields=["stock_quantity"])
+                            from shop.utils.stock import deduct_stock
+                            deduct_stock(variant, quantity, "order_sold", "Manual order", request.user)
                     except ProductVariant.DoesNotExist:
                         pass
 
@@ -1658,10 +1658,21 @@ def returns_dashboard(request):
                 return_item_id = request.POST.get("return_item_id")
                 condition_notes = request.POST.get("condition_notes", "")
 
-                return_item = ReturnItem.objects.get(id=return_item_id)
+                return_item = ReturnItem.objects.select_related("order_item__variant").get(id=return_item_id)
                 return_item.received = True
                 return_item.condition_notes = condition_notes
                 return_item.save()
+
+                # Restock the returned item
+                if return_item.order_item and return_item.order_item.variant:
+                    from shop.utils.stock import add_stock
+                    add_stock(
+                        return_item.order_item.variant,
+                        return_item.quantity,
+                        "return_received",
+                        f"Return #{return_item.return_request_id} received",
+                        request.user,
+                    )
 
                 # Check if all items received
                 return_request = return_item.return_request

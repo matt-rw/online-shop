@@ -24,25 +24,15 @@ def inventory_dashboard(request):
         # Quick adjust a single variant's stock
         if action == "quick_adjust":
             try:
+                from shop.utils.stock import adjust_stock
                 variant = ProductVariant.objects.get(id=request.POST.get("variant_id"))
                 new_qty = int(request.POST.get("new_quantity", 0))
                 adj_type = request.POST.get("adjustment_type", "manual")
                 reason = request.POST.get("reason", "")
 
                 prev_qty = variant.stock_quantity
+                adjust_stock(variant, new_qty, adj_type, reason, request.user)
                 diff = new_qty - prev_qty
-
-                StockAdjustment.objects.create(
-                    variant=variant,
-                    adjustment_type=adj_type,
-                    previous_quantity=prev_qty,
-                    new_quantity=new_qty,
-                    difference=diff,
-                    reason=reason,
-                    adjusted_by=request.user,
-                )
-                variant.stock_quantity = new_qty
-                variant.save(update_fields=["stock_quantity"])
 
                 return JsonResponse({"success": True, "previous": prev_qty, "new": new_qty, "diff": diff})
             except ProductVariant.DoesNotExist:
@@ -97,6 +87,7 @@ def inventory_dashboard(request):
         # Apply all corrections from a count
         elif action == "apply_count":
             try:
+                from shop.utils.stock import adjust_stock
                 count = StockCount.objects.get(id=request.POST.get("count_id"))
                 items = count.items.filter(
                     physical_quantity__isnull=False,
@@ -105,19 +96,10 @@ def inventory_dashboard(request):
 
                 applied = 0
                 for item in items:
-                    variant = item.variant
-                    prev = variant.stock_quantity
-                    variant.stock_quantity = item.physical_quantity
-                    variant.save(update_fields=["stock_quantity"])
-
-                    StockAdjustment.objects.create(
-                        variant=variant,
-                        adjustment_type="count_correction",
-                        previous_quantity=prev,
-                        new_quantity=item.physical_quantity,
-                        difference=item.physical_quantity - prev,
-                        reason=f"Stock count: {count.name}",
-                        adjusted_by=request.user,
+                    adjust_stock(
+                        item.variant, item.physical_quantity,
+                        "count_correction", f"Stock count: {count.name}",
+                        request.user,
                     )
                     item.applied = True
                     item.save(update_fields=["applied"])

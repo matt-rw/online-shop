@@ -225,9 +225,9 @@ def complete_express_checkout(request):
         )
         order_item.allocate_from_shipments()
 
-        # Deduct stock
-        variant.stock_quantity -= quantity
-        variant.save()
+        # Deduct stock with audit log
+        from shop.utils.stock import deduct_stock
+        deduct_stock(variant, quantity, "order_sold", f"Express checkout order {order.order_number}")
 
         logger.info(f"Express checkout order {order.id} created for {variant.product.name}")
 

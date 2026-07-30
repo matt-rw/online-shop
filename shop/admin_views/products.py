@@ -465,6 +465,16 @@ def products_dashboard(request):
                     is_active=True,
                 )
 
+                # Log initial stock
+                if stock_quantity > 0:
+                    from shop.models.inventory import StockAdjustment
+                    StockAdjustment.objects.create(
+                        variant=variant, adjustment_type="manual",
+                        previous_quantity=0, new_quantity=stock_quantity,
+                        difference=stock_quantity, reason="Initial variant stock",
+                        adjusted_by=request.user,
+                    )
+
                 return JsonResponse({"success": True})
             except Product.DoesNotExist:
                 return JsonResponse({"success": False, "error": "Product not found"})
@@ -526,7 +536,12 @@ def products_dashboard(request):
                 variant.color = color
                 variant.material = material
                 variant.sku = sku or None
-                variant.stock_quantity = stock_quantity
+                # Log stock change if different
+                if variant.stock_quantity != stock_quantity:
+                    from shop.utils.stock import adjust_stock
+                    adjust_stock(variant, stock_quantity, "manual", "Variant edit", request.user)
+                else:
+                    variant.stock_quantity = stock_quantity
                 variant.price = price
                 # Handle cost - None means use base cost, a value means custom cost
                 if use_base_cost:
@@ -595,7 +610,7 @@ def products_dashboard(request):
                                 continue
 
                             # Create the variant
-                            ProductVariant.objects.create(
+                            variant = ProductVariant.objects.create(
                                 product=product,
                                 size=size,
                                 color=color,
@@ -606,6 +621,14 @@ def products_dashboard(request):
                                 custom_fields={},
                                 is_active=True,
                             )
+                            if stock_quantity > 0:
+                                from shop.models.inventory import StockAdjustment
+                                StockAdjustment.objects.create(
+                                    variant=variant, adjustment_type="manual",
+                                    previous_quantity=0, new_quantity=stock_quantity,
+                                    difference=stock_quantity, reason="Bulk variant creation",
+                                    adjusted_by=request.user,
+                                )
                             created_count += 1
                         except (Size.DoesNotExist, Color.DoesNotExist) as e:
                             errors.append(str(e))
@@ -845,15 +868,18 @@ def products_dashboard(request):
                 else:
                     variants = ProductVariant.objects.filter(id__in=variant_ids, product=product)
 
+                from shop.utils.stock import adjust_stock
                 updated_count = 0
                 for variant in variants:
                     if update_mode == "set":
-                        variant.stock_quantity = max(0, stock_value)
+                        new_qty = max(0, stock_value)
                     elif update_mode == "add":
-                        variant.stock_quantity = variant.stock_quantity + stock_value
+                        new_qty = variant.stock_quantity + stock_value
                     elif update_mode == "subtract":
-                        variant.stock_quantity = max(0, variant.stock_quantity - stock_value)
-                    variant.save()
+                        new_qty = max(0, variant.stock_quantity - stock_value)
+                    else:
+                        continue
+                    adjust_stock(variant, new_qty, "manual", f"Bulk stock {update_mode}: {stock_value}", request.user)
                     updated_count += 1
 
                 return JsonResponse({

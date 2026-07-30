@@ -106,10 +106,10 @@ def shipments_dashboard(request):
                         unit_cost=final_cost,
                     )
 
-                    # If delivered, also update variant stock
+                    # If delivered, also update variant stock with audit log
                     if shipment.status == "delivered" and received_qty > 0:
-                        variant.stock_quantity += received_qty
-                        variant.save(update_fields=["stock_quantity"])
+                        from shop.utils.stock import add_stock
+                        add_stock(variant, received_qty, "shipment_received", f"Shipment {shipment.tracking_number}", request.user)
 
                 return JsonResponse({
                     "success": True,
@@ -151,24 +151,22 @@ def shipments_dashboard(request):
 
                 # If status changed TO delivered, add received quantities to variant stock
                 if old_status != "delivered" and new_status == "delivered":
+                    from shop.utils.stock import add_stock
                     for item in shipment.items.select_related("variant"):
-                        # Use received_quantity if set, otherwise default to quantity
                         qty_to_add = item.received_quantity if item.received_quantity > 0 else item.quantity
                         if qty_to_add > 0:
-                            # If received_quantity wasn't set, update it to match quantity
                             if item.received_quantity == 0:
                                 item.received_quantity = item.quantity
                                 item.save(update_fields=["received_quantity"])
-                            item.variant.stock_quantity += qty_to_add
-                            item.variant.save(update_fields=["stock_quantity"])
+                            add_stock(item.variant, qty_to_add, "shipment_received", f"Shipment {shipment.tracking_number} delivered", request.user)
 
                 # If status changed FROM delivered to something else, reverse the stock
                 elif old_status == "delivered" and new_status != "delivered":
+                    from shop.utils.stock import deduct_stock
                     for item in shipment.items.select_related("variant"):
                         qty_to_remove = item.received_quantity if item.received_quantity > 0 else item.quantity
                         if qty_to_remove > 0:
-                            item.variant.stock_quantity = max(0, item.variant.stock_quantity - qty_to_remove)
-                            item.variant.save(update_fields=["stock_quantity"])
+                            deduct_stock(item.variant, qty_to_remove, "manual", f"Shipment {shipment.tracking_number} reverted from delivered", request.user)
 
                 # Update shipment items
                 for key, value in request.POST.items():
@@ -364,15 +362,13 @@ def shipments_dashboard(request):
                 shipment_id = request.POST.get("shipment_id")
                 shipment = Shipment.objects.get(id=shipment_id)
 
-                # If delivered, subtract stock from variants
+                # If delivered, subtract stock from variants with audit log
                 if shipment.status == "delivered":
+                    from shop.utils.stock import deduct_stock
                     items = ShipmentItem.objects.filter(shipment=shipment).select_related("variant")
                     for item in items:
-                        variant = item.variant
-                        # Subtract received quantity (use received_quantity if set, else quantity)
                         qty_to_subtract = item.received_quantity if item.received_quantity > 0 else item.quantity
-                        variant.stock_quantity = max(0, variant.stock_quantity - qty_to_subtract)
-                        variant.save(update_fields=["stock_quantity"])
+                        deduct_stock(item.variant, qty_to_subtract, "manual", f"Shipment {shipment.tracking_number} deleted", request.user)
 
                 shipment.delete()
                 return JsonResponse({"success": True})
