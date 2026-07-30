@@ -1000,7 +1000,9 @@ def products_dashboard(request):
 
     # Get variant stats in a single query instead of 4 separate queries
     # Exclude test checkout item from stats
-    variant_stats = ProductVariant.objects.exclude(product__slug="test-checkout-item").aggregate(
+    variant_stats = ProductVariant.objects.filter(
+        is_active=True, product__is_active=True
+    ).exclude(product__slug__startswith="test-").aggregate(
         total_variants=Count("id"),
         total_stock=Sum("stock_quantity"),
         low_stock_count=Count("id", filter=Q(stock_quantity__lt=10, stock_quantity__gt=0)),
