@@ -298,7 +298,8 @@ def handle_checkout_session_completed(event):
                 times_used=F("times_used") + 1
             )
 
-        # Create order items from cart
+        # Create order items from cart and deduct stock
+        from shop.utils.stock import deduct_stock
         for item in cart_items:
             order_item = OrderItem.objects.create(
                 order=order,
@@ -309,6 +310,8 @@ def handle_checkout_session_completed(event):
             )
             # Allocate from shipment batches (FIFO)
             order_item.allocate_from_shipments()
+            # Deduct stock with audit log
+            deduct_stock(item.variant, item.quantity, "order_sold", f"Order {order.order_number}")
 
         # Create order items from bundle items
         # Each bundle component becomes a separate OrderItem
@@ -343,6 +346,8 @@ def handle_checkout_session_completed(event):
                     )
                     # Allocate from shipment batches (FIFO)
                     order_item.allocate_from_shipments()
+                    # Deduct stock with audit log
+                    deduct_stock(variant, item_qty, "order_sold", f"Order {order.order_number} (bundle)")
 
                 logger.info(f"Created {len(variants_for_size)} order items from bundle '{bundle.name}' (size {size})")
             else:
