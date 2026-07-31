@@ -32,7 +32,7 @@ class Command(BaseCommand):
         completed_statuses = ["PAID", "SHIPPED", "HAND_DELIVERED", "FULFILLED"]
 
         variants = ProductVariant.objects.filter(
-            is_active=True, product__is_active=True
+            product__is_active=True
         ).exclude(product__slug__startswith="test-").select_related("product")
 
         self.stdout.write(f"\n{'Product':<35} {'SKU':<25} {'Received':<10} {'Sold':<8} {'Correct':<10} {'Current':<10} {'Diff':<8}")
