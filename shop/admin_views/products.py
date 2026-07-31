@@ -331,20 +331,19 @@ def products_dashboard(request):
             try:
                 product = Product.objects.get(id=product_id)
                 variants_qs = product.variants.all().select_related("size", "color", "material").prefetch_related("attributes__attribute")
-                # Sort by unified attribute display_order, falling back to legacy size order
+                # Sort by all unified attribute display_orders (attribute order first, then value order)
                 def variant_sort_key(v):
-                    size_order = 99
-                    color_order = 99
+                    # Build a sort tuple from all attributes in attribute display_order
+                    attr_orders = {}
                     for av in v.attributes.all():
-                        if av.attribute.slug == "size":
-                            size_order = av.display_order
-                        elif av.attribute.slug == "color":
-                            color_order = av.display_order
-                    if size_order == 99 and v.size:
-                        size_order = v.size.display_order
-                    if color_order == 99 and v.color:
-                        color_order = v.color.display_order
-                    return (size_order, color_order)
+                        attr_orders[av.attribute.display_order] = av.display_order
+                    # Fallback to legacy fields if no unified attributes
+                    if not attr_orders:
+                        size_order = v.size.display_order if v.size else 99
+                        color_order = v.color.display_order if v.color else 99
+                        return (size_order, color_order)
+                    # Return tuple sorted by attribute display_order
+                    return tuple(attr_orders[k] for k in sorted(attr_orders.keys()))
                 variants = sorted(variants_qs, key=variant_sort_key)
 
                 # Get pending shipment data for all variants in this product
