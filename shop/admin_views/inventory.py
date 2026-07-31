@@ -106,6 +106,11 @@ def shipments_dashboard(request):
                         unit_cost=final_cost,
                     )
 
+                    # Auto-update product base_cost to latest shipment cost
+                    if final_cost > 0:
+                        variant.product.base_cost = final_cost
+                        variant.product.save(update_fields=["base_cost"])
+
                     # If delivered, also update variant stock with audit log
                     if shipment.status == "delivered" and received_qty > 0:
                         from shop.utils.stock import add_stock

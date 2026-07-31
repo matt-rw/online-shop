@@ -790,26 +790,42 @@
                   </button>
                 </div>
 
-                <!-- Cost Mode Selector -->
-                <div style="margin-bottom: 1rem; padding: 0.75rem; background: white; border-radius: 6px; border: 1px solid #e2e8f0;">
-                  <label style="font-size: 0.75rem; font-weight: 600; color: #64748b; margin-bottom: 0.5rem; display: block;">Unit Cost</label>
-                  <div style="display: flex; gap: 0.5rem; flex-wrap: wrap; align-items: center;">
-                    <button type="button" id="costModeBase" onclick="setCostMode('base')" class="cost-mode-btn active" style="padding: 0.375rem 0.75rem; border-radius: 6px; font-size: 0.75rem; font-weight: 500; cursor: pointer; border: 1px solid #e2e8f0; background: #3b82f6; color: white;">
-                      Base <span id="baseCostLabel">$0</span>
-                    </button>
-                    <button type="button" id="costModeVariant" onclick="setCostMode('variant')" class="cost-mode-btn" style="padding: 0.375rem 0.75rem; border-radius: 6px; font-size: 0.75rem; font-weight: 500; cursor: pointer; border: 1px solid #e2e8f0; background: #f8fafc; color: #374151;">
-                      Per-Variant
-                    </button>
-                    <button type="button" id="costModeCustom" onclick="setCostMode('custom')" class="cost-mode-btn" style="padding: 0.375rem 0.75rem; border-radius: 6px; font-size: 0.75rem; font-weight: 500; cursor: pointer; border: 1px solid #e2e8f0; background: #f8fafc; color: #374151;">
-                      Custom
-                    </button>
-                    <button type="button" id="costModeBulk" onclick="setCostMode('bulk')" class="cost-mode-btn" style="padding: 0.375rem 0.75rem; border-radius: 6px; font-size: 0.75rem; font-weight: 500; cursor: pointer; border: 1px solid #e2e8f0; background: #f8fafc; color: #374151;">
-                      Bulk Total
-                    </button>
-                    <input type="number" id="customCostInput" step="0.01" min="0" placeholder="$0.00" style="display: none; width: 80px; padding: 0.375rem; border: 1px solid #d1d5db; border-radius: 6px; font-size: 0.75rem; text-align: center;">
-                    <input type="number" id="bulkTotalInput" step="0.01" min="0" placeholder="Total order cost" style="display: none; width: 140px; padding: 0.375rem; border: 1px solid #d1d5db; border-radius: 6px; font-size: 0.75rem; text-align: center;" oninput="updateBulkDistribution()">
+                <!-- Cost Entry -->
+                <div style="margin-bottom: 1rem; padding: 1rem; background: white; border-radius: 8px; border: 1px solid #e2e8f0;">
+                  <label style="font-size: 0.8125rem; font-weight: 600; color: #1e293b; margin-bottom: 0.625rem; display: block;">How much did you pay for this order?</label>
+                  <div style="display: flex; gap: 0.75rem; align-items: center; flex-wrap: wrap;">
+                    <div style="flex: 1; min-width: 200px;">
+                      <input type="number" id="bulkTotalInput" step="0.01" min="0" placeholder="Enter total cost from manufacturer"
+                             style="width: 100%; padding: 0.625rem 0.75rem; border: 2px solid #e2e8f0; border-radius: 8px; font-size: 0.9375rem; transition: border-color 0.2s;"
+                             onfocus="this.style.borderColor='#667eea'" onblur="this.style.borderColor='#e2e8f0'"
+                             oninput="updateBulkDistribution()">
+                    </div>
+                    <div style="font-size: 0.75rem; color: #94a3b8;">
+                      Cost is split automatically across items by selling price
+                    </div>
                   </div>
-                  <div id="costModeHint" style="font-size: 0.6875rem; color: #94a3b8; margin-top: 0.375rem;">Using product base cost for all variants</div>
+                  <div id="bulkPreview" style="margin-top: 0.75rem; display: none; font-size: 0.75rem; color: #64748b; background: #f8fafc; border-radius: 6px; padding: 0.625rem;"></div>
+                  <div style="margin-top: 0.5rem;">
+                    <button type="button" onclick="document.getElementById('advancedCostModes').style.display = document.getElementById('advancedCostModes').style.display === 'none' ? 'flex' : 'none'" style="background: none; border: none; color: #94a3b8; font-size: 0.6875rem; cursor: pointer; padding: 0;">
+                      Advanced cost options ▾
+                    </button>
+                    <div id="advancedCostModes" style="display: none; gap: 0.5rem; margin-top: 0.5rem; flex-wrap: wrap; align-items: center;">
+                      <button type="button" id="costModeBulk" onclick="setCostMode('bulk')" class="cost-mode-btn" style="padding: 0.25rem 0.625rem; border-radius: 6px; font-size: 0.6875rem; font-weight: 500; cursor: pointer; border: 1px solid #667eea; background: #667eea; color: white;">
+                        Bulk Total
+                      </button>
+                      <button type="button" id="costModeBase" onclick="setCostMode('base')" class="cost-mode-btn" style="padding: 0.25rem 0.625rem; border-radius: 6px; font-size: 0.6875rem; font-weight: 500; cursor: pointer; border: 1px solid #e2e8f0; background: #f8fafc; color: #374151;">
+                        Base Cost <span id="baseCostLabel"></span>
+                      </button>
+                      <button type="button" id="costModeVariant" onclick="setCostMode('variant')" class="cost-mode-btn" style="padding: 0.25rem 0.625rem; border-radius: 6px; font-size: 0.6875rem; font-weight: 500; cursor: pointer; border: 1px solid #e2e8f0; background: #f8fafc; color: #374151;">
+                        Per-Variant
+                      </button>
+                      <button type="button" id="costModeCustom" onclick="setCostMode('custom')" class="cost-mode-btn" style="padding: 0.25rem 0.625rem; border-radius: 6px; font-size: 0.6875rem; font-weight: 500; cursor: pointer; border: 1px solid #e2e8f0; background: #f8fafc; color: #374151;">
+                        Same for All
+                      </button>
+                      <input type="number" id="customCostInput" step="0.01" min="0" placeholder="$0.00" style="display: none; width: 80px; padding: 0.375rem; border: 1px solid #d1d5db; border-radius: 6px; font-size: 0.75rem; text-align: center;">
+                    </div>
+                  </div>
+                  <div id="costModeHint" style="font-size: 0.6875rem; color: #94a3b8; margin-top: 0.375rem; display: none;"></div>
                 </div>
 
                 <!-- Matrix Table Container -->
@@ -994,7 +1010,7 @@
     let currentShipmentItems = [];
     let currentEditingShipment = null;
     let currentMatrixProduct = null;
-    let currentCostMode = 'base'; // 'base', 'variant', or 'custom'
+    let currentCostMode = 'bulk'; // 'bulk' (default), 'base', 'variant', or 'custom'
 
     // Supplier selection functions
     function onSupplierSelect(selectEl) {
@@ -1279,7 +1295,7 @@
       document.getElementById('matrixView').style.display = 'block';
 
       // Reset cost mode UI
-      setCostMode('base');
+      setCostMode('bulk');
 
       renderVariantMatrix(product);
     }
@@ -1304,26 +1320,64 @@
       });
 
       // Show/hide inputs
-      document.getElementById('customCostInput').style.display = mode === 'custom' ? 'block' : 'none';
-      document.getElementById('bulkTotalInput').style.display = mode === 'bulk' ? 'block' : 'none';
+      document.getElementById('customCostInput').style.display = mode === 'custom' ? 'inline-block' : 'none';
+      var bulkInput = document.getElementById('bulkTotalInput');
+      bulkInput.parentElement.style.display = mode === 'bulk' ? '' : 'none';
 
       // Update hint text
       const hint = document.getElementById('costModeHint');
-      if (mode === 'base') {
-        hint.textContent = 'Using product base cost for all variants';
-      } else if (mode === 'variant') {
-        hint.textContent = 'Using each variant\'s individual cost (or base if not set)';
-      } else if (mode === 'custom') {
-        hint.textContent = 'Enter a custom cost to use for all variants';
-      } else if (mode === 'bulk') {
-        hint.textContent = 'Enter the total order cost — it will be distributed by selling price ratio';
+      if (mode === 'bulk') {
+        hint.style.display = 'none';
+      } else {
+        hint.style.display = 'block';
+        if (mode === 'base') {
+          hint.textContent = 'Using product base cost for all variants';
+        } else if (mode === 'variant') {
+          hint.textContent = 'Using each variant\'s individual cost (or base if not set)';
+        } else if (mode === 'custom') {
+          hint.textContent = 'Enter a cost per unit to use for all variants';
+        }
       }
     }
 
     function updateBulkDistribution() {
-      // Preview: show how bulk total would be distributed
-      // This runs when user types in the bulk total input
-      // The actual distribution happens in getCostForVariant
+      var bulkTotal = parseFloat(document.getElementById('bulkTotalInput').value) || 0;
+      var preview = document.getElementById('bulkPreview');
+      if (bulkTotal <= 0) { preview.style.display = 'none'; return; }
+
+      // Calculate distribution across all items currently in the matrix
+      var inputs = document.querySelectorAll('.matrix-qty-input');
+      var totalRetail = 0;
+      var items = [];
+      inputs.forEach(function(input) {
+        var qty = parseInt(input.value) || 0;
+        var price = parseFloat(input.dataset.price) || 0;
+        var sku = input.dataset.variantSku || '';
+        if (qty > 0) {
+          totalRetail += price * qty;
+          items.push({ sku: sku, qty: qty, price: price });
+        }
+      });
+
+      if (totalRetail <= 0 || items.length === 0) {
+        preview.style.display = 'none';
+        return;
+      }
+
+      // Build preview
+      var html = '<strong style="color: #1e293b;">Cost breakdown preview:</strong><br>';
+      items.forEach(function(item) {
+        var share = (item.price * item.qty) / totalRetail;
+        var itemCost = bulkTotal * share;
+        var unitCost = (itemCost / item.qty).toFixed(2);
+        var margin = ((item.price - unitCost) / item.price * 100).toFixed(0);
+        html += '<span style="color: #374151;">' + item.sku + '</span>: '
+          + '<strong>$' + unitCost + '/unit</strong> '
+          + '<span style="color: #10b981;">(' + margin + '% margin)</span> '
+          + '<span style="color: #94a3b8;">× ' + item.qty + ' = $' + itemCost.toFixed(2) + '</span><br>';
+      });
+      preview.innerHTML = html;
+      preview.style.display = 'block';
     }
 
     function renderVariantMatrix(product) {
