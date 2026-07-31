@@ -425,7 +425,25 @@ def shipments_dashboard(request):
     for shipment in shipments:
         # Get items for this shipment
         items_data = []
-        for item in shipment.items.all():
+        # Sort items by product name, then attribute display order
+        shipment_items = list(shipment.items.select_related(
+            "variant__product", "variant__size", "variant__color"
+        ).prefetch_related("variant__attributes__attribute").all())
+
+        def shipment_item_sort_key(item):
+            v = item.variant
+            product_name = v.product.name
+            attr_orders = {}
+            for av in v.attributes.all():
+                attr_orders[av.attribute.display_order] = av.display_order
+            if not attr_orders:
+                size_order = v.size.display_order if v.size else 99
+                return (product_name, size_order)
+            return (product_name,) + tuple(attr_orders[k] for k in sorted(attr_orders.keys()))
+
+        shipment_items.sort(key=shipment_item_sort_key)
+
+        for item in shipment_items:
             # Calculate stock impact for deletion warning
             qty_received = item.received_quantity if item.received_quantity > 0 else item.quantity
             current_stock = item.variant.stock_quantity
