@@ -519,6 +519,7 @@ def shipments_dashboard(request):
                 "id": variant.id,
                 "sku": variant.sku,
                 "cost": float(variant.cost) if variant.cost else float(product.base_cost or 0),
+                "price": float(variant.price),
                 "stock": variant.stock_quantity,
             }
 

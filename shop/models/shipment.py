@@ -58,6 +58,11 @@ class Shipment(models.Model):
         return self.items.aggregate(total=Sum("quantity"))["total"] or 0
 
     @property
+    def total_items(self):
+        """Total number of individual items across all variants"""
+        return self.items.aggregate(total=Sum("quantity"))["total"] or 0
+
+    @property
     def variant_count(self):
         """Number of different variants in this shipment"""
         return self.items.count()
@@ -128,3 +133,17 @@ class ShipmentItem(models.Model):
         if self.shipment.status == "delivered":
             return max(0, self.received_quantity - self.sold_quantity)
         return 0
+
+    @property
+    def overhead_per_unit(self):
+        """Shipping/customs/fees allocated per unit"""
+        total_items = self.shipment.items.aggregate(
+            total=models.Sum("quantity")
+        )["total"] or 1
+        overhead = self.shipment.shipping_cost + self.shipment.customs_duty + self.shipment.other_fees
+        return round(float(overhead) / total_items, 2)
+
+    @property
+    def landed_cost(self):
+        """True cost per unit: manufacturing + allocated overhead"""
+        return round(float(self.unit_cost) + self.overhead_per_unit, 2)
