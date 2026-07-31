@@ -921,19 +921,36 @@ def products_dashboard(request):
     # Exclude test checkout item from inventory reports
     from shop.models import OrderStatus
     products = Product.objects.exclude(slug="test-checkout-item").select_related("category_obj").annotate(
-        variants_count=Count("variants"),
-        stock_total=Sum("variants__stock_quantity"),
-        variants_active=Count("variants", filter=Q(variants__is_active=True)),
+        variants_count=Count("variants", distinct=True),
+        stock_total=Sum("variants__stock_quantity", distinct=False),
+        variants_active=Count("variants", filter=Q(variants__is_active=True), distinct=True),
         min_price=Min("variants__price"),
         max_price=Max("variants__price"),
-        # Total sold: sum of order item quantities for completed orders
-        total_sold=Sum(
-            "variants__orderitem__quantity",
-            filter=Q(variants__orderitem__order__status__in=[
-                OrderStatus.PAID, OrderStatus.SHIPPED, OrderStatus.FULFILLED
-            ])
-        ),
     )
+
+    # Calculate total_sold separately to avoid JOIN multiplication
+    from shop.models.cart import OrderItem
+    sold_by_product = dict(
+        OrderItem.objects.filter(
+            order__status__in=[OrderStatus.PAID, OrderStatus.SHIPPED, OrderStatus.FULFILLED],
+            variant__isnull=False,
+        ).values("variant__product_id").annotate(
+            total=Sum("quantity")
+        ).values_list("variant__product_id", "total")
+    )
+
+    # Fix stock_total — the Sum with joins can still inflate, so calculate separately
+    from django.db.models import Subquery, OuterRef
+    stock_by_product = {}
+    for p in products:
+        stock_by_product[p.id] = ProductVariant.objects.filter(
+            product_id=p.id, is_active=True
+        ).aggregate(total=Sum("stock_quantity"))["total"] or 0
+
+    # Patch the annotated values
+    for p in products:
+        p.stock_total = stock_by_product.get(p.id, 0)
+        p.total_sold = sold_by_product.get(p.id, 0)
 
     # Apply sorting
     if sort_by == "newest":
