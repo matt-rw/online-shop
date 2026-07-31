@@ -22,7 +22,9 @@ class Command(BaseCommand):
     def add_arguments(self, parser):
         parser.add_argument("--dry-run", action="store_true")
         parser.add_argument("--shipment-id", type=int, help="Fix a specific shipment")
-        parser.add_argument("--total", type=float, help="Override the total cost to distribute")
+        parser.add_argument("--total", type=float, help="Override the total items cost to distribute (manufacturing only, not shipping/customs)")
+        parser.add_argument("--tee-cost", type=float, help="If you know the per-unit tee cost, set it directly")
+        parser.add_argument("--pants-cost", type=float, help="If you know the per-unit pants cost, set it directly")
 
     def handle(self, *args, **options):
         dry_run = options["dry_run"]
@@ -63,7 +65,16 @@ class Command(BaseCommand):
                 self.stdout.write(self.style.ERROR("  Total retail value is 0 — can't distribute"))
                 continue
 
+            # Check for direct per-product cost overrides
+            direct_costs = {}
+            if options.get("tee_cost"):
+                direct_costs["tee"] = Decimal(str(options["tee_cost"]))
+            if options.get("pants_cost"):
+                direct_costs["pants"] = Decimal(str(options["pants_cost"]))
+
             self.stdout.write(f"Total retail value: ${total_retail:.2f}")
+            if direct_costs:
+                self.stdout.write(f"Direct costs: {direct_costs}")
             self.stdout.write(f"\n{'SKU':<30} {'Product':<25} {'Qty':<6} {'Price':<8} {'Old Cost':<10} {'New Cost':<10} {'Landed':<10} {'Margin':<8}")
             self.stdout.write("-" * 110)
 
@@ -72,13 +83,18 @@ class Command(BaseCommand):
             overhead_per_unit = overhead / max(total_items_count, 1)
 
             for item in items:
-                # Price ratio: this item's share of total retail value
-                item_retail = item.variant.price * item.quantity
-                share = item_retail / total_retail
-
-                # Distribute bulk cost by share, then per unit
-                item_cost_share = bulk_total * share
-                new_unit_cost = (item_cost_share / item.quantity).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
+                # Check for direct cost override by product name
+                product_name = item.variant.product.name.lower()
+                if "tee" in product_name and "tee" in direct_costs:
+                    new_unit_cost = direct_costs["tee"]
+                elif "pant" in product_name and "pants" in direct_costs:
+                    new_unit_cost = direct_costs["pants"]
+                else:
+                    # Price ratio: this item's share of total retail value
+                    item_retail = item.variant.price * item.quantity
+                    share = item_retail / total_retail
+                    item_cost_share = bulk_total * share
+                    new_unit_cost = (item_cost_share / item.quantity).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
 
                 landed = float(new_unit_cost) + float(overhead_per_unit)
                 margin = ((float(item.variant.price) - landed) / float(item.variant.price)) * 100
