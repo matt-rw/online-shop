@@ -330,9 +330,22 @@ def products_dashboard(request):
             product_id = request.POST.get("product_id")
             try:
                 product = Product.objects.get(id=product_id)
-                variants = product.variants.all().select_related("size", "color", "material").order_by(
-                    "size__display_order", "size__code", "color__display_order", "color__name"
-                )
+                variants_qs = product.variants.all().select_related("size", "color", "material").prefetch_related("attributes__attribute")
+                # Sort by unified attribute display_order, falling back to legacy size order
+                def variant_sort_key(v):
+                    size_order = 99
+                    color_order = 99
+                    for av in v.attributes.all():
+                        if av.attribute.slug == "size":
+                            size_order = av.display_order
+                        elif av.attribute.slug == "color":
+                            color_order = av.display_order
+                    if size_order == 99 and v.size:
+                        size_order = v.size.display_order
+                    if color_order == 99 and v.color:
+                        color_order = v.color.display_order
+                    return (size_order, color_order)
+                variants = sorted(variants_qs, key=variant_sort_key)
 
                 # Get pending shipment data for all variants in this product
                 pending_shipments = ShipmentItem.objects.filter(
