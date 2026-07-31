@@ -928,30 +928,6 @@ def products_dashboard(request):
         max_price=Max("variants__price"),
     )
 
-    # Calculate total_sold separately to avoid JOIN multiplication
-    from shop.models.cart import OrderItem
-    sold_by_product = dict(
-        OrderItem.objects.filter(
-            order__status__in=[OrderStatus.PAID, OrderStatus.SHIPPED, OrderStatus.FULFILLED],
-            variant__isnull=False,
-        ).values("variant__product_id").annotate(
-            total=Sum("quantity")
-        ).values_list("variant__product_id", "total")
-    )
-
-    # Fix stock_total — the Sum with joins can still inflate, so calculate separately
-    from django.db.models import Subquery, OuterRef
-    stock_by_product = {}
-    for p in products:
-        stock_by_product[p.id] = ProductVariant.objects.filter(
-            product_id=p.id, is_active=True
-        ).aggregate(total=Sum("stock_quantity"))["total"] or 0
-
-    # Patch the annotated values
-    for p in products:
-        p.stock_total = stock_by_product.get(p.id, 0)
-        p.total_sold = sold_by_product.get(p.id, 0)
-
     # Apply sorting
     if sort_by == "newest":
         products = products.order_by("-created_at")
@@ -963,6 +939,22 @@ def products_dashboard(request):
         products = products.order_by("-is_active", "name")
     else:
         products = products.order_by("-created_at")
+
+    # Calculate accurate stock and sold totals (separate queries to avoid JOIN inflation)
+    from shop.models.cart import OrderItem
+    sold_by_product = dict(
+        OrderItem.objects.filter(
+            order__status__in=[OrderStatus.PAID, OrderStatus.SHIPPED, OrderStatus.FULFILLED],
+            variant__isnull=False,
+        ).values("variant__product_id").annotate(
+            total=Sum("quantity")
+        ).values_list("variant__product_id", "total")
+    )
+    stock_by_product = {}
+    for pid, stock in ProductVariant.objects.filter(is_active=True).values("product_id").annotate(
+        total=Sum("stock_quantity")
+    ).values_list("product_id", "total"):
+        stock_by_product[pid] = stock
 
     # Build products data from annotated queryset
     products_data = []
@@ -1003,8 +995,8 @@ def products_dashboard(request):
                 "featured": product.featured,
                 "available_for_purchase": product.available_for_purchase,
                 "variant_count": product.variants_count or 0,
-                "total_stock": product.stock_total or 0,
-                "total_sold": product.total_sold or 0,
+                "total_stock": stock_by_product.get(product.id, 0),
+                "total_sold": sold_by_product.get(product.id, 0),
                 "active_variants": product.variants_active or 0,
                 "images": product.images or [],
                 "weight_oz": product.weight_oz,
