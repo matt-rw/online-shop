@@ -1329,8 +1329,11 @@
       <div class="stats-grid">
         <div class="stat-card">
           <div class="icon"><i class="fa-solid fa-shopping-cart"></i></div>
-          <h3>Total Orders</h3>
-          <div class="number">{{ stats.total }}</div>
+          <h3>Paid Orders</h3>
+          <div class="number">{{ stats.paid_count }}</div>
+          {% if stats.total != stats.paid_count %}
+          <div style="font-size: 0.75rem; color: #94a3b8; margin-top: 0.25rem;">{{ stats.total }} total</div>
+          {% endif %}
         </div>
         <div class="stat-card">
           <div class="icon"><i class="fa-solid fa-dollar-sign"></i></div>

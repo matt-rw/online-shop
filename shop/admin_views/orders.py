@@ -697,6 +697,7 @@ def orders_dashboard(request):
 
     # Basic stats
     total_count = real_orders.count()
+    paid_count = paid_orders.count()
     total_revenue = paid_orders.aggregate(Sum("total"))["total__sum"] or 0
 
     # Calculate total profit and AOV
@@ -745,8 +746,9 @@ def orders_dashboard(request):
         "shipped": real_orders.filter(status=OrderStatus.SHIPPED).count(),
         "delivered": real_orders.filter(status=OrderStatus.FULFILLED).count(),
         "total_revenue": total_revenue,
+        "paid_count": paid_count,
         # New metrics
-        "aov": float(total_revenue) / paid_orders.count() if paid_orders.count() > 0 else 0,
+        "aov": float(total_revenue) / paid_count if paid_count > 0 else 0,
         "total_profit": total_profit,
         "profit_margin": (total_profit / float(total_revenue) * 100) if total_revenue > 0 and total_profit else 0,
         # Time-based metrics
