@@ -691,7 +691,7 @@ def orders_dashboard(request):
     from shop.models import OrderStatus
 
     real_orders = Order.objects.filter(is_test=False)
-    paid_statuses = [OrderStatus.PAID, OrderStatus.SHIPPED, OrderStatus.FULFILLED]
+    paid_statuses = [OrderStatus.PAID, OrderStatus.SHIPPED, OrderStatus.HAND_DELIVERED, OrderStatus.FULFILLED]
     # Exclude orders marked as exclude_from_stats for revenue/profit calculations
     paid_orders = real_orders.filter(status__in=paid_statuses, exclude_from_stats=False)
 
