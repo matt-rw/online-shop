@@ -490,17 +490,22 @@ def admin_home(request):
     yesterday_start = today_start - timedelta(days=1)
 
     # Calculate orders and revenue
-    total_orders = Order.objects.count()
-    orders_30d = Order.objects.filter(created_at__gte=last_30d).count()
-    orders_today = Order.objects.filter(created_at__gte=today_start).count()
-    orders_yesterday = Order.objects.filter(created_at__gte=yesterday_start, created_at__lt=today_start).count()
-    total_revenue = Order.objects.aggregate(total=Sum("total"))["total"] or Decimal("0")
+    # Only count real, paid orders (exclude test orders and excluded-from-stats)
+    from shop.models.cart import OrderStatus
+    _paid_statuses = [OrderStatus.PAID, OrderStatus.SHIPPED, OrderStatus.HAND_DELIVERED, OrderStatus.FULFILLED]
+    _real_orders = Order.objects.filter(is_test=False, exclude_from_stats=False, status__in=_paid_statuses)
+
+    total_orders = _real_orders.count()
+    orders_30d = _real_orders.filter(created_at__gte=last_30d).count()
+    orders_today = _real_orders.filter(created_at__gte=today_start).count()
+    orders_yesterday = _real_orders.filter(created_at__gte=yesterday_start, created_at__lt=today_start).count()
+    total_revenue = _real_orders.aggregate(total=Sum("total"))["total"] or Decimal("0")
     last_7d = now - timedelta(days=7)
-    revenue_7d = Order.objects.filter(created_at__gte=last_7d).aggregate(total=Sum("total"))["total"] or Decimal("0")
-    orders_7d = Order.objects.filter(created_at__gte=last_7d).count()
-    revenue_30d = Order.objects.filter(created_at__gte=last_30d).aggregate(total=Sum("total"))["total"] or Decimal("0")
-    revenue_today = Order.objects.filter(created_at__gte=today_start).aggregate(total=Sum("total"))["total"] or Decimal("0")
-    revenue_yesterday = Order.objects.filter(created_at__gte=yesterday_start, created_at__lt=today_start).aggregate(total=Sum("total"))["total"] or Decimal("0")
+    revenue_7d = _real_orders.filter(created_at__gte=last_7d).aggregate(total=Sum("total"))["total"] or Decimal("0")
+    orders_7d = _real_orders.filter(created_at__gte=last_7d).count()
+    revenue_30d = _real_orders.filter(created_at__gte=last_30d).aggregate(total=Sum("total"))["total"] or Decimal("0")
+    revenue_today = _real_orders.filter(created_at__gte=today_start).aggregate(total=Sum("total"))["total"] or Decimal("0")
+    revenue_yesterday = _real_orders.filter(created_at__gte=yesterday_start, created_at__lt=today_start).aggregate(total=Sum("total"))["total"] or Decimal("0")
 
     # Calculate active sessions and visitors (exclude bots)
     _no_bots = ~models.Q(device_type="bot")
