@@ -908,15 +908,18 @@ def product_detail(request, slug):
         "review_count": product.reviews.filter(is_approved=True).count(),
     }
 
-    # Related products (same category, excluding current)
+    # Related products (same category first, then any other products)
+    related = Product.objects.filter(
+        is_active=True
+    ).exclude(id=product.id).exclude(slug__startswith="test-")
     if product.category_obj:
-        context["related_products"] = Product.objects.filter(
-            is_active=True, category_obj=product.category_obj
-        ).exclude(id=product.id).exclude(slug__startswith="test-")[:4]
+        same_category = related.filter(category_obj=product.category_obj)[:4]
+        if same_category.exists():
+            context["related_products"] = same_category
+        else:
+            context["related_products"] = related[:4]
     else:
-        context["related_products"] = Product.objects.filter(
-            is_active=True
-        ).exclude(id=product.id).exclude(slug__startswith="test-")[:4]
+        context["related_products"] = related[:4]
 
     return render(request, "shop/product_detail.html", context)
 
