@@ -990,10 +990,12 @@ def shop(request):
         else:
             image = default_image
 
+        total_stock = sum(v.stock_quantity for v in product.active_variants)
         product_list.append({
             "product": product,
             "image": image,
             "variant_count": len(product.active_variants),
+            "total_stock": total_stock,
             "is_bundle": False,
             "sale_info": product.get_sale_info(_active_sales=active_sales),
         })

@@ -137,6 +137,9 @@ class ShopConfig(AppConfig):
         # Process quick messages
         ShopConfig._process_quick_messages(now)
 
+        # Process abandoned cart recovery emails
+        ShopConfig._process_abandoned_carts(now)
+
     @staticmethod
     def _process_quick_messages(now):
         """Process scheduled quick messages that are ready to be sent."""
@@ -252,3 +255,89 @@ class ShopConfig(AppConfig):
                     message.save(update_fields=["status"])
                 except Exception:
                     pass  # Don't fail if we can't update status
+
+    @staticmethod
+    def _process_abandoned_carts(now):
+        """Send recovery emails to logged-in users with abandoned carts (1+ hour old)."""
+        from datetime import timedelta
+        from django.db import close_old_connections
+        from shop.models.cart import Cart
+
+        close_old_connections()
+
+        try:
+            # Find carts that:
+            # - belong to logged-in users (have user set)
+            # - have items in them
+            # - haven't been updated in over 1 hour
+            # - are still active (not checked out)
+            cutoff = now - timedelta(hours=1)
+            max_age = now - timedelta(days=7)  # Don't email carts older than 7 days
+
+            abandoned_carts = Cart.objects.filter(
+                user__isnull=False,
+                is_active=True,
+                items__isnull=False,
+                updated_at__lt=cutoff,
+                updated_at__gte=max_age,
+            ).distinct().select_related("user").prefetch_related("items__variant__product")
+
+            for cart in abandoned_carts:
+                user = cart.user
+                if not user.email:
+                    continue
+
+                # Check if we already sent a recovery email for this cart
+                # Use a simple flag on the cart to prevent duplicate sends
+                from django.core.cache import cache
+                cache_key = f"cart_recovery_sent_{cart.id}"
+                if cache.get(cache_key):
+                    continue
+
+                # Build cart items summary
+                items = list(cart.items.select_related("variant__product").all())
+                if not items:
+                    continue
+
+                item_lines = []
+                cart_total = 0
+                for item in items:
+                    name = item.variant.product.name if item.variant else "Item"
+                    price = float(item.variant.price) if item.variant else 0
+                    qty = item.quantity
+                    cart_total += price * qty
+                    item_lines.append(f"{name} × {qty} — ${price * qty:.2f}")
+
+                items_html = "".join(
+                    f'<p style="font-size: 15px; color: #555; margin: 0 0 8px; padding: 8px 0; border-bottom: 1px solid #eee;">{line}</p>'
+                    for line in item_lines
+                )
+
+                # Send recovery email
+                from shop.utils.email_helper import send_email
+                html_body = (
+                    '<div style="font-family: Helvetica, Arial, sans-serif; max-width: 520px; margin: 0 auto; padding: 40px 20px; color: #333;">'
+                    '<p style="font-size: 11px; letter-spacing: 0.15em; text-transform: uppercase; color: #999; margin: 0 0 20px;">Blueprint Apparel</p>'
+                    '<p style="font-size: 22px; font-weight: 700; color: #000; margin: 0 0 14px; letter-spacing: -0.02em;">You left something behind.</p>'
+                    '<p style="font-size: 15px; line-height: 1.8; color: #555; margin: 0 0 20px;">Your cart is still waiting for you.</p>'
+                    f'{items_html}'
+                    f'<p style="font-size: 15px; font-weight: 700; color: #000; margin: 16px 0 24px;">Total: ${cart_total:.2f}</p>'
+                    '<a href="https://www.blueprnt.store/shop/cart/" style="display: inline-block; padding: 13px 28px; background: #000; color: #fff; text-decoration: none; font-size: 11px; letter-spacing: 0.15em; text-transform: uppercase;">Complete Your Order</a>'
+                    '</div>'
+                )
+
+                success, log = send_email(
+                    email_address=user.email,
+                    subject="You left something in your cart",
+                    html_body=html_body,
+                )
+
+                if success:
+                    # Mark as sent so we don't send again (cache for 7 days)
+                    cache.set(cache_key, True, 60 * 60 * 24 * 7)
+                    logger.info(f"Abandoned cart recovery email sent to {user.email} (cart {cart.id})")
+                else:
+                    logger.error(f"Failed to send abandoned cart recovery to {user.email}")
+
+        except Exception as e:
+            logger.error(f"Error processing abandoned carts: {e}")
