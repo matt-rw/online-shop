@@ -110,7 +110,7 @@
       <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem;">
         <span style="font-family: 'Inter', sans-serif; font-size: 0.65rem; font-weight: 600; letter-spacing: 0.2em; text-transform: uppercase; color: #999;">{{ attr.name }}</span>
         {% if attr.slug == 'size' %}
-        <a href="#" onclick="event.preventDefault(); document.getElementById('size-guide-modal').classList.toggle('hidden');" style="font-family: 'Inter', sans-serif; font-size: 0.65rem; color: #bbb; text-decoration: underline; transition: color 0.2s;" onmouseenter="this.style.color='#000'" onmouseleave="this.style.color='#bbb'">Size Guide</a>
+        <a href="#" onclick="event.preventDefault(); document.getElementById('size-guide-modal').style.display='flex';" style="font-family: 'Inter', sans-serif; font-size: 0.65rem; color: #bbb; text-decoration: underline; transition: color 0.2s;" onmouseenter="this.style.color='#000'" onmouseleave="this.style.color='#bbb'">Size Guide</a>
         {% endif %}
       </div>
 
@@ -256,9 +256,9 @@
 </div>
 
 <!-- Size Guide Modal -->
-<div id="size-guide-modal" class="hidden" style="position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 100; display: flex; align-items: center; justify-content: center;" onclick="if(event.target===this) this.classList.add('hidden')">
+<div id="size-guide-modal" style="position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 100; display: none; align-items: center; justify-content: center;" onclick="if(event.target===this) this.style.display='none'">
   <div style="background: #fff; max-width: 500px; width: 90%; border-radius: 0; padding: 2.5rem; position: relative; max-height: 80vh; overflow-y: auto;">
-    <button onclick="document.getElementById('size-guide-modal').classList.add('hidden')" style="position: absolute; top: 1rem; right: 1rem; background: none; border: none; font-size: 1.25rem; cursor: pointer; color: #999;">×</button>
+    <button onclick="document.getElementById('size-guide-modal').style.display='none'" style="position: absolute; top: 1rem; right: 1rem; background: none; border: none; font-size: 1.25rem; cursor: pointer; color: #999;">×</button>
     <p style="font-family: 'Inter', sans-serif; font-size: 0.55rem; font-weight: 500; letter-spacing: 0.3em; text-transform: uppercase; color: #ccc; margin: 0 0 1.5rem;">Size Guide</p>
     <h3 style="font-family: 'Inter', sans-serif; font-size: 1.125rem; font-weight: 700; color: #000; margin: 0 0 0.5rem;">{{ product.name }}</h3>
     <p style="font-family: 'Inter', sans-serif; font-size: 0.8rem; color: #999; margin: 0 0 1.5rem;">All measurements in inches</p>
@@ -305,81 +305,102 @@
 {% endif %}
 
 <!-- Reviews Section -->
-<section style="background: #fff; padding: 4rem 2rem; border-top: 1px solid #eee;">
-  <div style="max-width: 40rem; margin: 0 auto;">
-    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
-      <div>
-        <p style="font-family: 'Inter', sans-serif; font-size: 0.55rem; font-weight: 500; letter-spacing: 0.3em; text-transform: uppercase; color: #ccc; margin: 0 0 0.5rem;">Reviews</p>
-        {% if avg_rating %}
-        <div style="display: flex; align-items: center; gap: 0.5rem;">
-          <span style="font-family: 'Inter', sans-serif; font-size: 1.5rem; font-weight: 700; color: #000;">{{ avg_rating|floatformat:1 }}</span>
-          <span style="color: #fbbf24; font-size: 1rem;">{% for i in "12345" %}{% if forloop.counter <= avg_rating %}★{% else %}☆{% endif %}{% endfor %}</span>
-          <span style="font-family: 'Inter', sans-serif; font-size: 0.8rem; color: #999;">({{ review_count }})</span>
+<section style="background: #f9f9f6; padding: 5rem 2rem;">
+  <div style="max-width: 45rem; margin: 0 auto;">
+
+    <!-- Header -->
+    <div style="text-align: center; margin-bottom: 3rem;">
+      <p style="font-family: 'Inter', sans-serif; font-size: 0.55rem; font-weight: 500; letter-spacing: 0.3em; text-transform: uppercase; color: #bbb; margin: 0 0 1rem;">Customer Reviews</p>
+      {% if avg_rating %}
+      <div style="display: flex; align-items: center; justify-content: center; gap: 0.75rem; margin-bottom: 1rem;">
+        <span style="font-family: 'Inter', sans-serif; font-size: 2.5rem; font-weight: 800; color: #000; letter-spacing: -0.03em;">{{ avg_rating|floatformat:1 }}</span>
+        <div>
+          <div style="color: #000; font-size: 0.875rem; letter-spacing: 0.15rem;">{% for i in "12345" %}{% if forloop.counter <= avg_rating %}★{% else %}☆{% endif %}{% endfor %}</div>
+          <p style="font-family: 'Inter', sans-serif; font-size: 0.7rem; color: #999; margin: 0.25rem 0 0;">{{ review_count }} review{{ review_count|pluralize }}</p>
         </div>
-        {% endif %}
       </div>
-      <button onclick="document.getElementById('review-form').style.display = document.getElementById('review-form').style.display === 'none' ? 'block' : 'none'" style="font-family: 'Inter', sans-serif; font-size: 0.7rem; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; padding: 10px 24px; border: 1px solid #000; background: none; color: #000; cursor: pointer; transition: all 0.2s;" onmouseenter="this.style.background='#000'; this.style.color='#fff'" onmouseleave="this.style.background='none'; this.style.color='#000'">Write a Review</button>
+      {% endif %}
+      <button onclick="document.getElementById('review-form').style.display = document.getElementById('review-form').style.display === 'none' ? 'block' : 'none'"
+              style="font-family: 'Inter', sans-serif; font-size: 0.65rem; font-weight: 600; letter-spacing: 0.15em; text-transform: uppercase; padding: 12px 32px; border: 1px solid #000; background: none; color: #000; cursor: pointer; transition: all 0.2s;"
+              onmouseenter="this.style.background='#000'; this.style.color='#fff'" onmouseleave="this.style.background='transparent'; this.style.color='#000'">
+        Write a Review
+      </button>
     </div>
 
-    <!-- Review Form (hidden by default) -->
-    <div id="review-form" style="display: none; margin-bottom: 2.5rem; padding: 2rem; background: #fafafa; border-radius: 0;">
+    <!-- Review Form -->
+    <div id="review-form" style="display: none; margin-bottom: 3rem; padding: 2.5rem; background: #fff;">
       <form method="POST" action="{% url 'shop:product_detail' slug=product.slug %}">
         {% csrf_token %}
         <input type="hidden" name="action" value="submit_review">
 
-        <div style="margin-bottom: 1rem;">
-          <label style="font-family: 'Inter', sans-serif; font-size: 0.65rem; font-weight: 600; letter-spacing: 0.15em; text-transform: uppercase; color: #999; display: block; margin-bottom: 0.375rem;">Rating</label>
-          <div id="star-rating" style="display: flex; gap: 0.25rem; font-size: 1.5rem; cursor: pointer;">
-            {% for i in "12345" %}<span data-rating="{{ forloop.counter }}" onclick="setRating({{ forloop.counter }})" onmouseenter="hoverRating({{ forloop.counter }})" onmouseleave="resetRating()" style="color: #ddd; transition: color 0.1s;">★</span>{% endfor %}
+        <div style="text-align: center; margin-bottom: 2rem;">
+          <p style="font-family: 'Inter', sans-serif; font-size: 0.65rem; font-weight: 600; letter-spacing: 0.2em; text-transform: uppercase; color: #bbb; margin: 0 0 0.75rem;">Your Rating</p>
+          <div id="star-rating" style="display: inline-flex; gap: 0.375rem; font-size: 2rem; cursor: pointer;">
+            {% for i in "12345" %}<span data-rating="{{ forloop.counter }}" onclick="setRating({{ forloop.counter }})" onmouseenter="hoverRating({{ forloop.counter }})" onmouseleave="resetRating()" style="color: #ddd; transition: color 0.15s; user-select: none;">★</span>{% endfor %}
           </div>
           <input type="hidden" name="rating" id="review-rating" value="5">
         </div>
 
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1rem;">
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin-bottom: 1.5rem;">
           <div>
-            <label style="font-family: 'Inter', sans-serif; font-size: 0.65rem; font-weight: 600; letter-spacing: 0.15em; text-transform: uppercase; color: #999; display: block; margin-bottom: 0.375rem;">Name</label>
-            <input type="text" name="reviewer_name" required placeholder="Your name" style="width: 100%; padding: 10px; font-family: 'Inter', sans-serif; font-size: 0.85rem; border: none; border-bottom: 1.5px solid #ddd; outline: none; background: transparent;" />
+            <input type="text" name="reviewer_name" required placeholder="Your name"
+                   style="width: 100%; padding: 12px 0; font-family: 'Inter', sans-serif; font-size: 0.9rem; border: none; border-bottom: 1.5px solid #e0e0e0; outline: none; background: transparent; transition: border-color 0.2s;"
+                   onfocus="this.style.borderColor='#000'" onblur="this.style.borderColor='#e0e0e0'" />
           </div>
           <div>
-            <label style="font-family: 'Inter', sans-serif; font-size: 0.65rem; font-weight: 600; letter-spacing: 0.15em; text-transform: uppercase; color: #999; display: block; margin-bottom: 0.375rem;">Email <span style="font-weight: 400; text-transform: none; letter-spacing: 0;">(for verified badge)</span></label>
-            <input type="email" name="reviewer_email" placeholder="your@email.com" style="width: 100%; padding: 10px; font-family: 'Inter', sans-serif; font-size: 0.85rem; border: none; border-bottom: 1.5px solid #ddd; outline: none; background: transparent;" />
+            <input type="email" name="reviewer_email" placeholder="Email (optional — for verified badge)"
+                   style="width: 100%; padding: 12px 0; font-family: 'Inter', sans-serif; font-size: 0.9rem; border: none; border-bottom: 1.5px solid #e0e0e0; outline: none; background: transparent; transition: border-color 0.2s;"
+                   onfocus="this.style.borderColor='#000'" onblur="this.style.borderColor='#e0e0e0'" />
           </div>
-        </div>
-
-        <div style="margin-bottom: 1rem;">
-          <label style="font-family: 'Inter', sans-serif; font-size: 0.65rem; font-weight: 600; letter-spacing: 0.15em; text-transform: uppercase; color: #999; display: block; margin-bottom: 0.375rem;">Title <span style="font-weight: 400; text-transform: none; letter-spacing: 0;">(optional)</span></label>
-          <input type="text" name="review_title" placeholder="Summarize your experience" style="width: 100%; padding: 10px; font-family: 'Inter', sans-serif; font-size: 0.85rem; border: none; border-bottom: 1.5px solid #ddd; outline: none; background: transparent;" />
         </div>
 
         <div style="margin-bottom: 1.5rem;">
-          <label style="font-family: 'Inter', sans-serif; font-size: 0.65rem; font-weight: 600; letter-spacing: 0.15em; text-transform: uppercase; color: #999; display: block; margin-bottom: 0.375rem;">Review</label>
-          <textarea name="review_body" required rows="4" placeholder="What did you think?" style="width: 100%; padding: 10px; font-family: 'Inter', sans-serif; font-size: 0.85rem; border: none; border-bottom: 1.5px solid #ddd; outline: none; background: transparent; resize: vertical;"></textarea>
+          <input type="text" name="review_title" placeholder="Review title (optional)"
+                 style="width: 100%; padding: 12px 0; font-family: 'Inter', sans-serif; font-size: 0.9rem; border: none; border-bottom: 1.5px solid #e0e0e0; outline: none; background: transparent; transition: border-color 0.2s;"
+                 onfocus="this.style.borderColor='#000'" onblur="this.style.borderColor='#e0e0e0'" />
         </div>
 
-        <button type="submit" style="padding: 12px 32px; font-family: 'Inter', sans-serif; font-size: 0.7rem; font-weight: 600; letter-spacing: 0.15em; text-transform: uppercase; border: none; background: #000; color: #fff; cursor: pointer;">Submit Review</button>
+        <div style="margin-bottom: 2rem;">
+          <textarea name="review_body" required rows="4" placeholder="Share your experience with this product..."
+                    style="width: 100%; padding: 12px 0; font-family: 'Inter', sans-serif; font-size: 0.9rem; border: none; border-bottom: 1.5px solid #e0e0e0; outline: none; background: transparent; resize: vertical; line-height: 1.7; transition: border-color 0.2s;"
+                    onfocus="this.style.borderColor='#000'" onblur="this.style.borderColor='#e0e0e0'"></textarea>
+        </div>
+
+        <button type="submit"
+                style="width: 100%; padding: 14px; font-family: 'Inter', sans-serif; font-size: 0.7rem; font-weight: 600; letter-spacing: 0.15em; text-transform: uppercase; border: none; background: #000; color: #fff; cursor: pointer; transition: background 0.2s;"
+                onmouseenter="this.style.background='#222'" onmouseleave="this.style.background='#000'">
+          Submit Review
+        </button>
       </form>
     </div>
 
     <!-- Review List -->
     {% for review in reviews %}
-    <div style="padding: 1.5rem 0; border-bottom: 1px solid #f0f0f0;">
-      <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 0.5rem;">
-        <div>
-          <span style="color: #fbbf24; font-size: 0.875rem; letter-spacing: 0.1rem;">{% for i in "12345" %}{% if forloop.counter <= review.rating %}★{% else %}☆{% endif %}{% endfor %}</span>
-          {% if review.is_verified_purchase %}
-          <span style="font-family: 'Inter', sans-serif; font-size: 0.6rem; font-weight: 600; color: #10b981; background: #ecfdf5; padding: 0.15rem 0.5rem; border-radius: 2px; margin-left: 0.5rem;">Verified Purchase</span>
-          {% endif %}
+    <div style="padding: 2rem 0; {% if not forloop.last %}border-bottom: 1px solid #eee;{% endif %}">
+      <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 1rem;">
+        <!-- Reviewer initial -->
+        <div style="width: 36px; height: 36px; border-radius: 50%; background: #000; color: #fff; display: flex; align-items: center; justify-content: center; font-family: 'Inter', sans-serif; font-size: 0.75rem; font-weight: 700; flex-shrink: 0;">{{ review.name|make_list|first|upper }}</div>
+        <div style="flex: 1;">
+          <div style="display: flex; align-items: center; gap: 0.5rem;">
+            <span style="font-family: 'Inter', sans-serif; font-size: 0.85rem; font-weight: 600; color: #000;">{{ review.name }}</span>
+            {% if review.is_verified_purchase %}
+            <span style="font-family: 'Inter', sans-serif; font-size: 0.55rem; font-weight: 600; letter-spacing: 0.05em; color: #000; border: 1px solid #000; padding: 0.125rem 0.375rem;">VERIFIED</span>
+            {% endif %}
+          </div>
+          <span style="font-family: 'Inter', sans-serif; font-size: 0.7rem; color: #bbb;">{{ review.created_at|date:"M j, Y" }}</span>
         </div>
-        <span style="font-family: 'Inter', sans-serif; font-size: 0.7rem; color: #ccc;">{{ review.created_at|date:"M j, Y" }}</span>
+        <div style="color: #000; font-size: 0.75rem; letter-spacing: 0.1rem; flex-shrink: 0;">{% for i in "12345" %}{% if forloop.counter <= review.rating %}★{% else %}☆{% endif %}{% endfor %}</div>
       </div>
       {% if review.title %}
-      <p style="font-family: 'Inter', sans-serif; font-size: 0.9rem; font-weight: 600; color: #000; margin: 0 0 0.375rem;">{{ review.title }}</p>
+      <p style="font-family: 'Inter', sans-serif; font-size: 0.95rem; font-weight: 600; color: #000; margin: 0 0 0.5rem; letter-spacing: -0.01em;">{{ review.title }}</p>
       {% endif %}
-      <p style="font-family: 'Inter', sans-serif; font-size: 0.85rem; color: #666; line-height: 1.7; margin: 0 0 0.5rem;">{{ review.body }}</p>
-      <p style="font-family: 'Inter', sans-serif; font-size: 0.7rem; color: #bbb; margin: 0;">{{ review.name }}</p>
+      <p style="font-family: 'Inter', sans-serif; font-size: 0.875rem; font-weight: 300; color: #555; line-height: 1.8; margin: 0;">{{ review.body }}</p>
     </div>
     {% empty %}
-    <p style="font-family: 'Inter', sans-serif; font-size: 0.85rem; color: #ccc; text-align: center; padding: 2rem 0;">No reviews yet. Be the first to share your experience.</p>
+    <div style="text-align: center; padding: 3rem 0;">
+      <p style="font-family: 'Inter', sans-serif; font-size: 1rem; font-weight: 300; color: #bbb; margin: 0;">No reviews yet.</p>
+      <p style="font-family: 'Inter', sans-serif; font-size: 0.8rem; font-weight: 300; color: #ddd; margin: 0.5rem 0 0;">Be the first to share your experience.</p>
+    </div>
     {% endfor %}
   </div>
 </section>
@@ -617,9 +638,7 @@ if (tbody && sizeGuide.sizes) {
   if (link) link.style.display = 'none';
 }
 
-// Size guide modal toggle
-var sgModal = document.getElementById('size-guide-modal');
-if (sgModal) { sgModal.style.display = 'none'; sgModal.classList.remove('hidden'); }
+// Size guide modal is display:none by default, opened via inline onclick
 
 // Star rating interaction
 var currentRating = 5;
