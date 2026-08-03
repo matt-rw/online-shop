@@ -667,8 +667,6 @@ def order_detail(request, order_number):
     return render(request, "shop/order_detail.html", context)
 
 
-@cache_page(60 * 5)  # Cache for 5 minutes
-@vary_on_cookie
 def product_detail(request, slug):
     """Product detail page."""
     import json
@@ -904,12 +902,17 @@ def product_detail(request, slug):
         "avg_rating": product.reviews.filter(is_approved=True).aggregate(
             avg=django_models.Avg("rating"))["avg"],
         "review_count": product.reviews.filter(is_approved=True).count(),
-        # Related products (same category, excluding current)
-        "related_products": Product.objects.filter(
-            is_active=True, category_obj=product.category_obj
-        ).exclude(id=product.id).exclude(slug__startswith="test-")[:4] if product.category_obj else
-        Product.objects.filter(is_active=True).exclude(id=product.id).exclude(slug__startswith="test-")[:4],
     }
+
+    # Related products (same category, excluding current)
+    if product.category_obj:
+        context["related_products"] = Product.objects.filter(
+            is_active=True, category_obj=product.category_obj
+        ).exclude(id=product.id).exclude(slug__startswith="test-")[:4]
+    else:
+        context["related_products"] = Product.objects.filter(
+            is_active=True
+        ).exclude(id=product.id).exclude(slug__startswith="test-")[:4]
 
     return render(request, "shop/product_detail.html", context)
 
