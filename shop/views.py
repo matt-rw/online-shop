@@ -3,6 +3,7 @@ import logging
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.core.mail import send_mail
+from django.db import models as django_models
 from django.http import HttpResponse, JsonResponse
 from django.shortcuts import redirect, render
 from django.urls import reverse
@@ -676,6 +677,43 @@ def product_detail(request, slug):
     from django.shortcuts import get_object_or_404
 
     from .models import CustomAttribute, Product
+    from .models.review import ProductReview
+    from .models.cart import Order, OrderItem
+
+    # Handle review submission
+    if request.method == "POST" and request.POST.get("action") == "submit_review":
+        product = get_object_or_404(Product, slug=slug, is_active=True)
+        name = request.POST.get("reviewer_name", "").strip()
+        email = request.POST.get("reviewer_email", "").strip()
+        rating = int(request.POST.get("rating", 5))
+        title = request.POST.get("review_title", "").strip()
+        body = request.POST.get("review_body", "").strip()
+
+        if name and body and 1 <= rating <= 5:
+            # Check if verified purchase
+            is_verified = False
+            if email:
+                is_verified = OrderItem.objects.filter(
+                    order__email__iexact=email,
+                    order__status__in=["PAID", "SHIPPED", "HAND_DELIVERED", "FULFILLED"],
+                    variant__product=product,
+                ).exists()
+
+            ProductReview.objects.create(
+                product=product,
+                user=request.user if request.user.is_authenticated else None,
+                name=name,
+                email=email,
+                rating=rating,
+                title=title,
+                body=body,
+                is_verified_purchase=is_verified,
+            )
+            messages.success(request, "Thank you for your review!")
+        else:
+            messages.error(request, "Please fill in your name, rating, and review.")
+
+        return redirect("shop:product_detail", slug=slug)
 
     product = get_object_or_404(Product, slug=slug, is_active=True)
 
@@ -861,6 +899,11 @@ def product_detail(request, slug):
         "stripe_publishable_key": settings.STRIPE_PUBLISHABLE_KEY,
         # Sale info
         "sale_info": sale_info,
+        # Reviews
+        "reviews": product.reviews.filter(is_approved=True)[:20],
+        "avg_rating": product.reviews.filter(is_approved=True).aggregate(
+            avg=django_models.Avg("rating"))["avg"],
+        "review_count": product.reviews.filter(is_approved=True).count(),
         # Related products (same category, excluding current)
         "related_products": Product.objects.filter(
             is_active=True, category_obj=product.category_obj

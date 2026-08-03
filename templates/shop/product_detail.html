@@ -304,6 +304,86 @@
 </section>
 {% endif %}
 
+<!-- Reviews Section -->
+<section style="background: #fff; padding: 4rem 2rem; border-top: 1px solid #eee;">
+  <div style="max-width: 40rem; margin: 0 auto;">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
+      <div>
+        <p style="font-family: 'Inter', sans-serif; font-size: 0.55rem; font-weight: 500; letter-spacing: 0.3em; text-transform: uppercase; color: #ccc; margin: 0 0 0.5rem;">Reviews</p>
+        {% if avg_rating %}
+        <div style="display: flex; align-items: center; gap: 0.5rem;">
+          <span style="font-family: 'Inter', sans-serif; font-size: 1.5rem; font-weight: 700; color: #000;">{{ avg_rating|floatformat:1 }}</span>
+          <span style="color: #fbbf24; font-size: 1rem;">{% for i in "12345" %}{% if forloop.counter <= avg_rating %}★{% else %}☆{% endif %}{% endfor %}</span>
+          <span style="font-family: 'Inter', sans-serif; font-size: 0.8rem; color: #999;">({{ review_count }})</span>
+        </div>
+        {% endif %}
+      </div>
+      <button onclick="document.getElementById('review-form').style.display = document.getElementById('review-form').style.display === 'none' ? 'block' : 'none'" style="font-family: 'Inter', sans-serif; font-size: 0.7rem; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; padding: 10px 24px; border: 1px solid #000; background: none; color: #000; cursor: pointer; transition: all 0.2s;" onmouseenter="this.style.background='#000'; this.style.color='#fff'" onmouseleave="this.style.background='none'; this.style.color='#000'">Write a Review</button>
+    </div>
+
+    <!-- Review Form (hidden by default) -->
+    <div id="review-form" style="display: none; margin-bottom: 2.5rem; padding: 2rem; background: #fafafa; border-radius: 0;">
+      <form method="POST" action="{% url 'shop:product_detail' slug=product.slug %}">
+        {% csrf_token %}
+        <input type="hidden" name="action" value="submit_review">
+
+        <div style="margin-bottom: 1rem;">
+          <label style="font-family: 'Inter', sans-serif; font-size: 0.65rem; font-weight: 600; letter-spacing: 0.15em; text-transform: uppercase; color: #999; display: block; margin-bottom: 0.375rem;">Rating</label>
+          <div id="star-rating" style="display: flex; gap: 0.25rem; font-size: 1.5rem; cursor: pointer;">
+            {% for i in "12345" %}<span data-rating="{{ forloop.counter }}" onclick="setRating({{ forloop.counter }})" onmouseenter="hoverRating({{ forloop.counter }})" onmouseleave="resetRating()" style="color: #ddd; transition: color 0.1s;">★</span>{% endfor %}
+          </div>
+          <input type="hidden" name="rating" id="review-rating" value="5">
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1rem;">
+          <div>
+            <label style="font-family: 'Inter', sans-serif; font-size: 0.65rem; font-weight: 600; letter-spacing: 0.15em; text-transform: uppercase; color: #999; display: block; margin-bottom: 0.375rem;">Name</label>
+            <input type="text" name="reviewer_name" required placeholder="Your name" style="width: 100%; padding: 10px; font-family: 'Inter', sans-serif; font-size: 0.85rem; border: none; border-bottom: 1.5px solid #ddd; outline: none; background: transparent;" />
+          </div>
+          <div>
+            <label style="font-family: 'Inter', sans-serif; font-size: 0.65rem; font-weight: 600; letter-spacing: 0.15em; text-transform: uppercase; color: #999; display: block; margin-bottom: 0.375rem;">Email <span style="font-weight: 400; text-transform: none; letter-spacing: 0;">(for verified badge)</span></label>
+            <input type="email" name="reviewer_email" placeholder="your@email.com" style="width: 100%; padding: 10px; font-family: 'Inter', sans-serif; font-size: 0.85rem; border: none; border-bottom: 1.5px solid #ddd; outline: none; background: transparent;" />
+          </div>
+        </div>
+
+        <div style="margin-bottom: 1rem;">
+          <label style="font-family: 'Inter', sans-serif; font-size: 0.65rem; font-weight: 600; letter-spacing: 0.15em; text-transform: uppercase; color: #999; display: block; margin-bottom: 0.375rem;">Title <span style="font-weight: 400; text-transform: none; letter-spacing: 0;">(optional)</span></label>
+          <input type="text" name="review_title" placeholder="Summarize your experience" style="width: 100%; padding: 10px; font-family: 'Inter', sans-serif; font-size: 0.85rem; border: none; border-bottom: 1.5px solid #ddd; outline: none; background: transparent;" />
+        </div>
+
+        <div style="margin-bottom: 1.5rem;">
+          <label style="font-family: 'Inter', sans-serif; font-size: 0.65rem; font-weight: 600; letter-spacing: 0.15em; text-transform: uppercase; color: #999; display: block; margin-bottom: 0.375rem;">Review</label>
+          <textarea name="review_body" required rows="4" placeholder="What did you think?" style="width: 100%; padding: 10px; font-family: 'Inter', sans-serif; font-size: 0.85rem; border: none; border-bottom: 1.5px solid #ddd; outline: none; background: transparent; resize: vertical;"></textarea>
+        </div>
+
+        <button type="submit" style="padding: 12px 32px; font-family: 'Inter', sans-serif; font-size: 0.7rem; font-weight: 600; letter-spacing: 0.15em; text-transform: uppercase; border: none; background: #000; color: #fff; cursor: pointer;">Submit Review</button>
+      </form>
+    </div>
+
+    <!-- Review List -->
+    {% for review in reviews %}
+    <div style="padding: 1.5rem 0; border-bottom: 1px solid #f0f0f0;">
+      <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 0.5rem;">
+        <div>
+          <span style="color: #fbbf24; font-size: 0.875rem; letter-spacing: 0.1rem;">{% for i in "12345" %}{% if forloop.counter <= review.rating %}★{% else %}☆{% endif %}{% endfor %}</span>
+          {% if review.is_verified_purchase %}
+          <span style="font-family: 'Inter', sans-serif; font-size: 0.6rem; font-weight: 600; color: #10b981; background: #ecfdf5; padding: 0.15rem 0.5rem; border-radius: 2px; margin-left: 0.5rem;">Verified Purchase</span>
+          {% endif %}
+        </div>
+        <span style="font-family: 'Inter', sans-serif; font-size: 0.7rem; color: #ccc;">{{ review.created_at|date:"M j, Y" }}</span>
+      </div>
+      {% if review.title %}
+      <p style="font-family: 'Inter', sans-serif; font-size: 0.9rem; font-weight: 600; color: #000; margin: 0 0 0.375rem;">{{ review.title }}</p>
+      {% endif %}
+      <p style="font-family: 'Inter', sans-serif; font-size: 0.85rem; color: #666; line-height: 1.7; margin: 0 0 0.5rem;">{{ review.body }}</p>
+      <p style="font-family: 'Inter', sans-serif; font-size: 0.7rem; color: #bbb; margin: 0;">{{ review.name }}</p>
+    </div>
+    {% empty %}
+    <p style="font-family: 'Inter', sans-serif; font-size: 0.85rem; color: #ccc; text-align: center; padding: 2rem 0;">No reviews yet. Be the first to share your experience.</p>
+    {% endfor %}
+  </div>
+</section>
+
 {% endblock %}
 
 {% block extra_js %}
@@ -538,8 +618,24 @@ if (tbody && sizeGuide.sizes) {
 }
 
 // Size guide modal toggle
-document.getElementById('size-guide-modal').style.display = 'none';
-document.getElementById('size-guide-modal').classList.remove('hidden');
+var sgModal = document.getElementById('size-guide-modal');
+if (sgModal) { sgModal.style.display = 'none'; sgModal.classList.remove('hidden'); }
+
+// Star rating interaction
+var currentRating = 5;
+function setRating(n) {
+  currentRating = n;
+  document.getElementById('review-rating').value = n;
+  updateStars(n);
+}
+function hoverRating(n) { updateStars(n); }
+function resetRating() { updateStars(currentRating); }
+function updateStars(n) {
+  document.querySelectorAll('#star-rating span').forEach(function(star) {
+    star.style.color = parseInt(star.dataset.rating) <= n ? '#fbbf24' : '#ddd';
+  });
+}
+updateStars(5);
 </script>
 
 <!-- Product Structured Data -->
@@ -560,7 +656,12 @@ document.getElementById('size-guide-modal').classList.remove('hidden');
     "priceCurrency": "USD",
     "availability": "{% if total_stock > 0 %}https://schema.org/InStock{% else %}https://schema.org/OutOfStock{% endif %}",
     "url": "https://www.blueprnt.store{% url 'shop:product_detail' slug=product.slug %}"
-  }
+  }{% if review_count > 0 %},
+  "aggregateRating": {
+    "@type": "AggregateRating",
+    "ratingValue": "{{ avg_rating|floatformat:1 }}",
+    "reviewCount": "{{ review_count }}"
+  }{% endif %}
 }
 </script>
 {% endblock %}

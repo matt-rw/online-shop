@@ -11,6 +11,7 @@ from .product import *
 from .profile import SavedAddress, UserProfile
 from .reporting import ScheduledReport, ScheduledReportLog
 from .returns import Return, ReturnItem, ReturnReason, ReturnStatus
+from .review import ProductReview
 from .settings import Currency, QuickLink, SiteSettings
 from .lookbook import Lookbook
 from .shipment import Shipment, ShipmentItem
