@@ -267,6 +267,14 @@ def products_dashboard(request):
                     except json.JSONDecodeError:
                         pass
 
+                # Update size guide
+                size_guide_json = request.POST.get("size_guide")
+                if size_guide_json is not None:
+                    try:
+                        product.size_guide = json.loads(size_guide_json)
+                    except json.JSONDecodeError:
+                        pass
+
                 product.save()
 
                 # Update all variants that were using the old base price to the new base price
@@ -1012,6 +1020,7 @@ def products_dashboard(request):
                 "active_variants": product.variants_active or 0,
                 "images": product.images or [],
                 "weight_oz": product.weight_oz,
+                "size_guide": product.size_guide or {},
             }
         )
 

@@ -711,6 +711,7 @@
                   data-available="{{ product.available_for_purchase|lower }}"
                   data-images='{{ product.images|to_json }}'
                   data-weight-oz="{{ product.weight_oz|default:"" }}"
+                  data-size-guide='{{ product.size_guide|to_json }}'
                 >
                   <i class="fa-solid fa-edit"></i>
                   Edit
@@ -817,6 +818,18 @@
               <span>Available for purchase</span>
             </label>
             <p style="font-size: 0.75rem; color: #64748b; margin-top: 0.25rem; margin-left: 1.5rem;">If unchecked, product shows "Not Available" instead of Add to Cart</p>
+          </div>
+
+          <!-- Size Guide Editor -->
+          <div class="form-group">
+            <label>Size Guide</label>
+            <p style="font-size: 0.75rem; color: #64748b; margin-bottom: 0.5rem;">Measurement table shown on the product page. Columns = measurement types, rows = sizes.</p>
+            <div style="margin-bottom: 0.5rem;">
+              <label style="font-size: 0.75rem; color: #64748b;">Columns (comma separated):</label>
+              <input type="text" id="edit_size_guide_columns" placeholder="e.g. Chest, Length, Sleeve" style="width: 100%; padding: 0.5rem; border: 1px solid #e2e8f0; border-radius: 6px; font-size: 0.875rem;">
+            </div>
+            <div id="edit_size_guide_rows" style="margin-bottom: 0.5rem;"></div>
+            <button type="button" onclick="addSizeGuideRow()" style="font-size: 0.75rem; padding: 0.375rem 0.75rem; border: 1px dashed #cbd5e1; border-radius: 6px; background: none; color: #64748b; cursor: pointer;">+ Add Size</button>
           </div>
 
           <div class="form-group">
@@ -1835,11 +1848,13 @@
         images = [];
       }
       const weightOz = btn.dataset.weightOz;
+      let sizeGuide = {};
+      try { sizeGuide = JSON.parse(btn.dataset.sizeGuide || '{}'); } catch(e) {}
 
-      openEditModal(id, name, slug, category, description, price, cost, featured, available, images, weightOz);
+      openEditModal(id, name, slug, category, description, price, cost, featured, available, images, weightOz, sizeGuide);
     }
 
-    function openEditModal(id, name, slug, category, description, price, cost, featured, available, images, weightOz) {
+    function openEditModal(id, name, slug, category, description, price, cost, featured, available, images, weightOz, sizeGuide) {
       document.getElementById('edit_product_id').value = id;
       document.getElementById('edit_name').value = name;
       document.getElementById('edit_slug').value = slug;
@@ -1855,7 +1870,47 @@
       productImages = Array.isArray(images) ? [...images] : [];
       displayProductImages();
 
+      // Load size guide
+      loadSizeGuide(sizeGuide || {});
+
       document.getElementById('editModal').classList.add('active');
+    }
+
+    function loadSizeGuide(sg) {
+      document.getElementById('edit_size_guide_columns').value = (sg.columns || []).join(', ');
+      var container = document.getElementById('edit_size_guide_rows');
+      container.innerHTML = '';
+      if (sg.sizes) {
+        var sizeOrder = ['XS', 'S', 'M', 'L', 'XL', 'XXL', '2XL', '3XL'];
+        Object.keys(sg.sizes).sort(function(a, b) {
+          var ai = sizeOrder.indexOf(a), bi = sizeOrder.indexOf(b);
+          return (ai === -1 ? 99 : ai) - (bi === -1 ? 99 : bi);
+        }).forEach(function(size) {
+          addSizeGuideRow(size, sg.sizes[size].join(', '));
+        });
+      }
+    }
+
+    function addSizeGuideRow(size, measurements) {
+      var container = document.getElementById('edit_size_guide_rows');
+      var row = document.createElement('div');
+      row.style.cssText = 'display: flex; gap: 0.5rem; margin-bottom: 0.375rem; align-items: center;';
+      row.innerHTML = '<input type="text" placeholder="Size (e.g. M)" value="' + (size || '') + '" style="width: 60px; padding: 0.375rem; border: 1px solid #e2e8f0; border-radius: 4px; font-size: 0.8125rem;" class="sg-size">'
+        + '<input type="text" placeholder="Measurements (comma separated)" value="' + (measurements || '') + '" style="flex: 1; padding: 0.375rem; border: 1px solid #e2e8f0; border-radius: 4px; font-size: 0.8125rem;" class="sg-measurements">'
+        + '<button type="button" onclick="this.parentElement.remove()" style="background: none; border: none; color: #dc2626; cursor: pointer; font-size: 1rem;">×</button>';
+      container.appendChild(row);
+    }
+
+    function getSizeGuideData() {
+      var columns = document.getElementById('edit_size_guide_columns').value.split(',').map(function(c) { return c.trim(); }).filter(Boolean);
+      var sizes = {};
+      document.querySelectorAll('#edit_size_guide_rows > div').forEach(function(row) {
+        var size = row.querySelector('.sg-size').value.trim();
+        var measurements = row.querySelector('.sg-measurements').value.split(',').map(function(m) { return m.trim(); }).filter(Boolean);
+        if (size && measurements.length) sizes[size] = measurements;
+      });
+      if (!columns.length && !Object.keys(sizes).length) return {};
+      return { columns: columns, sizes: sizes };
     }
 
     async function handleProductImageUpload(event) {
@@ -2007,6 +2062,7 @@
       formData.append('featured', document.getElementById('edit_featured').checked ? 'true' : 'false');
       formData.append('available_for_purchase', document.getElementById('edit_available').checked ? 'true' : 'false');
       formData.append('images', JSON.stringify(productImages));
+      formData.append('size_guide', JSON.stringify(getSizeGuideData()));
 
       fetch(window.location.pathname, {
         method: 'POST',

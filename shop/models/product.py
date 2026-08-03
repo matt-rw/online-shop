@@ -116,6 +116,12 @@ class Product(models.Model):
         max_digits=10, decimal_places=2, default=0, help_text="Base cost for this product (used for profit calculations)"
     )
 
+    # Size guide measurements (managed from admin, displayed on product page)
+    size_guide = models.JSONField(
+        default=dict, blank=True,
+        help_text='Size guide data. Format: {"columns": ["Chest", "Length"], "sizes": {"S": ["38", "28"], "M": ["40", "29"]}}'
+    )
+
     # Shipping weight in ounces (used for shipping rate calculation)
     weight_oz = models.DecimalField(
         max_digits=6, decimal_places=2, null=True, blank=True,

@@ -263,18 +263,9 @@
     <h3 style="font-family: 'Inter', sans-serif; font-size: 1.125rem; font-weight: 700; color: #000; margin: 0 0 0.5rem;">{{ product.name }}</h3>
     <p style="font-family: 'Inter', sans-serif; font-size: 0.8rem; color: #999; margin: 0 0 1.5rem;">All measurements in inches</p>
     <table style="width: 100%; border-collapse: collapse; font-family: 'Inter', sans-serif; font-size: 0.8rem;">
-      <thead>
+      <thead id="size-guide-head">
         <tr>
           <th style="text-align: left; padding: 0.625rem 0.5rem; border-bottom: 2px solid #000; font-size: 0.65rem; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; color: #999;">Size</th>
-          {% if product.category_legacy == "Tops" or "Tee" in product.name or "tee" in product.name %}
-          <th style="text-align: center; padding: 0.625rem 0.5rem; border-bottom: 2px solid #000; font-size: 0.65rem; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; color: #999;">Chest</th>
-          <th style="text-align: center; padding: 0.625rem 0.5rem; border-bottom: 2px solid #000; font-size: 0.65rem; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; color: #999;">Length</th>
-          <th style="text-align: center; padding: 0.625rem 0.5rem; border-bottom: 2px solid #000; font-size: 0.65rem; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; color: #999;">Sleeve</th>
-          {% else %}
-          <th style="text-align: center; padding: 0.625rem 0.5rem; border-bottom: 2px solid #000; font-size: 0.65rem; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; color: #999;">Waist</th>
-          <th style="text-align: center; padding: 0.625rem 0.5rem; border-bottom: 2px solid #000; font-size: 0.65rem; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; color: #999;">Length</th>
-          <th style="text-align: center; padding: 0.625rem 0.5rem; border-bottom: 2px solid #000; font-size: 0.65rem; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; color: #999;">Inseam</th>
-          {% endif %}
         </tr>
       </thead>
       <tbody id="size-guide-body">
@@ -507,42 +498,31 @@
 </script>
 
 <script>
-// Size guide measurements — update these with your actual measurements
-// Format: { "Size": ["Col1", "Col2", "Col3"] }
-var sizeGuideData = {{ product.custom_fields|default:"{}"|safe }};
-
-// Default measurements if not set in product custom_fields
-if (!sizeGuideData.size_guide) {
-  var productName = "{{ product.name }}";
-  if (productName.toLowerCase().includes('tee')) {
-    sizeGuideData.size_guide = {
-      "XS": ["36", "27", "8"],
-      "S": ["38", "28", "8.25"],
-      "M": ["40", "29", "8.5"],
-      "L": ["42", "30", "8.75"],
-      "XL": ["44", "31", "9"],
-      "XXL": ["46", "32", "9.25"]
-    };
-  } else {
-    sizeGuideData.size_guide = {
-      "S": ["28-30", "40", "30"],
-      "M": ["30-32", "41", "31"],
-      "L": ["32-34", "42", "32"],
-      "XL": ["34-36", "43", "33"],
-      "XXL": ["36-38", "44", "34"]
-    };
-  }
-}
+// Size guide from product data (managed in admin)
+var sizeGuide = {{ product.size_guide|default:"{}"|safe }};
 
 // Populate size guide table
 var tbody = document.getElementById('size-guide-body');
-if (tbody && sizeGuideData.size_guide) {
+var thead = document.getElementById('size-guide-head');
+if (tbody && sizeGuide.sizes) {
+  // Build header from columns
+  if (thead && sizeGuide.columns) {
+    var headerHtml = '<tr><th style="text-align: left; padding: 0.625rem 0.5rem; border-bottom: 2px solid #000; font-size: 0.65rem; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; color: #999;">Size</th>';
+    sizeGuide.columns.forEach(function(col) {
+      headerHtml += '<th style="text-align: center; padding: 0.625rem 0.5rem; border-bottom: 2px solid #000; font-size: 0.65rem; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; color: #999;">' + col + '</th>';
+    });
+    headerHtml += '</tr>';
+    thead.innerHTML = headerHtml;
+  }
   var html = '';
   var sizeOrder = ['XS', 'S', 'M', 'L', 'XL', 'XXL', '2XL', '3XL'];
-  var sizes = Object.keys(sizeGuideData.size_guide);
-  sizes.sort(function(a, b) { return sizeOrder.indexOf(a) - sizeOrder.indexOf(b); });
+  var sizes = Object.keys(sizeGuide.sizes);
+  sizes.sort(function(a, b) {
+    var ai = sizeOrder.indexOf(a), bi = sizeOrder.indexOf(b);
+    return (ai === -1 ? 99 : ai) - (bi === -1 ? 99 : bi);
+  });
   sizes.forEach(function(size) {
-    var measurements = sizeGuideData.size_guide[size];
+    var measurements = sizeGuide.sizes[size];
     html += '<tr>';
     html += '<td style="padding: 0.625rem 0.5rem; border-bottom: 1px solid #eee; font-weight: 600; color: #000;">' + size + '</td>';
     measurements.forEach(function(m) {
@@ -551,16 +531,15 @@ if (tbody && sizeGuideData.size_guide) {
     html += '</tr>';
   });
   tbody.innerHTML = html;
+} else if (tbody) {
+  // No size guide data — hide the Size Guide link
+  var link = document.querySelector('[onclick*="size-guide-modal"]');
+  if (link) link.style.display = 'none';
 }
 
-// Fix hidden class for size guide modal
+// Size guide modal toggle
 document.getElementById('size-guide-modal').style.display = 'none';
 document.getElementById('size-guide-modal').classList.remove('hidden');
-document.querySelector('[onclick*="size-guide-modal"]').addEventListener('click', function(e) {
-  e.preventDefault();
-  var modal = document.getElementById('size-guide-modal');
-  modal.style.display = modal.style.display === 'none' ? 'flex' : 'none';
-});
 </script>
 
 <!-- Product Structured Data -->
