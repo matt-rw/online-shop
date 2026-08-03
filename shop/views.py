@@ -680,36 +680,40 @@ def product_detail(request, slug):
 
     # Handle review submission
     if request.method == "POST" and request.POST.get("action") == "submit_review":
-        product = get_object_or_404(Product, slug=slug, is_active=True)
-        name = request.POST.get("reviewer_name", "").strip()
-        email = request.POST.get("reviewer_email", "").strip()
-        rating = int(request.POST.get("rating", 5))
-        title = request.POST.get("review_title", "").strip()
-        body = request.POST.get("review_body", "").strip()
+        try:
+            product = get_object_or_404(Product, slug=slug, is_active=True)
+            name = request.POST.get("reviewer_name", "").strip()
+            email = request.POST.get("reviewer_email", "").strip()
+            rating = int(request.POST.get("rating", 5))
+            title = request.POST.get("review_title", "").strip()
+            body = request.POST.get("review_body", "").strip()
 
-        if name and body and 1 <= rating <= 5:
-            # Check if verified purchase
-            is_verified = False
-            if email:
-                is_verified = OrderItem.objects.filter(
-                    order__email__iexact=email,
-                    order__status__in=["PAID", "SHIPPED", "HAND_DELIVERED", "FULFILLED"],
-                    variant__product=product,
-                ).exists()
+            if name and body and 1 <= rating <= 5:
+                is_verified = False
+                if email:
+                    is_verified = OrderItem.objects.filter(
+                        order__email__iexact=email,
+                        order__status__in=["PAID", "SHIPPED", "HAND_DELIVERED", "FULFILLED"],
+                        variant__product=product,
+                    ).exists()
 
-            ProductReview.objects.create(
-                product=product,
-                user=request.user if request.user.is_authenticated else None,
-                name=name,
-                email=email,
-                rating=rating,
-                title=title,
-                body=body,
-                is_verified_purchase=is_verified,
-            )
-            messages.success(request, "Thank you for your review!")
-        else:
-            messages.error(request, "Please fill in your name, rating, and review.")
+                ProductReview.objects.create(
+                    product=product,
+                    user=request.user if request.user.is_authenticated else None,
+                    name=name,
+                    email=email,
+                    rating=rating,
+                    title=title,
+                    body=body,
+                    is_verified_purchase=is_verified,
+                )
+                logger.info(f"Review created for {product.name} by {name}")
+                messages.success(request, "Thank you for your review!")
+            else:
+                messages.error(request, "Please fill in your name, rating, and review.")
+        except Exception as e:
+            logger.error(f"Review submission error: {e}")
+            messages.error(request, "Something went wrong. Please try again.")
 
         return redirect("shop:product_detail", slug=slug)
 

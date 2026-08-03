@@ -811,6 +811,18 @@ admin.site.register(Size)
 admin.site.register(Color)
 
 
+from shop.models.review import ProductReview
+
+@admin.register(ProductReview)
+class ProductReviewAdmin(admin.ModelAdmin):
+    list_display = ("name", "product", "rating", "is_verified_purchase", "is_approved", "created_at")
+    list_filter = ("is_approved", "is_verified_purchase", "rating", "product")
+    list_editable = ("is_approved",)
+    search_fields = ("name", "email", "body", "title")
+    readonly_fields = ("created_at",)
+    ordering = ("-created_at",)
+
+
 @admin.register(PageView)
 class PageViewAdmin(admin.ModelAdmin):
     """Admin interface for page view analytics."""
