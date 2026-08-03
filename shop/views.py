@@ -861,6 +861,11 @@ def product_detail(request, slug):
         "stripe_publishable_key": settings.STRIPE_PUBLISHABLE_KEY,
         # Sale info
         "sale_info": sale_info,
+        # Related products (same category, excluding current)
+        "related_products": Product.objects.filter(
+            is_active=True, category_obj=product.category_obj
+        ).exclude(id=product.id).exclude(slug__startswith="test-")[:4] if product.category_obj else
+        Product.objects.filter(is_active=True).exclude(id=product.id).exclude(slug__startswith="test-")[:4],
     }
 
     return render(request, "shop/product_detail.html", context)
