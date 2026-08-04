@@ -33,6 +33,10 @@ media/
 .DS_Store
 Thumbs.db
 
+# Large video originals (keep optimized .mp4 only)
+*.mov
+*.MOV
+
 # Migrations (keep structure but ignore generated files)
 # migrations/
 

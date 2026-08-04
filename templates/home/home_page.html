@@ -169,8 +169,14 @@
 
     {% if hero_slides %}
       {% for slide in hero_slides %}
-        <div class="absolute inset-0 hero-slide hero-slide-{{ forloop.counter }}" data-filter="{{ slide.filter|default:'none' }}" style="{% if forloop.first %}opacity: 1; z-index: 2;{% else %}opacity: 0; z-index: 1;{% endif %} transition: opacity 0.6s ease;">
-          {% if slide.is_split %}
+        <div class="absolute inset-0 hero-slide hero-slide-{{ forloop.counter }}" data-filter="{{ slide.filter|default:'none' }}" {% if slide.is_video %}data-is-video="true"{% endif %} style="{% if forloop.first %}opacity: 1; z-index: 2;{% else %}opacity: 0; z-index: 1;{% endif %} transition: opacity 0.6s ease;">
+          {% if slide.is_video %}
+            <div class="absolute inset-0 overflow-hidden">
+              <video class="w-full h-full" style="object-fit: cover; object-position: {{ slide.position_x|default:50 }}% {{ slide.position_y|default:50 }}%;" {% if forloop.first %}autoplay{% endif %} muted loop playsinline preload="{% if forloop.first %}auto{% else %}none{% endif %}">
+                <source src="{{ slide.video_url|default:slide.image_url }}" type="video/mp4">
+              </video>
+            </div>
+          {% elif slide.is_split %}
             <div class="absolute inset-0 flex">
               <div class="hidden md:block overflow-hidden" style="width: 70%;">
                 <div class="w-full h-full hero-slide-img"
@@ -591,6 +597,19 @@
           if (slideNum === currentHeroSlide) return;
           var curr = document.querySelector('.hero-slide-' + currentHeroSlide);
           var next = document.querySelector('.hero-slide-' + slideNum);
+
+          // Pause video on outgoing slide
+          var currVideo = curr.querySelector('video');
+          if (currVideo) currVideo.pause();
+
+          // Load and play video on incoming slide
+          var nextVideo = next.querySelector('video');
+          if (nextVideo) {
+              if (nextVideo.preload === 'none') nextVideo.preload = 'auto';
+              nextVideo.currentTime = 0;
+              nextVideo.play().catch(function(){});
+          }
+
           next.style.zIndex = '3';
           next.style.opacity = '1';
           setTimeout(function() {
