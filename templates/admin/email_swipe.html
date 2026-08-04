@@ -195,6 +195,16 @@
       </button>
     </div>
 
+    <!-- Product selector for review requests -->
+    <div id="review-product-selector" style="display: none; padding: 0 2rem; margin-bottom: 0.75rem;">
+      <select id="review-product-id" style="width: 100%; padding: 0.5rem 0.75rem; font-family: 'Inter', sans-serif; font-size: 0.75rem; border: 1px solid #ddd; background: #fff; color: #000; outline: none;">
+        <option value="">Select product for review request...</option>
+        {% for p in products_for_review %}
+        <option value="{{ p.id }}" data-slug="{{ p.slug }}">{{ p.name }}</option>
+        {% endfor %}
+      </select>
+    </div>
+
     <div class="action-row">
       <button class="send-btn" onclick="confirmSend()">Send to {{ subscriber_count }} subscriber{{ subscriber_count|pluralize:"s" }}</button>
       <div class="test-row">
@@ -531,6 +541,11 @@ function showCard() {
     badge.style.display = 'none';
   }
   document.getElementById('card-meta').textContent = meta;
+  // Show product selector for review request templates
+  var reviewSelector = document.getElementById('review-product-selector');
+  if (reviewSelector) {
+    reviewSelector.style.display = (t.target_audience === 'review_request') ? 'block' : 'none';
+  }
   document.getElementById('counter').textContent = (idx + 1) + ' / ' + filtered.length;
   document.getElementById('prev-btn').disabled = idx === 0;
   document.getElementById('next-btn').disabled = idx === filtered.length - 1;
@@ -730,10 +745,23 @@ function doSend() {
   btn.textContent = 'Sending...'; btn.disabled = true;
   document.querySelector('.confirm-cancel').disabled = true;
   showProgress(0, 'Starting...');
+  // Check if review request needs a product selected
+  var reviewProductId = '';
+  var reviewProductSelect = document.getElementById('review-product-id');
+  if (t.target_audience === 'review_request' && reviewProductSelect) {
+    reviewProductId = reviewProductSelect.value;
+    if (!reviewProductId) {
+      alert('Please select a product for the review request.');
+      btn.textContent = 'Send'; btn.disabled = false;
+      document.querySelector('.confirm-cancel').disabled = false;
+      return;
+    }
+  }
   var body = new URLSearchParams();
   body.append('action', 'send'); body.append('template_id', t.id);
   body.append('subject', document.getElementById('card-subject').value);
   body.append('body', getBodyWithImage());
+  if (reviewProductId) body.append('review_product_id', reviewProductId);
   fetch(window.location.pathname, { method: 'POST', headers: { 'X-CSRFToken': csrfToken, 'Content-Type': 'application/x-www-form-urlencoded' }, body: body.toString() })
   .then(function(r) { return r.json(); })
   .then(function(d) {

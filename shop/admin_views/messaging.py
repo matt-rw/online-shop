@@ -2741,12 +2741,33 @@ def email_swipe(request):
                         ).values_list("email", flat=True) if e)
                         subscribers = [s for s in all_subscribers if s.email.lower() in buyer_emails]
                     elif target_audience == "review_request":
-                        from shop.models.cart import Order
+                        from shop.models.cart import Order, OrderItem
                         from shop.models.review import ProductReview
-                        buyer_emails = set(e.lower() for e in Order.objects.filter(
-                            status__in=["PAID", "SHIPPED", "HAND_DELIVERED", "FULFILLED"]
-                        ).values_list("email", flat=True) if e)
-                        reviewed_emails = set(e.lower() for e in ProductReview.objects.values_list("email", flat=True) if e)
+                        from shop.models.product import Product
+                        # If a specific product was selected, filter to buyers of that product
+                        review_product_id = request.POST.get("review_product_id")
+                        if review_product_id:
+                            buyer_emails = set(e.lower() for e in OrderItem.objects.filter(
+                                variant__product_id=review_product_id,
+                                order__status__in=["PAID", "SHIPPED", "HAND_DELIVERED", "FULFILLED"],
+                            ).values_list("order__email", flat=True) if e)
+                            reviewed_emails = set(e.lower() for e in ProductReview.objects.filter(
+                                product_id=review_product_id
+                            ).values_list("email", flat=True) if e)
+                            # Replace review link in body with direct product link
+                            try:
+                                product = Product.objects.get(id=review_product_id)
+                                body = body.replace(
+                                    "https://www.blueprnt.store/shop/",
+                                    f"https://www.blueprnt.store/shop/product/{product.slug}/#reviews"
+                                )
+                            except Product.DoesNotExist:
+                                pass
+                        else:
+                            buyer_emails = set(e.lower() for e in Order.objects.filter(
+                                status__in=["PAID", "SHIPPED", "HAND_DELIVERED", "FULFILLED"]
+                            ).values_list("email", flat=True) if e)
+                            reviewed_emails = set(e.lower() for e in ProductReview.objects.values_list("email", flat=True) if e)
                         subscribers = [s for s in all_subscribers if s.email.lower() in buyer_emails and s.email.lower() not in reviewed_emails]
                     else:
                         subscribers = list(all_subscribers)
@@ -2871,12 +2892,17 @@ def email_swipe(request):
         for m in sent_messages
     ]
 
+    # Products for review request targeting
+    from shop.models.product import Product
+    products_for_review = Product.objects.filter(is_active=True).exclude(slug__startswith="test-").order_by("name")
+
     context = {
         "templates_json": json.dumps(templates_data),
         "template_count": len(templates_data),
         "subscriber_count": subscriber_count,
         "sent_json": json.dumps(sent_data),
         "sent_count": len(sent_data),
+        "products_for_review": products_for_review,
     }
 
     return render(request, "admin/email_swipe.html", context)
