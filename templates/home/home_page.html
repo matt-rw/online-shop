@@ -491,7 +491,7 @@
   <script>
       const slideshowSettings = JSON.parse(document.getElementById('slideshow-settings').textContent);
       const slideDuration = slideshowSettings.duration || 5000;
-      const slideAutoplay = slideshowSettings.autoplay !== false;
+      const slideAutoplay = slideshowSettings.autoplay !== false && slideshowSettings.autoplay !== 'false';
 
       // Hero positioning
       function applyHeroPositioning() {

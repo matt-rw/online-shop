@@ -81,7 +81,7 @@ def site_settings_context(request):
         data = {
             "site_settings": site_settings,
             "gallery_images": site_settings.gallery_images or [],
-            "hero_slides": site_settings.hero_slides or [],
+            "hero_slides": [s for s in (site_settings.hero_slides or []) if s.get("is_active", True)],
             "free_shipping_threshold": free_shipping_threshold,
             "default_product_image": site_settings.default_product_image or "",
         }
