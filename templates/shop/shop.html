@@ -40,6 +40,10 @@
   @media (max-width: 768px) {
     .shop-header-flex { flex-direction: column-reverse !important; align-items: flex-start !important; gap: 1.5rem !important; }
     .shop-card-info { font-size: 0.75rem; }
+    #qv-modal { width: 95vw !important; max-height: 90vh !important; }
+    #qv-content { grid-template-columns: 1fr !important; }
+    #qv-gallery { max-height: 45vh; }
+    #qv-accent { display: none !important; }
   }
 
   .sort-select {
@@ -135,7 +139,7 @@
 
     <!-- Products -->
     {% for item in products %}
-    <a href="{% url 'shop:product_detail' slug=item.product.slug %}" class="shop-card" style="aspect-ratio: 3/4;">
+    <div class="shop-card" style="aspect-ratio: 3/4; cursor: pointer;" onclick="openQuickView('{{ item.product.slug }}', event)">
       <img src="{{ item.image }}" alt="{{ item.product.name }}" loading="lazy" />
       <div style="position: absolute; top: 1rem; left: 1rem; z-index: 2; display: flex; gap: 4px;">
         {% if not item.product.available_for_purchase or item.total_stock == 0 %}
@@ -161,7 +165,7 @@
           {% endif %}
         </div>
       </div>
-    </a>
+    </div>
     {% endfor %}
 
   </div>
@@ -180,6 +184,63 @@
 
   {% endif %}
 </section>
+
+<!-- Quick View Modal -->
+<div id="qv-overlay" onclick="closeQuickView()" style="display:none; position:fixed; inset:0; z-index:9998; background:rgba(0,0,0,0.7); backdrop-filter:blur(4px); opacity:0; transition:opacity 0.3s ease;"></div>
+<div id="qv-modal" style="display:none; position:fixed; z-index:9999; top:50%; left:50%; transform:translate(-50%,-50%) scale(0.95); opacity:0; transition:all 0.3s cubic-bezier(0.16,1,0.3,1); background:#fff; width:min(90vw, 900px); max-height:85vh; overflow:hidden;">
+
+  <!-- Close -->
+  <button onclick="closeQuickView()" style="position:absolute; top:1.25rem; right:1.25rem; z-index:10; width:36px; height:36px; border:none; background:none; cursor:pointer; display:flex; align-items:center; justify-content:center;">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
+  </button>
+
+  <div id="qv-content" style="display:grid; grid-template-columns:1.1fr 1fr; min-height:400px;">
+    <!-- Left: Image -->
+    <div id="qv-gallery" style="position:relative; background:#f5f5f0; overflow:hidden;">
+      <img id="qv-main-img" src="" alt="" style="width:100%; height:100%; object-fit:cover; display:block; min-height:400px;" />
+      <!-- Diagonal type accent — Reid Miles inspired -->
+      <div id="qv-accent" style="position:absolute; bottom:2rem; left:-1rem; font-family:'Inter',sans-serif; font-size:clamp(4rem,8vw,7rem); font-weight:900; color:rgba(0,0,0,0.06); letter-spacing:-0.05em; line-height:0.85; transform:rotate(-90deg); transform-origin:bottom left; white-space:nowrap; pointer-events:none;"></div>
+      <!-- Thumbnails -->
+      <div id="qv-thumbs" style="position:absolute; bottom:1rem; left:1rem; display:flex; gap:4px;"></div>
+    </div>
+
+    <!-- Right: Info -->
+    <div style="padding:2.5rem 2.5rem 2rem; display:flex; flex-direction:column; overflow-y:auto; max-height:85vh;">
+      <!-- Category -->
+      <p id="qv-category" style="font-family:'Inter',sans-serif; font-size:0.55rem; font-weight:500; letter-spacing:0.3em; text-transform:uppercase; color:#bbb; margin:0 0 0.75rem;"></p>
+      <!-- Name — big, bold -->
+      <h2 id="qv-name" style="font-family:'Inter',sans-serif; font-size:clamp(1.5rem,2.5vw,2rem); font-weight:800; color:#000; letter-spacing:-0.03em; margin:0 0 1rem; line-height:1.1;"></h2>
+      <!-- Price -->
+      <div id="qv-price" style="display:flex; align-items:baseline; gap:0.75rem; margin-bottom:2rem;"></div>
+
+      <!-- Attributes -->
+      <div id="qv-attributes"></div>
+
+      <!-- Quantity -->
+      <div id="qv-qty-section" style="margin-bottom:1.75rem;">
+        <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:0.75rem;">
+          <span style="font-family:'Inter',sans-serif; font-size:0.65rem; font-weight:600; letter-spacing:0.2em; text-transform:uppercase; color:#999;">Quantity</span>
+          <span id="qv-stock" style="font-family:'Inter',sans-serif; font-size:0.65rem; color:#bbb;"></span>
+        </div>
+        <div style="display:inline-flex; border:1px solid #ddd;">
+          <button type="button" onclick="qvQty(-1)" style="width:40px; height:40px; display:flex; align-items:center; justify-content:center; border:none; background:none; cursor:pointer;">
+            <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 12H4"/></svg>
+          </button>
+          <input type="number" id="qv-qty" value="1" min="1" readonly style="width:40px; text-align:center; border:none; border-left:1px solid #ddd; border-right:1px solid #ddd; font-family:'Inter',sans-serif; font-size:0.85rem; font-weight:500; background:none;" />
+          <button type="button" onclick="qvQty(1)" style="width:40px; height:40px; display:flex; align-items:center; justify-content:center; border:none; background:none; cursor:pointer;">
+            <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+          </button>
+        </div>
+      </div>
+
+      <!-- Add to Cart -->
+      <button id="qv-add-btn" onclick="qvAddToCart()" style="width:100%; padding:14px; font-family:'Inter',sans-serif; font-size:0.7rem; font-weight:600; letter-spacing:0.15em; text-transform:uppercase; border:none; background:#000; color:#fff; cursor:pointer; transition:background 0.2s; margin-bottom:1.5rem;" onmouseenter="this.style.background='#222'" onmouseleave="this.style.background='#000'">Add to Cart</button>
+
+      <!-- View Full Details -->
+      <a id="qv-link" href="#" style="font-family:'Inter',sans-serif; font-size:0.65rem; font-weight:500; letter-spacing:0.15em; text-transform:uppercase; color:#999; text-decoration:none; text-align:center; transition:color 0.2s;" onmouseenter="this.style.color='#000'" onmouseleave="this.style.color='#999'">View Full Details &rarr;</a>
+    </div>
+  </div>
+</div>
 
 {% endblock %}
 
@@ -360,5 +421,296 @@
     setTimeout(typeLine, 800);
   }
 })();
+</script>
+
+<script>
+// ── Quick View ──
+var qvData = null;
+var qvSelected = {};
+var qvStock = 0;
+var qvVariantId = null;
+var qvCache = {};
+
+function openQuickView(slug, e) {
+  if (e) e.preventDefault();
+  var overlay = document.getElementById('qv-overlay');
+  var modal = document.getElementById('qv-modal');
+
+  // Show loading state
+  overlay.style.display = 'block';
+  modal.style.display = 'block';
+  requestAnimationFrame(function() {
+    overlay.style.opacity = '1';
+    modal.style.opacity = '1';
+    modal.style.transform = 'translate(-50%,-50%) scale(1)';
+  });
+  document.body.style.overflow = 'hidden';
+
+  // Fetch or use cache
+  if (qvCache[slug]) {
+    renderQuickView(qvCache[slug]);
+    return;
+  }
+
+  document.getElementById('qv-content').style.opacity = '0.3';
+  fetch('/product/' + slug + '/quick-view/')
+    .then(function(r) { return r.json(); })
+    .then(function(data) {
+      qvCache[slug] = data;
+      document.getElementById('qv-content').style.opacity = '1';
+      renderQuickView(data);
+    })
+    .catch(function() {
+      closeQuickView();
+      window.location.href = '/product/' + slug + '/';
+    });
+}
+
+function renderQuickView(data) {
+  qvData = data;
+  qvSelected = {};
+  document.getElementById('qv-qty').value = 1;
+
+  // Image
+  var img = document.getElementById('qv-main-img');
+  var imgSrc = (data.images && data.images[0]) || '';
+  if (imgSrc && !imgSrc.startsWith('/') && !imgSrc.startsWith('http')) imgSrc = '/static/' + imgSrc;
+  img.src = imgSrc;
+  img.alt = data.name;
+
+  // Accent text — Reid Miles diagonal type
+  document.getElementById('qv-accent').textContent = data.name.toUpperCase();
+
+  // Thumbnails
+  var thumbsEl = document.getElementById('qv-thumbs');
+  thumbsEl.innerHTML = '';
+  if (data.images && data.images.length > 1) {
+    data.images.forEach(function(src, i) {
+      if (!src.startsWith('/') && !src.startsWith('http')) src = '/static/' + src;
+      var btn = document.createElement('button');
+      btn.style.cssText = 'width:40px;height:48px;border:2px solid ' + (i===0?'#000':'transparent') + ';background:none;padding:0;cursor:pointer;overflow:hidden;';
+      btn.innerHTML = '<img src="'+src+'" style="width:100%;height:100%;object-fit:cover;">';
+      btn.onclick = function() {
+        img.src = src;
+        thumbsEl.querySelectorAll('button').forEach(function(b){b.style.borderColor='transparent';});
+        btn.style.borderColor = '#000';
+      };
+      thumbsEl.appendChild(btn);
+    });
+  }
+
+  // Info
+  document.getElementById('qv-category').textContent = data.category;
+  document.getElementById('qv-name').textContent = data.name;
+
+  // Price
+  var priceEl = document.getElementById('qv-price');
+  if (data.sale_info) {
+    priceEl.innerHTML = '<span style="font-family:\'Inter\',sans-serif;font-size:1.25rem;font-weight:600;color:#b91c1c;">$'+parseFloat(data.sale_info.sale_price).toFixed(2)+'</span>'
+      + '<span style="font-family:\'Inter\',sans-serif;font-size:1rem;color:#bbb;text-decoration:line-through;">$'+parseFloat(data.price).toFixed(2)+'</span>'
+      + '<span style="font-family:\'Inter\',sans-serif;font-size:0.65rem;font-weight:600;letter-spacing:0.1em;color:#b91c1c;">-'+data.sale_info.save_percent+'%</span>';
+  } else {
+    priceEl.innerHTML = '<span style="font-family:\'Inter\',sans-serif;font-size:1.25rem;font-weight:600;color:#000;">$'+parseFloat(data.price).toFixed(2)+'</span>';
+  }
+
+  // Attributes
+  var attrsEl = document.getElementById('qv-attributes');
+  attrsEl.innerHTML = '';
+  data.attributes.forEach(function(attr) {
+    var div = document.createElement('div');
+    div.style.marginBottom = '1.5rem';
+    var label = '<span style="font-family:\'Inter\',sans-serif;font-size:0.65rem;font-weight:600;letter-spacing:0.2em;text-transform:uppercase;color:#999;display:block;margin-bottom:0.75rem;">'+attr.name+'</span>';
+
+    var btns = '<div style="display:flex;flex-wrap:wrap;gap:0.5rem;">';
+    attr.values.forEach(function(val) {
+      if (attr.input_type === 'color') {
+        var hex = (val.metadata && val.metadata.hex_code) || '#000';
+        btns += '<button onclick="qvSelectAttr(\''+attr.slug+'\',\''+val.value+'\')" data-qv-attr="'+attr.slug+'" data-qv-val="'+val.value+'" title="'+val.value+'" '
+          + 'style="width:28px;height:28px;border-radius:50%;border:2px solid #e5e5e5;background-color:'+hex+';cursor:pointer;transition:border-color 0.15s;padding:0;"'
+          + (val.available ? '' : ' disabled') + '></button>';
+      } else {
+        btns += '<button onclick="qvSelectAttr(\''+attr.slug+'\',\''+val.value+'\')" data-qv-attr="'+attr.slug+'" data-qv-val="'+val.value+'" '
+          + 'style="min-width:3rem;padding:0.5rem 0.875rem;font-family:\'Inter\',sans-serif;font-size:0.75rem;font-weight:500;letter-spacing:0.05em;border:1.5px solid #ddd;background:#fff;color:#333;cursor:pointer;transition:all 0.15s;text-transform:uppercase;"'
+          + (val.available ? '' : ' disabled style="min-width:3rem;padding:0.5rem 0.875rem;font-family:\'Inter\',sans-serif;font-size:0.75rem;font-weight:500;letter-spacing:0.05em;border:1.5px solid #eee;background:#fff;color:#ccc;cursor:not-allowed;text-transform:uppercase;text-decoration:line-through;"')
+          + '>' + (val.metadata && val.metadata.label || val.value) + '</button>';
+      }
+    });
+    btns += '</div>';
+    div.innerHTML = label + btns;
+    attrsEl.appendChild(div);
+  });
+
+  // Link
+  document.getElementById('qv-link').href = data.url;
+
+  // Stock / button state
+  if (!data.available || data.total_stock === 0) {
+    document.getElementById('qv-qty-section').style.display = 'none';
+    var btn = document.getElementById('qv-add-btn');
+    btn.disabled = true;
+    btn.textContent = data.available ? 'Out of Stock' : 'Not Available';
+    btn.style.background = '#e5e5e5';
+    btn.style.color = '#999';
+    btn.style.cursor = 'not-allowed';
+  } else {
+    document.getElementById('qv-qty-section').style.display = '';
+    var btn = document.getElementById('qv-add-btn');
+    btn.disabled = false;
+    btn.textContent = 'Add to Cart';
+    btn.style.background = '#000';
+    btn.style.color = '#fff';
+    btn.style.cursor = 'pointer';
+    qvStock = data.total_stock;
+  }
+
+  // Auto-select first available value for each attribute
+  data.attributes.forEach(function(attr) {
+    for (var i = 0; i < attr.values.length; i++) {
+      if (attr.values[i].available) {
+        qvSelectAttr(attr.slug, attr.values[i].value);
+        break;
+      }
+    }
+  });
+}
+
+function qvSelectAttr(slug, value) {
+  qvSelected[slug] = value;
+
+  // Update button UI
+  document.querySelectorAll('[data-qv-attr="'+slug+'"]').forEach(function(btn) {
+    if (btn.dataset.qvVal === value) {
+      if (btn.style.borderRadius === '50%') {
+        btn.style.borderColor = '#000';
+        btn.style.boxShadow = '0 0 0 1px #000';
+      } else {
+        btn.style.background = '#000';
+        btn.style.color = '#fff';
+        btn.style.borderColor = '#000';
+      }
+    } else {
+      if (btn.style.borderRadius === '50%') {
+        btn.style.borderColor = '#e5e5e5';
+        btn.style.boxShadow = 'none';
+      } else if (!btn.disabled) {
+        btn.style.background = '#fff';
+        btn.style.color = '#333';
+        btn.style.borderColor = '#ddd';
+      }
+    }
+  });
+
+  // Find matching variant
+  qvUpdateVariant();
+}
+
+function qvUpdateVariant() {
+  if (!qvData) return;
+  var order = qvData.attribute_order || [];
+  var key = order.map(function(s) { return qvSelected[s] || ''; }).join('_');
+
+  var match = qvData.variant_data[key];
+  if (match) {
+    qvVariantId = match.id;
+    qvStock = match.stock;
+
+    var stockEl = document.getElementById('qv-stock');
+    var qtySection = document.getElementById('qv-qty-section');
+    var btn = document.getElementById('qv-add-btn');
+
+    if (match.stock > 0) {
+      stockEl.textContent = match.stock + ' in stock';
+      stockEl.style.color = match.stock <= 3 ? '#b91c1c' : '#bbb';
+      stockEl.style.fontWeight = match.stock <= 3 ? '600' : '400';
+      qtySection.style.display = '';
+      btn.disabled = false;
+      btn.textContent = 'Add to Cart';
+      btn.style.background = '#000';
+      btn.style.color = '#fff';
+      btn.style.cursor = 'pointer';
+      document.getElementById('qv-qty').value = 1;
+      document.getElementById('qv-qty').max = match.stock;
+    } else {
+      stockEl.textContent = '';
+      qtySection.style.display = 'none';
+      btn.disabled = true;
+      btn.textContent = 'Out of Stock';
+      btn.style.background = '#e5e5e5';
+      btn.style.color = '#999';
+      btn.style.cursor = 'not-allowed';
+    }
+  }
+}
+
+function qvQty(delta) {
+  var input = document.getElementById('qv-qty');
+  var val = parseInt(input.value) + delta;
+  if (val >= 1 && val <= qvStock) input.value = val;
+}
+
+function qvAddToCart() {
+  if (!qvVariantId) return;
+  var qty = parseInt(document.getElementById('qv-qty').value) || 1;
+  var btn = document.getElementById('qv-add-btn');
+  btn.textContent = 'Adding...';
+  btn.disabled = true;
+
+  var formData = new FormData();
+  formData.append('variant_id', qvVariantId);
+  formData.append('quantity', qty);
+  formData.append('csrfmiddlewaretoken', '{{ csrf_token }}');
+
+  fetch('{% url "shop:add_to_cart" %}', {
+    method: 'POST',
+    headers: { 'X-Requested-With': 'XMLHttpRequest' },
+    body: formData
+  })
+  .then(function(r) { return r.json(); })
+  .then(function(data) {
+    if (data.success) {
+      btn.textContent = 'Added!';
+      btn.style.background = '#16a34a';
+      // Update cart count in header
+      var cartBadge = document.querySelector('.cart-count');
+      if (cartBadge) cartBadge.textContent = data.cart_count;
+      setTimeout(function() {
+        btn.textContent = 'Add to Cart';
+        btn.style.background = '#000';
+        btn.disabled = false;
+      }, 1500);
+    } else {
+      btn.textContent = 'Error';
+      btn.style.background = '#b91c1c';
+      setTimeout(function() {
+        btn.textContent = 'Add to Cart';
+        btn.style.background = '#000';
+        btn.disabled = false;
+      }, 2000);
+    }
+  })
+  .catch(function() {
+    btn.textContent = 'Add to Cart';
+    btn.style.background = '#000';
+    btn.disabled = false;
+  });
+}
+
+function closeQuickView() {
+  var overlay = document.getElementById('qv-overlay');
+  var modal = document.getElementById('qv-modal');
+  overlay.style.opacity = '0';
+  modal.style.opacity = '0';
+  modal.style.transform = 'translate(-50%,-50%) scale(0.95)';
+  setTimeout(function() {
+    overlay.style.display = 'none';
+    modal.style.display = 'none';
+  }, 300);
+  document.body.style.overflow = '';
+}
+
+// Close on Escape
+document.addEventListener('keydown', function(e) {
+  if (e.key === 'Escape') closeQuickView();
+});
 </script>
 {% endblock %}

@@ -26,6 +26,7 @@ urlpatterns = [
     path("contact/", views.contact, name="contact"),
     # Product detail
     path("product/<slug:slug>/", views.product_detail, name="product_detail"),
+    path("product/<slug:slug>/quick-view/", views.product_quick_view, name="product_quick_view"),
     # Bundle detail
     path("bundle/<slug:slug>/", views.bundle_detail, name="bundle_detail"),
     # Account

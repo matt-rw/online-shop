@@ -926,6 +926,104 @@ def product_detail(request, slug):
     return response
 
 
+def product_quick_view(request, slug):
+    """AJAX endpoint returning product data for quick view modal."""
+    import json
+    from collections import OrderedDict
+    from django.http import JsonResponse
+    from django.shortcuts import get_object_or_404
+    from .models import CustomAttribute, Product
+
+    product = get_object_or_404(Product, slug=slug, is_active=True)
+    variants = product.variants.filter(is_active=True)
+
+    # Build variant data
+    variant_data = {}
+    all_attrs = OrderedDict()
+
+    for variant in variants:
+        attrs = variant.attribute_values or {}
+        key_parts = []
+        for attr_slug in sorted(attrs.keys()):
+            key_parts.append(str(attrs[attr_slug]))
+            if attr_slug not in all_attrs:
+                all_attrs[attr_slug] = {}
+            val = attrs[attr_slug]
+            if val not in all_attrs[attr_slug]:
+                all_attrs[attr_slug][val] = {"available": variant.stock_quantity > 0}
+            elif variant.stock_quantity > 0:
+                all_attrs[attr_slug][val]["available"] = True
+
+        key = "_".join(key_parts) if key_parts else str(variant.id)
+        variant_data[key] = {
+            "id": variant.id,
+            "stock": variant.stock_quantity,
+            "price": str(variant.price),
+        }
+
+    # Build attributes with metadata from CustomAttribute
+    product_attributes = []
+    custom_attrs = {a.slug: a for a in CustomAttribute.objects.all()}
+    for attr_slug, values in all_attrs.items():
+        ca = custom_attrs.get(attr_slug)
+        attr_info = {
+            "slug": attr_slug,
+            "name": ca.name if ca else attr_slug.title(),
+            "input_type": ca.input_type if ca else "button",
+            "values": [],
+        }
+        for val, info in values.items():
+            val_meta = {}
+            if ca and ca.input_type == "color":
+                for av in (ca.allowed_values or []):
+                    if av.get("value") == val:
+                        val_meta = av.get("metadata", {})
+                        break
+            attr_info["values"].append({
+                "value": val,
+                "available": info["available"],
+                "metadata": val_meta,
+            })
+        product_attributes.append(attr_info)
+
+    # Images
+    images = product.images or []
+    if not images and variants:
+        for v in variants:
+            if v.images:
+                images = v.images
+                break
+
+    # Sale info
+    from .models.product import get_active_sales
+    sale_info = product.get_sale_info(_active_sales=get_active_sales())
+
+    total_stock = sum(v.stock_quantity for v in variants)
+
+    data = {
+        "name": product.name,
+        "slug": product.slug,
+        "price": str(product.base_price),
+        "description": product.description or "",
+        "category": product.category_legacy or "Foundation",
+        "images": images[:5],
+        "total_stock": total_stock,
+        "available": product.available_for_purchase,
+        "attributes": product_attributes,
+        "variant_data": variant_data,
+        "attribute_order": list(all_attrs.keys()),
+        "sale_info": {
+            "sale_price": str(sale_info["sale_price"]),
+            "save_percent": sale_info["save_percent"],
+        } if sale_info else None,
+        "url": f"/product/{product.slug}/",
+    }
+
+    response = JsonResponse(data)
+    response["Cache-Control"] = "public, max-age=300"
+    return response
+
+
 @cache_page(60 * 5)  # Cache for 5 minutes
 @vary_on_cookie
 def shop(request):
