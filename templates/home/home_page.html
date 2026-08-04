@@ -169,7 +169,7 @@
 
     {% if hero_slides %}
       {% for slide in hero_slides %}
-        <div class="absolute inset-0 hero-slide hero-slide-{{ forloop.counter }}" data-filter="{{ slide.filter|default:'none' }}" {% if slide.is_video %}data-is-video="true"{% endif %} style="{% if forloop.first %}opacity: 1; z-index: 2;{% else %}opacity: 0; z-index: 1;{% endif %} transition: opacity 0.6s ease;">
+        <div class="absolute inset-0 hero-slide hero-slide-{{ forloop.counter }}" data-filter="{{ slide.filter|default:'none' }}" {% if slide.is_video %}data-is-video="true"{% endif %} {% if slide.duration %}data-duration="{{ slide.duration }}"{% endif %} style="{% if forloop.first %}opacity: 1; z-index: 2;{% else %}opacity: 0; z-index: 1;{% endif %} transition: opacity 0.6s ease;">
           {% if slide.is_video %}
             <div class="absolute inset-0 overflow-hidden">
               <video class="w-full h-full" style="object-fit: cover; object-position: {{ slide.position_x|default:50 }}% {{ slide.position_y|default:50 }}%;" {% if forloop.first %}autoplay{% endif %} muted loop playsinline preload="{% if forloop.first %}auto{% else %}none{% endif %}">
@@ -637,19 +637,28 @@
           clearTimeout(slideInterval);
           var currentSlideEl = document.querySelector('.hero-slide-' + currentHeroSlide);
           var video = currentSlideEl ? currentSlideEl.querySelector('video') : null;
-          var delay = slideDuration;
 
-          if (video && video.duration && isFinite(video.duration)) {
+          // Priority: per-slide duration > video duration > global default
+          var customDuration = currentSlideEl ? parseInt(currentSlideEl.dataset.duration) : NaN;
+          var delay;
+
+          if (customDuration > 0) {
+              delay = customDuration * 1000;
+          } else if (video && video.duration && isFinite(video.duration)) {
               delay = video.duration * 1000;
           } else if (video) {
-              // Video not loaded yet — wait for metadata then reschedule
+              delay = slideDuration;
               video.addEventListener('loadedmetadata', function() {
-                  clearTimeout(slideInterval);
-                  var remaining = (video.duration - video.currentTime) * 1000;
-                  slideInterval = setTimeout(function() {
-                      changeHeroSlide(currentHeroSlide < totalSlides ? currentHeroSlide + 1 : 1);
-                  }, remaining > 0 ? remaining : slideDuration);
+                  if (!parseInt(currentSlideEl.dataset.duration)) {
+                      clearTimeout(slideInterval);
+                      var remaining = (video.duration - video.currentTime) * 1000;
+                      slideInterval = setTimeout(function() {
+                          changeHeroSlide(currentHeroSlide < totalSlides ? currentHeroSlide + 1 : 1);
+                      }, remaining > 0 ? remaining : slideDuration);
+                  }
               }, { once: true });
+          } else {
+              delay = slideDuration;
           }
 
           slideInterval = setTimeout(function() {

@@ -1546,7 +1546,30 @@
                 <input type="text" value="${slide.video_url || ''}" placeholder="/static/images/sidevid.mp4"
                        onchange="updateSlide(${index}, 'video_url', this.value)">
               </div>
+              <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem; margin-top: 0.5rem;">
+                <div class="slide-field">
+                  <label>Horizontal Position</label>
+                  <div style="display: flex; align-items: center; gap: 0.5rem;">
+                    <input type="range" min="0" max="100" value="${slide.position_x ?? 50}" style="flex:1;"
+                           oninput="updateSlide(${index}, 'position_x', parseInt(this.value)); this.nextElementSibling.textContent=this.value+'%'">
+                    <span style="font-size:0.75rem;color:#64748b;min-width:2.5rem;">${slide.position_x ?? 50}%</span>
+                  </div>
+                </div>
+                <div class="slide-field">
+                  <label>Vertical Position</label>
+                  <div style="display: flex; align-items: center; gap: 0.5rem;">
+                    <input type="range" min="0" max="100" value="${slide.position_y ?? 50}" style="flex:1;"
+                           oninput="updateSlide(${index}, 'position_y', parseInt(this.value)); this.nextElementSibling.textContent=this.value+'%'">
+                    <span style="font-size:0.75rem;color:#64748b;min-width:2.5rem;">${slide.position_y ?? 50}%</span>
+                  </div>
+                </div>
+              </div>
               ` : ''}
+              <div class="slide-field" style="margin-top: 0.5rem;">
+                <label>Slide Duration (seconds) — leave empty for default${slide.is_video ? ' or full video length' : ''}</label>
+                <input type="number" min="1" max="120" value="${slide.duration || ''}" placeholder="${slide.is_video ? 'Full video' : 'Default'}"
+                       onchange="updateSlide(${index}, 'duration', this.value ? parseInt(this.value) : null)" style="width: 100px;">
+              </div>
             </div>
 
             <div class="split-section">
