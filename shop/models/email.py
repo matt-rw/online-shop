@@ -102,6 +102,20 @@ class EmailTemplate(models.Model):
         help_text="When should this template be automatically sent?",
     )
 
+    # Smart targeting
+    TARGET_AUDIENCES = [
+        ("all", "All Subscribers"),
+        ("no_account", "Subscribers Without Account"),
+        ("customers", "Customers (Ordered Before)"),
+        ("review_request", "Review Request (Bought But No Review)"),
+    ]
+    target_audience = models.CharField(
+        max_length=30,
+        choices=TARGET_AUDIENCES,
+        default="all",
+        help_text="Who should receive this email when sent",
+    )
+
     is_active = models.BooleanField(default=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)

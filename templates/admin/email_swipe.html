@@ -518,9 +518,15 @@ function showCard() {
   var triggerLabels = { on_subscribe: 'Sends automatically on new signup', on_order: 'Sends automatically on new order', on_shipping: 'Sends automatically when order ships', on_order_admin: 'Sends to admin on new order', on_confirmation: 'Sends on confirmation request' };
   var badge = document.getElementById('card-auto-badge');
   var badgeLabel = document.getElementById('card-auto-label');
+  // Show auto-trigger or target audience badge
+  var targetLabels = { no_account: 'Sends to subscribers without accounts', customers: 'Sends to customers only', review_request: 'Sends to customers who haven\'t reviewed' };
   if (t.auto_trigger && t.auto_trigger !== 'manual') {
     badge.style.display = 'block';
     badgeLabel.textContent = triggerLabels[t.auto_trigger] || 'Auto: ' + t.auto_trigger;
+  } else if (t.target_audience && t.target_audience !== 'all') {
+    badge.style.display = 'block';
+    badge.style.background = 'linear-gradient(90deg, #0f172a, #1e293b)';
+    badgeLabel.textContent = targetLabels[t.target_audience] || 'Targeted: ' + t.target_audience;
   } else {
     badge.style.display = 'none';
   }

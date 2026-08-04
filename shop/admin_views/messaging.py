@@ -2676,7 +2676,36 @@ def email_swipe(request):
                 subject = subject_override or template.subject
                 body = body_override or template.html_body
 
-                subscriber_count = EmailSubscription.objects.filter(is_active=True).count()
+                # Get targeted recipients based on template's target_audience
+                target = template.target_audience or "all"
+                all_subs = EmailSubscription.objects.filter(is_active=True)
+
+                if target == "no_account":
+                    # Subscribers who don't have a user account
+                    from django.contrib.auth import get_user_model
+                    User = get_user_model()
+                    existing_emails = set(User.objects.values_list("email", flat=True))
+                    exclude_emails = existing_emails
+                elif target == "customers":
+                    # Only subscribers who have placed an order
+                    from shop.models.cart import Order
+                    customer_emails = set(Order.objects.filter(
+                        status__in=["PAID", "SHIPPED", "HAND_DELIVERED", "FULFILLED"]
+                    ).values_list("email", flat=True))
+                    # Will filter in the send loop
+                elif target == "review_request":
+                    # Customers who bought but haven't reviewed
+                    from shop.models.cart import Order
+                    from shop.models.review import ProductReview
+                    customer_emails = set(Order.objects.filter(
+                        status__in=["PAID", "SHIPPED", "HAND_DELIVERED", "FULFILLED"]
+                    ).values_list("email", flat=True))
+                    reviewed_emails = set(ProductReview.objects.values_list("email", flat=True))
+                    # Will filter in the send loop
+                else:
+                    target = "all"
+
+                subscriber_count = all_subs.count()
 
                 # Create QuickMessage for tracking
                 qm = QuickMessage.objects.create(
@@ -2695,7 +2724,36 @@ def email_swipe(request):
 
                     qm = QuickMessage.objects.get(id=qm_id)
                     template = EmailTemplate.objects.get(id=template_id)
-                    subscribers = EmailSubscription.objects.filter(is_active=True)
+                    target_audience = template.target_audience or "all"
+
+                    # Build recipient list based on targeting
+                    all_subscribers = EmailSubscription.objects.filter(is_active=True)
+
+                    if target_audience == "no_account":
+                        from django.contrib.auth import get_user_model
+                        User = get_user_model()
+                        account_emails = set(User.objects.values_list("email", flat=True))
+                        subscribers = [s for s in all_subscribers if s.email.lower() not in {e.lower() for e in account_emails if e}]
+                    elif target_audience == "customers":
+                        from shop.models.cart import Order
+                        buyer_emails = set(e.lower() for e in Order.objects.filter(
+                            status__in=["PAID", "SHIPPED", "HAND_DELIVERED", "FULFILLED"]
+                        ).values_list("email", flat=True) if e)
+                        subscribers = [s for s in all_subscribers if s.email.lower() in buyer_emails]
+                    elif target_audience == "review_request":
+                        from shop.models.cart import Order
+                        from shop.models.review import ProductReview
+                        buyer_emails = set(e.lower() for e in Order.objects.filter(
+                            status__in=["PAID", "SHIPPED", "HAND_DELIVERED", "FULFILLED"]
+                        ).values_list("email", flat=True) if e)
+                        reviewed_emails = set(e.lower() for e in ProductReview.objects.values_list("email", flat=True) if e)
+                        subscribers = [s for s in all_subscribers if s.email.lower() in buyer_emails and s.email.lower() not in reviewed_emails]
+                    else:
+                        subscribers = list(all_subscribers)
+
+                    # Update actual recipient count
+                    qm.recipient_count = len(subscribers)
+                    qm.save(update_fields=["recipient_count"])
 
                     sent = 0
                     failed = 0
@@ -2786,6 +2844,7 @@ def email_swipe(request):
             "type": t.template_type,
             "folder": t.folder,
             "auto_trigger": t.auto_trigger,
+            "target_audience": t.target_audience,
             "times_used": t.times_used,
         }
         for t in templates
