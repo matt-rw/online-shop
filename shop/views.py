@@ -935,55 +935,64 @@ def product_quick_view(request, slug):
     from .models import CustomAttribute, Product
 
     product = get_object_or_404(Product, slug=slug, is_active=True)
-    variants = product.variants.filter(is_active=True)
+    variants = product.variants.filter(is_active=True).prefetch_related("attributes__attribute")
 
-    # Build variant data
+    # Build variant data — same approach as product_detail
     variant_data = {}
-    all_attrs = OrderedDict()
+    attributes_map = OrderedDict()
 
     for variant in variants:
-        attrs = variant.attribute_values or {}
-        key_parts = []
-        for attr_slug in sorted(attrs.keys()):
-            key_parts.append(str(attrs[attr_slug]))
-            if attr_slug not in all_attrs:
-                all_attrs[attr_slug] = {}
-            val = attrs[attr_slug]
-            if val not in all_attrs[attr_slug]:
-                all_attrs[attr_slug][val] = {"available": variant.stock_quantity > 0}
-            elif variant.stock_quantity > 0:
-                all_attrs[attr_slug][val]["available"] = True
+        variant_attrs = {}
+        for attr_value in sorted(variant.attributes.all(), key=lambda a: a.attribute.display_order):
+            attr = attr_value.attribute
+            attr_slug = attr.slug
+            variant_attrs[attr_slug] = attr_value.value
 
-        key = "_".join(key_parts) if key_parts else str(variant.id)
+            if attr_slug not in attributes_map:
+                attributes_map[attr_slug] = {
+                    "attribute": attr,
+                    "values": OrderedDict(),
+                }
+
+            if attr_value.value not in attributes_map[attr_slug]["values"]:
+                attributes_map[attr_slug]["values"][attr_value.value] = {
+                    "value": attr_value.value,
+                    "metadata": attr_value.metadata or {},
+                    "available": variant.stock_quantity > 0,
+                }
+            elif variant.stock_quantity > 0:
+                attributes_map[attr_slug]["values"][attr_value.value]["available"] = True
+
+        # Fallback to legacy fields
+        if not variant_attrs:
+            if variant.size:
+                variant_attrs["size"] = variant.size.code
+            if variant.color:
+                variant_attrs["color"] = variant.color.name
+
+        key_parts = [variant_attrs.get(slug, "default") for slug in attributes_map.keys()]
+        if not key_parts:
+            size_code = variant.size.code if variant.size else "one-size"
+            color_name = variant.color.name if variant.color else "default"
+            key_parts = [size_code, color_name]
+
+        key = "_".join(key_parts)
         variant_data[key] = {
             "id": variant.id,
             "stock": variant.stock_quantity,
             "price": str(variant.price),
         }
 
-    # Build attributes with metadata from CustomAttribute
+    # Build attributes for frontend
     product_attributes = []
-    custom_attrs = {a.slug: a for a in CustomAttribute.objects.all()}
-    for attr_slug, values in all_attrs.items():
-        ca = custom_attrs.get(attr_slug)
+    for attr_slug, attr_data in attributes_map.items():
+        attr = attr_data["attribute"]
         attr_info = {
             "slug": attr_slug,
-            "name": ca.name if ca else attr_slug.title(),
-            "input_type": ca.input_type if ca else "button",
-            "values": [],
+            "name": attr.name,
+            "input_type": attr.input_type or "button",
+            "values": list(attr_data["values"].values()),
         }
-        for val, info in values.items():
-            val_meta = {}
-            if ca and ca.input_type == "color":
-                for av in (ca.allowed_values or []):
-                    if av.get("value") == val:
-                        val_meta = av.get("metadata", {})
-                        break
-            attr_info["values"].append({
-                "value": val,
-                "available": info["available"],
-                "metadata": val_meta,
-            })
         product_attributes.append(attr_info)
 
     # Images
@@ -1011,7 +1020,7 @@ def product_quick_view(request, slug):
         "available": product.available_for_purchase,
         "attributes": product_attributes,
         "variant_data": variant_data,
-        "attribute_order": list(all_attrs.keys()),
+        "attribute_order": list(attributes_map.keys()),
         "sale_info": {
             "sale_price": str(sale_info["sale_price"]),
             "save_percent": sale_info["save_percent"],
