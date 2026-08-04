@@ -16,9 +16,7 @@
     .about-label-desktop { display: none !important; }
     .about-label-mobile { display: block !important; }
     .about-origin-section { padding-bottom: 5rem !important; }
-    .about-breath { height: 3rem !important; }
-    .about-collections-section { padding-bottom: 5rem !important; }
-    .about-spacer { height: 2rem !important; }
+    .about-collections-section { padding: 4rem 2rem 5rem !important; }
     .about-statement { padding: 5rem 2rem !important; }
     .about-statement p { font-size: 1.5rem !important; }
     .about-bottom { flex-direction: column !important; }
@@ -46,17 +44,14 @@
   <p class="about-hero-heading" style="position: absolute; bottom: 3rem; right: 4rem; font-family: 'Inter', sans-serif; font-size: clamp(3rem, 6vw, 5rem); font-weight: 800; color: #fff; letter-spacing: -0.04em; line-height: 0.9; margin: 0; text-align: right; -webkit-font-smoothing: antialiased; text-rendering: geometricPrecision;">Chicago.<br>Seoul.</p>
 </section>
 
-<!-- White space breath -->
-<div class="about-breath" style="background: #fff; height: 8rem;"></div>
-
-<!-- Origin story: asymmetric -->
-<section class="about-origin-section" style="background: #fff; padding: 0 2rem 10rem;">
+<!-- Origin story: dark editorial -->
+<section class="about-origin-section" style="background: #111; padding: 6rem 2rem 8rem;">
   <div style="max-width: 70rem; margin: 0 auto;">
     <div class="about-split" style="display: grid; grid-template-columns: 1fr 1.2fr; gap: 6rem; align-items: start;">
 
       <!-- Left: just the label and one image -->
       <div>
-        <p class="about-label-desktop" style="font-family: 'Inter', sans-serif; font-size: 0.55rem; font-weight: 500; letter-spacing: 0.3em; text-transform: uppercase; color: #ccc; margin: 0 0 3rem;">About</p>
+        <p class="about-label-desktop" style="font-family: 'Inter', sans-serif; font-size: 0.55rem; font-weight: 500; letter-spacing: 0.3em; text-transform: uppercase; color: rgba(255,255,255,0.25); margin: 0 0 3rem;">About</p>
         <div style="overflow: hidden; aspect-ratio: 4/5;">
           <video src="{% static 'images/about-video.mp4' %}" autoplay muted loop playsinline style="width: 100%; height: 100%; object-fit: cover; display: block;"></video>
         </div>
@@ -64,10 +59,10 @@
 
       <!-- Right: the story, pushed down -->
       <div class="about-origin-text" style="padding-top: 8rem;">
-        <p class="about-label-mobile" style="display: none; font-family: 'Inter', sans-serif; font-size: 0.55rem; font-weight: 500; letter-spacing: 0.3em; text-transform: uppercase; color: #ccc; margin: 0 0 3rem;">About</p>
-        <p style="font-family: 'Inter', sans-serif; font-size: 1.1rem; font-weight: 300; color: #444; line-height: 2; margin: 0 0 1.75rem;">Blueprint was created by Kevin Lee — raised on Chicago basketball, rooted in Korean heritage. The brand started the way most real things do: someone who always wanted to make something finally did.</p>
-        <p style="font-family: 'Inter', sans-serif; font-size: 1.1rem; font-weight: 300; color: #444; line-height: 2; margin: 0 0 1.75rem;">Every graphic tells that story. The quiet discipline of knowing where you come from — and the nerve to go somewhere new.</p>
-        <p style="font-family: 'Inter', sans-serif; font-size: 1.1rem; font-weight: 300; color: #444; line-height: 2; margin: 0;">Kevin linked up with longtime friend Matt and they built it from the ground up. Two people, one vision.</p>
+        <p class="about-label-mobile" style="display: none; font-family: 'Inter', sans-serif; font-size: 0.55rem; font-weight: 500; letter-spacing: 0.3em; text-transform: uppercase; color: rgba(255,255,255,0.25); margin: 0 0 3rem;">About</p>
+        <p style="font-family: 'Inter', sans-serif; font-size: 1.1rem; font-weight: 300; color: rgba(255,255,255,0.6); line-height: 2; margin: 0 0 1.75rem;">Blueprint was created by Kevin Lee — raised on Chicago basketball, rooted in Korean heritage. The brand started the way most real things do: someone who always wanted to make something finally did.</p>
+        <p style="font-family: 'Inter', sans-serif; font-size: 1.1rem; font-weight: 300; color: rgba(255,255,255,0.6); line-height: 2; margin: 0 0 1.75rem;">Every graphic tells that story. The quiet discipline of knowing where you come from — and the nerve to go somewhere new.</p>
+        <p style="font-family: 'Inter', sans-serif; font-size: 1.1rem; font-weight: 300; color: rgba(255,255,255,0.6); line-height: 2; margin: 0;">Kevin linked up with longtime friend Matt and they built it from the ground up. Two people, one vision.</p>
       </div>
 
     </div>
@@ -81,11 +76,8 @@
   </div>
 </section>
 
-<!-- Large white space -->
-<div class="about-spacer" style="background: #fff; height: 6rem;"></div>
-
 <!-- Collections: image left, text right -->
-<section class="about-collections-section" style="background: #fff; padding: 0 2rem 10rem;">
+<section class="about-collections-section" style="background: #0a0a0a; border-top: 1px solid rgba(255,255,255,0.06); padding: 6rem 2rem 10rem;">
   <div class="about-split" style="max-width: 70rem; margin: 0 auto; display: grid; grid-template-columns: 1.6fr 1fr; gap: 4rem; align-items: center;">
 
     <!-- Left: crossfade images -->
@@ -97,10 +89,11 @@
 
     <!-- Right: collections text -->
     <div>
-      <p style="font-family: 'Inter', sans-serif; font-size: 0.55rem; font-weight: 500; letter-spacing: 0.3em; text-transform: uppercase; color: #ccc; margin: 0 0 3rem;">Collections</p>
-      <p style="font-family: 'Inter', sans-serif; font-size: 1.1rem; font-weight: 300; color: #444; line-height: 2; margin: 0 0 1.25rem;"><span style="font-weight: 600; color: #000;">Foundation</span> — released January 2026. The first line drawn. The starting point everything else builds on.</p>
-      <p style="font-family: 'Inter', sans-serif; font-size: 1.1rem; font-weight: 300; color: #444; line-height: 2; margin: 0 0 2.5rem;"><span style="font-weight: 600; color: #000;">Discovery</span> — late summer. The next chapter.</p>
-      <a href="{% url 'shop:shop' %}" style="font-family: 'Inter', sans-serif; font-size: 0.7rem; font-weight: 600; letter-spacing: 0.15em; text-transform: uppercase; color: #000; text-decoration: none; padding: 13px 36px; border: 1px solid #000; display: inline-block; transition: all 0.2s;" onmouseenter="this.style.background='#000'; this.style.color='#fff'" onmouseleave="this.style.background='transparent'; this.style.color='#000'">Shop Foundation</a>
+      <p style="font-family: 'Inter', sans-serif; font-size: 0.55rem; font-weight: 500; letter-spacing: 0.3em; text-transform: uppercase; color: rgba(255,255,255,0.25); margin: 0 0 1.5rem;">Collections</p>
+      <div style="width: 2rem; height: 1px; background: rgba(255,255,255,0.15); margin-bottom: 2.5rem;"></div>
+      <p style="font-family: 'Inter', sans-serif; font-size: 1.1rem; font-weight: 300; color: rgba(255,255,255,0.6); line-height: 2; margin: 0 0 1.25rem;"><span style="font-weight: 600; color: #fff;">Foundation</span> — released January 2026. The first line drawn. The starting point everything else builds on.</p>
+      <p style="font-family: 'Inter', sans-serif; font-size: 1.1rem; font-weight: 300; color: rgba(255,255,255,0.6); line-height: 2; margin: 0 0 2.5rem;"><span style="font-weight: 600; color: #fff;">Discovery</span> — late summer. The next chapter.</p>
+      <a href="{% url 'shop:shop' %}" style="font-family: 'Inter', sans-serif; font-size: 0.7rem; font-weight: 600; letter-spacing: 0.15em; text-transform: uppercase; color: #fff; text-decoration: none; padding: 13px 36px; border: 1px solid rgba(255,255,255,0.5); display: inline-block; transition: all 0.2s;" onmouseenter="this.style.background='#fff'; this.style.color='#000'; this.style.borderColor='#fff'" onmouseleave="this.style.background='transparent'; this.style.color='#fff'; this.style.borderColor='rgba(255,255,255,0.3)'">Shop Foundation</a>
     </div>
 
   </div>
