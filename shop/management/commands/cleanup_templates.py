@@ -1,7 +1,6 @@
 """
-Clean up email templates — remove seed/filler templates and reorganize folders.
-Keeps: auto-triggered, targeted, and hand-crafted content templates.
-Reorganizes into clear purpose-based folders.
+Reorganize email templates into clear purpose-based folders.
+Keeps all templates, just moves them into better categories.
 
 Usage:
     python manage.py cleanup_templates --dry-run    # Preview
@@ -9,30 +8,24 @@ Usage:
 """
 
 from django.core.management.base import BaseCommand
+from django.db.models import Count
 
 from shop.models.email import EmailTemplate
 
 
-# Templates to keep by name (hand-crafted content)
-KEEP_NAMES = {
-    # Content templates
-    "How Foundation Got Made", "Chicago × Seoul", "Why We Use Premium Blanks",
-    "Two Friends One Brand", "What Discovery Means", "Foundation Breakdown",
-    "How to Style Foundation", "Sizing and Fit Guide", "Checking In",
-    "Why We Started This", "Summer Plans", "We Read Every Reply",
-    "New Drop This Week", "Restock Alert", "Free Shipping Reminder",
-    # Transactional
-    "Welcome — Auto", "Order Confirmed", "Shipped", "Admin Order Alert", "Blank Canvas",
-    # Targeted
-    "Create Your Account", "Early Access", "Save Your Info",
-    "Your Order History", "Be First",
-    "How was it?", "Share your thoughts", "Quick review?",
-    "Wear test complete", "Rate your purchase",
+# Old folder → new folder mapping for bulk reassignment
+FOLDER_REMAP = {
+    "storytelling": "brand-story",
+    "casual": "casual",
+    "direct": "product",
+    "minimal": "minimal",
+    "urgent": "promo",
+    "transactional": "automatic",
 }
 
-# New folder assignments
-FOLDER_MAP = {
-    # Transactional (auto-triggered)
+# Specific templates that need precise folder placement
+SPECIFIC_FOLDERS = {
+    # Auto-triggered
     "Welcome — Auto": "automatic",
     "Order Confirmed": "automatic",
     "Shipped": "automatic",
@@ -48,29 +41,11 @@ FOLDER_MAP = {
     "Quick review?": "targeted",
     "Wear test complete": "targeted",
     "Rate your purchase": "targeted",
-    # Campaigns — storytelling
-    "How Foundation Got Made": "campaigns",
-    "Chicago × Seoul": "campaigns",
-    "Why We Use Premium Blanks": "campaigns",
-    "Two Friends One Brand": "campaigns",
-    "What Discovery Means": "campaigns",
-    "Why We Started This": "campaigns",
-    # Campaigns — product/promo
-    "Foundation Breakdown": "campaigns",
-    "How to Style Foundation": "campaigns",
-    "Sizing and Fit Guide": "campaigns",
-    "New Drop This Week": "campaigns",
-    "Restock Alert": "campaigns",
-    "Free Shipping Reminder": "campaigns",
-    # Campaigns — casual
-    "Checking In": "campaigns",
-    "Summer Plans": "campaigns",
-    "We Read Every Reply": "campaigns",
 }
 
 
 class Command(BaseCommand):
-    help = "Clean up email templates — remove filler, reorganize folders"
+    help = "Reorganize email templates into purpose-based folders"
 
     def add_arguments(self, parser):
         parser.add_argument("--dry-run", action="store_true")
@@ -78,49 +53,41 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         dry_run = options["dry_run"]
 
-        all_templates = EmailTemplate.objects.all()
-        total = all_templates.count()
-
-        # Identify keepers
-        keepers = all_templates.filter(name__in=KEEP_NAMES) | all_templates.filter(
-            auto_trigger__in=["on_subscribe", "on_order", "on_shipping", "on_order_admin"]
-        ) | all_templates.filter(
-            target_audience__in=["no_account", "review_request"]
-        )
-        keeper_ids = set(keepers.values_list("id", flat=True))
-
-        # Templates to delete
-        to_delete = all_templates.exclude(id__in=keeper_ids)
-        delete_count = to_delete.count()
-
+        total = EmailTemplate.objects.count()
         self.stdout.write(f"\nTotal templates: {total}")
-        self.stdout.write(f"Keeping: {len(keeper_ids)}")
-        self.stdout.write(f"Deleting: {delete_count}")
 
-        if delete_count > 0:
-            self.stdout.write(f"\nDeleting {delete_count} seed/filler templates...")
-            if not dry_run:
-                to_delete.delete()
+        # Show current organization
+        self.stdout.write("\nCurrent folders:")
+        for f in EmailTemplate.objects.values("folder").annotate(count=Count("id")).order_by("folder"):
+            self.stdout.write(f"  {f['folder']}: {f['count']}")
 
-        # Reorganize folders
-        self.stdout.write(f"\nReorganizing folders...")
-        for name, new_folder in FOLDER_MAP.items():
+        moved = 0
+
+        # 1. Move specific named templates first
+        for name, new_folder in SPECIFIC_FOLDERS.items():
             t = EmailTemplate.objects.filter(name=name).first()
             if t and t.folder != new_folder:
                 self.stdout.write(f"  {name}: {t.folder} → {new_folder}")
                 if not dry_run:
                     t.folder = new_folder
                     t.save(update_fields=["folder"])
+                moved += 1
+
+        # 2. Bulk remap remaining templates by old folder name
+        for old_folder, new_folder in FOLDER_REMAP.items():
+            count = EmailTemplate.objects.filter(folder=old_folder).count()
+            if count > 0:
+                self.stdout.write(f"  {old_folder} ({count}) → {new_folder}")
+                if not dry_run:
+                    EmailTemplate.objects.filter(folder=old_folder).update(folder=new_folder)
+                moved += count
 
         if dry_run:
-            self.stdout.write(self.style.WARNING("\nDry run — no changes made."))
+            self.stdout.write(self.style.WARNING(f"\nDry run — {moved} templates would be moved."))
         else:
-            remaining = EmailTemplate.objects.count()
-            self.stdout.write(self.style.SUCCESS(f"\nDone. {remaining} templates remaining."))
+            self.stdout.write(self.style.SUCCESS(f"\nDone. {moved} templates reorganized."))
 
-            # Show final organization
-            from django.db.models import Count
-            folders = EmailTemplate.objects.values("folder").annotate(count=Count("id")).order_by("folder")
-            self.stdout.write("\nFinal organization:")
-            for f in folders:
-                self.stdout.write(f"  {f['folder']}: {f['count']}")
+        # Show final organization
+        self.stdout.write("\nNew folders:")
+        for f in EmailTemplate.objects.values("folder").annotate(count=Count("id")).order_by("folder"):
+            self.stdout.write(f"  {f['folder']}: {f['count']}")
