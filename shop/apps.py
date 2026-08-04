@@ -137,8 +137,8 @@ class ShopConfig(AppConfig):
         # Process quick messages
         ShopConfig._process_quick_messages(now)
 
-        # Process abandoned cart recovery emails
-        ShopConfig._process_abandoned_carts(now)
+        # Abandoned cart recovery — disabled for now (most customers are guests)
+        # ShopConfig._process_abandoned_carts(now)
 
     @staticmethod
     def _process_quick_messages(now):
