@@ -629,13 +629,35 @@
               activeDot.style.background = '#fff';
           }
           currentHeroSlide = slideNum;
+          if (slideAutoplay && totalSlides > 1) scheduleNextSlide();
       }
 
       var slideInterval = null;
-      if (slideAutoplay && totalSlides > 1) {
-          slideInterval = setInterval(function() {
+      function scheduleNextSlide() {
+          clearTimeout(slideInterval);
+          var currentSlideEl = document.querySelector('.hero-slide-' + currentHeroSlide);
+          var video = currentSlideEl ? currentSlideEl.querySelector('video') : null;
+          var delay = slideDuration;
+
+          if (video && video.duration && isFinite(video.duration)) {
+              delay = video.duration * 1000;
+          } else if (video) {
+              // Video not loaded yet — wait for metadata then reschedule
+              video.addEventListener('loadedmetadata', function() {
+                  clearTimeout(slideInterval);
+                  var remaining = (video.duration - video.currentTime) * 1000;
+                  slideInterval = setTimeout(function() {
+                      changeHeroSlide(currentHeroSlide < totalSlides ? currentHeroSlide + 1 : 1);
+                  }, remaining > 0 ? remaining : slideDuration);
+              }, { once: true });
+          }
+
+          slideInterval = setTimeout(function() {
               changeHeroSlide(currentHeroSlide < totalSlides ? currentHeroSlide + 1 : 1);
-          }, slideDuration);
+          }, delay);
+      }
+      if (slideAutoplay && totalSlides > 1) {
+          scheduleNextSlide();
       }
 
       // Swipe support
@@ -657,14 +679,11 @@
           }
           function resumeAuto() {
               if (!slideAutoplay || totalSlides <= 1) return;
-              clearInterval(slideInterval);
-              slideInterval = setInterval(function() {
-                  changeHeroSlide(currentHeroSlide < totalSlides ? currentHeroSlide + 1 : 1);
-              }, slideDuration);
+              scheduleNextSlide();
           }
-          heroSection.addEventListener('touchstart', function(e) { startX = e.changedTouches[0].screenX; clearInterval(slideInterval); }, { passive: true });
+          heroSection.addEventListener('touchstart', function(e) { startX = e.changedTouches[0].screenX; clearTimeout(slideInterval); }, { passive: true });
           heroSection.addEventListener('touchend', function(e) { handleSwipe(e.changedTouches[0].screenX); resumeAuto(); }, { passive: true });
-          heroSection.addEventListener('mousedown', function(e) { isDragging = true; startX = e.screenX; heroSection.style.cursor = 'grabbing'; clearInterval(slideInterval); e.preventDefault(); });
+          heroSection.addEventListener('mousedown', function(e) { isDragging = true; startX = e.screenX; heroSection.style.cursor = 'grabbing'; clearTimeout(slideInterval); e.preventDefault(); });
           document.addEventListener('mouseup', function(e) { if (!isDragging) return; isDragging = false; heroSection.style.cursor = 'grab'; handleSwipe(e.screenX); resumeAuto(); });
           document.addEventListener('mousemove', function(e) { if (isDragging) e.preventDefault(); });
       }
