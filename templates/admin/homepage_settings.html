@@ -1810,6 +1810,14 @@
       slides[index][field] = value;
       markUnsaved();
       if (field === 'is_active' || field === 'filter') renderSlides();
+      // Live-update video position
+      if ((field === 'position_x' || field === 'position_y') && slides[index].is_video) {
+        var card = document.querySelector('.slide-card[data-index="' + index + '"]');
+        if (card) {
+          var vid = card.querySelector('video');
+          if (vid) vid.style.objectPosition = (slides[index].position_x ?? 50) + '% ' + (slides[index].position_y ?? 50) + '%';
+        }
+      }
     }
 
     function triggerUpload(index, type) {
