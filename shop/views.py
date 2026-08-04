@@ -1099,10 +1099,24 @@ def shop(request):
         else:
             image = default_image
 
+        # Get second image for hover swap
+        image_alt = None
+        all_images = []
+        for v in product.active_variants:
+            if v.images:
+                all_images.extend(v.images)
+        if not all_images and product.images:
+            all_images = product.images
+        if len(all_images) >= 2:
+            image_alt = all_images[1]
+            if image_alt and not image_alt.startswith(("/", "http", "data:")):
+                image_alt = f"/static/{image_alt}"
+
         total_stock = sum(v.stock_quantity for v in product.active_variants)
         product_list.append({
             "product": product,
             "image": image,
+            "image_alt": image_alt,
             "variant_count": len(product.active_variants),
             "total_stock": total_stock,
             "is_bundle": False,
