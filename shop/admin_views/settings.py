@@ -504,6 +504,35 @@ def homepage_settings(request):
                 import traceback
                 return JsonResponse({"success": False, "error": f"{str(e)} - {traceback.format_exc()[:200]}"})
 
+        elif action == "upload_slide_video":
+            try:
+                video_file = request.FILES.get("video")
+                if not video_file:
+                    return JsonResponse({"success": False, "error": "No video file"})
+
+                from django.conf import settings as django_settings
+                if getattr(django_settings, 'CLOUDINARY_ENABLED', False):
+                    import cloudinary.uploader
+                    result = cloudinary.uploader.upload(
+                        video_file,
+                        folder="hero",
+                        public_id=f"hero_video_{uuid.uuid4().hex[:8]}",
+                        resource_type="video"
+                    )
+                    url = result['secure_url']
+                else:
+                    from django.core.files.storage import default_storage
+                    from django.core.files.base import ContentFile
+                    path = default_storage.save(
+                        f"site/hero/{video_file.name}",
+                        ContentFile(video_file.read())
+                    )
+                    url = default_storage.url(path)
+
+                return JsonResponse({"success": True, "url": url})
+            except Exception as e:
+                return JsonResponse({"success": False, "error": str(e)})
+
         elif action == "delete_slide_image":
             try:
                 data = json.loads(request.body)
