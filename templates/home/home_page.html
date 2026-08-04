@@ -172,7 +172,15 @@
         <div class="absolute inset-0 hero-slide hero-slide-{{ forloop.counter }}" data-filter="{{ slide.filter|default:'none' }}" {% if slide.is_video %}data-is-video="true"{% endif %} {% if slide.duration %}data-duration="{{ slide.duration }}"{% endif %} style="{% if forloop.first %}opacity: 1; z-index: 2;{% else %}opacity: 0; z-index: 1;{% endif %} transition: opacity 0.6s ease;">
           {% if slide.is_video %}
             <div class="absolute inset-0 overflow-hidden">
-              <video class="w-full h-full" style="object-fit: cover; object-position: {{ slide.position_x|default:50 }}% {{ slide.position_y|default:50 }}%;" {% if forloop.first %}autoplay{% endif %} muted loop playsinline preload="{% if forloop.first %}auto{% else %}none{% endif %}">
+              <video class="w-full h-full hero-slide-video"
+                     data-pos-x="{{ slide.position_x|default:50 }}"
+                     data-pos-y="{{ slide.position_y|default:50 }}"
+                     data-zoom="{{ slide.zoom|default:100 }}"
+                     data-mobile-pos-x="{{ slide.mobile_position_x|default:slide.position_x|default:50 }}"
+                     data-mobile-pos-y="{{ slide.mobile_position_y|default:slide.position_y|default:50 }}"
+                     data-mobile-zoom="{{ slide.mobile_zoom|default:slide.zoom|default:100 }}"
+                     style="object-fit: cover; object-position: {{ slide.position_x|default:50 }}% {{ slide.position_y|default:50 }}%;"
+                     {% if forloop.first %}autoplay{% endif %} muted loop playsinline preload="{% if forloop.first %}auto{% else %}none{% endif %}">
                 <source src="{{ slide.video_url|default:slide.image_url }}" type="video/mp4">
               </video>
             </div>
@@ -508,6 +516,27 @@
                   : (parseFloat(el.dataset.posY) || 50);
               const scale = zoom / 100;
               el.style.backgroundPosition = posX + '% ' + posY + '%';
+              if (scale !== 1) {
+                  el.style.transform = 'scale(' + scale + ')';
+                  el.style.transformOrigin = posX + '% ' + posY + '%';
+              } else {
+                  el.style.transform = '';
+                  el.style.transformOrigin = '';
+              }
+          });
+          // Apply same positioning to video slides
+          document.querySelectorAll('.hero-slide-video').forEach(function(el) {
+              const zoom = isMobile
+                  ? (parseFloat(el.dataset.mobileZoom) || parseFloat(el.dataset.zoom) || 100)
+                  : (parseFloat(el.dataset.zoom) || 100);
+              const posX = isMobile
+                  ? (parseFloat(el.dataset.mobilePosX) || parseFloat(el.dataset.posX) || 50)
+                  : (parseFloat(el.dataset.posX) || 50);
+              const posY = isMobile
+                  ? (parseFloat(el.dataset.mobilePosY) || parseFloat(el.dataset.posY) || 50)
+                  : (parseFloat(el.dataset.posY) || 50);
+              const scale = zoom / 100;
+              el.style.objectPosition = posX + '% ' + posY + '%';
               if (scale !== 1) {
                   el.style.transform = 'scale(' + scale + ')';
                   el.style.transformOrigin = posX + '% ' + posY + '%';
