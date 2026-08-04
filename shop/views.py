@@ -921,7 +921,9 @@ def product_detail(request, slug):
     else:
         context["related_products"] = related[:4]
 
-    return render(request, "shop/product_detail.html", context)
+    response = render(request, "shop/product_detail.html", context)
+    response["Cache-Control"] = "public, max-age=300"
+    return response
 
 
 @cache_page(60 * 5)  # Cache for 5 minutes
