@@ -1478,7 +1478,7 @@
               Slide
             </div>
             <div class="slide-header-actions">
-              ${slide.image_url ? `<button class="header-btn adjust" onclick="openPositionModal(${index})" title="Crop & Position"><i class="fas fa-crop-alt"></i></button>` : ''}
+              ${(slide.image_url || slide.video_url) ? `<button class="header-btn adjust" onclick="openPositionModal(${index})" title="Crop & Position"><i class="fas fa-crop-alt"></i></button>` : ''}
               <button class="header-btn" onclick="duplicateSlide(${index})" title="Duplicate"><i class="fas fa-copy"></i></button>
               <button class="header-btn drag-handle" title="Drag to reorder"><i class="fas fa-grip-vertical"></i></button>
               <button class="header-btn delete" onclick="deleteSlide(${index})" title="Delete"><i class="fas fa-trash"></i></button>
@@ -1546,24 +1546,6 @@
                 <input type="text" value="${slide.video_url || ''}" placeholder="/static/images/sidevid.mp4"
                        onchange="updateSlide(${index}, 'video_url', this.value)">
               </div>
-              <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem; margin-top: 0.5rem;">
-                <div class="slide-field">
-                  <label>Horizontal Position</label>
-                  <div style="display: flex; align-items: center; gap: 0.5rem;">
-                    <input type="range" min="0" max="100" value="${slide.position_x ?? 50}" style="flex:1;"
-                           oninput="updateSlide(${index}, 'position_x', parseInt(this.value)); this.nextElementSibling.textContent=this.value+'%'">
-                    <span style="font-size:0.75rem;color:#64748b;min-width:2.5rem;">${slide.position_x ?? 50}%</span>
-                  </div>
-                </div>
-                <div class="slide-field">
-                  <label>Vertical Position</label>
-                  <div style="display: flex; align-items: center; gap: 0.5rem;">
-                    <input type="range" min="0" max="100" value="${slide.position_y ?? 50}" style="flex:1;"
-                           oninput="updateSlide(${index}, 'position_y', parseInt(this.value)); this.nextElementSibling.textContent=this.value+'%'">
-                    <span style="font-size:0.75rem;color:#64748b;min-width:2.5rem;">${slide.position_y ?? 50}%</span>
-                  </div>
-                </div>
-              </div>
               ` : ''}
               <div class="slide-field" style="margin-top: 0.5rem;">
                 <label>Slide Duration (seconds) — leave empty for default${slide.is_video ? ' or full video length' : ''}</label>
@@ -1608,11 +1590,17 @@
       currentPositionIndex = index;
       const slide = slides[index];
       const modal = document.getElementById('position-modal');
-      const preview = document.getElementById('position-preview-img');
+      const wrapper = document.querySelector('.position-preview-wrapper');
 
-      // Set preview image and mode
-      preview.src = slide.image_url;
-      preview.parentElement.classList.toggle('mobile-preview', previewMode === 'mobile');
+      // Swap preview element for video or image
+      if (slide.is_video) {
+        wrapper.innerHTML = `<video id="position-preview-img" class="position-preview-img" src="${slide.video_url || slide.image_url}" autoplay muted loop playsinline></video>`;
+      } else {
+        wrapper.innerHTML = `<img id="position-preview-img" class="position-preview-img" src="${slide.image_url}" alt="Preview">`;
+      }
+
+      const preview = document.getElementById('position-preview-img');
+      wrapper.classList.toggle('mobile-preview', previewMode === 'mobile');
       document.getElementById('modal-device-label').innerHTML =
         previewMode === 'mobile'
           ? '<i class="fas fa-mobile-alt"></i> Mobile'
@@ -1704,16 +1692,16 @@
     function updateSlideCardPosition(index) {
       const card = document.querySelector(`.slide-card[data-index="${index}"]`);
       if (card) {
-        const img = card.querySelector('.slide-image-container img');
-        if (img) {
+        const el = card.querySelector('.slide-image-container img') || card.querySelector('.slide-image-container video');
+        if (el) {
           const isMobile = previewMode === 'mobile';
           const x = isMobile ? (slides[index].mobile_position_x ?? slides[index].position_x ?? 50) : (slides[index].position_x ?? 50);
           const y = isMobile ? (slides[index].mobile_position_y ?? slides[index].position_y ?? 50) : (slides[index].position_y ?? 50);
           const z = isMobile ? (slides[index].mobile_zoom ?? slides[index].zoom ?? 100) : (slides[index].zoom ?? 100);
           const scale = z / 100;
-          img.style.objectPosition = `${x}% ${y}%`;
-          img.style.transform = `scale(${scale})`;
-          img.style.transformOrigin = `${x}% ${y}%`;
+          el.style.objectPosition = `${x}% ${y}%`;
+          el.style.transform = `scale(${scale})`;
+          el.style.transformOrigin = `${x}% ${y}%`;
         }
       }
     }
@@ -1810,14 +1798,6 @@
       slides[index][field] = value;
       markUnsaved();
       if (field === 'is_active' || field === 'filter') renderSlides();
-      // Live-update video position
-      if ((field === 'position_x' || field === 'position_y') && slides[index].is_video) {
-        var card = document.querySelector('.slide-card[data-index="' + index + '"]');
-        if (card) {
-          var vid = card.querySelector('video');
-          if (vid) vid.style.objectPosition = (slides[index].position_x ?? 50) + '% ' + (slides[index].position_y ?? 50) + '%';
-        }
-      }
     }
 
     function triggerUpload(index, type) {
