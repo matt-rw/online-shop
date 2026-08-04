@@ -120,6 +120,9 @@
 
     /* Mobile adjustments */
     @media (max-width: 768px) {
+      /* Prevent hero jerk: hide slides until JS applies mobile positioning */
+      .hero-slide-img { visibility: hidden; }
+      .hero-positioned .hero-slide-img { visibility: visible; }
       .hero-mobile { height: 60vh !important; }
       .mosaic-mobile { grid-template-columns: 1fr !important; grid-template-rows: auto !important; height: auto !important; }
       .mosaic-mobile > div { grid-row: span 1 !important; aspect-ratio: 4/3; }
@@ -509,6 +512,8 @@
           });
       }
       applyHeroPositioning();
+      var heroSection = document.querySelector('.hero-mobile');
+      if (heroSection) heroSection.classList.add('hero-positioned');
       window.addEventListener('resize', applyHeroPositioning);
 
       // Reveal overlays
