@@ -1016,7 +1016,7 @@ def product_quick_view(request, slug):
             "sale_price": str(sale_info["sale_price"]),
             "save_percent": sale_info["save_percent"],
         } if sale_info else None,
-        "url": f"/product/{product.slug}/",
+        "url": f"/shop/product/{product.slug}/",
     }
 
     response = JsonResponse(data)

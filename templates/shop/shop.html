@@ -453,7 +453,7 @@ function openQuickView(slug, e) {
   }
 
   document.getElementById('qv-content').style.opacity = '0.3';
-  fetch('/product/' + slug + '/quick-view/')
+  fetch('/shop/product/' + slug + '/quick-view/')
     .then(function(r) { return r.json(); })
     .then(function(data) {
       qvCache[slug] = data;
@@ -462,7 +462,7 @@ function openQuickView(slug, e) {
     })
     .catch(function() {
       closeQuickView();
-      window.location.href = '/product/' + slug + '/';
+      window.location.href = '/shop/product/' + slug + '/';
     });
 }
 
